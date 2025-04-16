@@ -14,5 +14,5 @@ class PACHIO_API UStompAttackStrategy : public UAttackStrategy
 {
 	GENERATED_BODY()
 public:
-	virtual void ExecuteEffect(AActor*, AActor*)override;
+	virtual void ExecuteEffect(AActor*, AActor*,float FinalDamage = 0)override;
 };

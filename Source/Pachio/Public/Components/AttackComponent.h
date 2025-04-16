@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -8,22 +6,38 @@
 
 class UAttackStrategy;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UAttackComponent : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UAttackComponent();
+public:
+    UAttackComponent();
+
+    /** 新しい攻撃戦略を設定する */
+    UFUNCTION(BlueprintCallable, Category = "Attack")
+    void SetAttackStrategy(UAttackStrategy* NewStrategy);
+
+    /** 対象アクターに攻撃を実行する */
+    UFUNCTION(BlueprintCallable, Category = "Attack")
+    void PerformAttack(AActor* Target);
+
+    /** 攻撃力を取得する */
+    float GetAttackPower() const;
 
 protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+public:
+    /** デフォルトで使用する攻撃戦略のクラス（インスタンスはBeginPlayで生成） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
+    TSubclassOf<UAttackStrategy> DefaultAttackStrategyClass;
 
-private:
+    /** 現在使用中の攻撃戦略インスタンス */
+    UPROPERTY(VisibleInstanceOnly, Category = "Attack")
+    UAttackStrategy* CurrentStrategy;
+
+protected:
+    /** 基本攻撃力（各戦略で加算や補正が可能） */
+    float BaseAttackPower = 1.0f;
 };

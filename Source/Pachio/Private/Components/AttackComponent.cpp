@@ -1,34 +1,49 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// プロジェクト設定の説明ページに著作権情報を記載してください。
 
 #include "Components/AttackComponent.h"
+#include "Attack/AttackStrategy.h"
 
-// Sets default values for this component's properties
 UAttackComponent::UAttackComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+    // このコンポーネントはTickを使わない（毎フレームの更新は不要）
+    PrimaryComponentTick.bCanEverTick = false;
 }
 
-
-// Called when the game starts
 void UAttackComponent::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	// ...
-	
+    // ゲーム開始時にデフォルトの攻撃戦略をインスタンス化
+    if (DefaultAttackStrategyClass)
+    {
+        CurrentStrategy = NewObject<UAttackStrategy>(this, DefaultAttackStrategyClass);
+    }
 }
 
-
-// Called every frame
-void UAttackComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UAttackComponent::SetAttackStrategy(UAttackStrategy* NewStrategy)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+    // 新しい戦略が有効であれば差し替える
+    if (NewStrategy)
+    {
+        CurrentStrategy = NewStrategy;
+    }
 }
 
+float UAttackComponent::GetAttackPower() const
+{
+    // プレイヤーのレベルやバフなどを考慮する場合は、ここで補正処理を行う
+    return BaseAttackPower;
+}
+
+void UAttackComponent::PerformAttack(AActor* Target)
+{
+    // 現在の攻撃戦略が存在し、対象が有効な場合に攻撃を実行
+    if (CurrentStrategy && Target)
+    {
+        // ダメージ計算（戦略が持つ基本ダメージ × プレイヤーの攻撃力）
+        float FinalDamage = CurrentStrategy->GetBaseDamage() * GetAttackPower();
+
+        // 戦略に応じた攻撃効果を実行（ノックバックやエフェクトも含めて処理）
+        CurrentStrategy->ExecuteEffect(GetOwner(), Target, FinalDamage);
+    }
+}
