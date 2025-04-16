@@ -56,7 +56,7 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 			
-
+	void Jump()override;
 protected:
 
 	virtual void NotifyControllerChanged() override;
