@@ -23,7 +23,6 @@ public:
 	void PlaySound(FName Category, FName CueName);
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundManager* SoundManager;
 
 	/** 安全なシングルトン用 */
