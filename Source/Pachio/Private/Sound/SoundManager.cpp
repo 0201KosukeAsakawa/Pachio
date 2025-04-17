@@ -5,6 +5,7 @@
 USoundManager::USoundManager()
     : BGMVolume(0.5f)
     , SEVolume(1)
+    ,mCurrentBGM(nullptr)
 {
 }
 

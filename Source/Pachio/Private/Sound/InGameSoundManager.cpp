@@ -23,7 +23,7 @@ void AInGameSoundManager::BeginPlay()
 	if (SoundManager)
 	{
 		SoundManager->Init();
-		SoundManager->PlaySound("BGM", "monstruo", SoundManager->GetBGMVolume());
+		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
 	}
 	else
 	{

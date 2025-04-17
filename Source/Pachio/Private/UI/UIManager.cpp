@@ -7,9 +7,6 @@ void AUIManager::BeginPlay()
 
     // ウィジェットの初期化（すべてのカテゴリに対して）
     InitAllWidgets();
-
-    // 初期ステートウィジェットを表示（例："State"カテゴリの"Default"ウィジェット）
-    ShowWidget("Explanation", "Action");
 }
 
 void AUIManager::InitAllWidgets()
@@ -29,7 +26,8 @@ void AUIManager::InitWidgetGroup(FWidgetData& WidgetGroup)
     // クラス情報に基づき、各ウィジェットを生成してマップに登録
     for (auto& ClassPair : WidgetGroup.WidgetClassMap)
     {
-        if (!ClassPair.Value) continue;
+        if (!ClassPair.Value) 
+            continue;
 
         UUserWidget* NewWidget = CreateWidget<UUserWidget>(GetWorld(), ClassPair.Value);
         if (NewWidget)
@@ -48,7 +46,8 @@ void AUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Class
 
     for (auto& WidgetClass : Classes)
     {
-        if (!WidgetClass) continue;
+        if (!WidgetClass) 
+            continue;
 
         UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), WidgetClass);
         if (Widget)
@@ -80,7 +79,8 @@ void AUIManager::ShowWidget(FName CategoryName, FName WidgetName)
 void AUIManager::HideCurrentWidget(FName CategoryName)
 {
     // 指定カテゴリが存在しない場合は無視
-    if (!WidgetDataMap.Contains(CategoryName)) return;
+    if (!WidgetDataMap.Contains(CategoryName)) 
+        return;
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
 
@@ -91,10 +91,12 @@ void AUIManager::HideCurrentWidget(FName CategoryName)
 void AUIManager::ToggleWidgetVisibility(FName CategoryName, bool bVisible)
 {
     // 指定カテゴリが存在しない場合は無視
-    if (!WidgetDataMap.Contains(CategoryName)) return;
+    if (!WidgetDataMap.Contains(CategoryName)) 
+        return;
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
-    if (!Group.CurrentWidget) return;
+    if (!Group.CurrentWidget) 
+        return;
 
     // 表示状態を切り替える
     if (bVisible)
@@ -110,12 +112,6 @@ void AUIManager::ToggleWidgetVisibility(FName CategoryName, bool bVisible)
         {
             Group.CurrentWidget->RemoveFromViewport();
         }
-    }
-
-    // "State"カテゴリの表示状態は別フラグで保持
-    if (CategoryName == "State")
-    {
-        bIsStateWidgetVisible = bVisible;
     }
 }
 

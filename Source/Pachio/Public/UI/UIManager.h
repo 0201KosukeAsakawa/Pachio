@@ -72,7 +72,4 @@ private:
     /** 複数のウィジェットカテゴリごとのデータ（State, Combat, Inventory など） */
     UPROPERTY(EditAnywhere, Category = "UI")
     TMap<FName, FWidgetData> WidgetDataMap;
-
-    /** 状態カテゴリの UI が現在表示中かどうかを記録 */
-    bool bIsStateWidgetVisible = true;
 };
