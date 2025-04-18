@@ -1,7 +1,5 @@
-// プロジェクト設定の説明ページに著作権情報を記載してください。
-
 #include "Components/AttackComponent.h"
-#include "Attack/AttackStrategy.h"
+
 
 UAttackComponent::UAttackComponent()
 {
@@ -44,6 +42,6 @@ void UAttackComponent::PerformAttack(AActor* Target)
         float FinalDamage = CurrentStrategy->GetBaseDamage() * GetAttackPower();
 
         // 戦略に応じた攻撃効果を実行（ノックバックやエフェクトも含めて処理）
-        CurrentStrategy->ExecuteEffect(GetOwner(), Target, FinalDamage);
+        CurrentStrategy->ExecuteEffect(GetOwner(), Target, AttackType, FinalDamage);
     }
 }

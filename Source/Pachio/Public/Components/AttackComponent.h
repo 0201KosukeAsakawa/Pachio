@@ -2,9 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Attack/AttackStrategy.h"
 #include "AttackComponent.generated.h"
 
-class UAttackStrategy;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UAttackComponent : public UActorComponent
@@ -40,4 +40,5 @@ public:
 protected:
     /** 基本攻撃力（各戦略で加算や補正が可能） */
     float BaseAttackPower = 1.0f;
+    FAttackData AttackType;
 };

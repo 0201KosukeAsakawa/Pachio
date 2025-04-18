@@ -1,3 +1,4 @@
+#pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Sound/SoundManager.h"
@@ -23,8 +24,12 @@ public:
 	void PlaySound(FName Category, FName CueName);
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Sound")
-	USoundManager* SoundManager;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<USoundManager> SoundManagerClass;
+
+	UPROPERTY()
+	TObjectPtr<USoundManager> SoundManager;
+
 
 	/** 安全なシングルトン用 */
 	static TWeakObjectPtr<AInGameSoundManager> Instance;
