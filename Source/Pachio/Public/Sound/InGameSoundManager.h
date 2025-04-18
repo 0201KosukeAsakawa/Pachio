@@ -24,6 +24,7 @@ public:
 	void PlaySound(FName Category, FName CueName);
 
 private:
+	UPROPERTY()
 	USoundManager* SoundManager;
 
 	/** 安全なシングルトン用 */
