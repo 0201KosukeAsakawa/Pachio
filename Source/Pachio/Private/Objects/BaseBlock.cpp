@@ -1,4 +1,6 @@
 #include "Objects/BaseBlock.h"
+#include "Components/BlockState.h"
+#include "DataContainer/BlockDataContainer.h"
 
 // Sets default values
 ABaseBlock::ABaseBlock()
@@ -12,17 +14,24 @@ ABaseBlock::ABaseBlock()
 void ABaseBlock::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	if (Container)
+		CurrentState = Container->CreateState(GetWorld(), "Idle");
 }
 
 // Called every frame
 void ABaseBlock::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
-bool ABaseBlock::TakeDamage(FAttackData, float damage)
+bool ABaseBlock::TakeDamage(FAttackData attackData, float damage)
 {
-	return false;
+	if (CurrentState)
+	{
+		CurrentState->OnHit(FVector(0, 0, 0), attackData);
+	}
+
+	return true;
 }
+
+

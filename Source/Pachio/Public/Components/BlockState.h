@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "BlockState.generated.h"
 
+struct FAttackData;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PACHIO_API UBlockState : public UActorComponent
@@ -16,13 +17,14 @@ public:
 	// Sets default values for this component's properties
 	UBlockState();
 
+	virtual bool OnEnter(AActor*,UWorld*);
+	virtual bool OnUpdate(AActor*);
+	virtual bool OnExit(AActor*);
+	virtual bool OnHit(FVector, FAttackData);
 protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-		
+	UPROPERTY()
+	AActor* mOwner;
+	UPROPERTY()
+	UWorld* pWorld;
+	int count;
 };

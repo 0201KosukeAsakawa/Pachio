@@ -5,6 +5,9 @@
 #include "Interface/IDamageable.h"
 #include "BaseBlock.generated.h"
 
+class UBlockState;
+class UBlockDataContainer;
+
 UCLASS()
 class PACHIO_API ABaseBlock : public AActor,public IDamageable
 {
@@ -25,9 +28,18 @@ public:
 	//ダメージを受ける処理
 	bool TakeDamage(FAttackData, float damage = 0)override;
 
-	bool DropItem();
 private:
-	//blockを移動させる
+	//出現させるアイテム名
 	UPROPERTY(EditAnywhere)
-	int hp;
+	FString DropItemName;
+
+	//管理するステート
+	UPROPERTY()
+	UBlockState* CurrentState;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UBlockDataContainer> ContainerClass;
+
+	UPROPERTY()
+	TObjectPtr<UBlockDataContainer> Container;
 };

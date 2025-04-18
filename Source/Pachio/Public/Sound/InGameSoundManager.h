@@ -24,8 +24,12 @@ public:
 	void PlaySound(FName Category, FName CueName);
 
 private:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<USoundManager> SoundManagerClass;
+
 	UPROPERTY()
-	USoundManager* SoundManager;
+	TObjectPtr<USoundManager> SoundManager;
+
 
 	/** 安全なシングルトン用 */
 	static TWeakObjectPtr<AInGameSoundManager> Instance;

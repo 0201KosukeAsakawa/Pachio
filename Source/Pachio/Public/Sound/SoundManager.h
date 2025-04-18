@@ -26,8 +26,8 @@ public:
 };
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class PACHIO_API USoundManager : public UActorComponent, public ISoundable
+UCLASS( ClassGroup=(Custom), Blueprintable, meta=(BlueprintSpawnableComponent) )
+class PACHIO_API USoundManager : public UObject, public ISoundable
 {
 	GENERATED_BODY()
 

@@ -16,12 +16,9 @@ void AInGameSoundManager::BeginPlay()
 	// シングルトン登録
 	Instance = this;
 
-	// SoundManager取得（型をテンプレートではなく明示指定）
-	if (!SoundManager)
-		SoundManager = Cast<USoundManager>(GetComponentByClass(USoundManager::StaticClass()));
-
-	if (SoundManager)
+	if (!IsValid(SoundManager))
 	{
+		SoundManager = NewObject<USoundManager>(this,SoundManagerClass);
 		SoundManager->Init();
 		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
 	}
@@ -44,7 +41,8 @@ AInGameSoundManager* AInGameSoundManager::Get(UObject* WorldContext)
 	}
 
 	UWorld* World = WorldContext ? WorldContext->GetWorld() : nullptr;
-	if (!World) return nullptr;
+	if (!World)
+		return nullptr;
 
 	for (TActorIterator<AInGameSoundManager> It(World); It; ++It)
 	{

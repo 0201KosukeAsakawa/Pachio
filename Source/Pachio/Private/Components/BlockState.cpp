@@ -2,6 +2,7 @@
 
 
 #include "Components/BlockState.h"
+#include"Attack/AttackStrategy.h"
 
 // Sets default values for this component's properties
 UBlockState::UBlockState()
@@ -13,22 +14,22 @@ UBlockState::UBlockState()
 	// ...
 }
 
-
-// Called when the game starts
-void UBlockState::BeginPlay()
+bool UBlockState::OnEnter(AActor*, UWorld*)
 {
-	Super::BeginPlay();
-
-	// ...
-	
+	return false;
 }
 
-
-// Called every frame
-void UBlockState::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+bool UBlockState::OnUpdate(AActor*)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	return false;
 }
 
+bool UBlockState::OnExit(AActor*)
+{
+	return false;
+}
+
+bool UBlockState::OnHit(FVector, FAttackData)
+{
+	return false;
+}
