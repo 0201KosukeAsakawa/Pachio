@@ -5,7 +5,7 @@
 USoundManager::USoundManager()
     : BGMVolume(0.5f)
     , SEVolume(1)
-    ,mCurrentBGM(nullptr)
+    , mCurrentBGM(nullptr)
 {
 }
 
@@ -21,7 +21,7 @@ void USoundManager::Init()
         {
             const FName waveTag = soundwaveMap.Key;
             USoundWave* soundWave = soundwaveMap.Value;
-            if (waveTag.IsNone() || soundWave == nullptr)
+            if (waveTag.IsNone() || (soundWave == nullptr))
                 continue;
 
             // すでにAudioComponentが存在する場合はスキップ
@@ -44,12 +44,12 @@ void USoundManager::Init()
     }
 }
 
-void USoundManager::SetSoundVolume(float BGMvol, float SEVol)
+void USoundManager::SetSoundVolume(float BGMVol, float SEVol)
 {
-    float previousBGMVolume = BGMVolume;
+    const float previousBGMVolume = BGMVolume;
 
     // 音量を0から1の範囲に制限
-    BGMVolume = FMath::Clamp(BGMvol, 0.0f, 1.0f);
+    BGMVolume = FMath::Clamp(BGMVol, 0.0f, 1.0f);
     SEVolume = FMath::Clamp(SEVol, 0.0f, 1.0f);
 
     // BGM音量が変更されていた場合、音量変更後に再生を管理
@@ -93,7 +93,8 @@ bool USoundManager::PlaySound(FName DataID, FName SoundID, float Volume, bool Is
     }
 
     // 音量を設定 (0.0が無音、1.0が最大音量)
-    AudioComponent->SetVolumeMultiplier(FMath::Clamp(Volume, 0.0f, 1.0f));
+    const float volumeToPlay = FMath::Clamp(Volume, 0.0f, 1.0f);
+    AudioComponent->SetVolumeMultiplier(volumeToPlay);
 
     // 位置指定がある場合、音の位置を設定
     if (IsSpecifyLocation)
