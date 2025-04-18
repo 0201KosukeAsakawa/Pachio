@@ -6,9 +6,12 @@
 #include "GameFramework/Character.h"
 #include <GameFramework/SpringArmComponent.h>
 #include <Camera/CameraComponent.h>
+#include "InputAction.h"
 #include "PlayerCharacter.generated.h"
 
 class IStateBase;
+class UPlayerDefaultState;
+class UInputMappingContext;
 
 UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter
@@ -32,6 +35,9 @@ public:
 
 private:
 	void GenerateState();
+	void Movement(const FInputActionValue& Value);
+	void Jump(const FInputActionValue& Value);
+	void Action(const FInputActionValue& Value);
 
 private:
 	/** Character用のStaticMesh : Capsule  プレイヤー本体の判定用*/
@@ -54,10 +60,22 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> Camera;
 
-private:
-	UPROPERTY()
-	TSubclassOf<IStateBase>CurrentState;
+	/** MappingContext */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputMappingContext* DefaultMappingContext;
+
+	/** Jump Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* JumpAction;
+
+	/** Move Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* MoveAction;
+
+	/** Look Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* LookAction;
 
 	UPROPERTY()
-	TMap<FString, TScriptInterface<IStateBase>> StateMap;
+	UPlayerDefaultState* CurrentState;
 };
