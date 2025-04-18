@@ -61,7 +61,8 @@ void AUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Class
 void AUIManager::ShowWidget(FName CategoryName, FName WidgetName)
 {
     // 指定カテゴリが存在しない場合は無視
-    if (!WidgetDataMap.Contains(CategoryName)) return;
+    if (!WidgetDataMap.Contains(CategoryName)) 
+        return;
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
 
