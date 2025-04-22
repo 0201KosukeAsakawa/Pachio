@@ -17,7 +17,7 @@ void ABaseBlock::BeginPlay()
 	{
 		Container = NewObject<UBlockDataContainer>(this, ContainerClass);
 		if (Container)
-			CurrentState = Container->CreateState(GetWorld(), "Idle");
+			CurrentState = Container->CreateState(GetWorld(), StateID);
 	}
 
 	Super::BeginPlay();
