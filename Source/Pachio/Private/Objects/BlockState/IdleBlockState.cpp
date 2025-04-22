@@ -4,7 +4,7 @@
 #include "Objects/BlockState/IdleBlockState.h"
 #include "Attack/AttackStrategy.h"
 
-bool UIdleBlockState::OnEnter(AActor* owner, UWorld*)
+bool UQuestionBlockIdleState::OnEnter(AActor* owner, UWorld*)
 {
 	if (!owner)
 		return false;
@@ -15,7 +15,7 @@ bool UIdleBlockState::OnEnter(AActor* owner, UWorld*)
 	return true;
 }
 
-bool UIdleBlockState::OnUpdate(AActor*)
+bool UQuestionBlockIdleState::OnUpdate(AActor*)
 {
 	if (!mOwner)
 		return false;
@@ -27,12 +27,12 @@ bool UIdleBlockState::OnUpdate(AActor*)
 }
 
 
-bool UIdleBlockState::OnExit(AActor*)
+bool UQuestionBlockIdleState::OnExit(AActor*)
 {
 	return true;
 }
 
-bool UIdleBlockState::OnHit(FVector , FAttackData attackData)
+bool UQuestionBlockIdleState::OnHit(FVector , FAttackData attackData)
 {
 	//if (attackData.attackType == EAttackType::Enemy)
 	//	return false;

@@ -11,7 +11,7 @@ struct FAttackData;
  * 
  */
 UCLASS()
-class PACHIO_API UIdleBlockState : public UBlockState
+class PACHIO_API UQuestionBlockIdleState : public UBlockState
 {
 	GENERATED_BODY()
 public:

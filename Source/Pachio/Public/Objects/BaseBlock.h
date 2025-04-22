@@ -33,6 +33,10 @@ private:
 	UPROPERTY(EditAnywhere)
 	FString DropItemName;
 
+	//最初のクラスのタグ
+	UPROPERTY(EditAnywhere)
+	FString StateID;
+
 	//管理するステート
 	UPROPERTY()
 	UBlockState* CurrentState;
