@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Components/BlockState.h"
-#include "IdleBlockState.generated.h"
+#include "QuestionBlockIdleState.generated.h"
 
 struct FAttackData;
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class PACHIO_API UQuestionBlockIdleState : public UBlockState
 {
 	GENERATED_BODY()

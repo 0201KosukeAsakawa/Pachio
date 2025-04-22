@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Objects/BlockState/IdleBlockState.h"
+#include "Objects/BlockState/QuestionBlockIdleState.h"
 #include "Attack/AttackStrategy.h"
 
 bool UQuestionBlockIdleState::OnEnter(AActor* owner, UWorld*)
@@ -11,6 +11,20 @@ bool UQuestionBlockIdleState::OnEnter(AActor* owner, UWorld*)
 
 	mOwner = owner;
 	count = 1;
+
+	// アクターにアタッチされている全てのコンポーネントを取得
+	UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
+	if (!NewMaterial)
+	{
+		// 新しいマテリアルを取得（例えば、ゲームのアセットから）
+		NewMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("Material'/Game/Materials/NewMaterial.NewMaterial'"));
+	}
+
+	if (NewMaterial && MeshComp)
+	{
+		// マテリアルを変更
+		MeshComp->SetMaterial(0, NewMaterial); // 0 はマテリアルのインデックス
+	}
 
 	return true;
 }
