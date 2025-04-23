@@ -13,15 +13,25 @@ ABaseBlock::ABaseBlock()
 // Called when the game starts or when spawned
 void ABaseBlock::BeginPlay()
 {
+	//if (!IsValid(ContainerClass))
+	{
+		Container = NewObject<UBlockDataContainer>(this, ContainerClass);
+		if (Container)
+			CurrentState = Container->CreateState(GetWorld(), StateID);
+	}
+
 	Super::BeginPlay();
-	if (Container)
-		CurrentState = Container->CreateState(GetWorld(), "Idle");
 }
 
 // Called every frame
 void ABaseBlock::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (CurrentState)
+	{
+		CurrentState->OnEnter(this,GetWorld());
+	}
+
 }
 
 bool ABaseBlock::TakeDamage(FAttackData attackData, float damage)
