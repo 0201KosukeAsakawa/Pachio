@@ -12,18 +12,18 @@ bool UQuestionBlockIdleState::OnEnter(AActor* owner, UWorld*)
 	mOwner = owner;
 	count = 1;
 
-	// ƒAƒNƒ^[‚ÉƒAƒ^ƒbƒ`‚³‚ê‚Ä‚¢‚é‘S‚Ä‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg‚ğæ“¾
+	// ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ÉƒAï¿½^ï¿½bï¿½`ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Sï¿½Ä‚ÌƒRï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½æ“¾
 	UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
 	if (!NewMaterial)
 	{
-		// V‚µ‚¢ƒ}ƒeƒŠƒAƒ‹‚ğæ“¾i—á‚¦‚ÎAƒQ[ƒ€‚ÌƒAƒZƒbƒg‚©‚çj
+		// ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½æ“¾ï¿½iï¿½á‚¦ï¿½ÎAï¿½Qï¿½[ï¿½ï¿½ï¿½ÌƒAï¿½Zï¿½bï¿½gï¿½ï¿½ï¿½ï¿½j
 		NewMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("Material'/Game/Materials/NewMaterial.NewMaterial'"));
 	}
 
 	if (NewMaterial && MeshComp)
 	{
-		// ƒ}ƒeƒŠƒAƒ‹‚ğ•ÏX
-		MeshComp->SetMaterial(0, NewMaterial); // 0 ‚Íƒ}ƒeƒŠƒAƒ‹‚ÌƒCƒ“ƒfƒbƒNƒX
+		// ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ÏX
+		MeshComp->SetMaterial(0, NewMaterial); // 0 ï¿½Íƒ}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
 	}
 
 	return true;

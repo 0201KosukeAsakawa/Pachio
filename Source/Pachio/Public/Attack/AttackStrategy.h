@@ -57,14 +57,16 @@ class PACHIO_API UAttackStrategy : public UObject
     GENERATED_BODY()
 
 public:
-    // コンストラクタで攻撃データを設定
-    UAttackStrategy(const FAttackData& NewAttackData)
-        : attackData(NewAttackData)
-    {
-    }
+    //// コンストラクタで攻撃データを設定
+    //UAttackStrategy(const FAttackData& NewAttackData)
+    //    : attackData(NewAttackData)
+    //{
+    //}
+
+    UAttackStrategy();
 
     // 攻撃の実行
-    virtual void ExecuteEffect(AActor* Attacker, AActor* Target, float FinalDamage = 0) PURE_VIRTUAL(UAttackStrategy::ExecuteEffect, );
+    virtual void ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage = 0);
 
     // 攻撃力を取得
     float GetBaseDamage() const { return attackData.BaseDamage; }

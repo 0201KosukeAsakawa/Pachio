@@ -25,19 +25,19 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
-	//ƒ_ƒ[ƒW‚ğó‚¯‚éˆ—
+	//ï¿½_ï¿½ï¿½ï¿½[ï¿½Wï¿½ï¿½ó‚¯‚éˆï¿½ï¿½
 	bool TakeDamage(FAttackData, float damage = 0)override;
 
 private:
-	//oŒ»‚³‚¹‚éƒAƒCƒeƒ€–¼
+	//ï¿½oï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½Cï¿½eï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(EditAnywhere)
 	FString DropItemName;
 
-	//Å‰‚ÌƒNƒ‰ƒX‚Ìƒ^ƒO
+	//ï¿½Åï¿½ï¿½ÌƒNï¿½ï¿½ï¿½Xï¿½Ìƒ^ï¿½O
 	UPROPERTY(EditAnywhere)
 	FString StateID;
 
-	//ŠÇ—‚·‚éƒXƒe[ƒg
+	//ï¿½Ç—ï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½eï¿½[ï¿½g
 	UPROPERTY()
 	UBlockState* CurrentState;
 
