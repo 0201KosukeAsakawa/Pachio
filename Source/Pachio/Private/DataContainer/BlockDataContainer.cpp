@@ -13,3 +13,12 @@ UBlockState* UBlockDataContainer::CreateState(UObject* WorldContext, FString Sta
     }
     return nullptr;
 }
+
+UMaterialInterface* UBlockDataContainer::CreateMaterial(UObject* WorldContext, FString StateName)
+{
+    if (const TSoftObjectPtr<UMaterialInterface>* MaterialPtr = MaterialMap.Find(StateName))
+    {
+        return MaterialPtr->LoadSynchronous();
+    }
+    return nullptr;
+}

@@ -30,7 +30,7 @@ protected:
 	UPROPERTY()
 	UWorld* pWorld;
 	UPROPERTY(EditAnywhere)
-	UMaterialInterface* NewMaterial;
+	FString MaterialID;
 	int count;
 	UPROPERTY()
 	TObjectPtr<UBlockDataContainer> Container;

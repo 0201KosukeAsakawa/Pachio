@@ -20,6 +20,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attack")
     TMap<FString, TSubclassOf<UBlockState>> AttackStrategyMap;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attack")
+    TMap<FString, TSoftObjectPtr<UMaterialInterface>> MaterialMap;
+
     // ステートをインスタンス化して返す
     UBlockState* CreateState(UObject*, FString) const;
+    UMaterialInterface* CreateMaterial(UObject* WorldContext, FString StateName);
 };

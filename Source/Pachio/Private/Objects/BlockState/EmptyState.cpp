@@ -1,28 +1,26 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Objects/BlockState/EmptyState.h"
 #include "Components/StaticMeshComponent.h"
+#include "DataContainer/BlockDataContainer.h"
 #include "FunctionLibrary.h"
 
-bool UEmptyState::OnEnter(ABaseBlock* owner, UWorld*, UBlockDataContainer*c)
+bool UEmptyState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer*c)
 {
     if (!owner || !c)
         return false;
     mOwner = owner;
 
-    // ƒAƒNƒ^[‚ÉƒAƒ^ƒbƒ`‚³‚ê‚Ä‚¢‚é‘S‚Ä‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg‚ğæ“¾
-    UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
-    if (!NewMaterial)
-    {
-        // V‚µ‚¢ƒ}ƒeƒŠƒAƒ‹‚ğæ“¾i—á‚¦‚ÎAƒQ[ƒ€‚ÌƒAƒZƒbƒg‚©‚çj
-        NewMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("Material'/Game/Materials/NewMaterial.NewMaterial'"));
-    }
+	pWorld = world;
 
-    if (NewMaterial && MeshComp)
+	// ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ÉƒAï¿½^ï¿½bï¿½`ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Sï¿½Ä‚ÌƒRï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½æ“¾
+	UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
+
+    UMaterialInterface* newMaterial = c->CreateMaterial(world, MaterialID);
+    if (MeshComp && newMaterial)
     {
-        // ƒ}ƒeƒŠƒAƒ‹‚ğ•ÏX
-        MeshComp->SetMaterial(0, NewMaterial); // 0 ‚Íƒ}ƒeƒŠƒAƒ‹‚ÌƒCƒ“ƒfƒbƒNƒX
+        MeshComp->SetMaterial(0, newMaterial);
     }
     Container = c;
     return true;

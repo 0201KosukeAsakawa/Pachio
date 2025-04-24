@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Objects/BlockState/BlockDepletedState.h"
@@ -7,25 +7,22 @@
 #include "Materials/MaterialInterface.h"
 #include "FunctionLibrary.h"
 #include "Objects/BaseBlock.h"
+#include "DataContainer/BlockDataContainer.h"
 
-bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* , UBlockDataContainer* c)
+bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer* c)
 {
     if (!owner || !c)
         return false;
     mOwner = owner;
 
-    // ƒAƒNƒ^[‚ÉƒAƒ^ƒbƒ`‚³‚ê‚Ä‚¢‚é‘S‚Ä‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg‚ğæ“¾
+    // ã‚¢ã‚¯ã‚¿ãƒ¼ã«ã‚¢ã‚¿ãƒƒãƒã•ã‚Œã¦ã„ã‚‹å…¨ã¦ã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å–å¾—
     UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
-    if (!NewMaterial)
-    {
-        // V‚µ‚¢ƒ}ƒeƒŠƒAƒ‹‚ğæ“¾i—á‚¦‚ÎAƒQ[ƒ€‚ÌƒAƒZƒbƒg‚©‚çj
-        NewMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("Material'/Game/Materials/NewMaterial.NewMaterial'"));
-    }
+    pWorld = world;
 
-    if (NewMaterial && MeshComp)
+    UMaterialInterface* newMaterial = c->CreateMaterial(world, MaterialID);
+    if (MeshComp && newMaterial)
     {
-        // ƒ}ƒeƒŠƒAƒ‹‚ğ•ÏX
-        MeshComp->SetMaterial(0, NewMaterial); // 0 ‚Íƒ}ƒeƒŠƒAƒ‹‚ÌƒCƒ“ƒfƒbƒNƒX
+        MeshComp->SetMaterial(0, newMaterial);
     }
     Container = c;
     return true;
