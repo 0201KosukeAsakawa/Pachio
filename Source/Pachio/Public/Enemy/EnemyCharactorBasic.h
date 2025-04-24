@@ -7,11 +7,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "GameFramework/Actor.h"
 #include "EnemyCharactorBasic.generated.h"
 
 UCLASS()
-class PACHIO_API AEnemyCharactorBasic : public ACharacter
+class PACHIO_API AEnemyCharactorBasic : public AActor
 {
 	GENERATED_BODY()
 
@@ -27,14 +27,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+private:
 
-public:
 	UFUNCTION()
 	void MoveTo(float _deltaTime);		//移動処理
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float MoveSpeed = 50.0f;			// 移動速度（調整可能）
-	
+protected:
+	UFUNCTION(BlueprintCallable)
+	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
 };
