@@ -6,20 +6,24 @@
 
 
 #include "Enemy/EnemyCharactorBasic.h"
+#include "GameFramework/Actor.h"              // Actorに関する基本的なインクルード
+#include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
+
+class UBoxComponent;
 
 // Sets default values
 AEnemyCharactorBasic::AEnemyCharactorBasic()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
 void AEnemyCharactorBasic::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 // Called every frame
@@ -32,19 +36,20 @@ void AEnemyCharactorBasic::Tick(float DeltaTime)
 
 }
 
-// Called to bind functionality to input
-void AEnemyCharactorBasic::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
-
 void AEnemyCharactorBasic::MoveTo(float _deltaTime)
 {
-	// キャラクターの前方向に移動
-    FVector Forward = GetActorForwardVector();					//GetActorForwardVector()：アクター（AActor）が向いている方向（前方向）を示す単位ベクトル
-    AddMovementInput(Forward, MoveSpeed * _deltaTime);			//AddMovementInput：キャラクターの移動処理を簡素化、物理計算を自動的に処理、
-																//					移動のための入力をCharacterMovementComponentに直接渡すメリットがある。
-	//デバックログ表示
+	FVector ForwardDirection = GetActorForwardVector();
+
+	// 前方に移動するための入力をAddMovementInputで適用
+	
+	AddActorWorldOffset(ForwardDirection, true);
+
 	UE_LOG(LogTemp, Warning, TEXT("Success Function!!"));
+
 }
+
+void AEnemyCharactorBasic::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	
+}
+
