@@ -29,7 +29,7 @@ void ABaseBlock::BeginPlay()
     // ステートの初期化
     if (CurrentState)
     {
-        CurrentState->OnEnter(this, GetWorld());
+        CurrentState->OnEnter(this, GetWorld(), Container);
     }
 
     // Collision コンポーネントの取得
@@ -55,29 +55,34 @@ void ABaseBlock::Tick(float DeltaTime)
 
 bool ABaseBlock::TakeDamage(FAttackData attackData, float damage)
 {
-	if (CurrentState)
-	{
-		CurrentState->OnHit(FVector(0, 0, 0), attackData);
-	}
+	//if (CurrentState)
+	//{
+	//	CurrentState->OnHit(FVector(0, 0, 0), attackData);
+	//}
 
 	return true;
+}
+
+void ABaseBlock::ChangeState(UBlockState* nextState)
+{
+    if (CurrentState)
+        CurrentState->OnExit(this);
+
+    if (nextState)
+        CurrentState = nextState;
+
+    if (Container)
+        CurrentState->OnEnter(this, GetWorld(), Container);
 }
 
 
 void ABaseBlock::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (!OtherActor || !OtherActor->ActorHasTag("Player"))
-        return;
 
-    if (!Container)
-        return;
-
-    UBlockState* nextState = Container->CreateState(GetWorld(), "Delpeted");
-
-    if (!nextState)
-        return;
-
-    CurrentState = nextState;
-    CurrentState->OnEnter(this, GetWorld());
+    // ステートの初期化
+    if (CurrentState)
+    {
+        CurrentState->OnHit(OtherActor, FVector(0, 0, 0));
+    }
 }

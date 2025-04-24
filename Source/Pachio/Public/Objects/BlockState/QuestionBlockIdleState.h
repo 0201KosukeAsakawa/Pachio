@@ -15,8 +15,8 @@ class PACHIO_API UQuestionBlockIdleState : public UBlockState
 {
 	GENERATED_BODY()
 public:
-	virtual bool OnEnter(AActor*, UWorld*)override;
-	virtual bool OnUpdate(AActor*)override;
-	virtual bool OnExit(AActor*)override;
-	virtual bool OnHit(FVector, FAttackData)override;
+	virtual bool OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*)override;
+	virtual bool OnUpdate(ABaseBlock*)override;
+	virtual bool OnExit(ABaseBlock*)override;
+	virtual bool OnHit(const AActor*,FVector)override;
 };
