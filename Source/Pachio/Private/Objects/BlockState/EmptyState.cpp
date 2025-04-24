@@ -6,18 +6,21 @@
 #include "DataContainer/BlockDataContainer.h"
 #include "FunctionLibrary.h"
 
-bool UEmptyState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer*c)
+bool UEmptyState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer* c,  FString materialID)
 {
     if (!owner || !c)
         return false;
     mOwner = owner;
 
-	pWorld = world;
+    pWorld = world;
 
-	// �A�N�^�[�ɃA�^�b�`����Ă���S�ẴR���|�[�l���g��擾
-	UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
+    // �A�N�^�[�ɃA�^�b�`����Ă���S�ẴR���|�[�l���g��擾
+    UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
 
-    UMaterialInterface* newMaterial = c->CreateMaterial(world, MaterialID);
+    if (materialID == "None")
+        materialID = MaterialID;
+
+    UMaterialInterface* newMaterial = c->CreateMaterial(world, materialID);
     if (MeshComp && newMaterial)
     {
         MeshComp->SetMaterial(0, newMaterial);

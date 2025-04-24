@@ -7,6 +7,7 @@
 #include "BlockDataContainer.generated.h"
 
 class UBlockState;
+class ABaseBlock;
 /**
  * 
  */
@@ -16,14 +17,15 @@ class PACHIO_API UBlockDataContainer : public UObject
 	GENERATED_BODY()
 public:
 
-    // blockのステートを保持するデータコンテナ
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attack")
-    TMap<FString, TSubclassOf<UBlockState>> AttackStrategyMap;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attack")
-    TMap<FString, TSoftObjectPtr<UMaterialInterface>> MaterialMap;
-
-    // ステートをインスタンス化して返す
     UBlockState* CreateState(UObject*, FString) const;
     UMaterialInterface* CreateMaterial(UObject* WorldContext, FString StateName);
+    bool GenerateBlock(FString,FString,FString,FVector,FRotator);
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data")
+    TMap<FString, TSubclassOf<UBlockState>> AttackStrategyMap;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data")
+    TMap<FString, TSoftObjectPtr<UMaterialInterface>> MaterialMap;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data")
+    TSubclassOf<ABaseBlock> BlockClass;
 };

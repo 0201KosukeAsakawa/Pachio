@@ -7,7 +7,7 @@
 #include "Objects/BaseBlock.h"
 #include "FunctionLibrary.h"
 
-bool UQuestionBlockIdleState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer*c)
+bool UQuestionBlockIdleState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer* c, FString materialName)
 {
 	if (!owner)
 		return false;
@@ -20,7 +20,10 @@ bool UQuestionBlockIdleState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDa
 	// �A�N�^�[�ɃA�^�b�`����Ă���S�ẴR���|�[�l���g��擾
 	UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
 
-	UMaterialInterface* newMaterial = c->CreateMaterial(world, MaterialID);
+	if (materialName == "None")
+		materialName = MaterialID;
+
+	UMaterialInterface* newMaterial = c->CreateMaterial(world, materialName);
 	if (MeshComp && newMaterial)
 	{
 		MeshComp->SetMaterial(0, newMaterial);

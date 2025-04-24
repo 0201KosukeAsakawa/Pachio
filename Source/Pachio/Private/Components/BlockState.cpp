@@ -18,7 +18,7 @@ UBlockState::UBlockState()
 	// ...
 }
 
-bool UBlockState::OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*)
+bool UBlockState::OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*, FString)
 {
 	return false;
 }
