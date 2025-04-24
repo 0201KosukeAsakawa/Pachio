@@ -3,14 +3,18 @@
 
 #include "Objects/BlockState/QuestionBlockIdleState.h"
 #include "Attack/AttackStrategy.h"
+#include "DataContainer/BlockDataContainer.h"
+#include "Objects/BaseBlock.h"
+#include "FunctionLibrary.h"
 
-bool UQuestionBlockIdleState::OnEnter(AActor* owner, UWorld*)
+bool UQuestionBlockIdleState::OnEnter(ABaseBlock* owner, UWorld* , UBlockDataContainer*c)
 {
 	if (!owner)
 		return false;
 
 	mOwner = owner;
 	count = 1;
+	Container = c;
 
 	// �A�N�^�[�ɃA�^�b�`����Ă���S�ẴR���|�[�l���g��擾
 	UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
@@ -29,37 +33,32 @@ bool UQuestionBlockIdleState::OnEnter(AActor* owner, UWorld*)
 	return true;
 }
 
-bool UQuestionBlockIdleState::OnUpdate(AActor*)
+bool UQuestionBlockIdleState::OnUpdate(ABaseBlock*)
 {
-	if (!mOwner)
+
+	return true;
+}
+
+
+bool UQuestionBlockIdleState::OnExit(ABaseBlock*)
+{
+	return true;
+}
+
+bool UQuestionBlockIdleState::OnHit(const AActor* OtherActor, FVector)
+{
+	--count;
+	if (!OtherActor || !OtherActor->ActorHasTag("Player"))
 		return false;
 
-	if (count > 0)
-		return true;
-	mOwner->Destroy();
+	if (!Container)
+		return false;
+
+	UBlockState* nextState = Container->CreateState(GetWorld(), "Enpty");
+
+	if (!nextState)
+		return false;
+
+	mOwner->ChangeState(nextState);
 	return true;
 }
-
-
-bool UQuestionBlockIdleState::OnExit(AActor*)
-{
-	return true;
-}
-
-bool UQuestionBlockIdleState::OnHit(FVector , FAttackData attackData)
-{
-	//if (attackData.attackType == EAttackType::Enemy)
-	//	return false;
-
-	//if (attackData.breakLevel == EBreakLevel::Functional)
-	//{
-	//	//ItemDataContainer->DropItem(FString,FVector); 
-	//}
-
-	//else(attackData.breakLevel == EBreakLevel::Breakable)
-		//Destroy();
-
-	--count;
-	return true;
-}
-

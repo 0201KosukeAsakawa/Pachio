@@ -4,21 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Components/BlockState.h"
-#include "BlockDepletedState.generated.h"
+#include "EmptyState.generated.h"
 
 /**
  * 
  */
-
-struct FAttackData;
-
 UCLASS(Blueprintable)
-class PACHIO_API UBlockDepletedState : public UBlockState
+class PACHIO_API UEmptyState : public UBlockState
 {
 	GENERATED_BODY()
 public:
 	bool OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*)override;
-	bool OnUpdate(ABaseBlock*)override;
-	bool OnExit(ABaseBlock*)override;
-	bool OnHit(const AActor*, FVector)override;
+
 };

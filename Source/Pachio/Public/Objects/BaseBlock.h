@@ -29,6 +29,8 @@ public:
 	//�_���[�W��󂯂鏈��
 	bool TakeDamage(FAttackData, float damage = 0)override;
 
+	void ChangeState(UBlockState*);
+
 private:
 	UFUNCTION()
 	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -47,7 +49,7 @@ private:
 	UPROPERTY()
 	UBlockState* CurrentState;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	UBoxComponent* Collision;
 
 	UPROPERTY(EditAnywhere)

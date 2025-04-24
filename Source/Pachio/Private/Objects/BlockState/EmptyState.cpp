@@ -1,14 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Objects/BlockState/BlockDepletedState.h"
-#include "Attack/AttackStrategy.h"
+#include "Objects/BlockState/EmptyState.h"
 #include "Components/StaticMeshComponent.h"
-#include "Materials/MaterialInterface.h"
 #include "FunctionLibrary.h"
-#include "Objects/BaseBlock.h"
 
-bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* , UBlockDataContainer* c)
+bool UEmptyState::OnEnter(ABaseBlock* owner, UWorld*, UBlockDataContainer*c)
 {
     if (!owner || !c)
         return false;
@@ -28,21 +25,5 @@ bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* , UBlockDataContain
         MeshComp->SetMaterial(0, NewMaterial); // 0 はマテリアルのインデックス
     }
     Container = c;
-    return true;
-}
-
-bool UBlockDepletedState::OnUpdate(ABaseBlock*)
-{
-    return true;
-}
-bool UBlockDepletedState::OnExit(ABaseBlock*)
-{
-    return true;
-}
-bool UBlockDepletedState::OnHit(const AActor* hitActor, FVector)
-{
-    if (!hitActor || !hitActor->ActorHasTag("Player"))
-        return false;
-    mOwner->Destroy();
     return true;
 }

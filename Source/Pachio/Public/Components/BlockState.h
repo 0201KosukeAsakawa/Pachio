@@ -7,7 +7,9 @@
 #include "BlockState.generated.h"
 
 struct FAttackData;
+class ABaseBlock;
 class UMaterialInterface;
+class UBlockDataContainer;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PACHIO_API UBlockState : public UActorComponent
@@ -18,16 +20,18 @@ public:
 	// Sets default values for this component's properties
 	UBlockState();
 
-	virtual bool OnEnter(AActor*,UWorld*);
-	virtual bool OnUpdate(AActor*);
-	virtual bool OnExit(AActor*);
-	virtual bool OnHit(FVector, FAttackData);
+	virtual bool OnEnter(ABaseBlock*,UWorld*, UBlockDataContainer*);
+	virtual bool OnUpdate(ABaseBlock*);
+	virtual bool OnExit(ABaseBlock*);
+	virtual bool OnHit(const AActor*,FVector);
 protected:
 	UPROPERTY()
-	AActor* mOwner;
+	ABaseBlock* mOwner;
 	UPROPERTY()
 	UWorld* pWorld;
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* NewMaterial;
 	int count;
+	UPROPERTY()
+	TObjectPtr<UBlockDataContainer> Container;
 };
