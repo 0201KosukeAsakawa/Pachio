@@ -3,7 +3,10 @@
 
 #include "Attack/AttackStrategy.h"
 
-void UAttackStrategy::ExecuteEffect(AActor*, AActor*, FAttackData, float FinalDamage)
+UAttackStrategy::UAttackStrategy()
 {
-	//このクラスを継承したクラスで各攻撃の処理をしてください
+}
+
+void UAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage)
+{
 }

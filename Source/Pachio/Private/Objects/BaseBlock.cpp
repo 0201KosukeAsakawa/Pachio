@@ -17,9 +17,12 @@ void ABaseBlock::BeginPlay()
 	{
 		Container = NewObject<UBlockDataContainer>(this, ContainerClass);
 		if (Container)
-			CurrentState = Container->CreateState(GetWorld(), "Idle");
+			CurrentState = Container->CreateState(GetWorld(), StateID);
 	}
-
+	if (CurrentState)
+	{
+		CurrentState->OnEnter(this, GetWorld());
+	}
 	Super::BeginPlay();
 }
 
@@ -27,10 +30,7 @@ void ABaseBlock::BeginPlay()
 void ABaseBlock::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (CurrentState)
-	{
-		CurrentState->OnEnter(this,GetWorld());
-	}
+
 
 }
 

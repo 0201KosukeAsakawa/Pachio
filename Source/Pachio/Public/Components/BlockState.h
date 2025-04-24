@@ -7,6 +7,7 @@
 #include "BlockState.generated.h"
 
 struct FAttackData;
+class UMaterialInterface;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PACHIO_API UBlockState : public UActorComponent
@@ -26,5 +27,7 @@ protected:
 	AActor* mOwner;
 	UPROPERTY()
 	UWorld* pWorld;
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* NewMaterial;
 	int count;
 };

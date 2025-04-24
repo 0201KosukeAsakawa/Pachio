@@ -3,6 +3,8 @@
 
 #include "Components/BlockState.h"
 #include"Attack/AttackStrategy.h"
+#include "Materials/MaterialInterface.h"
+#include "FunctionLibrary.h"
 
 // Sets default values for this component's properties
 UBlockState::UBlockState()

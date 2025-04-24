@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+//インクルード
 #include "Player/PlayerCharacter.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -8,7 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Player/State/PlayerDefaultState.h"
-//#include "Player/State/DefaultPlayerState.h"
+#include"GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -86,10 +86,12 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	if (CurrentState != nullptr)
+	/*/if (CurrentState != nullptr)
 	{
 		CurrentState->Jump(Value);
-	}
+	}/*/
+	GetCharacterMovement()->AddForce(FVector(0,0,5000000));
+	
 }
 
 void APlayerCharacter::Action(const FInputActionValue& Value)
