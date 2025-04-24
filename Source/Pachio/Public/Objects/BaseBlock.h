@@ -7,6 +7,7 @@
 
 class UBlockState;
 class UBlockDataContainer;
+class UBoxComponent;
 
 UCLASS()
 class PACHIO_API ABaseBlock : public AActor,public IDamageable
@@ -29,6 +30,11 @@ public:
 	bool TakeDamage(FAttackData, float damage = 0)override;
 
 private:
+	UFUNCTION()
+	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+private:
 	//�o��������A�C�e����
 	UPROPERTY(EditAnywhere)
 	FString DropItemName;
@@ -40,6 +46,9 @@ private:
 	//�Ǘ�����X�e�[�g
 	UPROPERTY()
 	UBlockState* CurrentState;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Collision;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UBlockDataContainer> ContainerClass;
