@@ -20,7 +20,7 @@ public:
 	// Sets default values for this component's properties
 	UBlockState();
 
-	virtual bool OnEnter(ABaseBlock*,UWorld*, UBlockDataContainer*);
+	virtual bool OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*,const FString materialID = "None");
 	virtual bool OnUpdate(ABaseBlock*);
 	virtual bool OnExit(ABaseBlock*);
 	virtual bool OnHit(const AActor*,FVector);

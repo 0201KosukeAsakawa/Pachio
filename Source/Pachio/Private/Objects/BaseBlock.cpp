@@ -16,7 +16,18 @@ void ABaseBlock::BeginPlay()
 {
     Super::BeginPlay();
 
-    // ƒRƒ“ƒeƒi‚Ì‰Šú‰»
+    Init(StateID, DropItemName);
+}
+
+void ABaseBlock::Init(FString stateID, FString dorpItemID, FString materialID)
+{
+    StateID = stateID;
+    DropItemName = dorpItemID;
+
+    if(materialID == "None")
+        
+
+    // ï¿½Rï¿½ï¿½ï¿½eï¿½iï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½
     if (!Container)
     {
         Container = NewObject<UBlockDataContainer>(this, ContainerClass);
@@ -26,13 +37,16 @@ void ABaseBlock::BeginPlay()
         }
     }
 
-    // ƒXƒe[ƒg‚Ì‰Šú‰»
+    // ï¿½Xï¿½eï¿½[ï¿½gï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½
     if (CurrentState)
     {
-        CurrentState->OnEnter(this, GetWorld(), Container);
+        if (materialID == "None")
+            CurrentState->OnEnter(this, GetWorld(), Container);
+        else
+            CurrentState->OnEnter(this, GetWorld(), Container, materialID);
     }
 
-    // Collision ƒRƒ“ƒ|[ƒlƒ“ƒg‚Ìæ“¾
+    // Collision ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ìæ“¾
     Collision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Box");
 
     if (Collision)
@@ -79,8 +93,6 @@ void ABaseBlock::ChangeState(UBlockState* nextState)
 void ABaseBlock::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-
-    // ƒXƒe[ƒg‚Ì‰Šú‰»
     if (CurrentState)
     {
         CurrentState->OnHit(OtherActor, FVector(0, 0, 0));

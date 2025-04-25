@@ -14,6 +14,6 @@ class PACHIO_API UEmptyState : public UBlockState
 {
 	GENERATED_BODY()
 public:
-	bool OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*)override;
+	bool OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer* ,const FString materialID = "None")override;
 
 };

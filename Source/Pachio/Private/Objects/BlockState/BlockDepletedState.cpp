@@ -9,7 +9,7 @@
 #include "Objects/BaseBlock.h"
 #include "DataContainer/BlockDataContainer.h"
 
-bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer* c)
+bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer* c, FString materialID)
 {
     if (!owner || !c)
         return false;
@@ -19,7 +19,10 @@ bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataCo
     UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
     pWorld = world;
 
-    UMaterialInterface* newMaterial = c->CreateMaterial(world, MaterialID);
+    if (materialID == "None")
+        materialID = MaterialID;
+
+    UMaterialInterface* newMaterial = c->CreateMaterial(world, materialID);
     if (MeshComp && newMaterial)
     {
         MeshComp->SetMaterial(0, newMaterial);

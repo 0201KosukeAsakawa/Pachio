@@ -3,10 +3,11 @@
 
 #include "DataContainer/BlockDataContainer.h"
 #include "Components/BlockState.h"
+#include "Objects/BaseBlock.h"
 
 UBlockState* UBlockDataContainer::CreateState(UObject* WorldContext, FString StateName) const
 {
-    // ’¼Ú Find ‚ğg‚Á‚ÄA’l‚ª‘¶İ‚·‚éê‡‚ÉƒCƒ“ƒXƒ^ƒ“ƒX‚ğì¬
+    // ï¿½ï¿½ï¿½ï¿½ Find ï¿½ï¿½gï¿½ï¿½ï¿½ÄAï¿½lï¿½ï¿½ï¿½ï¿½ï¿½İ‚ï¿½ï¿½ï¿½ê‡ï¿½ÉƒCï¿½ï¿½ï¿½Xï¿½^ï¿½ï¿½ï¿½Xï¿½ï¿½ì¬
     if (const TSubclassOf<UBlockState>* BlockStateClass = AttackStrategyMap.Find(StateName))
     {
         return NewObject<UBlockState>(WorldContext, *BlockStateClass);
@@ -21,4 +22,20 @@ UMaterialInterface* UBlockDataContainer::CreateMaterial(UObject* WorldContext, F
         return MaterialPtr->LoadSynchronous();
     }
     return nullptr;
+}
+
+bool UBlockDataContainer::GenerateBlock(FString stateID, FString dropItemID, FString materialID, FVector location, FRotator rotator)
+{
+    if (!BlockClass) return false;
+
+    UWorld* World = GEngine->GetWorldFromContextObjectChecked(this);
+    if (!World) return false;
+
+    ABaseBlock* NewBlock = World->SpawnActor<ABaseBlock>(BlockClass, location, rotator);
+    if (!NewBlock) return false;
+
+    // Init ã« thisï¼ˆã‚³ãƒ³ãƒ†ãƒŠï¼‰ã‚’æ¸¡ã—ã¦ã€çŠ¶æ…‹ãƒ»ãƒãƒ†ãƒªã‚¢ãƒ«ã‚’å†…éƒ¨ã§å–å¾—
+    NewBlock->Init(stateID, dropItemID, materialID);
+
+    return true;
 }

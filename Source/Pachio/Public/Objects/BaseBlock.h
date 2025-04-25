@@ -22,7 +22,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 public:	
-	
+	void Init(FString,FString,const FString = "None");
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
