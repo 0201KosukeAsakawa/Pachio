@@ -1,20 +1,27 @@
-#include "Sound/InGameSoundManager.h"
+#include "Manager/LevelManager.h"
 #include "EngineUtils.h"
-#include "Sound/SoundManager.h" // 念のため
+#include "DataContainer/BlockDataContainer.h"
+#include "Sound/SoundManager.h"
 
-TWeakObjectPtr<AInGameSoundManager> AInGameSoundManager::Instance = nullptr;
+TWeakObjectPtr<ALevelManager> ALevelManager::Instance = nullptr;
 
-AInGameSoundManager::AInGameSoundManager()
+ALevelManager::ALevelManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void AInGameSoundManager::BeginPlay()
+void ALevelManager::BeginPlay()
 {
 	Super::BeginPlay();
 
 	// シングルトン登録
 	Instance = this;
+
+	//
+	if (!IsValid(Container))
+	{
+		Container = NewObject<UBlockDataContainer>(this, ContainerClass);
+	}
 
 	if (!IsValid(SoundManager))
 	{
@@ -24,16 +31,16 @@ void AInGameSoundManager::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("SoundManager component not found on AInGameSoundManager."));
+		UE_LOG(LogTemp, Error, TEXT("SoundManager component not found on ALevelManager."));
 	}
 }
 
-void AInGameSoundManager::Tick(float DeltaTime)
+void ALevelManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-AInGameSoundManager* AInGameSoundManager::Get(UObject* WorldContext)
+ALevelManager* ALevelManager::GetComponent(UObject* WorldContext)
 {
 	if (Instance.IsValid())
 	{
@@ -44,7 +51,7 @@ AInGameSoundManager* AInGameSoundManager::Get(UObject* WorldContext)
 	if (!World)
 		return nullptr;
 
-	for (TActorIterator<AInGameSoundManager> It(World); It; ++It)
+	for (TActorIterator<ALevelManager> It(World); It; ++It)
 	{
 		Instance = *It;
 		return *It;
@@ -53,7 +60,7 @@ AInGameSoundManager* AInGameSoundManager::Get(UObject* WorldContext)
 	return nullptr;
 }
 
-void AInGameSoundManager::PlaySound(FName WaveName, FName SoundName)
+void ALevelManager::PlaySound(FName WaveName, FName SoundName)
 {
 	if (SoundManager)
 	{
