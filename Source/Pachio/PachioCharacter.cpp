@@ -11,7 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 
-#include "Sound/InGameSoundManager.h"
+#include "Manager/LevelManager.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -132,7 +132,7 @@ void APachioCharacter::Look(const FInputActionValue& Value)
 
 void APachioCharacter::Jump()
 {
-	AInGameSoundManager* SoundMgr = AInGameSoundManager::Get(this);
+	ALevelManager* SoundMgr = ALevelManager::GetComponent(this);
 	if (SoundMgr && !bPressedJump)
 	{
 		SoundMgr->PlaySound("SE", "Jump");

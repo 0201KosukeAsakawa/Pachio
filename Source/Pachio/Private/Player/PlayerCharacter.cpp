@@ -8,7 +8,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Player/State/PlayerDefaultState.h"
-#include"GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "FunctionLibrary.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -27,6 +28,13 @@ void APlayerCharacter::BeginPlay()
 	if (CurrentState != nullptr)
 	{
 		CurrentState->OnEnter(this,GetWorld());
+	}
+
+	// Input Action の設定を行います
+	if (JumpAction)
+	{
+		// InputAction はアセットとして設定されている前提
+		JumpAction = LoadObject<UInputAction>(nullptr, TEXT("InputAction'/Game/Path/To/IA_Jump.IA_Jump'"));
 	}
 
 	// Add Input Mapping Context
@@ -57,16 +65,22 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &APlayerCharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Jump);
+		// Jumping
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &APlayerCharacter::JumpStop);
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Movement);
 
 		// Looking
 		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APachioCharacter::Look);
-	}
-	else
-	{
+
+		//Action
+		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
+
+		//else
+		{
+		}
 	}
 
 }
@@ -90,8 +104,18 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 	{
 		CurrentState->Jump(Value);
 	}/*/
-	GetCharacterMovement()->AddForce(FVector(0,0,5000000));
-	
+	//GetCharacterMovement()->AddForce(FVector(0,0,5000000));
+
+	// CanJump() が true の場合のみジャンプ処理を実行
+	if (CanJump())
+	{
+		ACharacter::Jump();
+	}
+}
+
+void APlayerCharacter::JumpStop(const FInputActionValue& Value)
+{
+	ACharacter::StopJumping();
 }
 
 void APlayerCharacter::Action(const FInputActionValue& Value)

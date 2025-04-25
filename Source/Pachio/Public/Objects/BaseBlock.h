@@ -55,6 +55,5 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UBlockDataContainer> ContainerClass;
 
-	UPROPERTY()
 	TObjectPtr<UBlockDataContainer> Container;
 };
