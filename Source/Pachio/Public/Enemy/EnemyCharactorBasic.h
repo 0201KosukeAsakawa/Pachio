@@ -7,7 +7,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "EnemyCharactorBasic.generated.h"
 
 UCLASS()
@@ -32,8 +32,15 @@ private:
 	UFUNCTION()
 	void MoveTo(float _deltaTime);		//ˆÚ“®ˆ—
 
+	UPROPERTY(VisibleAnywhere)
+	class UBoxComponent* BoxComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	class UStaticMeshComponent* MeshComponent;
+
 protected:
-	UFUNCTION(BlueprintCallable)
-	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	// Õ“ËƒCƒxƒ“ƒg‚ğˆ—‚·‚éŠÖ”
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 };
