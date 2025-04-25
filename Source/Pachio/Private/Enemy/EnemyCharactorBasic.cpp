@@ -6,7 +6,7 @@
 
 
 #include "Enemy/EnemyCharactorBasic.h"
-#include "GameFramework/Actor.h"              // Actorに関する基本的なインクルード
+#include "GameFramework/Pawn.h"              // Actorに関する基本的なインクルード
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 
@@ -17,6 +17,14 @@ AEnemyCharactorBasic::AEnemyCharactorBasic()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("CapsuleComponent"));
+	RootComponent = BoxComponent;
+
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
+	MeshComponent->SetupAttachment(RootComponent);
+
+	MeshComponent->OnComponentHit.AddDynamic(this, &AEnemyCharactorBasic::OnHit);
 }
 
 // Called when the game starts or when spawned
@@ -38,18 +46,18 @@ void AEnemyCharactorBasic::Tick(float DeltaTime)
 
 void AEnemyCharactorBasic::MoveTo(float _deltaTime)
 {
-	FVector ForwardDirection = GetActorForwardVector();
+	// 移動量を設定（例：X方向に100ユニット/秒）
+	FVector MoveAmount(100.0f, 0.0f, 0.0f);
 
-	// 前方に移動するための入力をAddMovementInputで適用
-	
-	AddActorWorldOffset(ForwardDirection, true);
+	// DeltaTime を使ってフレームごとに移動量を計算
+	FVector DeltaMove = MoveAmount * _deltaTime;
 
-	UE_LOG(LogTemp, Warning, TEXT("Success Function!!"));
-
+	// アクターを移動
+	AddActorWorldOffset(DeltaMove, true);  // 衝突を有効にしたい場合は bSweep = true を指定
 }
 
-void AEnemyCharactorBasic::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AEnemyCharactorBasic::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	
+
 }
 
