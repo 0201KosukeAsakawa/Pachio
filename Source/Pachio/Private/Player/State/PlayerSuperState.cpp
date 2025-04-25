@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Player/State/PlayerDefaultState.h"
+#include "Player/State/PlayerSuperState.h"
 #include "InputActionValue.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/StaticMeshComponent.h"
 
-bool UPlayerDefaultState::OnEnter(ACharacter*owner, UWorld*world)
+bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
 {
 	if (owner == nullptr || world == nullptr)
 	{
@@ -32,28 +32,27 @@ bool UPlayerDefaultState::OnEnter(ACharacter*owner, UWorld*world)
 	return true;
 }
 
-bool UPlayerDefaultState::OnUpdate(ACharacter*)
+bool UPlayerSuperState::OnUpdate(ACharacter*)
 {
-	return true;
+	return false;
 }
 
-bool UPlayerDefaultState::OnExit(ACharacter*)
+bool UPlayerSuperState::OnExit(ACharacter*)
 {
-	return true;
+	return false;
 }
 
-bool UPlayerDefaultState::OnSkill(const FInputActionValue&)
+bool UPlayerSuperState::OnSkill(const FInputActionValue&)
 {
-	return true;
+	return false;
 }
 
-void UPlayerDefaultState::Jump(const FInputActionValue& Value)
+void UPlayerSuperState::Jump(const FInputActionValue& Value)
 {
-	return;
 }
 
 //äeStateÇÃà⁄ìÆèàóù
-void UPlayerDefaultState::Movement(const FInputActionValue& Value)
+void UPlayerSuperState::Movement(const FInputActionValue& Value)
 {
 	if (!mOwner || !pWorld)
 		return;
