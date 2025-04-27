@@ -3,60 +3,74 @@
 
 #include "Manager/ObjectManager.h"
 #include "Objects/BaseBlock.h"
+#include "Engine/Engine.h"
+
+
+void UObjectManager::DuplicateContentsFrom(UObjectManager* Source)
+{
+    if (!Source)
+        return;
+
+    // Engineã«é ¼ã‚“ã§ã€ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£å…¨éƒ¨ã‚³ãƒ”ãƒ¼ã—ã¦ã‚‚ã‚‰ã†
+    if (GEngine)
+    {
+        GEngine->CopyPropertiesForUnrelatedObjects(Source, this);
+    }
+}
 
 void UObjectManager::GenerateObject(FString ActorKey, FVector location, FRotator rotation)
 {
-    // TMap ‚©‚çw’è‚³‚ê‚½ƒL[‚ÉŠî‚Ã‚¢‚ÄƒAƒNƒ^[‚ÌƒNƒ‰ƒX‚ğæ“¾
-    TSubclassOf<AActor>* ActorClass = floorClass.Find(ActorKey);
+    // TMap ï¿½ï¿½ï¿½ï¿½wï¿½è‚³ï¿½ê‚½ï¿½Lï¿½[ï¿½ÉŠï¿½Ã‚ï¿½ï¿½ÄƒAï¿½Nï¿½^ï¿½[ï¿½ÌƒNï¿½ï¿½ï¿½Xï¿½ï¿½æ“¾
+    TSubclassOf<AActor>* ActorClass = FloorActor.Find(ActorKey);
 
     if (ActorClass != nullptr)
     {
-        // ƒAƒNƒ^[‚ÌƒNƒ‰ƒX‚ªŒ©‚Â‚©‚Á‚½ê‡AƒAƒNƒ^[‚ğ¶¬
+        // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ÌƒNï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½Aï¿½Aï¿½Nï¿½^ï¿½[ï¿½ğ¶ï¿½
         AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(*ActorClass, location, rotation);
 
         if (SpawnedActor)
         {
-            // ¬Œ÷‚µ‚½ê‡‚ÉƒAƒNƒ^[‚Ì‰Šú‰»‚È‚Ç‚ğs‚¤‚±‚Æ‚ª‚Å‚«‚Ü‚·
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½ÉƒAï¿½Nï¿½^ï¿½[ï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚Ç‚ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½Æ‚ï¿½ï¿½Å‚ï¿½ï¿½Ü‚ï¿½
             UE_LOG(LogTemp, Log, TEXT("Actor spawned successfully!"));
         }
         else
         {
-            // ¶¬¸”s‚ÌƒGƒ‰[ƒnƒ“ƒhƒŠƒ“ƒO
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sï¿½ï¿½ï¿½ÌƒGï¿½ï¿½ï¿½[ï¿½nï¿½ï¿½ï¿½hï¿½ï¿½ï¿½ï¿½ï¿½O
             UE_LOG(LogTemp, Error, TEXT("Failed to spawn actor!"));
         }
     }
     else
     {
-        // ƒNƒ‰ƒX‚ªŒ©‚Â‚©‚ç‚È‚¢ê‡‚ÌƒGƒ‰[ƒnƒ“ƒhƒŠƒ“ƒO
+        // ï¿½Nï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½È‚ï¿½ï¿½ê‡ï¿½ÌƒGï¿½ï¿½ï¿½[ï¿½nï¿½ï¿½ï¿½hï¿½ï¿½ï¿½ï¿½ï¿½O
         UE_LOG(LogTemp, Error, TEXT("Actor class not found for key: %s"), *ActorKey);
     }
 }
 
 void UObjectManager::GenerateBlock(FString stateID, FString dorpItemID, FString materialID, FVector location, FRotator rotation)
 {
-    //if (BaseBlock == nullptr)
-    //{
-    //    UE_LOG(LogTemp, Error, TEXT("BaseBlock class is not set!"));
-    //    return;
-    //}
+    if (BaseBlock == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("BaseBlock class is not set!"));
+        return;
+    }
 
-    //// TSubclassOf<ABaseBlock> ‚©‚ç UClass* ‚ğæ“¾
-    //UClass* ActorClass = BaseBlock.Get();
+    // TSubclassOf<ABaseBlock> ï¿½ï¿½ï¿½ï¿½ UClass* ï¿½ï¿½æ“¾
+    UClass* ActorClass = BaseBlock;
 
-    //// ƒAƒNƒ^[‚ÌƒNƒ‰ƒX‚ªŒ©‚Â‚©‚Á‚½ê‡AƒAƒNƒ^[‚ğ¶¬
-    //ABaseBlock* SpawnedActor = GetWorld()->SpawnActor<ABaseBlock>(ActorClass, location, rotation);
+    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ÌƒNï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½Aï¿½Aï¿½Nï¿½^ï¿½[ï¿½ğ¶ï¿½
+    ABaseBlock* SpawnedActor = GetWorld()->SpawnActor<ABaseBlock>(ActorClass, location, rotation);
 
-    //if (SpawnedActor)
-    //{
-    //    // ¬Œ÷‚µ‚½ê‡‚ÉƒAƒNƒ^[‚Ì‰Šú‰»‚È‚Ç‚ğs‚¤‚±‚Æ‚ª‚Å‚«‚Ü‚·
-    //    UE_LOG(LogTemp, Log, TEXT("Actor spawned successfully!"));
-    //}
-    //else
-    //{
-    //    // ¶¬¸”s‚ÌƒGƒ‰[ƒnƒ“ƒhƒŠƒ“ƒO
-    //    UE_LOG(LogTemp, Error, TEXT("Failed to spawn actor!"));
-    //}
+    if (SpawnedActor)
+    {
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½ÉƒAï¿½Nï¿½^ï¿½[ï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚Ç‚ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½Æ‚ï¿½ï¿½Å‚ï¿½ï¿½Ü‚ï¿½
+        UE_LOG(LogTemp, Log, TEXT("Actor spawned successfully!"));
+    }
+    else
+    {
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½sï¿½ï¿½ï¿½ÌƒGï¿½ï¿½ï¿½[ï¿½nï¿½ï¿½ï¿½hï¿½ï¿½ï¿½ï¿½ï¿½O
+        UE_LOG(LogTemp, Error, TEXT("Failed to spawn actor!"));
+    }
 
-    //// ƒAƒNƒ^[‚Ì‰Šú‰»ˆ—
-    //SpawnedActor->Init(stateID, dorpItemID, materialID);
+    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    SpawnedActor->Init(stateID, dorpItemID, materialID);
 }

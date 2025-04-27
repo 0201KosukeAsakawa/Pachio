@@ -17,11 +17,12 @@ class PACHIO_API UObjectManager : public UObject
 	GENERATED_BODY()
 
 public:
+	void DuplicateContentsFrom( UObjectManager* Source);
 	void GenerateObject(FString, FVector, FRotator);
 	void GenerateBlock(FString, FString, FString, FVector, FRotator);
 private:
 	UPROPERTY(EditAnywhere)
-	TMap<FString, TSubclassOf<AActor>> floorClass;
+	TMap<FString, TSubclassOf<AActor>> FloorActor;
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<ABaseBlock> BaseBlock;
+	TSubclassOf<ABaseBlock> BaseBlock;
 };
