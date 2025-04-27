@@ -1,0 +1,41 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Interface/ItemEffectSource.h"
+#include "SuperMushroom.generated.h"
+
+
+class UMoveComponent;
+class UPhysicsCalculator;
+UCLASS()
+class PACHIO_API ASuperMushroom : public AActor,public IItemEffectSource
+{
+    GENERATED_BODY()
+
+public:
+    // コンストラクタ
+    ASuperMushroom();
+
+protected:
+    // 初期化処理
+    virtual void BeginPlay() override;
+
+public:
+    // Tick関数
+    virtual void Tick(float DeltaTime) override;
+    // オーバーラップイベントにバインドされる関数
+    UFUNCTION()
+    void OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)override;
+    virtual void SetDirection(FVector)override;
+private:
+    // エフェクト（例：プレイヤーが強化されるときのパーティクル）
+    UPROPERTY(VisibleAnywhere)
+    UParticleSystemComponent* PowerUpEffect;
+    UPROPERTY()
+    UMoveComponent* moveComp;
+    UPROPERTY()
+    UPhysicsCalculator* physics;
+};
