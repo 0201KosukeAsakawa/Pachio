@@ -3,29 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "Interface/ItemEffectSource.h"
 #include "SuperMushroom.generated.h"
 
 
 class UMoveComponent;
 class UPhysicsCalculator;
+
 UCLASS()
-class PACHIO_API ASuperMushroom : public AActor,public IItemEffectSource
+class PACHIO_API USuperMushroomComponent : public UItemEffectSourceComponent
 {
     GENERATED_BODY()
 
 public:
     // コンストラクタ
-    ASuperMushroom();
-
-protected:
+    USuperMushroomComponent();
     // 初期化処理
-    virtual void BeginPlay() override;
-
-public:
+     void Init()override;
     // Tick関数
-    virtual void Tick(float DeltaTime) override;
+    void Update(float DeltaTime)override ;
     // オーバーラップイベントにバインドされる関数
     UFUNCTION()
     void OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)override;

@@ -9,31 +9,20 @@
 #include "Player/PlayerCharacter.h"
 
 
-ASuperMushroom::ASuperMushroom()
+USuperMushroomComponent::USuperMushroomComponent()
 {
-    PrimaryActorTick.bCanEverTick = true;
-
-    // スフィアコリジョンで重なった際にイベントをバインド
-    USphereComponent* CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
-    RootComponent = CollisionComponent;
-    CollisionComponent->InitSphereRadius(50.0f);
-    CollisionComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-
-    // OnCollected にバインド
-    CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ASuperMushroom::OnCollected);
 }
 
-void ASuperMushroom::BeginPlay()
+void USuperMushroomComponent::Init()
 {
-    Super::BeginPlay();
+  
     moveComp = NewObject<UMoveComponent>(this);
     physics = NewObject<UPhysicsCalculator>(this);
-    moveComp->Init(this);
+    moveComp->Init(GetOwner());
 }
 
-void ASuperMushroom::Tick(float DeltaTime)
+void USuperMushroomComponent::Update(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
     if (!moveComp)
         return;
 
@@ -41,7 +30,7 @@ void ASuperMushroom::Tick(float DeltaTime)
     physics->AddGravity();
 }
 
-void ASuperMushroom::OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void USuperMushroomComponent::OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     // 他のアクターがマリオかどうか確認
     if (APlayerCharacter* Mario = Cast<APlayerCharacter>(OtherActor))
@@ -55,12 +44,12 @@ void ASuperMushroom::OnCollected(UPrimitiveComponent* OverlappedComp, AActor* Ot
             PowerUpEffect->Activate();
         }
 
-        // アイテムを消す
-        Destroy();
+        //// アイテムを消す
+        //Destroy();
     }
 }
 
-void ASuperMushroom::SetDirection(FVector direction)
+void USuperMushroomComponent::SetDirection(FVector direction)
 {
     if (!moveComp)
         return;

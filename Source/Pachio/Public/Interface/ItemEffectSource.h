@@ -3,25 +3,32 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Interface.h"
+#include "Components/ActorComponent.h"
 #include "ItemEffectSource.generated.h"
 
-// This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UItemEffectSource : public UInterface
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class PACHIO_API UItemEffectSourceComponent : public UActorComponent
 {
-	GENERATED_BODY()
-};
+    GENERATED_BODY()
 
-/**
- * 
- */
-class PACHIO_API IItemEffectSource
-{
-	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void OnCollected(UPrimitiveComponent* , AActor* , UPrimitiveComponent* , int32 , bool , const FHitResult&);
-	virtual void SetDirection(FVector);
+
+    // Called when the item is collected
+    virtual void OnCollected(
+        UPrimitiveComponent* OverlappedComponent,
+        AActor* OtherActor,
+        UPrimitiveComponent* OtherComp,
+        int32 OtherBodyIndex,
+        bool bFromSweep,
+        const FHitResult& SweepResult
+    );
+
+    // Sets the direction for some effect
+    virtual void SetDirection(FVector Direction);
+
+    // Initializes the effect source
+    virtual void Init();
+
+    // Updates the effect source every tick or interval
+    virtual void Update(float DeltaTime);
 };
