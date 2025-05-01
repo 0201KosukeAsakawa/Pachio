@@ -11,6 +11,40 @@ class ABaseBlock;
 /**
  * 
  */
+
+USTRUCT(BlueprintType)
+struct FInstansBlockData : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	FString MaterialID;
+	UPROPERTY(EditAnywhere)
+	FString StateID;
+	UPROPERTY(EditAnywhere)
+	FString DropItem;
+	UPROPERTY(EditAnywhere)
+	float Location_X;
+	UPROPERTY(EditAnywhere)
+	float Location_Y;
+	UPROPERTY(EditAnywhere)
+	float Location_Z;
+	UPROPERTY(EditAnywhere)
+	float Rotate_X;
+	UPROPERTY(EditAnywhere)
+	float Rotate_Y;
+	UPROPERTY(EditAnywhere)
+	float Rotate_Z;
+	UPROPERTY(EditAnywhere)
+	float Scale_X;
+	UPROPERTY(EditAnywhere)
+	float Scale_Y;
+	UPROPERTY(EditAnywhere)
+	float Scale_Z;
+};
+
+
 UCLASS(Blueprintable)
 class PACHIO_API UBlockDataContainer : public UObject
 {

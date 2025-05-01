@@ -53,7 +53,7 @@ bool UQuestionBlockIdleState::OnHit(const AActor* OtherActor, FVector)
 	if (!Container)
 		return false;
 
-	UBlockState* nextState = Container->CreateState(GetWorld(), "Enpty");
+	UBlockState* nextState = Container->CreateState(GetWorld(), "Empty");
 
 	if (!nextState)
 		return false;

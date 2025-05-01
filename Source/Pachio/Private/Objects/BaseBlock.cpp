@@ -17,39 +17,11 @@ void ABaseBlock::BeginPlay()
     Super::BeginPlay();
 
     Init(StateID, DropItemName);
-}
-
-void ABaseBlock::Init(FString stateID, FString dorpItemID, FString materialID)
-{
-    StateID = stateID;
-    DropItemName = dorpItemID;
-
-    if(materialID == "None")
-        
-
-    // �R���e�i�̏�����
-    if (!Container)
-    {
-        Container = NewObject<UBlockDataContainer>(this, ContainerClass);
-        if (Container)
-        {
-            CurrentState = Container->CreateState(GetWorld(), StateID);
-        }
-    }
-
-    // �X�e�[�g�̏�����
-    if (CurrentState)
-    {
-        if (materialID == "None")
-            CurrentState->OnEnter(this, GetWorld(), Container);
-        else
-            CurrentState->OnEnter(this, GetWorld(), Container, materialID);
-    }
 
     // Collision �R���|�[�l���g�̎擾
     Collision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Box");
 
-    if (Collision)
+    if (IsValid(Collision))
     {
         UE_LOG(LogTemp, Warning, TEXT("Collision Component found!"));
         Collision->OnComponentBeginOverlap.AddDynamic(this, &ABaseBlock::BeginOverlap);
@@ -57,6 +29,31 @@ void ABaseBlock::Init(FString stateID, FString dorpItemID, FString materialID)
     else
     {
         UE_LOG(LogTemp, Error, TEXT("Collision Component not found!"));
+    }
+}
+
+void ABaseBlock::Init(FString stateID, FString dorpItemID, FString materialID)
+{
+    StateID = stateID;
+    DropItemName = dorpItemID;
+
+    // �R���e�i�̏�����
+    if (!Container)
+    {
+        Container = NewObject<UBlockDataContainer>(this, ContainerClass);
+
+    }
+    if (Container)
+    {
+        CurrentState = Container->CreateState(GetWorld(), StateID);
+    }
+    // �X�e�[�g�̏�����
+    if (CurrentState)
+    {
+        if (materialID == "None")
+            CurrentState->OnEnter(this, GetWorld(), Container);
+        else
+            CurrentState->OnEnter(this, GetWorld(), Container, materialID);
     }
 }
 // Called every frame

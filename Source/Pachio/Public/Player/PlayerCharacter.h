@@ -37,6 +37,7 @@ private:
 	void GenerateState();
 	void Movement(const FInputActionValue& Value);
 	void Jump(const FInputActionValue& Value);
+	void JumpStop(const FInputActionValue& Value);
 	void Action(const FInputActionValue& Value);
 
 private:
@@ -75,6 +76,10 @@ private:
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
+
+	/** Special Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SpecialAction;
 
 	UPROPERTY()
 	UPlayerDefaultState* CurrentState;

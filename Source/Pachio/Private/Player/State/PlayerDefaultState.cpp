@@ -4,6 +4,7 @@
 #include "Player/State/PlayerDefaultState.h"
 #include "InputActionValue.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/StaticMeshComponent.h"
 
 bool UPlayerDefaultState::OnEnter(ACharacter*owner, UWorld*world)
 {
@@ -11,8 +12,19 @@ bool UPlayerDefaultState::OnEnter(ACharacter*owner, UWorld*world)
 	{
 		return false;
 	}
+
 	mOwner = owner;
 	pWorld = world;
+
+	if (NewMaterial != nullptr)
+	{
+		UStaticMeshComponent* StaticMeshComp = owner->FindComponentByClass<UStaticMeshComponent>();
+		UMaterialInterface* N = NewMaterial.LoadSynchronous();
+		if (N != nullptr)
+		{
+			StaticMeshComp->SetMaterial(0, N);
+		}
+	}
 
 	mMoveSpeed = 100.0f;
 
