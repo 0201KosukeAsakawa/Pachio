@@ -29,6 +29,15 @@ void ALevelManager::BeginPlay()
 	if (!IsValid(ObjectManager))
 	{
 		ObjectManager = NewObject<UObjectManager>(this, ObjectManagerClass);
+
+		if (ObjectManager && ObjectManagerClass)
+		{
+			UObjectManager* DefaultObj = Cast<UObjectManager>(ObjectManagerClass->GetDefaultObject());
+			if (DefaultObj)
+			{
+				ObjectManager->DuplicateContentsFrom(DefaultObj);
+			}
+		}
 	}
 
 	if (!IsValid(SoundManager))
@@ -106,7 +115,7 @@ void ALevelManager::GenerateStage()
 			FVector location = FVector(data->Location_X, data->Location_Y, data->Location_Z);
 			FRotator rotate = FRotator(data->Rotate_X, data->Rotate_Y, data->Rotate_Z);
 			if (ObjectManager)
-				ObjectManager->GenerateObject(data->ObjectName, location, rotate);
+				ObjectManager->GenerateObject(data->ObjectName,data->MaterialName ,location, rotate);
 		}
 	}
 }
@@ -132,8 +141,8 @@ void ALevelManager::GenerateBlock()
 			}
 			FVector location = FVector(data->Location_X, data->Location_Y, data->Location_Z);
 			FRotator rotate = FRotator(data->Rotate_X, data->Rotate_Y, data->Rotate_Z);
-			if (ObjectManager)
-				ObjectManager->GenerateBlock(data->MaterialID,data->StateID,data->DropItem,location, rotate);
+			if (Container)
+				Container->GenerateBlock(data->StateID,data->DropItem, data->MaterialID, location, rotate);
 		}
 	}
 }

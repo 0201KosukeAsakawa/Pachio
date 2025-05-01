@@ -2,61 +2,43 @@
 
 
 #include "Manager/ObjectManager.h"
+#include "Materials/MaterialInterface.h"
 #include "Objects/BaseBlock.h"
+#include "Engine/Engine.h"
+#include "Components/StaticMeshComponent.h"
+#include "FunctionLibrary.h"
 
-void UObjectManager::GenerateObject(FString ActorKey, FVector location, FRotator rotation)
+
+void UObjectManager::DuplicateContentsFrom(UObjectManager* Source)
 {
-    // TMap ‚©‚çw’è‚³‚ê‚½ƒL[‚ÉŠî‚Ã‚¢‚ÄƒAƒNƒ^[‚ÌƒNƒ‰ƒX‚ğæ“¾
-    TSubclassOf<AActor>* ActorClass = floorClass.Find(ActorKey);
+    if (!Source)
+        return;
 
-    if (ActorClass != nullptr)
+    // Engineã«é ¼ã‚“ã§ã€ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£å…¨éƒ¨ã‚³ãƒ”ãƒ¼ã—ã¦ã‚‚ã‚‰ã†
+    if (GEngine)
     {
-        // ƒAƒNƒ^[‚ÌƒNƒ‰ƒX‚ªŒ©‚Â‚©‚Á‚½ê‡AƒAƒNƒ^[‚ğ¶¬
-        AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(*ActorClass, location, rotation);
-
-        if (SpawnedActor)
-        {
-            // ¬Œ÷‚µ‚½ê‡‚ÉƒAƒNƒ^[‚Ì‰Šú‰»‚È‚Ç‚ğs‚¤‚±‚Æ‚ª‚Å‚«‚Ü‚·
-            UE_LOG(LogTemp, Log, TEXT("Actor spawned successfully!"));
-        }
-        else
-        {
-            // ¶¬¸”s‚ÌƒGƒ‰[ƒnƒ“ƒhƒŠƒ“ƒO
-            UE_LOG(LogTemp, Error, TEXT("Failed to spawn actor!"));
-        }
-    }
-    else
-    {
-        // ƒNƒ‰ƒX‚ªŒ©‚Â‚©‚ç‚È‚¢ê‡‚ÌƒGƒ‰[ƒnƒ“ƒhƒŠƒ“ƒO
-        UE_LOG(LogTemp, Error, TEXT("Actor class not found for key: %s"), *ActorKey);
+        GEngine->CopyPropertiesForUnrelatedObjects(Source, this);
     }
 }
 
-void UObjectManager::GenerateBlock(FString stateID, FString dorpItemID, FString materialID, FVector location, FRotator rotation)
+void UObjectManager::GenerateObject(FString ActorKey, FString material, FVector location, FRotator rotation)
 {
-    //if (BaseBlock == nullptr)
-    //{
-    //    UE_LOG(LogTemp, Error, TEXT("BaseBlock class is not set!"));
-    //    return;
-    //}
+    // TMap ï¿½ï¿½ï¿½ï¿½wï¿½è‚³ï¿½ê‚½ï¿½Lï¿½[ï¿½ÉŠï¿½Ã‚ï¿½ï¿½ÄƒAï¿½Nï¿½^ï¿½[ï¿½ÌƒNï¿½ï¿½ï¿½Xï¿½ï¿½æ“¾
+    TSubclassOf<AActor>* ActorClass = FloorActor.Find(ActorKey);
 
-    //// TSubclassOf<ABaseBlock> ‚©‚ç UClass* ‚ğæ“¾
-    //UClass* ActorClass = BaseBlock.Get();
+    if (!ActorClass)
+        return;
+    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ÌƒNï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½Aï¿½Aï¿½Nï¿½^ï¿½[ï¿½ğ¶ï¿½
+    AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(*ActorClass, location, rotation);
+    // ã‚¢ã‚¯ã‚¿ãƒ¼ã«ã‚¢ã‚¿ãƒƒãƒã•ã‚Œã¦ã„ã‚‹å…¨ã¦ã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å–å¾—
+    UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(SpawnedActor, "StaticMesh");
+    const TSoftObjectPtr<UMaterialInterface>* MaterialPtr = MaterialMap.Find(material);
+    if (!MaterialPtr)
+        return;
+    UMaterialInterface* b = MaterialPtr->LoadSynchronous();
 
-    //// ƒAƒNƒ^[‚ÌƒNƒ‰ƒX‚ªŒ©‚Â‚©‚Á‚½ê‡AƒAƒNƒ^[‚ğ¶¬
-    //ABaseBlock* SpawnedActor = GetWorld()->SpawnActor<ABaseBlock>(ActorClass, location, rotation);
-
-    //if (SpawnedActor)
-    //{
-    //    // ¬Œ÷‚µ‚½ê‡‚ÉƒAƒNƒ^[‚Ì‰Šú‰»‚È‚Ç‚ğs‚¤‚±‚Æ‚ª‚Å‚«‚Ü‚·
-    //    UE_LOG(LogTemp, Log, TEXT("Actor spawned successfully!"));
-    //}
-    //else
-    //{
-    //    // ¶¬¸”s‚ÌƒGƒ‰[ƒnƒ“ƒhƒŠƒ“ƒO
-    //    UE_LOG(LogTemp, Error, TEXT("Failed to spawn actor!"));
-    //}
-
-    //// ƒAƒNƒ^[‚Ì‰Šú‰»ˆ—
-    //SpawnedActor->Init(stateID, dorpItemID, materialID);
+    if (MeshComp && b)
+    {
+        MeshComp->SetMaterial(0, b);
+    }
 }

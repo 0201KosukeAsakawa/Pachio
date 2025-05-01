@@ -17,6 +17,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	FString ObjectName;
 	UPROPERTY(EditAnywhere)
+	FString MaterialName;
+	UPROPERTY(EditAnywhere)
 	float Location_X;
 	UPROPERTY(EditAnywhere)
 	float Location_Y;

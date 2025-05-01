@@ -10,6 +10,7 @@
  * 
  */
 class ABaseBlock;
+class UMaterialInterface;
 
 UCLASS(Blueprintable)
 class PACHIO_API UObjectManager : public UObject
@@ -17,11 +18,11 @@ class PACHIO_API UObjectManager : public UObject
 	GENERATED_BODY()
 
 public:
-	void GenerateObject(FString, FVector, FRotator);
-	void GenerateBlock(FString, FString, FString, FVector, FRotator);
+	void DuplicateContentsFrom( UObjectManager* Source);
+	void GenerateObject(FString, FString,FVector, FRotator);
 private:
 	UPROPERTY(EditAnywhere)
-	TMap<FString, TSubclassOf<AActor>> floorClass;
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<ABaseBlock> BaseBlock;
+	TMap<FString, TSubclassOf<AActor>> FloorActor;
+	UPROPERTY(EditAnywhere, Category = "Data")
+	TMap<FString, TSoftObjectPtr<UMaterialInterface>> MaterialMap;
 };

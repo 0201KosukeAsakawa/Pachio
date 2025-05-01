@@ -29,4 +29,6 @@ protected:
 	UPROPERTY()
 	UWorld* pWorld;
 	float mMoveSpeed;
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<UMaterialInterface> NewMaterial;
 };
