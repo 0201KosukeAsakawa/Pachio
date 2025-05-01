@@ -19,7 +19,7 @@ class PACHIO_API UObjectManager : public UObject
 
 public:
 	void DuplicateContentsFrom( UObjectManager* Source);
-	void GenerateObject(FString, FString,FVector, FRotator);
+	void GenerateObject(FString, FString,FVector, FVector ,  FRotator);
 private:
 	UPROPERTY(EditAnywhere)
 	TMap<FString, TSubclassOf<AActor>> FloorActor;
