@@ -32,7 +32,7 @@ bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
 	return true;
 }
 
-bool UPlayerSuperState::OnUpdate(ACharacter*)
+bool UPlayerSuperState::OnUpdate(float)
 {
 	return false;
 }
