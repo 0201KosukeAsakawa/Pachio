@@ -12,6 +12,7 @@
 class IStateBase;
 class UPlayerDefaultState;
 class UInputMappingContext;
+class UStateManager;
 
 UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter
@@ -39,6 +40,9 @@ private:
 	void Jump(const FInputActionValue& Value);
 	void JumpStop(const FInputActionValue& Value);
 	void Action(const FInputActionValue& Value);
+
+	UStateManager* manager;
+	void ChangeState(FString Tag);
 
 private:
 	/** Character用のStaticMesh : Capsule  プレイヤー本体の判定用*/
@@ -80,7 +84,4 @@ private:
 	/** Special Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
-
-	UPROPERTY()
-	UPlayerDefaultState* CurrentState;
 };

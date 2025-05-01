@@ -32,7 +32,7 @@ bool UPlayerDefaultState::OnEnter(ACharacter*owner, UWorld*world)
 	return true;
 }
 
-bool UPlayerDefaultState::OnUpdate(ACharacter*)
+bool UPlayerDefaultState::OnUpdate(float)
 {
 	return true;
 }
