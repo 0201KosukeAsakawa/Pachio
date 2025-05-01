@@ -17,13 +17,14 @@ APlayerCharacter::APlayerCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bIsDashing = false;
 
 	manager = NewObject<UStateManager>();
 	manager->Init(this,GetWorld());
@@ -43,6 +44,9 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+	GetCharacterMovement()->GravityScale = 3.0f;
+
+	
 }
 
 // Called every frame
@@ -72,6 +76,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		//Action
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
+		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAction);
 
 		//else
 		{
@@ -115,7 +120,20 @@ void APlayerCharacter::JumpStop(const FInputActionValue& Value)
 
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
+	if (!bIsDashing)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 900.0f;
+		bIsDashing = true;
+	}
+}
 
+void APlayerCharacter::StopAction()
+{
+	if (bIsDashing)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+		bIsDashing = false;
+	}
 }
 
 void APlayerCharacter::ChangeState(FString Tag)
