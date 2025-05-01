@@ -19,7 +19,7 @@ bool UPlayerStateBase::OnEnter(ACharacter*, UWorld*)
 	return false;
 }
 
-bool UPlayerStateBase::OnUpdate(ACharacter*)
+bool UPlayerStateBase::OnUpdate(float)
 {
 	return false;
 }
