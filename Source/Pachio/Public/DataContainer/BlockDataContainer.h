@@ -53,7 +53,7 @@ public:
 
     UBlockState* CreateState(UObject*, FString) const;
     UMaterialInterface* CreateMaterial(UObject* WorldContext, FString StateName);
-    bool GenerateBlock(FString, FString, FString, FVector, FRotator);
+    bool GenerateBlock(FString, FString, FString, FVector, FVector,FRotator);
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data")
     TMap<FString, TSubclassOf<UBlockState>> BlockClassMap;

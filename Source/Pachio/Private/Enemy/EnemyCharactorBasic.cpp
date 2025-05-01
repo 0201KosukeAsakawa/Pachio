@@ -47,7 +47,7 @@ void AEnemyCharactorBasic::Tick(float DeltaTime)
 void AEnemyCharactorBasic::MoveTo(float _deltaTime)
 {
 	// 移動量を設定（例：X方向に100ユニット/秒）
-	FVector MoveAmount(100.0f, 0.0f, 0.0f);
+	FVector MoveAmount(0.0f, -100.0f, 0.0f);
 
 	// DeltaTime を使ってフレームごとに移動量を計算
 	FVector DeltaMove = MoveAmount * _deltaTime;
