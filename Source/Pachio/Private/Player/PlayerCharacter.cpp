@@ -133,10 +133,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 }
 
-void APlayerCharacter::GenerateState()
-{
-	//StateMap.Add("Defaul",TScriptInterface<IStateBase>(NewObject<DefaultPlayerState>()))
-}
 
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
