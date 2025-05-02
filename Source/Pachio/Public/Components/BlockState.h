@@ -23,7 +23,7 @@ public:
 	virtual bool OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*,const FString materialID = "None");
 	virtual bool OnUpdate(ABaseBlock*);
 	virtual bool OnExit(ABaseBlock*);
-	virtual bool OnUpperAttack(const AActor*,FVector);
+	virtual bool OnHit(FAttackData,const FVector = FVector(0,0,0));
 protected:
 	UPROPERTY()
 	ABaseBlock* mOwner;

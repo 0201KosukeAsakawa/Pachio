@@ -33,7 +33,7 @@ bool UBlockState::OnExit(ABaseBlock*)
 	return false;
 }
 
-bool UBlockState::OnUpperAttack(const AActor*,FVector)
+bool UBlockState::OnHit(FAttackData, FVector)
 {
 	return false;
 }
