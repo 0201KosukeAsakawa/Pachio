@@ -23,6 +23,7 @@ private:
 	// ダッシュしているかどうかのフラグ
 	bool bIsDashing;
 	FVector NewCameraLocation;
+	FVector PlayerOldLocation;
 
 public:
 	// Sets default values for this character's properties
