@@ -97,7 +97,7 @@ bool UPhysicsCalculator::CanFall(FVector Start, FVector End) const
 	FeetPosition.Z -= ActorScale.Z * 50.0f; // 高さの半分を引いて足元の位置
 
 	// 足元から下方向にレイを飛ばして衝突判定を行う
-	FVector FallEnd = FeetPosition -FVector(0.0f, 0.0f, 10.0f); // 足元から下方向に1000ユニット
+	FVector FallEnd = FeetPosition -FVector(0.0f, 0.0f, 10.0f); // 足元から下方向に10ユニット
 
 	// 衝突判定のためのパラメータ
 	FCollisionQueryParams CollisionParams;

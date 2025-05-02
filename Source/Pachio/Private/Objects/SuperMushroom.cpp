@@ -5,20 +5,23 @@
 #include "Components/SphereComponent.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/MoveComponent.h"
+#include "FunctionLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Player/PlayerCharacter.h"
+#include "Objects/ItemBase.h"
 
 
 USuperMushroomComponent::USuperMushroomComponent()
 {
 }
 
-void USuperMushroomComponent::Init()
+void USuperMushroomComponent::Init(AItemBase* owner)
 {
-  
+    if (!owner)
+        return;
+    mOwner = owner;
     moveComp = NewObject<UMoveComponent>(this);
-    physics = NewObject<UPhysicsCalculator>(this);
-    moveComp->Init(GetOwner());
+    moveComp->Init(mOwner);
 }
 
 void USuperMushroomComponent::Update(float DeltaTime)
@@ -27,7 +30,7 @@ void USuperMushroomComponent::Update(float DeltaTime)
         return;
 
     moveComp->Movement(DeltaTime);
-    physics->AddGravity();
+    mOwner->GetPhysics()->AddGravity();
 }
 
 void USuperMushroomComponent::OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

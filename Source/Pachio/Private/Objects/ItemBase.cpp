@@ -3,8 +3,12 @@
 
 #include "Objects/ItemBase.h"
 #include "Objects/SuperMushroom.h"
+#include "DataContainer/ItemDataContainer.h"
 #include "Components/SphereComponent.h"
 #include "Interface/ItemEffectSource.h"
+#include "Components/PhysicsCalculator.h"
+#include "Manager/LevelManager.h"
+#include "FunctionLibrary.h"
 
 // Sets default values
 AItemBase::AItemBase()
@@ -26,24 +30,53 @@ AItemBase::AItemBase()
 void AItemBase::BeginPlay()
 {
     Super::BeginPlay();
-    my = NewObject<USuperMushroomComponent>(this);
-    if (my)
-        my->Init();
+    ItemLogic = NewObject<USuperMushroomComponent>(this);
+    physics = UFunctionLibrary::FindComponentByName<UPhysicsCalculator>(this, "BP_Physics");
+    if (ItemLogic)
+    {
+        ItemLogic->Init(this);
+        ItemLogic->SetDirection(direction);
+    }
 }
 
 // Called every frame
 void AItemBase::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    if (my)
-        my->Update(DeltaTime);
+    if (ItemLogic)
+        ItemLogic->Update(DeltaTime);
+}
+
+void AItemBase::Init(FString objectID, const FString meshID, const FString materialID, const FVector direc)
+{
+    ObjectID = objectID;
+
+    if (ObjectID == "None")
+        return;
+
+    if (ALevelManager::GetComponent(GetWorld()))
+    {
+        ItemLogic = ALevelManager::GetComponent(GetWorld())->GetItemContainer()->CreateState(GetWorld(), ObjectID);
+    }
+    // �X�e�[�g�̏�����
+    if (ItemLogic)
+    {
+        ItemLogic->Init(this);
+
+        ItemLogic->SetDirection(direc);
+    }
+}
+
+void AItemBase::AddForce(float force , FVector addDirection)
+{
+    GetPhysics()->AddForce(addDirection, force , true);
 }
 
 void AItemBase::OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (my)
+    if (ItemLogic)
     {
-        my->OnCollected(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+        ItemLogic->OnCollected(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
     }
 }
 

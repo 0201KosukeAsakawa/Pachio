@@ -4,6 +4,7 @@
 #include "Player/PlayerCharacter.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/BoxComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -17,6 +18,27 @@ APlayerCharacter::APlayerCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	// SpringArmを作成してルートにアタッチ
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	SpringArm->SetupAttachment(RootComponent); // ← これでキャラクターにアタッチされる
+
+	// Cameraを作成してSpringArmにアタッチ
+	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera->SetupAttachment(SpringArm); // ← これでスプリングアームの先にカメラが付きます
+
+	SpringArm->TargetArmLength = 500.0f; // カメラ距離
+
+	// キャラの少し右側から見るようにオフセット調整
+	SpringArm->SocketOffset = FVector(0.0f, 100.0f, 50.0f); // Yを+100にするとキャラが画面の左寄りに見える
+	SpringArm->bUsePawnControlRotation = false;
+
+	//UBoxComponent* CollisionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
+	// 攻撃判定用ボックスの作成
+	UpperAttackBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
+	UpperAttackBox->SetupAttachment(RootComponent);
+	// 判定を無効化（当たり判定が発生しないようにする）
+	UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called when the game starts or when spawned
@@ -28,6 +50,17 @@ void APlayerCharacter::BeginPlay()
 
 	manager = NewObject<UStateManager>();
 	manager->Init(this,GetWorld());
+
+	// SpringArmの設定: Yaw（左右）方向は追従、Pitch（上下）方向は追従しない
+	if (SpringArm)
+	{
+		SpringArm->bInheritYaw = true;  // 左右の回転を追従
+		SpringArm->bInheritPitch = false;  // 上下の回転を追従しない
+		SpringArm->bInheritRoll = false;  // ロール（横の回転）を追従しない
+	}
+
+	NewCameraLocation = Camera->GetComponentLocation();
+	PlayerOldLocation = GetActorLocation();
 
 	// Input Action の設定を行います
 	if (JumpAction)
@@ -45,15 +78,30 @@ void APlayerCharacter::BeginPlay()
 		}
 	}
 	GetCharacterMovement()->GravityScale = 3.0f;
-
-	
 }
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// カメラの位置を x 軸のみに追従させる
+	if (SpringArm && Camera)
+	{
+		Camera->SetWorldLocation(NewCameraLocation);  // 更新した位置をカメラに反映
+		//Camera->SetWorldLocation(FVector(Camera->GetComponentLocation().X, NewCameraLocation.Y, NewCameraLocation.Z));
+		
+		FVector deff = GetActorLocation() - PlayerOldLocation;
+		Camera->SetWorldLocation(FVector(NewCameraLocation.X, Camera->GetComponentLocation().Y + deff.Y,NewCameraLocation.Z));
+		NewCameraLocation = Camera->GetComponentLocation();
+	}
+
+	if (!GetCharacterMovement()->IsFalling())
+	{
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 	
+	PlayerOldLocation = GetActorLocation();
 }
 
 // Called to bind functionality to input
@@ -100,17 +148,16 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	/*/if (CurrentState != nullptr)
+	/*if (CurrentState != nullptr)
 	{
 		CurrentState->Jump(Value);
-	}/*/
-	//GetCharacterMovement()->AddForce(FVector(0,0,5000000));
-
-	// CanJump() が true の場合のみジャンプ処理を実行
+	}*/
 	if (CanJump())
 	{
 		ACharacter::Jump();
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
+
 }
 
 void APlayerCharacter::JumpStop(const FInputActionValue& Value)
@@ -122,7 +169,7 @@ void APlayerCharacter::Action(const FInputActionValue& Value)
 {
 	if (!bIsDashing)
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 900.0f;
+		GetCharacterMovement()->MaxWalkSpeed = 1200.0f;
 		bIsDashing = true;
 	}
 }
