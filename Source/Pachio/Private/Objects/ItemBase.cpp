@@ -32,7 +32,7 @@ void AItemBase::BeginPlay()
     Super::BeginPlay();
 
     // ItemLogicをSuperMushroomComponentで初期化
-    ItemLogic = NewObject<USuperMushroomComponent>(this);
+    ItemLogic = NewObject<UItemEffectSourceComponent>(this);
 
     // PhysicsCalculatorコンポーネントを探して初期化
     physics = UFunctionLibrary::FindComponentByName<UPhysicsCalculator>(this, "BP_Physics");
