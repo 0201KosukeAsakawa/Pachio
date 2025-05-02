@@ -24,6 +24,8 @@ public:
     // 生成時にDirectionを設定
     void SetDirection(FVector NewDirection);
 
+    void SetSpeed(float newSpeed) { Speed = newSpeed; }
+
 private:
     // 現在の移動方向
     FVector CurrentMovementDirection;
