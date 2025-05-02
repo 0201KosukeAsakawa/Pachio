@@ -6,7 +6,9 @@
 
 
 #include "Enemy/EnemyCharactorBasic.h"
-#include "GameFramework/Pawn.h"              // Actorに関する基本的なインクルード
+#include "GameFramework/Pawn.h"					//Actorに関する基本的なインクルード
+#include "Components/MoveComponent.h"			//移動に関するインクルード
+#include "Components/PhysicsCalculator.h"		//重力に関するインクルード
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 
@@ -23,8 +25,6 @@ AEnemyCharactorBasic::AEnemyCharactorBasic()
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetupAttachment(RootComponent);
-
-	MeshComponent->OnComponentHit.AddDynamic(this, &AEnemyCharactorBasic::OnHit);
 }
 
 // Called when the game starts or when spawned
@@ -32,6 +32,13 @@ void AEnemyCharactorBasic::BeginPlay()
 {
 	Super::BeginPlay();
 
+	MoveComp = NewObject<UMoveComponent>(this);
+	if (MoveComp)
+		MoveComp->Init(this);
+
+	PhysicsCal = NewObject<UPhysicsCalculator>(this);
+
+	FVector PhyForce = FVector(0.0f, 0.0f, 10.0f);
 }
 
 // Called every frame
@@ -39,25 +46,17 @@ void AEnemyCharactorBasic::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//早期リターン
+	if (!MoveComp)
+	{ 
+		return; 
+	}
+
 	//移動処理
-	MoveTo(DeltaTime);
+	MoveComp->Movement(DeltaTime);
 
+	//重力を加算
+	PhysicsCal->AddGravity();
 }
 
-void AEnemyCharactorBasic::MoveTo(float _deltaTime)
-{
-	// 移動量を設定（例：X方向に100ユニット/秒）
-	FVector MoveAmount(0.0f, -100.0f, 0.0f);
-
-	// DeltaTime を使ってフレームごとに移動量を計算
-	FVector DeltaMove = MoveAmount * _deltaTime;
-
-	// アクターを移動
-	AddActorWorldOffset(DeltaMove, true);  // 衝突を有効にしたい場合は bSweep = true を指定
-}
-
-void AEnemyCharactorBasic::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-{
-
-}
 

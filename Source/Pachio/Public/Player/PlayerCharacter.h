@@ -6,12 +6,14 @@
 #include "GameFramework/Character.h"
 #include <GameFramework/SpringArmComponent.h>
 #include <Camera/CameraComponent.h>
+#include "Components/BoxComponent.h"
 #include "InputAction.h"
 #include "PlayerCharacter.generated.h"
 
 class IStateBase;
 class UPlayerDefaultState;
 class UInputMappingContext;
+class UStateManager;
 
 UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter
@@ -39,19 +41,29 @@ private:
 	void Jump(const FInputActionValue& Value);
 	void JumpStop(const FInputActionValue& Value);
 	void Action(const FInputActionValue& Value);
+	void StopAction();
+
+	UStateManager* manager;
+	void ChangeState(FString Tag);
+
+	// ダッシュしているかどうかのフラグ
+	bool bIsDashing;
 
 private:
 	/** Character用のStaticMesh : Capsule  プレイヤー本体の判定用*/
 	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> Capsule;
 
-	/** Characterの攻撃用のStaticMesh : Box 　(下、踏みつけ攻撃など)*/
+	/** Characterの攻撃用のStaticMesh : Box 　(下、踏みつけ攻撃など)
 	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> StompAttackBox;
+	TObjectPtr<UStaticMeshComponent> StompAttackBox;*/
 
-	/** Character用のStaticMesh : Box 　(上、ブロック破壊など)*/
+	UPROPERTY(VisibleAnywhere,Category = "BoxCollision")
+	TSubclassOf<UBoxComponent> StompAttackBox;
+
+	/** Character用のStaticMesh : Box 　(上、ブロック破壊など)
 	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> UpperAttackBox;
+	TObjectPtr<UStaticMeshComponent> UpperAttackBox;*/
 
 	/** Cameraを配置するためのSpringArm */
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -80,7 +92,4 @@ private:
 	/** Special Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
-
-	UPROPERTY()
-	UPlayerDefaultState* CurrentState;
 };

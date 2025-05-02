@@ -10,25 +10,24 @@
 #include "Player/State/PlayerDefaultState.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "FunctionLibrary.h"
+#include "Player/State/StateManager.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	//DefaultPlayerState* DP = NewObject<DefaultPlayerState>();
-	CurrentState = NewObject<UPlayerDefaultState>();
-	if (CurrentState != nullptr)
-	{
-		CurrentState->OnEnter(this,GetWorld());
-	}
+
+	bIsDashing = false;
+
+	manager = NewObject<UStateManager>();
+	manager->Init(this,GetWorld());
 
 	// Input Action ‚ÌÝ’è‚ðs‚¢‚Ü‚·
 	if (JumpAction)
@@ -45,16 +44,16 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+	GetCharacterMovement()->GravityScale = 3.0f;
+
+	
 }
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (CurrentState != nullptr)
-	{
-		CurrentState->OnUpdate(this);
-	}
+	
 }
 
 // Called to bind functionality to input
@@ -77,6 +76,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		//Action
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
+		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAction);
 
 		//else
 		{
@@ -92,10 +92,10 @@ void APlayerCharacter::GenerateState()
 
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	if (CurrentState != nullptr)
-	{
-		CurrentState->Movement(Value);
-	}
+	if (!manager)
+		return;
+
+	manager->Movement(Value);
 }
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
@@ -120,6 +120,23 @@ void APlayerCharacter::JumpStop(const FInputActionValue& Value)
 
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
-
+	if (!bIsDashing)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 900.0f;
+		bIsDashing = true;
+	}
 }
 
+void APlayerCharacter::StopAction()
+{
+	if (bIsDashing)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+		bIsDashing = false;
+	}
+}
+
+void APlayerCharacter::ChangeState(FString Tag)
+{
+	manager->ChangeState(Tag);
+}

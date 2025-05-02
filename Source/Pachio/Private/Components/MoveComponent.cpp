@@ -14,7 +14,7 @@ UMoveComponent::UMoveComponent()
     Speed = 600.0f; // 速度の設定
 
     // 初期方向を設定（ランダムな方向で初期化）
-    CurrentMovementDirection = FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f);
+    CurrentMovementDirection = FVector(0.0f, FMath::RandRange(-1.f, 1.f), 0.f);
     CurrentMovementDirection.Normalize(); // 方向ベクトルを正規化して長さを1にする
 }
 

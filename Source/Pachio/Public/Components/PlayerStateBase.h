@@ -18,7 +18,7 @@ public:
 	// Sets default values for this component's properties
 	UPlayerStateBase();
 	virtual bool OnEnter(ACharacter*, UWorld*);
-	virtual bool OnUpdate(ACharacter*);
+	virtual bool OnUpdate(float);
 	virtual bool OnExit(ACharacter*);
 	virtual bool OnSkill(const FInputActionValue&);
 	virtual void Jump(const FInputActionValue& Value);
