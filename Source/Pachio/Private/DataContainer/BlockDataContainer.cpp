@@ -7,7 +7,6 @@
 
 UBlockState* UBlockDataContainer::CreateState(UObject* WorldContext, FString StateName) const
 {
-    // ���� Find ��g���āA�l�����݂���ꍇ�ɃC���X�^���X��쐬
     if (const TSubclassOf<UBlockState>* BlockStateClass = BlockClassMap.Find(StateName))
     {
         return NewObject<UBlockState>(WorldContext, *BlockStateClass);

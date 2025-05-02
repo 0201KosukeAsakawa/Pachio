@@ -9,6 +9,7 @@
 
 class UMoveComponent;
 class UPhysicsCalculator;
+class AItemBase;
 
 UCLASS()
 class PACHIO_API USuperMushroomComponent : public UItemEffectSourceComponent
@@ -19,7 +20,7 @@ public:
     // コンストラクタ
     USuperMushroomComponent();
     // 初期化処理
-     void Init()override;
+     void Init(AItemBase*)override;
     // Tick関数
     void Update(float DeltaTime)override ;
     // オーバーラップイベントにバインドされる関数
@@ -32,6 +33,4 @@ private:
     UParticleSystemComponent* PowerUpEffect;
     UPROPERTY()
     UMoveComponent* moveComp;
-    UPROPERTY()
-    UPhysicsCalculator* physics;
 };
