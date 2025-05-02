@@ -1,7 +1,7 @@
-// プロジェクト設定の説明ページに著作権情報を記載してください。
-
 #include "Components/AttackComponent.h"
 #include "Attack/AttackStrategy.h"
+
+
 
 UAttackComponent::UAttackComponent()
 {
@@ -12,6 +12,9 @@ UAttackComponent::UAttackComponent()
 void UAttackComponent::BeginPlay()
 {
     Super::BeginPlay();
+
+    UAttackStrategy* Stomp = NewObject<UAttackStrategy>(this);
+    UAttackStrategy* Upper = NewObject<UAttackStrategy>(this);
 
     // ゲーム開始時にデフォルトの攻撃戦略をインスタンス化
     if (DefaultAttackStrategyClass)
@@ -27,6 +30,7 @@ void UAttackComponent::SetAttackStrategy(UAttackStrategy* NewStrategy)
     {
         CurrentStrategy = NewStrategy;
     }
+
 }
 
 float UAttackComponent::GetAttackPower() const
@@ -44,6 +48,6 @@ void UAttackComponent::PerformAttack(AActor* Target)
         float FinalDamage = CurrentStrategy->GetBaseDamage() * GetAttackPower();
 
         // 戦略に応じた攻撃効果を実行（ノックバックやエフェクトも含めて処理）
-        CurrentStrategy->ExecuteEffect(GetOwner(), Target, FinalDamage);
+        CurrentStrategy->ExecuteEffect(GetOwner(), Target, AttackType, FinalDamage);
     }
 }

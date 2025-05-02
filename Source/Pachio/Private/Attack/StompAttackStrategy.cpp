@@ -1,10 +1,13 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Attack/StompAttackStrategy.h"
+#include "Interface/IDamageable.h"
 
-void UStompAttackStrategy::ExecuteEffect(AActor* InstigatorActor, AActor* TargetActor , float FinalDamage)
+
+void UStompAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage)
 {
 	//ここで各攻撃の処理をしてください
-
+	if (IDamageable* id = Cast<IDamageable>(Target))
+	{
+		id->TakeDamage(attackData,FinalDamage);
+	}
 }
+

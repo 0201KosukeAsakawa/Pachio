@@ -22,6 +22,5 @@ public:
     TMap<FString, TSubclassOf<UAttackStrategy>> AttackStrategyMap;
 
     // 戦略をインスタンス化して返す
-  //z  UFUNCTION(BlueprintCallable, Category = "Attack")
     UAttackStrategy* CreateStrategy(UObject*, FString ) const;
 };

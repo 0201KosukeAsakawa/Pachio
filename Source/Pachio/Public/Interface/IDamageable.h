@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "Attack/AttackStrategy.h"
+
 #include "IDamageable.generated.h"
 
 // This class does not need to be modified.
@@ -22,5 +24,8 @@ class PACHIO_API IDamageable
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	
+	//ƒ_ƒ[ƒW‚ğó‚¯‚éˆ—
+	virtual bool TakeDamage(FAttackData, float damage = 0);
+	//€‚ñ‚¾‚©
+	virtual bool IsDead()const;
 };

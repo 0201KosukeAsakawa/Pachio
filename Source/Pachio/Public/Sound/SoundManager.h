@@ -9,7 +9,6 @@
 #include "Interface/Soundable.h"
 #include "SoundManager.generated.h"
 
-class AInGameSoundManager;
 
 // サウンドデータを格納する構造体
 USTRUCT()
@@ -27,10 +26,12 @@ public:
 };
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class PACHIO_API USoundManager : public UActorComponent, public ISoundable
+UCLASS( ClassGroup=(Custom), Blueprintable, meta=(BlueprintSpawnableComponent) )
+class PACHIO_API USoundManager : public UObject, public ISoundable
 {
 	GENERATED_BODY()
+
+    friend class ALevelManager;
 
 public:	
 	// Sets default values for this component's properties
@@ -62,6 +63,7 @@ private:
     TMap<FName, FSoundData> SoundDataMap;
 
     // 現在再生中のBGM
+    UPROPERTY()
     UAudioComponent* mCurrentBGM;
 
     // BGM音量
@@ -70,6 +72,4 @@ private:
     // SE音量
     float SEVolume;
 
-private:
-    friend AInGameSoundManager;
 };
