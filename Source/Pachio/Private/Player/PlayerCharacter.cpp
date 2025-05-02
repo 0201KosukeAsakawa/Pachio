@@ -60,6 +60,7 @@ void APlayerCharacter::BeginPlay()
 	}
 
 	NewCameraLocation = Camera->GetComponentLocation();
+	PlayerOldLocation = GetActorLocation();
 
 	// Input Action の設定を行います
 	if (JumpAction)
@@ -87,10 +88,12 @@ void APlayerCharacter::Tick(float DeltaTime)
 	// カメラの位置を x 軸のみに追従させる
 	if (SpringArm && Camera)
 	{
-
-		//NewCameraLocation.X = Camera->GetComponentLocation().X;
-		//Camera->SetWorldLocation(FVector(NewCameraLocation.X, NewCameraLocation.Y, NewCameraLocation.Z));
-		//Camera->SetWorldLocation(NewCameraLocation);  // 更新した位置をカメラに反映
+		Camera->SetWorldLocation(NewCameraLocation);  // 更新した位置をカメラに反映
+		//Camera->SetWorldLocation(FVector(Camera->GetComponentLocation().X, NewCameraLocation.Y, NewCameraLocation.Z));
+		
+		FVector deff = GetActorLocation() - PlayerOldLocation;
+		Camera->SetWorldLocation(FVector(NewCameraLocation.X, Camera->GetComponentLocation().Y + deff.Y,NewCameraLocation.Z));
+		NewCameraLocation = Camera->GetComponentLocation();
 	}
 
 	if (!GetCharacterMovement()->IsFalling())
@@ -98,6 +101,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 	
+	PlayerOldLocation = GetActorLocation();
 }
 
 // Called to bind functionality to input

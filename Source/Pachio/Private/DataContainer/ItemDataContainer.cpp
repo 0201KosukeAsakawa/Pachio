@@ -23,22 +23,43 @@ UMaterialInterface* UItemDataContainer::CreateMaterial(UObject* WorldContext, FS
     return nullptr;
 }
 
-AItemBase* UItemDataContainer::GenerateItem(FString ItemID, FVector location, FVector direction, float force , FVector addDirection,FVector scale, FRotator rotation , const FString meshID , const FString materialID)
+AItemBase* UItemDataContainer::GenerateItem(FString ItemID, FVector location, FVector direction, float force, FVector addDirection, FVector scale, FRotator rotation, const FString meshID, const FString materialID)
 {
-    if (!ItemClass)
+    // ItemClassMap内にItemIDが存在しない場合は早期リターン
+    if (!ItemClassMap.Contains(ItemID))
+    {
         return nullptr;
+    }
 
+    // ItemClass を取得
+    UClass* itemClass = ItemClassMap[ItemID];
+    if (!itemClass)
+    {
+        return nullptr;
+    }
+
+    // Worldを取得
     UWorld* World = GEngine->GetWorldFromContextObjectChecked(this);
     if (!World)
+    {
         return nullptr;
+    }
 
+    // アイテムをスポーン
     AItemBase* NewItem = World->SpawnActor<AItemBase>(ItemClass, location, rotation);
     if (!NewItem)
+    {
         return nullptr;
+    }
+
+    // スケールを設定
     NewItem->SetActorScale3D(scale);
-    // Init に this（コンテナ）を渡して、状態・マテリアルを内部で取得
-    NewItem->Init(ItemID,meshID, materialID, direction);
-    NewItem->AddForce(force , addDirection);
+
+    // アイテムの初期化
+    NewItem->Init(ItemID, meshID, materialID, direction);
+
+    // 力を加える
+    NewItem->AddForce(force, addDirection);
 
     return NewItem;
 }
