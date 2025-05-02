@@ -54,9 +54,13 @@ AItemBase* UItemDataContainer::GenerateItem(FString ItemID, FVector location, FV
     }
 
     // アイテムを指定した位置と回転でスポーン
-    AItemBase* NewItem = World->SpawnActor<AItemBase>(itemClass, location, rotation);
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+     AItemBase* NewItem = World->SpawnActor<AItemBase>(ItemClass, location, rotation, SpawnParams);
     if (!NewItem)
     {
+        UE_LOG(LogTemp, Error, TEXT("Failed to spawn item. itemClass: %s, location: %s, rotation: %s"), *itemClass->GetName(), *location.ToString(), *rotation.ToString());
         return nullptr;
     }
 

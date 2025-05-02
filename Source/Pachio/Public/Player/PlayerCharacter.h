@@ -19,11 +19,7 @@ UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
-private:
-	// ダッシュしているかどうかのフラグ
-	bool bIsDashing;
-	FVector NewCameraLocation;
-	FVector PlayerOldLocation;
+
 
 public:
 	// Sets default values for this character's properties
@@ -41,7 +37,6 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	void GenerateState();
 	void Movement(const FInputActionValue& Value);
 	void Jump(const FInputActionValue& Value);
 	void JumpStop(const FInputActionValue& Value);
@@ -100,4 +95,10 @@ private:
 	/** Special Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
+
+private:
+	// ダッシュしているかどうかのフラグ
+	bool bIsDashing;
+	FVector NewCameraLocation;
+	FVector PlayerOldLocation;
 };
