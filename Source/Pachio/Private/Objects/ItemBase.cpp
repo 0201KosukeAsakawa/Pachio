@@ -69,7 +69,7 @@ void AItemBase::Init(FString objectID, const FString meshID, const FString mater
 
 void AItemBase::AddForce(float force , FVector addDirection)
 {
-    GetPhysics()->AddForce(addDirection, force);
+    GetPhysics()->AddForce(addDirection, force , true);
 }
 
 void AItemBase::OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
