@@ -19,6 +19,10 @@ UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
+private:
+	// ダッシュしているかどうかのフラグ
+	bool bIsDashing;
+	FVector NewCameraLocation;
 
 public:
 	// Sets default values for this character's properties
@@ -43,11 +47,10 @@ private:
 	void Action(const FInputActionValue& Value);
 	void StopAction();
 
+	UPROPERTY()
 	UStateManager* manager;
-	void ChangeState(FString Tag);
 
-	// ダッシュしているかどうかのフラグ
-	bool bIsDashing;
+	void ChangeState(FString Tag);
 
 private:
 	/** Character用のStaticMesh : Capsule  プレイヤー本体の判定用*/
@@ -58,14 +61,18 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> StompAttackBox;*/
 
-	UPROPERTY(VisibleAnywhere,Category = "BoxCollision")
-	TSubclassOf<UBoxComponent> StompAttackBox;
+	/*UPROPERTY(VisibleAnywhere, Category = "BoxCollision")
+	TSubclassOf<UBoxComponent> StompAttackBox;*/
+
+	// PlayerCharacter.h
+	UPROPERTY(VisibleAnywhere, Category = "BoxCollision")
+	UBoxComponent* UpperAttackBox;
 
 	/** Character用のStaticMesh : Box 　(上、ブロック破壊など)
 	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> UpperAttackBox;*/
 
-	/** Cameraを配置するためのSpringArm */
+	// SpringArmをカメラが追従する設定
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> SpringArm;
 
