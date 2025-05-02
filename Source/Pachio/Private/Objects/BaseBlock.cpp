@@ -76,10 +76,10 @@ void ABaseBlock::Tick(float DeltaTime)
 bool ABaseBlock::TakeDamage(FAttackData attackData, float damage)
 {
     // 状態が存在する場合、ダメージ処理を行う（現在はコメントアウト）
-    //if (CurrentState)
-    //{
-    //    CurrentState->OnHit(FVector(0, 0, 0), attackData);
-    //}
+    if (CurrentState)
+    {
+        CurrentState->OnHit(attackData,FVector(0, 0, 0));
+    }
 
     return true;
 }
@@ -105,8 +105,8 @@ void ABaseBlock::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     // 状態が存在する場合、OnHitを呼び出す
-    if (CurrentState)
-    {
-        CurrentState->OnHit(OtherActor, FVector(0, 0, 0));
-    }
+    //if (CurrentState)
+    //{
+    //    CurrentState->OnHit(OtherActor, FVector(0, 0, 0));
+    //}
 }
