@@ -12,33 +12,26 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "FunctionLibrary.h"
 #include "Player/State/StateManager.h"
+#include "Components/AttackComponent.h"
 
-// Sets default values
 APlayerCharacter::APlayerCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// SpringArmを作成してルートにアタッチ
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	SpringArm->SetupAttachment(RootComponent); // ← これでキャラクターにアタッチされる
+	SpringArm->SetupAttachment(RootComponent);
 
 	// Cameraを作成してSpringArmにアタッチ
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(SpringArm); // ← これでスプリングアームの先にカメラが付きます
+	Camera->SetupAttachment(SpringArm);
 
-	SpringArm->TargetArmLength = 500.0f; // カメラ距離
+	SpringArm->TargetArmLength = 500.0f;
 
-	// キャラの少し右側から見るようにオフセット調整
-	SpringArm->SocketOffset = FVector(0.0f, 100.0f, 50.0f); // Yを+100にするとキャラが画面の左寄りに見える
+	SpringArm->SocketOffset = FVector(0.0f, 100.0f, 50.0f);
 	SpringArm->bUsePawnControlRotation = false;
 
-	//UBoxComponent* CollisionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
-	// 攻撃判定用ボックスの作成
-	UpperAttackBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
-	UpperAttackBox->SetupAttachment(RootComponent);
-	// 判定を無効化（当たり判定が発生しないようにする）
-	UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 }
 
 // Called when the game starts or when spawned
@@ -48,8 +41,25 @@ void APlayerCharacter::BeginPlay()
 
 	bIsDashing = false;
 
+	//中のステートを初期化していない
+	Upper = NewObject<UAttackComponent>(this);
+	Stomp = NewObject<UAttackComponent>(this);
+
 	manager = NewObject<UStateManager>();
 	manager->Init(this,GetWorld());
+
+	//攻撃判定用ボックスの作成
+	UpperAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "A");
+
+	StompAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "B");
+
+	if (!UpperAttackBox || !StompAttackBox)
+		return;
+	UpperAttackBox->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnUpperAttack);
+	StompAttackBox->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnStompAttack);
+
+	UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// SpringArmの設定: Yaw（左右）方向は追従、Pitch（上下）方向は追従しない
 	if (SpringArm)
@@ -131,6 +141,22 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		}
 	}
 
+}
+
+void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!Upper)
+		return;
+
+	Upper->PerformAttack(OtherActor);
+}
+
+void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!Stomp)
+		return;
+
+	Stomp->PerformAttack(OtherActor);
 }
 
 void APlayerCharacter::GenerateState()

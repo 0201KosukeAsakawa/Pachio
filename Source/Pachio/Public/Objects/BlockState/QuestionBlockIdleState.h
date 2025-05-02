@@ -18,5 +18,5 @@ public:
 	virtual bool OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*,const FString materialID = "None")override;
 	virtual bool OnUpdate(ABaseBlock*)override;
 	virtual bool OnExit(ABaseBlock*)override;
-	virtual bool OnHit(const AActor*,FVector)override;
+	virtual bool OnUpperAttack(const AActor*,FVector)override;
 };

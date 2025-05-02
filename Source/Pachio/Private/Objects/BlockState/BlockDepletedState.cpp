@@ -39,7 +39,7 @@ bool UBlockDepletedState::OnExit(ABaseBlock*)
 {
     return true;
 }
-bool UBlockDepletedState::OnHit(const AActor* hitActor, FVector)
+bool UBlockDepletedState::OnUpperAttack(const AActor* hitActor, FVector)
 {
     if (!hitActor || !hitActor->ActorHasTag("Player"))
         return false;

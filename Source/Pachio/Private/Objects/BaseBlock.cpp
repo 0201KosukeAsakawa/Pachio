@@ -92,6 +92,6 @@ void ABaseBlock::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 {
     if (CurrentState)
     {
-        CurrentState->OnHit(OtherActor, FVector(0, 0, 0));
+        CurrentState->OnUpperAttack(OtherActor, FVector(0, 0, 0));
     }
 }

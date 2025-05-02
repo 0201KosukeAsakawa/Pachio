@@ -46,7 +46,7 @@ bool UQuestionBlockIdleState::OnExit(ABaseBlock*)
 	return true;
 }
 
-bool UQuestionBlockIdleState::OnHit(const AActor* OtherActor, FVector)
+bool UQuestionBlockIdleState::OnUpperAttack(const AActor* OtherActor, FVector)
 {
 	--count;
 	if (!OtherActor || !mOwner || !Container || !OtherActor->ActorHasTag("Player"))

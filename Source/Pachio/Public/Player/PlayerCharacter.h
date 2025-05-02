@@ -14,6 +14,7 @@ class IStateBase;
 class UPlayerDefaultState;
 class UInputMappingContext;
 class UStateManager;
+class UAttackComponent;
 
 UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter
@@ -24,6 +25,11 @@ private:
 	bool bIsDashing;
 	FVector NewCameraLocation;
 	FVector PlayerOldLocation;
+	UPROPERTY()
+	UAttackComponent* Upper;
+	UPROPERTY()
+	UAttackComponent* Stomp;
+
 
 public:
 	// Sets default values for this character's properties
@@ -40,6 +46,11 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION()
+	void OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 private:
 	void GenerateState();
 	void Movement(const FInputActionValue& Value);
@@ -47,6 +58,8 @@ private:
 	void JumpStop(const FInputActionValue& Value);
 	void Action(const FInputActionValue& Value);
 	void StopAction();
+
+	
 
 	UPROPERTY()
 	UStateManager* manager;
@@ -58,16 +71,11 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> Capsule;
 
-	/** Characterの攻撃用のStaticMesh : Box 　(下、踏みつけ攻撃など)
-	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> StompAttackBox;*/
-
-	/*UPROPERTY(VisibleAnywhere, Category = "BoxCollision")
-	TSubclassOf<UBoxComponent> StompAttackBox;*/
-
-	// PlayerCharacter.h
-	UPROPERTY(VisibleAnywhere, Category = "BoxCollision")
+	UPROPERTY()
 	UBoxComponent* UpperAttackBox;
+
+	UPROPERTY()
+	UBoxComponent* StompAttackBox;
 
 	/** Character用のStaticMesh : Box 　(上、ブロック破壊など)
 	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
