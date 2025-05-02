@@ -7,6 +7,7 @@
 #include "ItemBase.generated.h"
 
 class UItemEffectSourceComponent;
+class UPhysicsCalculator;
 
 UCLASS()
 class PACHIO_API AItemBase : public AActor
@@ -24,9 +25,22 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	//
+	void Init(FString objectID,const FString meshID = "None", const FString materialID = "None", const FVector direc = FVector(0,0,0));
+
+	void AddForce(float force,FVector addDirection);
 	 UFUNCTION()
     void OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UPhysicsCalculator* GetPhysics()const { return physics; }
 
+private:
 	UPROPERTY()
-	UItemEffectSourceComponent* my;
+	UItemEffectSourceComponent* ItemLogic;
+	UPROPERTY(EditAnywhere)
+	FVector direction;
+	UPROPERTY()
+	UPhysicsCalculator* physics;
+	FString ObjectID;
+	FString MaterialID;
+	FString StaticMeshID;
 };

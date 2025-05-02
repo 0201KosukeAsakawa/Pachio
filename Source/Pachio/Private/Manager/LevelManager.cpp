@@ -21,11 +21,11 @@ void ALevelManager::BeginPlay()
 
 
 	//
-	if (!IsValid(Container))
+	if (!IsValid(BlockContainer))
 	{
-		Container = NewObject<UBlockDataContainer>(this, ContainerClass);
+		BlockContainer = NewObject<UBlockDataContainer>(this, ContainerClass);
 	}
-
+	ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
 	if (!IsValid(ObjectManager))
 	{
 		ObjectManager = NewObject<UObjectManager>(this, ObjectManagerClass);
@@ -143,8 +143,8 @@ void ALevelManager::GenerateBlock()
 			FVector location = FVector(data->Location_X, data->Location_Y, data->Location_Z);
 			FVector scalse = FVector(data->Scale_X, data->Scale_Y,data->Scale_Z);
 			FRotator rotate = FRotator(data->Rotate_X, data->Rotate_Y, data->Rotate_Z);
-			if (Container)
-				Container->GenerateBlock(data->StateID,data->DropItem, data->MaterialID, location, scalse,rotate);
+			if (BlockContainer)
+				BlockContainer->GenerateBlock(data->StateID,data->DropItem, data->MaterialID, location, scalse,rotate);
 		}
 	}
 }

@@ -6,6 +6,9 @@
 #include "Components/ActorComponent.h"
 #include "ItemEffectSource.generated.h"
 
+class UPhysicsCalculator;
+class AItemBase;
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UItemEffectSourceComponent : public UActorComponent
 {
@@ -27,8 +30,11 @@ public:
     virtual void SetDirection(FVector Direction);
 
     // Initializes the effect source
-    virtual void Init();
+    virtual void Init(AItemBase*);
 
     // Updates the effect source every tick or interval
     virtual void Update(float DeltaTime);
+protected:
+    UPROPERTY()
+    AItemBase* mOwner;
 };
