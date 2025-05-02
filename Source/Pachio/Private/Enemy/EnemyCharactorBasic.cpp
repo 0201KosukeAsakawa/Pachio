@@ -38,7 +38,7 @@ void AEnemyCharactorBasic::BeginPlay()
 
 	PhysicsCal = NewObject<UPhysicsCalculator>(this);
 
-	FVector PhyForce = FVector(0.0f, 10.0f, 0.0f);
+	FVector PhyForce = FVector(0.0f, 0.0f, 10.0f);
 }
 
 // Called every frame

@@ -2,6 +2,9 @@
 
 
 #include "Interface/ItemEffectSource.h"
+#include "Objects/ItemBase.h"
+
+#include "Components/PhysicsCalculator.h"
 
 void UItemEffectSourceComponent::OnCollected(UPrimitiveComponent*, AActor*, UPrimitiveComponent*, int32, bool, const FHitResult&)
 {
@@ -11,7 +14,7 @@ void UItemEffectSourceComponent::SetDirection(FVector)
 {
 }
 
-void UItemEffectSourceComponent::Init()
+void UItemEffectSourceComponent::Init(AItemBase*)
 {
 }
 

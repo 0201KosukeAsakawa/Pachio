@@ -16,7 +16,7 @@ void ABaseBlock::BeginPlay()
 {
     Super::BeginPlay();
 
-    Init(StateID, DropItemName);
+    Init(StateID, DropItemID);
 
     // Collision �R���|�[�l���g�̎擾
     Collision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Box");
@@ -35,7 +35,7 @@ void ABaseBlock::BeginPlay()
 void ABaseBlock::Init(FString stateID, FString dorpItemID, FString materialID)
 {
     StateID = stateID;
-    DropItemName = dorpItemID;
+    DropItemID = dorpItemID;
 
     // �R���e�i�̏�����
     if (!Container)

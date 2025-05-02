@@ -31,6 +31,7 @@ public:
 
 	void ChangeState(UBlockState*);
 
+	FString GetDropItemID()const { return DropItemID; }
 private:
 	UFUNCTION()
 	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -39,7 +40,7 @@ private:
 private:
 	//�o��������A�C�e����
 	UPROPERTY(EditAnywhere)
-	FString DropItemName;
+	FString DropItemID;
 
 	//�ŏ��̃N���X�̃^�O
 	UPROPERTY(EditAnywhere)
