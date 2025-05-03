@@ -46,37 +46,3 @@ bool UPlayerSuperState::OnSkill(const FInputActionValue&)
 {
 	return false;
 }
-
-void UPlayerSuperState::Jump(const FInputActionValue& Value)
-{
-}
-
-//各Stateの移動処理
-void UPlayerSuperState::Movement(const FInputActionValue& Value)
-{
-	if (!mOwner || !pWorld)
-		return;
-	FVector2D MoveInput = Value.Get<FVector2D>();
-	FRotator CamRot = mOwner->GetControlRotation();
-	FVector CamForward = CamRot.Vector();
-	FVector CamRight = FRotationMatrix(CamRot).GetUnitAxis(EAxis::Y);
-
-	// ===========================
-	// 通常移動
-	// ===========================
-
-		// 移動処理
-	FVector MoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();
-	mOwner->AddMovementInput(MoveDir, mMoveSpeed);
-
-	// 回転処理（前方向に向く）
-	if (!MoveDir.IsNearlyZero())
-	{
-		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(mOwner->GetActorLocation(), mOwner->GetActorLocation() + MoveDir);
-		TargetRot.Pitch = 0.0f;
-		TargetRot.Roll = 0.0f;
-		FRotator SmoothRot = FMath::RInterpTo(mOwner->GetActorRotation(), TargetRot, pWorld->GetDeltaSeconds(), 10.0f);
-		mOwner->SetActorRotation(SmoothRot);
-	}
-	return;
-}

@@ -1,5 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fi// プレイヤーキャラクターの基本クラス
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,6 +9,7 @@
 #include "InputAction.h"
 #include "PlayerCharacter.generated.h"
 
+// 前方宣言
 class IStateBase;
 class UPlayerDefaultState;
 class UInputMappingContext;
@@ -20,92 +20,102 @@ UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
-private:
-	// �_�b�V�����Ă��邩�ǂ����̃t���O
-	bool bIsDashing;
-	FVector NewCameraLocation;
-	FVector PlayerOldLocation;
-	UPROPERTY()
-	UAttackComponent* Upper;
-	UPROPERTY()
-	UAttackComponent* Stomp;
-
-
 public:
-	// Sets default values for this character's properties
+	// デフォルトコンストラクタ
 	APlayerCharacter();
 
 protected:
-	// Called when the game starts or when spawned
+	// ゲーム開始時に呼ばれる
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
+public:
+	// 毎フレーム呼ばれる
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
+	// 入力をバインド
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// 上攻撃と踏みつけ攻撃の衝突判定
 	UFUNCTION()
 	void OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 	UFUNCTION()
 	void OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 private:
+	// 状態の初期化
 	void GenerateState();
+
+private:
+
+	// 移動・ジャンプ・アクションの入力処理
 	void Movement(const FInputActionValue& Value);
 	void Jump(const FInputActionValue& Value);
 	void JumpStop(const FInputActionValue& Value);
 	void Action(const FInputActionValue& Value);
 	void StopAction();
 
-	
 
-	UPROPERTY()
-	UStateManager* manager;
 
+
+
+	// 状態の変更
 	void ChangeState(FString Tag);
 
 private:
-	/** Character�p��StaticMesh : Capsule  �v���C���[�{�̂̔���p*/
+	// 状態管理クラスへのポインタ
+	UPROPERTY()
+	UStateManager* StateManager;
+
+// 攻撃用のコンポーネント（上攻撃と踏みつけ）
+	UPROPERTY()
+	UAttackComponent* Upper;
+
+	UPROPERTY()
+	UAttackComponent* Stomp;
+
+	// ダッシュ中かどうかのフラグ
+	bool bIsDashing;
+
+	// カメラの新しい位置とプレイヤーの以前の位置
+	FVector NewCameraLocation;
+	FVector PlayerOldLocation;
+
+	
+
+private:
+	// キャラクターのカプセルメッシュ（※独自に追加？）
 	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> Capsule;
 
+	// 攻撃用の当たり判定ボックス
 	UPROPERTY()
 	UBoxComponent* UpperAttackBox;
 
 	UPROPERTY()
 	UBoxComponent* StompAttackBox;
 
-	/** Character�p��StaticMesh : Box �@(��A�u���b�N�j��Ȃ�)
-	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> UpperAttackBox;*/
-
-	// SpringArm���J�������Ǐ]����ݒ�
+	// カメラの回転・距離制御用のスプリングアーム
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> SpringArm;
 
-	/** SpringArm�̐�[�ɔz�u����J���� */
+	// プレイヤー視点用のカメラ
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> Camera;
 
-	/** MappingContext */
+	// 入力マッピングと各アクション
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
 
-	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
 
-	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
-	/** Special Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
 };

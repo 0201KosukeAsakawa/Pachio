@@ -1,85 +1,91 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright notice を Description ページで記載
 
-//�C���N���[�h
+// インクルード
 #include "Player/PlayerCharacter.h"
+#include "Player/State/PlayerDefaultState.h"
+#include "Player/State/StateManager.h"
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/SpringArmComponent.h"
+#include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Player/State/PlayerDefaultState.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "FunctionLibrary.h"
-#include "Player/State/StateManager.h"
-#include "Components/AttackComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
+
+
+// コンストラクタ
 APlayerCharacter::APlayerCharacter()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true; // Tickを有効化
 
-	// SpringArm���쐬���ă��[�g�ɃA�^�b�`
+	// SpringArmの作成とルートへのアタッチ
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
 
-	// Camera���쐬����SpringArm�ɃA�^�b�`
+	// Cameraの作成とSpringArmへのアタッチ
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 
+	// SpringArmの初期設定
 	SpringArm->TargetArmLength = 500.0f;
-
 	SpringArm->SocketOffset = FVector(0.0f, 100.0f, 50.0f);
-	SpringArm->bUsePawnControlRotation = false;
-
-	
+	SpringArm->bUsePawnControlRotation = false; // プレイヤー回転と連動しない
 }
 
-// Called when the game starts or when spawned
+// ゲーム開始時に呼ばれる関数
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	bIsDashing = false;
+	bIsDashing = false; // 初期状態ではダッシュしていない
 
-	//���̃X�e�[�g�����������Ă��Ȃ�
+	// 攻撃コンポーネントの生成
 	Upper = NewObject<UAttackComponent>(this);
 	Stomp = NewObject<UAttackComponent>(this);
 
-	manager = NewObject<UStateManager>();
-	manager->Init(this,GetWorld());
+	// ステートマネージャーの初期化
+	StateManager = NewObject<UStateManager>();
+	StateManager->Init(this, GetWorld());
 
-	//�U������p�{�b�N�X�̍쐬
+	// 攻撃判定用のボックスコンポーネントを探す
 	UpperAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "A");
-
 	StompAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "B");
 
+	// ボックスが見つからなければ処理中断
 	if (!UpperAttackBox || !StompAttackBox)
 		return;
+
+	// 当たり判定のイベント登録
 	UpperAttackBox->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnUpperAttack);
 	StompAttackBox->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnStompAttack);
 
+	// 初期状態では当たり判定を無効にする
 	UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// SpringArm�̐ݒ�: Yaw�i���E�j�����͒Ǐ]�APitch�i�㉺�j�����͒Ǐ]���Ȃ�
+	// SpringArm の回転継承設定
 	if (SpringArm)
 	{
-		SpringArm->bInheritYaw = true;  // ���E�̉�]��Ǐ]
-		SpringArm->bInheritPitch = false;  // �㉺�̉�]��Ǐ]���Ȃ�
-		SpringArm->bInheritRoll = false;  // ���[���i���̉�]�j��Ǐ]���Ȃ�
+		SpringArm->bInheritYaw = true;    // Yaw（左右）は継承する
+		SpringArm->bInheritPitch = false; // Pitch（上下）は継承しない
+		SpringArm->bInheritRoll = false;  // Roll（傾き）は継承しない
 	}
 
+	// カメラとプレイヤーの初期位置記録
 	NewCameraLocation = Camera->GetComponentLocation();
 	PlayerOldLocation = GetActorLocation();
 
-	// Input Action �̐ݒ���s���܂�
+	// JumpAction の再ロード（必要な場合）
 	if (JumpAction)
 	{
-		// InputAction �̓A�Z�b�g�Ƃ��Đݒ肳��Ă���O��
 		JumpAction = LoadObject<UInputAction>(nullptr, TEXT("InputAction'/Game/Path/To/IA_Jump.IA_Jump'"));
 	}
 
-	// Add Input Mapping Context
+	// 入力マッピングコンテキストの追加
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -87,63 +93,60 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	// 重力スケールを強化（より素早い落下）
 	GetCharacterMovement()->GravityScale = 3.0f;
 }
 
-// Called every frame
+// 毎フレーム呼ばれる関数
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// �J�����̈ʒu�� x ���݂̂ɒǏ]������
+	// カメラの位置をプレイヤーの移動に合わせて補正
 	if (SpringArm && Camera)
 	{
-		Camera->SetWorldLocation(NewCameraLocation);  // �X�V�����ʒu���J�����ɔ��f
-		//Camera->SetWorldLocation(FVector(Camera->GetComponentLocation().X, NewCameraLocation.Y, NewCameraLocation.Z));
-		
+		// 現在位置との差分でカメラをY方向のみ追従
 		FVector deff = GetActorLocation() - PlayerOldLocation;
-		Camera->SetWorldLocation(FVector(NewCameraLocation.X, Camera->GetComponentLocation().Y + deff.Y,NewCameraLocation.Z));
+		Camera->SetWorldLocation(FVector(NewCameraLocation.X, Camera->GetComponentLocation().Y + deff.Y, NewCameraLocation.Z));
+
+		// カメラ位置を更新
 		NewCameraLocation = Camera->GetComponentLocation();
 	}
 
+	// 地上にいるときは上攻撃の当たり判定を無効にする
 	if (!GetCharacterMovement()->IsFalling())
 	{
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
-	
+
+	// プレイヤーの現在位置を更新
 	PlayerOldLocation = GetActorLocation();
 }
 
-// Called to bind functionality to input
+// 入力のバインド
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	// Set up action bindings
+
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
-		// Jumping
+		// ジャンプ開始／終了
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Jump);
-		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &APlayerCharacter::JumpStop);
 
-		// Moving
+		// 移動
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Movement);
 
-		// Looking
-		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APachioCharacter::Look);
-
-		//Action
+		// ダッシュ（スペシャルアクション）
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAction);
-
-		//else
-		{
-		}
 	}
-
 }
 
-void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+// 上攻撃時のヒット処理
+void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!Upper)
 		return;
@@ -151,7 +154,9 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 	Upper->PerformAttack(OtherActor);
 }
 
-void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+// 踏みつけ攻撃時のヒット処理
+void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!Stomp)
 		return;
@@ -159,38 +164,75 @@ void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor
 	Stomp->PerformAttack(OtherActor);
 }
 
+// 状態の初期化（未実装）
 void APlayerCharacter::GenerateState()
 {
-	//StateMap.Add("Defaul",TScriptInterface<IStateBase>(NewObject<DefaultPlayerState>()))
+	// 例: StateMap.Add("Default", TScriptInterface<IStateBase>(NewObject<UPlayerDefaultState>()));
 }
 
+// 移動処理（StateManager 経由）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	if (!manager)
-		return;
+	// 入力値（X = 左右, Y = 前後）
+	FVector2D MoveInput = Value.Get<FVector2D>();
 
-	manager->Movement(Value);
+	// カメラの回転から前方・右方向ベクトルを取得
+	FRotator CamRot = GetControlRotation();
+	FVector CamForward = CamRot.Vector(); // 前方ベクトル
+	FVector CamRight = FRotationMatrix(CamRot).GetUnitAxis(EAxis::Y); // 右方向ベクトル
+
+	// ========== 実際の移動処理 ==========
+	// 入力値に基づく移動方向を計算し、正規化
+	FVector MoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();
+
+	// キャラクターを移動させる
+	AddMovementInput(MoveDir, StateManager->GetCurrentState()->GetMoveSpeed());
+
+	// 入力がある場合のみ、キャラクターの向きを滑らかに回転させる
+	if (!MoveDir.IsNearlyZero())
+	{
+		// 向くべき方向を計算
+		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(
+			GetActorLocation(),
+			GetActorLocation() + MoveDir
+		);
+
+		// Pitch（上下）、Roll（傾き）は固定
+		TargetRot.Pitch = 0.0f;
+		TargetRot.Roll = 0.0f;
+
+		// 現在の回転と目標の回転の間をスムーズに補間
+		FRotator SmoothRot = FMath::RInterpTo(
+			GetActorRotation(),
+			TargetRot,
+			GetWorld()->GetDeltaSeconds(),
+			10.0f // 補間スピード
+		);
+
+		// キャラクターの回転を設定
+		SetActorRotation(SmoothRot);
+	}
+
+	return;
 }
 
+// ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	/*if (CurrentState != nullptr)
-	{
-		CurrentState->Jump(Value);
-	}*/
 	if (CanJump())
 	{
 		ACharacter::Jump();
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
-
 }
 
+// ジャンプ終了処理
 void APlayerCharacter::JumpStop(const FInputActionValue& Value)
 {
 	ACharacter::StopJumping();
 }
 
+// ダッシュ開始（移動速度上昇）
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
 	if (!bIsDashing)
@@ -200,6 +242,7 @@ void APlayerCharacter::Action(const FInputActionValue& Value)
 	}
 }
 
+// ダッシュ終了（移動速度戻す）
 void APlayerCharacter::StopAction()
 {
 	if (bIsDashing)
@@ -209,7 +252,8 @@ void APlayerCharacter::StopAction()
 	}
 }
 
+// 状態の変更（タグ指定）
 void APlayerCharacter::ChangeState(FString Tag)
 {
-	manager->ChangeState(Tag);
+	StateManager->ChangeState(Tag);
 }

@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Player/State/PlayerDefaultBase.h"
+#include "Components/PlayerStateComponent.h"
 #include "PlayerSuperState.generated.h"
 
 /**
  * 
  */
-UCLASS()
-class PACHIO_API UPlayerSuperState : public UPlayerStateBase
+UCLASS(Blueprintable)
+class PACHIO_API UPlayerSuperState : public UPlayerStateComponent
 {
 	GENERATED_BODY()
 
@@ -19,7 +19,4 @@ public:
 	bool OnUpdate(float)override;
 	bool OnExit(ACharacter*)override;
 	bool OnSkill(const FInputActionValue&)override;
-	void Jump(const FInputActionValue& Value)override;
-	void Movement(const FInputActionValue& Value)override;
-	
 };
