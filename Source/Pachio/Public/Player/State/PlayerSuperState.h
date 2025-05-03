@@ -16,7 +16,7 @@ class PACHIO_API UPlayerSuperState : public UPlayerStateBase
 
 public:
 	bool OnEnter(ACharacter*, UWorld*)override;
-	bool OnUpdate(ACharacter*)override;
+	bool OnUpdate(float)override;
 	bool OnExit(ACharacter*)override;
 	bool OnSkill(const FInputActionValue&)override;
 	void Jump(const FInputActionValue& Value)override;

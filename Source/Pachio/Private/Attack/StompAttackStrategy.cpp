@@ -10,3 +10,4 @@ void UStompAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAtta
 		id->TakeDamage(attackData,FinalDamage);
 	}
 }
+

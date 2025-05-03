@@ -41,4 +41,7 @@ protected:
     /** 基本攻撃力（各戦略で加算や補正が可能） */
     float BaseAttackPower = 1.0f;
     FAttackData AttackType;
+
+    UPROPERTY()
+    UAttackStrategy* CurrentState;
 };

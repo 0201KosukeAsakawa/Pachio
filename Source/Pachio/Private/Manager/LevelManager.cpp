@@ -21,11 +21,11 @@ void ALevelManager::BeginPlay()
 
 
 	//
-	if (!IsValid(Container))
+	if (!IsValid(BlockContainer))
 	{
-		Container = NewObject<UBlockDataContainer>(this, ContainerClass);
+		BlockContainer = NewObject<UBlockDataContainer>(this, ContainerClass);
 	}
-
+	ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
 	if (!IsValid(ObjectManager))
 	{
 		ObjectManager = NewObject<UObjectManager>(this, ObjectManagerClass);
@@ -113,9 +113,10 @@ void ALevelManager::GenerateStage()
 
 			UE_LOG(LogTemp, Log, TEXT("[%s]:[%f][%f][%f]"), *RowName.ToString(), data->Scale_X, data->Scale_Y, data->Scale_Z);
 			FVector location = FVector(data->Location_X, data->Location_Y, data->Location_Z);
+			FVector scale = FVector(data->Scale_X, data->Scale_Y, data->Scale_Z);
 			FRotator rotate = FRotator(data->Rotate_X, data->Rotate_Y, data->Rotate_Z);
 			if (ObjectManager)
-				ObjectManager->GenerateObject(data->ObjectName,data->MaterialName ,location, rotate);
+				ObjectManager->GenerateObject(data->ObjectName,data->MaterialName ,location,scale, rotate);
 		}
 	}
 }
@@ -140,9 +141,10 @@ void ALevelManager::GenerateBlock()
 				continue;
 			}
 			FVector location = FVector(data->Location_X, data->Location_Y, data->Location_Z);
+			FVector scalse = FVector(data->Scale_X, data->Scale_Y,data->Scale_Z);
 			FRotator rotate = FRotator(data->Rotate_X, data->Rotate_Y, data->Rotate_Z);
-			if (Container)
-				Container->GenerateBlock(data->StateID,data->DropItem, data->MaterialID, location, rotate);
+			if (BlockContainer)
+				BlockContainer->GenerateBlock(data->StateID,data->DropItem, data->MaterialID, location, scalse,rotate);
 		}
 	}
 }

@@ -1,6 +1,6 @@
 //-------------------------------------------
 // ファイル名	：EnemyCharactorBasic.h
-// 内容			：敵キャラクターに共通する処理全般
+// 内容			：敵キャラクターに共通する処理全般（移動・回転・接触）
 //-------------------------------------------
 // Fill out your copyright notice in the Description page of Project Settings.
 
@@ -9,6 +9,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "EnemyCharactorBasic.generated.h"
+
+class UMoveComponent;
+class UPhysicsCalculator;
 
 UCLASS()
 class PACHIO_API AEnemyCharactorBasic : public AActor
@@ -28,19 +31,17 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-
-	UFUNCTION()
-	void MoveTo(float _deltaTime);		//移動処理
-
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* BoxComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* MeshComponent;
 
-protected:
-	// 衝突イベントを処理する関数
-	UFUNCTION()
-	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+private:
+	UPROPERTY();
+	UMoveComponent* MoveComp;
+
+	UPROPERTY();
+	UPhysicsCalculator* PhysicsCal;
 
 };

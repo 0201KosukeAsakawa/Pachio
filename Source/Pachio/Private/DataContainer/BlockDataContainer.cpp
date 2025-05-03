@@ -7,7 +7,6 @@
 
 UBlockState* UBlockDataContainer::CreateState(UObject* WorldContext, FString StateName) const
 {
-    // ���� Find ��g���āA�l�����݂���ꍇ�ɃC���X�^���X��쐬
     if (const TSubclassOf<UBlockState>* BlockStateClass = BlockClassMap.Find(StateName))
     {
         return NewObject<UBlockState>(WorldContext, *BlockStateClass);
@@ -24,7 +23,7 @@ UMaterialInterface* UBlockDataContainer::CreateMaterial(UObject* WorldContext, F
     return nullptr;
 }
 
-bool UBlockDataContainer::GenerateBlock(FString stateID, FString dropItemID, FString materialID, FVector location, FRotator rotator)
+bool UBlockDataContainer::GenerateBlock(FString stateID, FString dropItemID, FString materialID, FVector location, FVector scale ,FRotator rotator)
 {
     if (!BlockClass) return false;
 
@@ -32,8 +31,9 @@ bool UBlockDataContainer::GenerateBlock(FString stateID, FString dropItemID, FSt
     if (!World) return false;
 
     ABaseBlock* NewBlock = World->SpawnActor<ABaseBlock>(BlockClass, location, rotator);
-    if (!NewBlock) return false;
-
+    if (!NewBlock) 
+        return false;
+    NewBlock->SetActorScale3D(scale);
     // Init に this（コンテナ）を渡して、状態・マテリアルを内部で取得
     NewBlock->Init(stateID, dropItemID, materialID);
 

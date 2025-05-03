@@ -48,6 +48,7 @@ public:
         : attackType(EAttackType::Indiscriminate), breakLevel(EBreakLevel::Breakable), BaseDamage(10.f), bIsProjectile(false), bDestroyAfterHit(true), AttackEffect(nullptr)
     {
     }
+
 };
 
 

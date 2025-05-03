@@ -7,6 +7,7 @@ class USoundManager;
 class UDataTable;
 class UBlockDataContainer;
 class UObjectManager;
+class UItemDataContainer;
 
 USTRUCT(BlueprintType)
 struct FStageData : public FTableRowBase
@@ -57,6 +58,9 @@ public:
 
 	void PlaySound(FName Category, FName CueName);
 
+	UBlockDataContainer* GetBlockContainer() const {return BlockContainer;}
+	UItemDataContainer* GetItemContainer()const { return ItemContainer; }
+
 private:
 	void GenerateStage();
 	void GenerateBlock();
@@ -67,6 +71,8 @@ private:
 	TSubclassOf<UBlockDataContainer> ContainerClass;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UObjectManager> ObjectManagerClass;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UItemDataContainer>ItemContainerClass;
 
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UDataTable> StageData;
@@ -76,9 +82,12 @@ private:
 	UPROPERTY()
 	TObjectPtr<USoundManager> SoundManager;
 	UPROPERTY()
-	TObjectPtr<UBlockDataContainer> Container;
+	TObjectPtr<UBlockDataContainer> BlockContainer;	
+	UPROPERTY()
+	TObjectPtr< UItemDataContainer>ItemContainer;
 	UPROPERTY()
 	TObjectPtr<UObjectManager>ObjectManager;
+
 
 
 	/** 安全なシングルトン用 */
