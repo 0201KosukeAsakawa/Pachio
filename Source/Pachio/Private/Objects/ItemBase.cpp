@@ -65,9 +65,9 @@ void AItemBase::Init(FString objectID, const FString meshID, const FString mater
         return;
 
     // LevelManagerが存在すればItemContainerからアイテムの状態を作成
-    if (ALevelManager::GetComponent(GetWorld()))
+    if (ALevelManager::GetInstance(GetWorld()))
     {
-        ItemLogic = ALevelManager::GetComponent(GetWorld())->GetItemContainer()->CreateState(GetWorld(), ObjectID);
+        ItemLogic = ALevelManager::GetInstance(GetWorld())->GetItemContainer()->CreateState(GetWorld(), ObjectID);
     }
 
     // アイテムのロジックが存在すれば初期化

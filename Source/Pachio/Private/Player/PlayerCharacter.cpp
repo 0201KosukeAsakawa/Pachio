@@ -79,12 +79,6 @@ void APlayerCharacter::BeginPlay()
 	NewCameraLocation = Camera->GetComponentLocation();
 	PlayerOldLocation = GetActorLocation();
 
-	// JumpAction の再ロード（必要な場合）
-	if (JumpAction)
-	{
-		JumpAction = LoadObject<UInputAction>(nullptr, TEXT("InputAction'/Game/Path/To/IA_Jump.IA_Jump'"));
-	}
-
 	// 入力マッピングコンテキストの追加
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{

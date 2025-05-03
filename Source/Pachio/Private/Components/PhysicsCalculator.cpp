@@ -69,10 +69,8 @@ void UPhysicsCalculator::AddForce(FVector Direction, float Force,const bool bSwe
 // 重力をオブジェクトに加える
 void UPhysicsCalculator::AddGravity()
 {
-
-	bool b = CanFall(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation());
 	// オブジェクトが落下可能かどうかを判定
-	if (b)
+	if (CanFall(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()))
 	{
 		Timer = 0; // 落下できる場合はタイマーをリセット
 		return;

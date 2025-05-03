@@ -14,11 +14,15 @@ bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner)
 
 	// 移動コンポーネントのインスタンスを生成して初期化
 	MoveComp = NewObject<UMoveComponent>();
+	AActor* actor = Cast<AActor>(mOwner);
+	if (!actor)
+		return false;
+
 	if (MoveComp)
-		MoveComp->Init(Cast<AActor>(mOwner));  // キャラクター自身を渡して初期化
+		MoveComp->Init(actor);  // キャラクター自身を渡して初期化
 
 	// 物理計算コンポーネントの生成（重力など）
-	PhysicsCal = NewObject<UPhysicsCalculator>();
+	PhysicsCal = NewObject<UPhysicsCalculator>(actor);
 
 	return true;
 }
