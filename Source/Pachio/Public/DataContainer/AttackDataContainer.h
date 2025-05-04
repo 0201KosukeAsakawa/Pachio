@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class PACHIO_API UAttackDataContainer : public UObject
 {
 	GENERATED_BODY()
@@ -19,8 +19,8 @@ public:
 
     // 攻撃タイプ → 戦略クラス
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attack")
-    TMap<FString, TSubclassOf<UAttackStrategy>> AttackStrategyMap;
+    TMap<FName, TSubclassOf<UAttackStrategy>> AttackStrategyMap;
 
     // 戦略をインスタンス化して返す
-    UAttackStrategy* CreateStrategy(UObject*, FString ) const;
+    UAttackStrategy* CreateStrategy(UObject*, FName ) const;
 };

@@ -1,112 +1,134 @@
-// Fi// プレイヤーキャラクターの基本クラス
+// プレイヤーキャラクターの基本クラス
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include <GameFramework/SpringArmComponent.h>
-#include <Camera/CameraComponent.h>
-#include "Components/BoxComponent.h"
+#include "Interface/AttackController.h"
 #include "InputAction.h"
+
 #include "PlayerCharacter.generated.h"
 
+// ===========================
 // 前方宣言
+// ===========================
 class IStateBase;
 class UPlayerDefaultState;
 class UInputMappingContext;
 class UStateManager;
 class UAttackComponent;
+class UAttackManagerComponent;
+class USpringArmComponent;
+class UCameraComponent;
+class UBoxComponent;
 
+/**
+ * APlayerCharacter
+ * プレイヤーキャラクターの基底クラス。
+ * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
+ */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter
+class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController
 {
 	GENERATED_BODY()
+
 public:
 	// デフォルトコンストラクタ
 	APlayerCharacter();
 
 protected:
-	// ゲーム開始時に呼ばれる
+	// ゲーム開始時に一度だけ呼ばれる
 	virtual void BeginPlay() override;
 
 public:
-	// 毎フレーム呼ばれる
+	// 毎フレーム更新
 	virtual void Tick(float DeltaTime) override;
 
-	// 入力をバインド
+	// プレイヤー入力のバインディング処理
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// 上攻撃と踏みつけ攻撃の衝突判定
-	UFUNCTION()
-	void OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	// 攻撃戦略の登録
+	virtual bool AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy) override;
 
 private:
-	// 状態の初期化
-	void GenerateState();
+	// ==== 入力アクション ====
 
-private:
-
-	// 移動・ジャンプ・アクションの入力処理
+	// 移動入力
 	void Movement(const FInputActionValue& Value);
+
+	// ジャンプ開始・終了
 	void Jump(const FInputActionValue& Value);
 	void JumpStop(const FInputActionValue& Value);
+
+	// ダッシュ（特殊アクション）開始・終了
 	void Action(const FInputActionValue& Value);
 	void StopAction();
 
-
-
-
-
-	// 状態の変更
+	// ステートの変更（タグ指定）
 	void ChangeState(FString Tag);
 
+	// ==== 攻撃コリジョン ====
+
+	// 上攻撃ヒット処理
+	UFUNCTION()
+	void OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	// 踏みつけ攻撃ヒット処理
+	UFUNCTION()
+	void OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 private:
-	// 状態管理クラスへのポインタ
+	// ==== 状態・戦闘 ====
+
+	// 状態管理コンポーネント
 	UPROPERTY()
 	UStateManager* StateManager;
 
-// 攻撃用のコンポーネント（上攻撃と踏みつけ）
+	// 攻撃管理コンポーネント（各攻撃の取得・実行）
 	UPROPERTY()
-	UAttackComponent* Upper;
+	UAttackManagerComponent* AttackManager;
 
-	UPROPERTY()
-	UAttackComponent* Stomp;
+	// ==== フラグ・座標 ====
 
-	// ダッシュ中かどうかのフラグ
+	// ダッシュ中フラグ
 	bool bIsDashing;
 
-	// カメラの新しい位置とプレイヤーの以前の位置
+	// 前フレームとカメラ位置補正用
 	FVector NewCameraLocation;
 	FVector PlayerOldLocation;
 
-	
+	// ==== メッシュ・コリジョン ====
 
-private:
-	// キャラクターのカプセルメッシュ（※独自に追加？）
+	// キャラクター用のカプセルメッシュ（カスタム追加の場合）
 	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> Capsule;
 
-	// 攻撃用の当たり判定ボックス
+	// 上攻撃用の当たり判定
 	UPROPERTY()
 	UBoxComponent* UpperAttackBox;
 
+	// 踏みつけ攻撃用の当たり判定
 	UPROPERTY()
 	UBoxComponent* StompAttackBox;
 
-	// カメラの回転・距離制御用のスプリングアーム
+	// ==== カメラ ====
+
+	// カメラの回転／位置制御用スプリングアーム
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> SpringArm;
 
-	// プレイヤー視点用のカメラ
+	// プレイヤー視点用カメラ
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> Camera;
 
-	// 入力マッピングと各アクション
+	// ==== 入力マッピング ====
+
+	// 使用する入力マッピングコンテキスト（Enhanced Input）
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
+	// 各種アクション設定
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
 

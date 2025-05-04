@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Interface/ItemEffectSource.h"
+#include "Components/ItemEffectSource.h"
 #include "Objects/ItemBase.h"
-
 #include "Components/PhysicsCalculator.h"
 
 void UItemEffectSourceComponent::OnCollected(UPrimitiveComponent*, AActor*, UPrimitiveComponent*, int32, bool, const FHitResult&)

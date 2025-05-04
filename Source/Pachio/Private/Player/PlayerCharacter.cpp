@@ -7,7 +7,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/AttackManagerComponent.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
@@ -44,8 +46,14 @@ void APlayerCharacter::BeginPlay()
 	bIsDashing = false; // 初期状態ではダッシュしていない
 
 	// 攻撃コンポーネントの生成
-	Upper = NewObject<UAttackComponent>(this);
-	Stomp = NewObject<UAttackComponent>(this);
+	AttackManager = NewObject<UAttackManagerComponent>(this);
+
+	if (AttackManager)
+	{
+		AttackManager->Init(GetWorld());
+		AttackManager->ResetMap();
+		AttackManager->RegisterAttackComponent("Stomp");
+	}
 
 	// ステートマネージャーの初期化
 	StateManager = NewObject<UStateManager>();
@@ -97,16 +105,16 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// カメラの位置をプレイヤーの移動に合わせて補正
-	if (SpringArm && Camera)
-	{
-		// 現在位置との差分でカメラをY方向のみ追従
-		FVector deff = GetActorLocation() - PlayerOldLocation;
-		Camera->SetWorldLocation(FVector(NewCameraLocation.X, Camera->GetComponentLocation().Y + deff.Y, NewCameraLocation.Z));
+	//// カメラの位置をプレイヤーの移動に合わせて補正
+	//if (SpringArm && Camera)
+	//{
+	//	// 現在位置との差分でカメラをY方向のみ追従
+	//	FVector deff = GetActorLocation() - PlayerOldLocation;
+	//	Camera->SetWorldLocation(FVector(NewCameraLocation.X, Camera->GetComponentLocation().Y + deff.Y, NewCameraLocation.Z));
 
-		// カメラ位置を更新
-		NewCameraLocation = Camera->GetComponentLocation();
-	}
+	//	// カメラ位置を更新
+	//	NewCameraLocation = Camera->GetComponentLocation();
+	//}
 
 	// 地上にいるときは上攻撃の当たり判定を無効にする
 	if (!GetCharacterMovement()->IsFalling())
@@ -138,30 +146,30 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	}
 }
 
+bool APlayerCharacter::AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy)
+{
+
+	return true;
+}
+
 // 上攻撃時のヒット処理
 void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!Upper)
+	if (!AttackManager)
 		return;
 
-	Upper->PerformAttack(OtherActor);
+	AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor);
 }
 
 // 踏みつけ攻撃時のヒット処理
 void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!Stomp)
+	if (!AttackManager)
 		return;
 
-	Stomp->PerformAttack(OtherActor);
-}
-
-// 状態の初期化（未実装）
-void APlayerCharacter::GenerateState()
-{
-	// 例: StateMap.Add("Default", TScriptInterface<IStateBase>(NewObject<UPlayerDefaultState>()));
+	AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor);
 }
 
 // 移動処理（StateManager 経由）

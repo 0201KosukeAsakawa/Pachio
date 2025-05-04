@@ -16,14 +16,16 @@ public:
 
     /** 新しい攻撃戦略を設定する */
     UFUNCTION(BlueprintCallable, Category = "Attack")
-    void SetAttackStrategy(UAttackStrategy* NewStrategy);
+    bool SetAttackStrategy(FName NewStrategy);
 
     /** 対象アクターに攻撃を実行する */
     UFUNCTION(BlueprintCallable, Category = "Attack")
-    void PerformAttack(AActor* Target);
+    const void PerformAttack(AActor* Target);
 
     /** 攻撃力を取得する */
     float GetAttackPower() const;
+
+    void Init(UWorld*);
 
 protected:
     virtual void BeginPlay() override;
@@ -44,4 +46,7 @@ protected:
 
     UPROPERTY()
     UAttackStrategy* CurrentState;
+
+    UPROPERTY()
+    UWorld* pWorld;
 };

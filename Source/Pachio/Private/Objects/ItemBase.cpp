@@ -4,7 +4,7 @@
 #include "Objects/SuperMushroom.h"
 #include "DataContainer/ItemDataContainer.h"
 #include "Components/SphereComponent.h"
-#include "Interface/ItemEffectSource.h"
+#include "Components/ItemEffectSource.h"
 #include "Components/PhysicsCalculator.h"
 #include "Manager/LevelManager.h"
 #include "FunctionLibrary.h"

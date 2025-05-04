@@ -1,78 +1,93 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// ItemDataContainer.cpp
 
 #include "DataContainer/ItemDataContainer.h"
-#include "Interface/ItemEffectSource.h"
+#include "Components/ItemEffectSource.h"
 #include "Objects/ItemBase.h"
 
-// CreateStateŠÖ”: w’è‚³‚ê‚½StateName‚ÉŠî‚Ã‚¢‚ÄAƒAƒCƒeƒ€‚ÌƒGƒtƒFƒNƒgƒ\[ƒXƒRƒ“ƒ|[ƒlƒ“ƒg‚ğ¶¬
+// æŒ‡å®šã•ã‚ŒãŸ StateName ã«å¯¾å¿œã™ã‚‹ UItemEffectSourceComponent ã®æ´¾ç”Ÿã‚¯ãƒ©ã‚¹ã‚’ç”Ÿæˆã—ã¦è¿”ã™
+// ç™»éŒ²ã•ã‚Œã¦ã„ãªã„å ´åˆã¯ nullptr ã‚’è¿”ã™
 UItemEffectSourceComponent* UItemDataContainer::CreateState(UObject* WorldContext, FString StateName) const
 {
-    // StateName‚É‘Î‰‚·‚éƒAƒCƒeƒ€‚ÌƒNƒ‰ƒX‚ªƒ}ƒbƒv“à‚É‚ ‚é‚©Šm”F
     if (const TSubclassOf<UItemEffectSourceComponent>* BlockStateClass = ItemClassMap.Find(StateName))
     {
-        // V‚µ‚¢ƒGƒtƒFƒNƒgƒ\[ƒXƒRƒ“ƒ|[ƒlƒ“ƒg‚ğ¶¬
         return NewObject<UItemEffectSourceComponent>(WorldContext, *BlockStateClass);
     }
-    // ƒNƒ‰ƒX‚ªŒ©‚Â‚©‚ç‚È‚¯‚ê‚Înullptr‚ğ•Ô‚·
     return nullptr;
 }
 
-// CreateMaterialŠÖ”: StateName‚ÉŠî‚Ã‚¢‚ÄƒAƒCƒeƒ€‚Ìƒ}ƒeƒŠƒAƒ‹‚ğ¶¬
+// æŒ‡å®šã•ã‚ŒãŸ StateName ã«å¯¾å¿œã™ã‚‹ãƒãƒ†ãƒªã‚¢ãƒ«ã‚¢ã‚»ãƒƒãƒˆã‚’åŒæœŸçš„ã«èª­ã¿è¾¼ã¿ã€UMaterialInterface ã¨ã—ã¦è¿”ã™
+// è©²å½“ã®ãƒãƒ†ãƒªã‚¢ãƒ«ãŒå­˜åœ¨ã—ãªã„ã€ã¾ãŸã¯èª­ã¿è¾¼ã¿ã«å¤±æ•—ã—ãŸå ´åˆã¯ nullptr ã‚’è¿”ã™
+// â€»åŒæœŸèª­ã¿è¾¼ã¿ã¯ã‚²ãƒ¼ãƒ ä¸­ã«ä½¿ç”¨ã™ã‚‹ã¨ãƒ‘ãƒ•ã‚©ãƒ¼ãƒãƒ³ã‚¹ã«å½±éŸ¿ã‚’ä¸ãˆã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ãŸã‚æ³¨æ„
 UMaterialInterface* UItemDataContainer::CreateMaterial(UObject* WorldContext, FString StateName)
 {
-    // StateName‚É‘Î‰‚·‚éƒ}ƒeƒŠƒAƒ‹‚ªƒ}ƒbƒv“à‚É‚ ‚é‚©Šm”F
     if (const TSoftObjectPtr<UMaterialInterface>* MaterialPtr = MaterialMap.Find(StateName))
     {
-        // ƒ}ƒeƒŠƒAƒ‹‚ğ“¯Šú“I‚Éƒ[ƒh‚µ‚Ä•Ô‚·
         return MaterialPtr->LoadSynchronous();
     }
-    // ƒ}ƒeƒŠƒAƒ‹‚ªŒ©‚Â‚©‚ç‚È‚¯‚ê‚Înullptr‚ğ•Ô‚·
     return nullptr;
 }
 
-// GenerateItemŠÖ”: ƒAƒCƒeƒ€‚ğ¶¬‚µ‚Ä‰Šú‰»‚·‚é
+// æŒ‡å®šã•ã‚ŒãŸ ItemID ã«å¯¾å¿œã™ã‚‹ã‚¢ã‚¤ãƒ†ãƒ ã‚’ç”Ÿæˆã—ã€åˆæœŸåŒ–ã—ã¦è¿”ã™
+//
+// åˆæœŸåŒ–å†…å®¹:
+// - ã‚¹ã‚±ãƒ¼ãƒ«ã€ä½ç½®ã€å›è»¢ã®è¨­å®š
+// - IDã€ãƒ¡ãƒƒã‚·ãƒ¥IDã€ãƒãƒ†ãƒªã‚¢ãƒ«ID ã«ã‚ˆã‚‹ãƒ“ã‚¸ãƒ¥ã‚¢ãƒ«åˆæœŸåŒ–
+// - åˆæœŸç§»å‹•æ–¹å‘ã¨åŠ›ã®åŠ ç®—
+//
+// @param ItemID        : ã‚¢ã‚¤ãƒ†ãƒ ã®è­˜åˆ¥å­ï¼ˆItemClassMap ã«ç™»éŒ²ã•ã‚Œã¦ã„ã‚‹ã‚­ãƒ¼ï¼‰
+// @param location      : ãƒ¯ãƒ¼ãƒ«ãƒ‰å†…ã§ã®ç”Ÿæˆä½ç½®
+// @param direction     : ã‚¢ã‚¤ãƒ†ãƒ ã®åˆæœŸé€²è¡Œæ–¹å‘
+// @param force         : åŠ ãˆã‚‹ç‰©ç†çš„ãªåŠ›ã®å¤§ãã•
+// @param addDirection  : åŠ›ã‚’åŠ ãˆã‚‹æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
+// @param scale         : ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ï¼ˆæ‹¡å¤§ç¸®å°ï¼‰ä¿‚æ•°
+// @param rotation      : åˆæœŸå›è»¢
+// @param meshID        : è¡¨ç¤ºç”¨ã®ãƒ¡ãƒƒã‚·ãƒ¥è­˜åˆ¥å­
+// @param materialID    : è¡¨ç¤ºç”¨ã®ãƒãƒ†ãƒªã‚¢ãƒ«è­˜åˆ¥å­
+//
+// @return              : æˆåŠŸæ™‚ã¯ AItemBase ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã€å¤±æ•—æ™‚ã¯ nullptr
 AItemBase* UItemDataContainer::GenerateItem(FString ItemID, FVector location, FVector direction, float force, FVector addDirection, FVector scale, FRotator rotation, const FString meshID, const FString materialID)
 {
-    // ItemID‚É‘Î‰‚·‚éƒAƒCƒeƒ€‚ªItemClassMap“à‚É‘¶İ‚µ‚È‚¢ê‡Anullptr‚ğ•Ô‚·
+    // ItemID ã«å¯¾å¿œã™ã‚‹ã‚¯ãƒ©ã‚¹ãŒç™»éŒ²ã•ã‚Œã¦ã„ãªã‘ã‚Œã° nullptr ã‚’è¿”ã™
     if (!ItemClassMap.Contains(ItemID))
     {
         return nullptr;
     }
 
-    // ƒAƒCƒeƒ€‚ÌƒNƒ‰ƒX‚ğæ“¾
+    // ã‚¢ã‚¤ãƒ†ãƒ ã‚¯ãƒ©ã‚¹å–å¾—
     UClass* itemClass = ItemClassMap[ItemID];
     if (!itemClass)
     {
         return nullptr;
     }
 
-    // Œ»İ‚ÌWorld‚ğæ“¾
+    // World ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å–å¾—
     UWorld* World = GEngine->GetWorldFromContextObjectChecked(this);
     if (!World)
     {
         return nullptr;
     }
 
-    // ƒAƒCƒeƒ€‚ğw’è‚µ‚½ˆÊ’u‚Æ‰ñ“]‚ÅƒXƒ|[ƒ“
+    // ã‚¢ã‚¤ãƒ†ãƒ ã®ã‚¹ãƒãƒ¼ãƒ³ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿è¨­å®š
     FActorSpawnParameters SpawnParams;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-     AItemBase* NewItem = World->SpawnActor<AItemBase>(ItemClass, location, rotation, SpawnParams);
+    // ã‚¢ã‚¤ãƒ†ãƒ ã®ç”Ÿæˆ
+    AItemBase* NewItem = World->SpawnActor<AItemBase>(itemClass, location, rotation, SpawnParams);
     if (!NewItem)
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to spawn item. itemClass: %s, location: %s, rotation: %s"), *itemClass->GetName(), *location.ToString(), *rotation.ToString());
+        UE_LOG(LogTemp, Error, TEXT("Failed to spawn item. itemClass: %s, location: %s, rotation: %s"),
+            *itemClass->GetName(), *location.ToString(), *rotation.ToString());
         return nullptr;
     }
 
-    // ƒAƒCƒeƒ€‚ÌƒXƒP[ƒ‹‚ğİ’è
+    // ã‚¹ã‚±ãƒ¼ãƒ«è¨­å®š
     NewItem->SetActorScale3D(scale);
 
-    // ƒAƒCƒeƒ€‚ğ‰Šú‰»iID, ƒƒbƒVƒ…ID, ƒ}ƒeƒŠƒAƒ‹IDA•ûŒü‚ğ“n‚·j
+    // åˆæœŸåŒ–ï¼ˆIDã€ãƒ¡ãƒƒã‚·ãƒ¥ã€ãƒãƒ†ãƒªã‚¢ãƒ«ã€é€²è¡Œæ–¹å‘ï¼‰
     NewItem->Init(ItemID, meshID, materialID, direction);
 
-    // ƒAƒCƒeƒ€‚É—Í‚ğ‰Á‚¦‚é
+    // åŠ›ã‚’åŠ ãˆã‚‹
     NewItem->AddForce(force, addDirection);
 
-    // ¶¬‚µ‚½ƒAƒCƒeƒ€‚ğ•Ô‚·
     return NewItem;
 }

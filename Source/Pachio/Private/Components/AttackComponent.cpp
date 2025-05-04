@@ -1,7 +1,7 @@
 #include "Components/AttackComponent.h"
 #include "Attack/AttackStrategy.h"
-
-
+#include "Manager/LevelManager.h"
+#include "DataContainer/AttackDataContainer.h"
 
 UAttackComponent::UAttackComponent()
 {
@@ -13,9 +13,6 @@ void UAttackComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    UAttackStrategy* Stomp = NewObject<UAttackStrategy>(this);
-    UAttackStrategy* Upper = NewObject<UAttackStrategy>(this);
-
     // ゲーム開始時にデフォルトの攻撃戦略をインスタンス化
     if (DefaultAttackStrategyClass)
     {
@@ -23,14 +20,19 @@ void UAttackComponent::BeginPlay()
     }
 }
 
-void UAttackComponent::SetAttackStrategy(UAttackStrategy* NewStrategy)
+bool UAttackComponent::SetAttackStrategy(FName NewStrategy)
 {
-    // 新しい戦略が有効であれば差し替える
-    if (NewStrategy)
-    {
-        CurrentStrategy = NewStrategy;
-    }
+    if (!pWorld)
+        return false;
 
+     UAttackStrategy* ua =   ALevelManager::GetInstance(GetWorld())->GetAttackDataContainer()->CreateStrategy(pWorld, NewStrategy);
+    
+     if (!ua)
+         return false;
+
+     CurrentStrategy = ua;
+
+    return true;
 }
 
 float UAttackComponent::GetAttackPower() const
@@ -39,15 +41,20 @@ float UAttackComponent::GetAttackPower() const
     return BaseAttackPower;
 }
 
-void UAttackComponent::PerformAttack(AActor* Target)
+void UAttackComponent::Init(UWorld* world)
+{
+    if (!world)
+        return;
+
+    pWorld = world;
+}
+
+const void UAttackComponent::PerformAttack(AActor* Target)
 {
     // 現在の攻撃戦略が存在し、対象が有効な場合に攻撃を実行
     if (CurrentStrategy && Target)
     {
-        // ダメージ計算（戦略が持つ基本ダメージ × プレイヤーの攻撃力）
-        float FinalDamage = CurrentStrategy->GetBaseDamage() * GetAttackPower();
-
         // 戦略に応じた攻撃効果を実行（ノックバックやエフェクトも含めて処理）
-        CurrentStrategy->ExecuteEffect(GetOwner(), Target, AttackType, FinalDamage);
+        CurrentStrategy->ExecuteEffect(GetOwner(), Target, AttackType, BaseAttackPower);
     }
 }
