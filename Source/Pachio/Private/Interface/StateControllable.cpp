@@ -4,3 +4,8 @@
 #include "Interface/StateControllable.h"
 
 // Add default functionality here for any IStateControllable functions that are not pure virtual.
+
+bool IStateControllable::ChangeState(FString Tag)
+{
+	return false;
+}

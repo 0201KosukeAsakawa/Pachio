@@ -6,7 +6,7 @@
 #include "Components/MoveComponent.h"
 #include "FunctionLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "Player/PlayerCharacter.h"
+#include "Interface/StateControllable.h"
 #include "Objects/ItemBase.h"
 
 USuperMushroomComponent::USuperMushroomComponent()
@@ -26,6 +26,7 @@ void USuperMushroomComponent::Init(AItemBase* owner)
     // 移動コンポーネントの初期化
     moveComp = NewObject<UMoveComponent>(this);
     moveComp->Init(mOwner);  // 移動コンポーネントに所有者を設定
+    moveComp->SetSpeed(0.0f);
 }
 
 void USuperMushroomComponent::Update(float DeltaTime)
@@ -43,11 +44,14 @@ void USuperMushroomComponent::Update(float DeltaTime)
 
 void USuperMushroomComponent::OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+    if (!mOwner)
+        return;
+
     // 他のアクターがマリオかどうかを確認
-    if (APlayerCharacter* Mario = Cast<APlayerCharacter>(OtherActor))
+    if (IStateControllable* Mario = Cast<IStateControllable>(OtherActor))
     {
         // マリオにパワーアップの通知を送る（現在はコメントアウトされている）
-        // Mario->RequestPowerUp(EPowerUpType::SuperMushroom);
+        Mario->ChangeState("Super");
 
         // パワーアップエフェクトが設定されていれば表示
         if (PowerUpEffect)
@@ -56,7 +60,7 @@ void USuperMushroomComponent::OnCollected(UPrimitiveComponent* OverlappedComp, A
         }
 
         // アイテムを消す処理（コメントアウトされている）
-        // Destroy();
+        mOwner->Destroy();
     }
 }
 

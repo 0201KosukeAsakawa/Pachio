@@ -16,7 +16,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "FunctionLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
-
+#include "InputAction.h"
 
 
 // コンストラクタ
@@ -255,7 +255,7 @@ void APlayerCharacter::StopAction()
 }
 
 // 状態の変更（タグ指定）
-void APlayerCharacter::ChangeState(FString Tag)
+bool APlayerCharacter::ChangeState(FString Tag)
 {
-	StateManager->ChangeState(Tag);
+	return StateManager->ChangeState(Tag);
 }

@@ -72,7 +72,7 @@ AItemBase* UItemDataContainer::GenerateItem(FString ItemID, FVector location, FV
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
     // アイテムの生成
-    AItemBase* NewItem = World->SpawnActor<AItemBase>(itemClass, location, rotation, SpawnParams);
+    AItemBase* NewItem = World->SpawnActor<AItemBase>(ItemClass, location, rotation, SpawnParams);
     if (!NewItem)
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to spawn item. itemClass: %s, location: %s, rotation: %s"),

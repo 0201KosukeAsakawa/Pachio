@@ -4,8 +4,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interface/AttackController.h"
-#include "InputAction.h"
-
+#include "Interface/StateControllable.h"
 #include "PlayerCharacter.generated.h"
 
 // ===========================
@@ -20,14 +19,16 @@ class UAttackManagerComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UBoxComponent;
+class UInputAction;
 
+struct FInputActionValue;
 /**
  * APlayerCharacter
  * プレイヤーキャラクターの基底クラス。
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController
+class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController,public IStateControllable
 {
 	GENERATED_BODY()
 
@@ -64,7 +65,7 @@ private:
 	void StopAction();
 
 	// ステートの変更（タグ指定）
-	void ChangeState(FString Tag);
+	bool ChangeState(FString Tag)override;
 
 	// ==== 攻撃コリジョン ====
 

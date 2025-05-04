@@ -1,4 +1,7 @@
 #include "Player/State/StateManager.h"
+#include "Player/State/PlayerDefaultState.h"
+#include "Player/State/PlayerSuperState.h"
+#include "Components/PlayerStateComponent.h"
 
 // コンストラクタ：このコンポーネントが毎フレームTickするように設定
 UStateManager::UStateManager()
@@ -40,12 +43,12 @@ void UStateManager::Update(float deltaTime)
 }
 
 // ステートを指定された名前（タグ）に切り替える
-void UStateManager::ChangeState(FString nextState)
+bool UStateManager::ChangeState(FString nextState)
 {
 	// 次のステートをマップから取得
 	UPlayerStateComponent* next = StateMap[nextState];
 	if (!next || !mOwner || !pWorld)
-		return;
+		return false;
 
 	// 現在のステートがある場合はOnExitでクリーンアップ
 	if (CurrentState)
@@ -56,4 +59,6 @@ void UStateManager::ChangeState(FString nextState)
 	// 新しいステートに切り替え
 	CurrentState = next;
 	CurrentState->OnEnter(mOwner, pWorld); // 新ステートの初期化処理
+
+	return true;
 }
