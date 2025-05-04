@@ -51,6 +51,7 @@ bool AEnemyCharacter::TakeDamage(FAttackData Data, float damage)
 
 	HP -= damage;
 	// 今後の処理実装予定。現時点ではダメージ処理なし。
+	Destroy();
 	return true;
 }
 

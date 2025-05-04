@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class PACHIO_API UPlayerDefaultState : public UPlayerStateComponent
 {
 	GENERATED_BODY()

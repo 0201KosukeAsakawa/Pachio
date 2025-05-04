@@ -23,9 +23,6 @@ void UStateManager::Init(ACharacter* owner, UWorld* world)
 	UPlayerDefaultState* Default = NewObject<UPlayerDefaultState>(mOwner); // 通常状態
 	UPlayerSuperState* Super = NewObject<UPlayerSuperState>(mOwner);       // スーパー状態（強化状態）
 
-	// ステートマップに登録（文字列タグをキーに）
-	StateMap.Add("Default", Default);
-	StateMap.Add("Super", Super);
 	// 今後 "Fire" や "Jumping" などを追加していくことも可能
 
 	// 初期状態を "Default" に設定
@@ -42,23 +39,26 @@ void UStateManager::Update(float deltaTime)
 	}
 }
 
-// ステートを指定された名前（タグ）に切り替える
-bool UStateManager::ChangeState(FString nextState)
+bool UStateManager::ChangeState(FString NextStateTag)
 {
-	// 次のステートをマップから取得
-	UPlayerStateComponent* next = StateMap[nextState];
-	if (!next || !mOwner || !pWorld)
+	if (StateClassMap.IsEmpty() || !StateClassMap.Contains(NextStateTag) || !mOwner || !pWorld)
 		return false;
 
-	// 現在のステートがある場合はOnExitでクリーンアップ
+	TSubclassOf<UPlayerStateComponent> StateClass = StateClassMap[NextStateTag];
+
+	// 既存ステートを終了
 	if (CurrentState)
 	{
 		CurrentState->OnExit(mOwner);
+		CurrentState->ConditionalBeginDestroy(); // メモリ解放（必要に応じて）
+		CurrentState = nullptr;
 	}
 
-	// 新しいステートに切り替え
-	CurrentState = next;
-	CurrentState->OnEnter(mOwner, pWorld); // 新ステートの初期化処理
+	// 新しいステートを生成
+	CurrentState = NewObject<UPlayerStateComponent>(mOwner, StateClass);
+	if (!CurrentState)
+		return false;
 
+	CurrentState->OnEnter(mOwner, pWorld);
 	return true;
 }

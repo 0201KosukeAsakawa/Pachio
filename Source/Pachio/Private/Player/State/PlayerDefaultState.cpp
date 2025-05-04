@@ -3,6 +3,7 @@
 #include "Player/State/PlayerDefaultState.h"
 #include "InputActionValue.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "FunctionLibrary.h"
 #include "Components/StaticMeshComponent.h"
 
 // ステートに入る際に実行される処理
@@ -19,10 +20,10 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 	pWorld = world;
 
 	// マテリアルの設定（デフォルトステート用）
-	if (NewMaterial != nullptr)
+	//if (NewMaterial)
 	{
 		// キャラクターが持つ StaticMeshComponent を取得
-		UStaticMeshComponent* StaticMeshComp = owner->FindComponentByClass<UStaticMeshComponent>();
+		UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
 		UMaterialInterface* N = NewMaterial.LoadSynchronous(); // 非同期ロードに対応
 		if (N != nullptr && StaticMeshComp)
 		{

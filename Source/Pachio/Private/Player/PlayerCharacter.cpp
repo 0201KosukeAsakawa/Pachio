@@ -53,15 +53,19 @@ void APlayerCharacter::BeginPlay()
 		AttackManager->Init(GetWorld());
 		AttackManager->ResetMap();
 		AttackManager->RegisterAttackComponent("Stomp");
+		AttackManager->RegisterAttackComponent("Upper");
 	}
 
-	// ステートマネージャーの初期化
-	StateManager = NewObject<UStateManager>();
-	StateManager->Init(this, GetWorld());
+	if (StateManagerClass)
+	{
+		StateManager = NewObject<UStateManager>(this, StateManagerClass);
+		StateManager->RegisterComponent(); // Register as component
+		StateManager->Init(this, GetWorld());
+	}
 
 	// 攻撃判定用のボックスコンポーネントを探す
-	UpperAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "A");
-	StompAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "B");
+	UpperAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Upper");
+	StompAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Stomp");
 
 	// ボックスが見つからなければ処理中断
 	if (!UpperAttackBox || !StompAttackBox)
@@ -100,31 +104,61 @@ void APlayerCharacter::BeginPlay()
 	GetCharacterMovement()->GravityScale = 3.0f;
 }
 
-// 毎フレーム呼ばれる関数
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//// カメラの位置をプレイヤーの移動に合わせて補正
-	//if (SpringArm && Camera)
-	//{
-	//	// 現在位置との差分でカメラをY方向のみ追従
-	//	FVector deff = GetActorLocation() - PlayerOldLocation;
-	//	Camera->SetWorldLocation(FVector(NewCameraLocation.X, Camera->GetComponentLocation().Y + deff.Y, NewCameraLocation.Z));
+	if (!UpperAttackBox || !StateManager)
+		return;
 
-	//	// カメラ位置を更新
-	//	NewCameraLocation = Camera->GetComponentLocation();
-	//}
+	StateManager->Update(DeltaTime);
 
-	// 地上にいるときは上攻撃の当たり判定を無効にする
+	// プレイヤーの現在Y座標を取得
+	float PlayerY = GetActorLocation().Y;
+
+	// カメラが存在するならスクロール制御
+	if (SpringArm && Camera)
+	{
+		// --- 最大カメラY位置を記録（右スクロールのみ） ---
+		static float MaxCameraY = Camera->GetComponentLocation().Y;
+		if (PlayerY > MaxCameraY)
+		{
+			MaxCameraY = PlayerY;
+		}
+
+		// --- カメラを最大Yに追従（戻らない） ---
+		FVector CurrentCamLoc = Camera->GetComponentLocation();
+		FVector TargetCamLoc = FVector(CurrentCamLoc.X, MaxCameraY, CurrentCamLoc.Z);
+		Camera->SetWorldLocation(TargetCamLoc);
+		NewCameraLocation = Camera->GetComponentLocation();
+
+		// --- カメラの視界の左端を計算（OrthoWidth → 横幅） ---
+		float OrthoWidth = Camera->OrthoWidth;
+		float AspectRatio = Camera->AspectRatio > 0 ? Camera->AspectRatio : 1.777f; // fallback 16:9
+		float CameraHalfWidth = (OrthoWidth * 0.5f) * AspectRatio;
+		float CameraBackLimitY = MaxCameraY - CameraHalfWidth;
+
+		// --- プレイヤーが視界外に戻らないよう制限 ---
+		FVector Location = GetActorLocation();
+		if (Location.Y < CameraBackLimitY)
+		{
+			Location.Y = CameraBackLimitY;
+			SetActorLocation(Location);
+		}
+	}
+
+	// --- 地上にいるとき、上攻撃＆踏みつけ判定を無効化 ---
 	if (!GetCharacterMovement()->IsFalling())
 	{
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
-	// プレイヤーの現在位置を更新
+	// --- プレイヤーの前フレーム位置を保存 ---
 	PlayerOldLocation = GetActorLocation();
 }
+
+
 
 // 入力のバインド
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -156,16 +190,18 @@ bool APlayerCharacter::AssignAttackStrategy(FName AttackID, UAttackStrategy* New
 void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	UE_LOG(LogTemp, Log, TEXT("UPPER!"));
 	if (!AttackManager)
 		return;
 
-	AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor);
+	AttackManager->GetAttack("Upper")->PerformAttack(OtherActor);
 }
 
 // 踏みつけ攻撃時のヒット処理
 void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	UE_LOG(LogTemp, Log, TEXT("Stomp!"));
 	if (!AttackManager)
 		return;
 
@@ -225,6 +261,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 	{
 		ACharacter::Jump();
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 }
 

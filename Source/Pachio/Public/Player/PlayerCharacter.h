@@ -82,6 +82,10 @@ private:
 private:
 	// ==== 状態・戦闘 ====
 
+
+	UPROPERTY(EditAnywhere, Category = "State")
+	TSubclassOf<UStateManager> StateManagerClass;
+
 	// 状態管理コンポーネント
 	UPROPERTY()
 	UStateManager* StateManager;

@@ -4,18 +4,20 @@
 #include "UObject/NoExportTypes.h"
 #include "AttackStrategy.generated.h"
 
-enum class EAttackType : uint8
-{
-    Player,
-    Enemy,
-    Indiscriminate,
-};
-
+UENUM(BlueprintType)
 enum class EBreakLevel : uint8
 {
-    Unbreakable,  // 壊せない
-    Functional,   // 作動できる
-    Breakable     // 壊せる
+    Unbreakable   UMETA(DisplayName = "Unbreakable"),
+    Functional    UMETA(DisplayName = "Functional"),
+    Breakable     UMETA(DisplayName = "Breakable")
+};
+
+UENUM(BlueprintType)
+enum class EAttackType : uint8
+{
+    Player           UMETA(DisplayName = "Player"),
+    Enemy            UMETA(DisplayName = "Enemy"),
+    Indiscriminate   UMETA(DisplayName = "Indiscriminate")
 };
 
 USTRUCT()
@@ -25,9 +27,11 @@ struct FAttackData : public FTableRowBase
 
 public:
     // 誰の発信の攻撃か
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack Strategy")
     EAttackType attackType;
 
     // ブロックに対する影響力
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack Strategy")
     EBreakLevel breakLevel;
 
     // 攻撃に必要な基本プロパティ

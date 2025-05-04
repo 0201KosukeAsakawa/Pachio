@@ -19,7 +19,10 @@ bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner)
 		return false;
 
 	if (MoveComp)
+	{
 		MoveComp->Init(actor);  // キャラクター自身を渡して初期化
+		MoveComp->SetSpeed(0.0f);
+	}
 
 	// 物理計算コンポーネントの生成（重力など）
 	PhysicsCal = NewObject<UPhysicsCalculator>(actor);

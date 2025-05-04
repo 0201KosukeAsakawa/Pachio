@@ -5,6 +5,7 @@
 #include "InputActionValue.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/StaticMeshComponent.h"
+#include "FunctionLibrary.h"
 
 bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
 {
@@ -13,23 +14,26 @@ bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
 		return false;
 	}
 
+	// 内部に所有者とワールドを保存
 	mOwner = owner;
 	pWorld = world;
 
-	if (NewMaterial != nullptr)
+	// マテリアルの設定（デフォルトステート用）
+	//if (NewMaterial)
 	{
-		UStaticMeshComponent* StaticMeshComp = owner->FindComponentByClass<UStaticMeshComponent>();
-		UMaterialInterface* N = NewMaterial.LoadSynchronous();
-		if (N != nullptr)
+		// キャラクターが持つ StaticMeshComponent を取得
+		UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
+		UMaterialInterface* N = NewMaterial.LoadSynchronous(); // 非同期ロードに対応
+		if (N != nullptr && StaticMeshComp)
 		{
-			StaticMeshComp->SetMaterial(0, N);
+			StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
 		}
 	}
 
+	// 移動速度の初期値設定（ステート内で使用）
 	mMoveSpeed = 100.0f;
 
-
-	return true;
+	return true; // ステートの切り替え成功
 }
 
 bool UPlayerSuperState::OnUpdate(float)

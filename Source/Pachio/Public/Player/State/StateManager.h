@@ -11,7 +11,7 @@ class ACharacter;
 /**
  * プレイヤーの状態（ステート）を切り替えて制御するコンポーネント
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(Blueprintable)
 class PACHIO_API UStateManager : public UActorComponent
 {
 	GENERATED_BODY()
@@ -34,7 +34,8 @@ public:
 
 private:
 	// ステート名（文字列）とステートインスタンスのマップ
-	TMap<FString, UPlayerStateComponent*> StateMap;
+	UPROPERTY(EditAnywhere)
+	TMap<FString, TSubclassOf<UPlayerStateComponent>> StateClassMap;
 
 	// ステートの所有キャラクター
 	UPROPERTY()

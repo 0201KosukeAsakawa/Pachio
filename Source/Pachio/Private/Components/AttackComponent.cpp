@@ -13,11 +13,6 @@ void UAttackComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    // ゲーム開始時にデフォルトの攻撃戦略をインスタンス化
-    if (DefaultAttackStrategyClass)
-    {
-        CurrentStrategy = NewObject<UAttackStrategy>(this, DefaultAttackStrategyClass);
-    }
 }
 
 bool UAttackComponent::SetAttackStrategy(FName NewStrategy)
@@ -38,7 +33,7 @@ bool UAttackComponent::SetAttackStrategy(FName NewStrategy)
 float UAttackComponent::GetAttackPower() const
 {
     // プレイヤーのレベルやバフなどを考慮する場合は、ここで補正処理を行う
-    return BaseAttackPower;
+    return AttackData.BaseDamage;
 }
 
 void UAttackComponent::Init(UWorld* world)
@@ -55,6 +50,6 @@ const void UAttackComponent::PerformAttack(AActor* Target)
     if (CurrentStrategy && Target)
     {
         // 戦略に応じた攻撃効果を実行（ノックバックやエフェクトも含めて処理）
-        CurrentStrategy->ExecuteEffect(GetOwner(), Target, AttackType, BaseAttackPower);
+        CurrentStrategy->ExecuteEffect(GetOwner(), Target, AttackData, AttackData.BaseDamage);
     }
 }

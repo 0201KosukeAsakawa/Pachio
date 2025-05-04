@@ -36,7 +36,7 @@ bool UAttackManagerComponent::RegisterAttackComponent(FName AttackID)
 	if (!ad)
 		return false;
 
-	UAttackComponent* AttackComponent = NewObject<UAttackComponent>(GetOwner());
+	UAttackComponent* AttackComponent = ad->GenerateAttackComponent(GetOwner(), AttackID);
 
 	if (!AttackComponent)
 		return false;

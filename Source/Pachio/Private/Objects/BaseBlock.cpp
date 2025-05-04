@@ -75,12 +75,14 @@ void ABaseBlock::Tick(float DeltaTime)
 // ダメージを受ける処理（現時点ではダメージを受けるロジックはコメントアウト）
 bool ABaseBlock::TakeDamage(FAttackData attackData, float damage)
 {
+    if (attackData.breakLevel == EBreakLevel::Unbreakable)
+        return false;
+
     // 状態が存在する場合、ダメージ処理を行う（現在はコメントアウト）
     if (CurrentState)
     {
         CurrentState->OnHit(attackData,FVector(0, 0, 0));
     }
-
     return true;
 }
 
