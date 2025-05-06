@@ -14,7 +14,7 @@ TWeakObjectPtr<ALevelManager> ALevelManager::Instance = nullptr;
 // コンストラクタ：Tickの有効化
 ALevelManager::ALevelManager()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true; // Tickを有効にする
 }
 
 void ALevelManager::BeginPlay()
@@ -22,6 +22,12 @@ void ALevelManager::BeginPlay()
 	Super::BeginPlay();
 	Instance = this;
 
+	// コンポーネント初期化
+	InitializeComponents();
+}
+
+void ALevelManager::InitializeComponents()
+{
 	if (!IsValid(BlockContainer))
 		BlockContainer = NewObject<UBlockDataContainer>(this, BlockContainerClass);
 
@@ -70,22 +76,31 @@ void ALevelManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+// GetInstance関数で、インスタンスが未設定の場合は初期化処理を強制する
 ALevelManager* ALevelManager::GetInstance(UObject* WorldContext)
 {
-	if (Instance.IsValid())
-		return Instance.Get();
-
-	UWorld* World = WorldContext ? WorldContext->GetWorld() : nullptr;
-	if (!World)
-		return nullptr;
-
-	for (TActorIterator<ALevelManager> It(World); It; ++It)
+	if (!Instance.IsValid())
 	{
-		Instance = *It;
-		return *It;
+		// WorldContextからレベルマネージャーを検索
+		UWorld* World = WorldContext ? WorldContext->GetWorld() : nullptr;
+		if (!World)
+			return nullptr;
+
+		// インスタンスがまだ設定されていない場合
+		for (TActorIterator<ALevelManager> It(World); It; ++It)
+		{
+			Instance = *It;
+			Instance->InitializeComponents();  // 必要な初期化処理を行う
+			return *It;
+		}
+
+		// レベルマネージャーが見つからなければ、新しく生成
+		ALevelManager* NewInstance = World->SpawnActor<ALevelManager>();
+		Instance = NewInstance;
+		Instance->InitializeComponents();  // 必要な初期化処理を行う
 	}
 
-	return nullptr;
+	return Instance.Get();
 }
 
 void ALevelManager::PlaySound(FName WaveName, FName SoundName)

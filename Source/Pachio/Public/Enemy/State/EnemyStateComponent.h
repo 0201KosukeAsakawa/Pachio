@@ -19,7 +19,7 @@ public:
 public:
 	// 敵キャラクターがこの状態に入ったときに呼ばれます。
 	// ここでは、状態に応じた初期化（ビジュアルの変更など）を行います。
-	virtual bool OnEnter(AEnemyCharacter* Owner);
+	virtual bool OnEnter(AEnemyCharacter* Owner, UWorld* currentLevel);
 
 	// 状態ごとの挙動を毎フレーム更新します。
 	// この関数で、移動や攻撃など、状態に基づくロジックを実行します。
@@ -28,6 +28,8 @@ public:
 	// 敵キャラクターが状態を終了する際に呼ばれます。
 	// ここでは、状態から抜ける際に必要なリセットやクリーンアップを行います。
 	virtual bool OnExit();
+
+	virtual void OnOverlap(AActor*);
 
 protected:
 	// このコンポーネントがアタッチされている敵キャラクターの参照

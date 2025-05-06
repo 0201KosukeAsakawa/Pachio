@@ -79,6 +79,8 @@ public:
 	inline UScoreManager* GetScoreManager()const { return ScoreManager; }
 
 private:
+	void InitializeComponents();
+
 	/** ステージ上のオブジェクトを生成（StageData をもとに） */
 	void GenerateStage();
 

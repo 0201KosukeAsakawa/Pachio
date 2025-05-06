@@ -2,9 +2,11 @@
 
 #include "Player/State/PlayerDefaultState.h"
 #include "InputActionValue.h"
+#include "Interface/StateControllable.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "FunctionLibrary.h"
 #include "Components/StaticMeshComponent.h"
+
 
 // ステートに入る際に実行される処理
 bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
@@ -52,5 +54,18 @@ bool UPlayerDefaultState::OnExit(ACharacter*)
 // スキルボタン入力時の処理（現時点では何もしない）
 bool UPlayerDefaultState::OnSkill(const FInputActionValue&)
 {
+	return true;
+}
+
+bool UPlayerDefaultState::TakeDamage()
+{
+	if (!mOwner)
+		return false;
+
+	IStateControllable* is = Cast<IStateControllable>(mOwner);
+	if (!is)
+		return false;
+
+	is->ChangeState("Dead");
 	return true;
 }

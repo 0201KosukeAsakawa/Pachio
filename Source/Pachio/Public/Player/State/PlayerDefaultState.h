@@ -19,4 +19,5 @@ public:
 	bool OnUpdate(float)override;
 	bool OnExit(ACharacter*)override;
 	bool OnSkill(const FInputActionValue&)override;
+	bool TakeDamage()override;
 };

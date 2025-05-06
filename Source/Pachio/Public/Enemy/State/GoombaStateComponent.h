@@ -8,6 +8,7 @@
 
 class UMoveComponent;
 class UPhysicsCalculator;
+class UAttackComponent;
 
 UCLASS()
 class PACHIO_API UGoombaStateComponent : public UEnemyStateComponent
@@ -18,7 +19,7 @@ class PACHIO_API UGoombaStateComponent : public UEnemyStateComponent
 public:
 	// 敵キャラクターがこの状態に入ったときに呼ばれます。
     // ここでは、状態に応じた初期化（ビジュアルの変更など）を行います。
-	virtual bool OnEnter(AEnemyCharacter* Owner)override;
+	virtual bool OnEnter(AEnemyCharacter* Owner, UWorld*)override;
 
 	// 状態ごとの挙動を毎フレーム更新します。
 	// この関数で、移動や攻撃など、状態に基づくロジックを実行します。
@@ -28,10 +29,15 @@ public:
 	// ここでは、状態から抜ける際に必要なリセットやクリーンアップを行います。
 	virtual bool OnExit()override;
 
+	void OnOverlap(AActor*)override;
+
 private:
 	UPROPERTY();
 	UMoveComponent* MoveComp;
 
 	UPROPERTY();
 	UPhysicsCalculator* PhysicsCal;
+
+	UPROPERTY()
+	UAttackComponent* Attack;
 };

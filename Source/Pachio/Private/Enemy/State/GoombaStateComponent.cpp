@@ -3,27 +3,31 @@
 
 #include "Enemy/State/GoombaStateComponent.h"
 #include "Enemy/EnemyCharacter.h"
+#include "Components/AttackComponent.h"
 #include "Components/MoveComponent.h"            // 自作の移動処理用コンポーネント
 #include "Components/PhysicsCalculator.h"        // 重力などの物理演算コンポーネント
 
-bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner)
+bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner , UWorld* currentLevel)
 {
-	if (!owner)
+	if (!owner || !currentLevel)
 		return false;
 
 	mOwner = owner;
 
 	// 移動コンポーネントのインスタンスを生成して初期化
-	MoveComp = NewObject<UMoveComponent>();
+	MoveComp = NewObject<UMoveComponent>(mOwner);
+	Attack = NewObject<UAttackComponent>(mOwner);
+
 	AActor* actor = Cast<AActor>(mOwner);
-	if (!actor)
+	if (!actor || !MoveComp || !Attack)
 		return false;
 
-	if (MoveComp)
-	{
-		MoveComp->Init(actor);  // キャラクター自身を渡して初期化
-		MoveComp->SetSpeed(0.0f);
-	}
+
+	MoveComp->Init(actor);  // キャラクター自身を渡して初期化
+	MoveComp->SetSpeed(0.0f);
+
+	if (!Attack->Init(currentLevel, "DamageOnly"))
+		return false;
 
 	// 物理計算コンポーネントの生成（重力など）
 	PhysicsCal = NewObject<UPhysicsCalculator>(actor);
@@ -33,7 +37,6 @@ bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner)
 
 bool UGoombaStateComponent::OnUpdate(float DeltaTime)
 {
-
 	// 移動コンポーネントが無ければ処理しない
 	if (!MoveComp || !mOwner)
 	{
@@ -59,4 +62,12 @@ bool UGoombaStateComponent::OnUpdate(float DeltaTime)
 bool UGoombaStateComponent::OnExit()
 {
 	return true;
+}
+
+void UGoombaStateComponent::OnOverlap(AActor* hitActor)
+{
+	if (!Attack)
+		return;
+
+	Attack->PerformAttack(hitActor);
 }

@@ -40,10 +40,8 @@ bool UAttackManagerComponent::RegisterAttackComponent(FName AttackID)
 
 	if (!AttackComponent)
 		return false;
-	 
-	AttackComponent->Init(pWorld);
 
-	if (!AttackComponent->SetAttackStrategy(AttackID))
+	if (!AttackComponent->Init(pWorld, AttackID))
 		return false;
 
 	// 攻撃IDと攻撃コンポーネントクラスをマップに追加

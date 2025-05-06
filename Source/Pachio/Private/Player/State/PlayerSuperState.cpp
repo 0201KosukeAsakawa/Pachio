@@ -3,6 +3,7 @@
 
 #include "Player/State/PlayerSuperState.h"
 #include "InputActionValue.h"
+#include "Interface/StateControllable.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/StaticMeshComponent.h"
 #include "FunctionLibrary.h"
@@ -49,4 +50,17 @@ bool UPlayerSuperState::OnExit(ACharacter*)
 bool UPlayerSuperState::OnSkill(const FInputActionValue&)
 {
 	return false;
+}
+
+bool UPlayerSuperState::TakeDamage()
+{
+	if (!mOwner)
+		return false;
+
+	IStateControllable* is = Cast<IStateControllable>(mOwner);
+	if (!is)
+		return false;
+
+	is->ChangeState("Default");
+	return true;
 }

@@ -207,6 +207,14 @@ void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor
 	AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor);
 }
 
+bool APlayerCharacter::TakeDamage(FAttackData Data, float damage)
+{
+	if (!StateManager)
+		return false;
+
+	return StateManager->GetCurrentState()->TakeDamage();
+}
+
 // 移動処理（StateManager 経由）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {

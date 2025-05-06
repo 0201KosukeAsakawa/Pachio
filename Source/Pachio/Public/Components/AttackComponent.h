@@ -14,18 +14,15 @@ class PACHIO_API UAttackComponent : public UActorComponent
 public:
     UAttackComponent();
 
-    /** 新しい攻撃戦略を設定する */
-    UFUNCTION(BlueprintCallable, Category = "Attack")
-    bool SetAttackStrategy(FName NewStrategy);
-
     /** 対象アクターに攻撃を実行する */
     UFUNCTION(BlueprintCallable, Category = "Attack")
     const void PerformAttack(AActor* Target);
 
     /** 攻撃力を取得する */
     float GetAttackPower() const;
-
-    void Init(UWorld*);
+    /** 新しい攻撃戦略を設定する */
+    UFUNCTION(BlueprintCallable, Category = "Attack")
+    bool Init(UWorld* world, FName NewStrategy);
 
 protected:
     virtual void BeginPlay() override;
@@ -40,6 +37,4 @@ protected:
     FAttackData AttackData;
     UPROPERTY()
     UAttackStrategy* CurrentState;
-    UPROPERTY()
-    UWorld* pWorld;
 };

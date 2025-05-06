@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interface/AttackController.h"
+#include "Interface/IDamageable.h"
 #include "Interface/StateControllable.h"
 #include "PlayerCharacter.generated.h"
 
@@ -28,7 +29,7 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController,public IStateControllable
+class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController,public IStateControllable,public IDamageable
 {
 	GENERATED_BODY()
 
@@ -52,7 +53,6 @@ public:
 
 private:
 	// ==== 入力アクション ====
-
 	// 移動入力
 	void Movement(const FInputActionValue& Value);
 
@@ -63,9 +63,6 @@ private:
 	// ダッシュ（特殊アクション）開始・終了
 	void Action(const FInputActionValue& Value);
 	void StopAction();
-
-	// ステートの変更（タグ指定）
-	bool ChangeState(FString Tag)override;
 
 	// ==== 攻撃コリジョン ====
 
@@ -78,6 +75,10 @@ private:
 	UFUNCTION()
 	void OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	// ステートの変更（タグ指定）
+	bool ChangeState(FString Tag)override;
+	bool TakeDamage(FAttackData Data, float damage = 0)override;
 
 private:
 	// ==== 状態・戦闘 ====

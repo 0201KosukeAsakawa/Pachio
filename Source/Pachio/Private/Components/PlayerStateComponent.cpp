@@ -33,3 +33,8 @@ bool UPlayerStateComponent::OnSkill(const FInputActionValue&)
 {
 	return false;
 }
+
+bool UPlayerStateComponent::TakeDamage()
+{
+	return false;
+}

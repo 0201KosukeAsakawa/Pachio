@@ -15,20 +15,6 @@ void UAttackComponent::BeginPlay()
 
 }
 
-bool UAttackComponent::SetAttackStrategy(FName NewStrategy)
-{
-    if (!pWorld)
-        return false;
-
-     UAttackStrategy* ua =   ALevelManager::GetInstance(GetWorld())->GetAttackDataContainer()->CreateStrategy(pWorld, NewStrategy);
-    
-     if (!ua)
-         return false;
-
-     CurrentStrategy = ua;
-
-    return true;
-}
 
 float UAttackComponent::GetAttackPower() const
 {
@@ -36,12 +22,19 @@ float UAttackComponent::GetAttackPower() const
     return AttackData.BaseDamage;
 }
 
-void UAttackComponent::Init(UWorld* world)
+bool UAttackComponent::Init(UWorld* world , FName NewStrategy)
 {
     if (!world)
-        return;
+        return false;
 
-    pWorld = world;
+    UAttackStrategy* ua = ALevelManager::GetInstance(GetWorld())->GetAttackDataContainer()->CreateStrategy(world, NewStrategy);
+
+    if (!ua)
+        return false;
+
+    CurrentStrategy = ua;
+
+    return true;
 }
 
 const void UAttackComponent::PerformAttack(AActor* Target)
