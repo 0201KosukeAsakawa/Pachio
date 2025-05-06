@@ -38,4 +38,5 @@ protected:
 	// 状態によって敵の見た目を変更するために使用されます。
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UMaterialInterface> NewMaterial;
+
 };

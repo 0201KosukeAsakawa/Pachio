@@ -11,6 +11,8 @@ class UBlockDataContainer;
 class UAttackDataContainer;
 class UObjectManager;
 class UItemDataContainer;
+class UScoreManager;
+class UUIManager;
 
 /**
  * ステージオブジェクト1つ分の配置情報（データテーブル用構造体）
@@ -49,23 +51,32 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	virtual void Tick(float DeltaTime) override;
-
-	/** グローバルから取得できるレベルマネージャー（シングルトン） */
-	UFUNCTION(BlueprintCallable, Category = "Sound")
-	static ALevelManager* GetInstance(UObject* WorldContext);
-
+	virtual void Tick(float DeltaTime) override;	
+	
 	/** サウンドの再生を指示する */
 	void PlaySound(FName Category, FName CueName);
 
+	/** グローバルから取得できるレベルマネージャー（シングルトン） */
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	static ALevelManager* GetInstance(UObject* WorldContext);
+
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	inline int GetTime()const { return InGameTimer; }
+
 	/** ブロックデータ管理コンテナを取得 */
-	UBlockDataContainer* GetBlockContainer() const { return BlockContainer; }
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	inline UBlockDataContainer* GetBlockContainer() const { return BlockContainer; }
 
 	/** アイテムデータ管理コンテナを取得 */
-	UItemDataContainer* GetItemContainer() const { return ItemContainer; }
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	inline UItemDataContainer* GetItemContainer() const { return ItemContainer; }
 
 	/** 攻撃データ管理コンテナを取得 */
-	UAttackDataContainer* GetAttackDataContainer() const { return AttackContainer; }
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	inline UAttackDataContainer* GetAttackDataContainer() const { return AttackContainer; }
+
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	inline UScoreManager* GetScoreManager()const { return ScoreManager; }
 
 private:
 	/** ステージ上のオブジェクトを生成（StageData をもとに） */
@@ -74,14 +85,21 @@ private:
 	/** ブロックを生成（BlockData をもとに） */
 	void GenerateBlock();
 
+	void CountDown();
+
 private:
+	UPROPERTY(EditAnywhere)
+	float InGameTimer = 500.0f;
+
+	FTimerHandle CountTimerHandle;
+
 	/** サウンドマネージャークラス（Blueprintで指定） */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<USoundManager> SoundManagerClass;
 
 	/** ブロックコンテナクラス（Blueprintで指定） */
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<UBlockDataContainer> ContainerClass;
+	TSubclassOf<UBlockDataContainer> BlockContainerClass;
 
 	/** オブジェクトマネージャークラス（Blueprintで指定） */
 	UPROPERTY(EditAnywhere)
@@ -95,6 +113,12 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UItemDataContainer> ItemContainerClass;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UScoreManager> ScoreManagerClass;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUIManager> UIManagerClass;
+
 	/** ステージオブジェクト配置データテーブル */
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UDataTable> StageData;
@@ -102,6 +126,7 @@ private:
 	/** ブロック配置データテーブル */
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UDataTable> BlockData;
+
 
 	/** 実行時に生成されたサウンドマネージャー */
 	UPROPERTY()
@@ -122,6 +147,12 @@ private:
 	/** 実行時に生成された攻撃データコンテナ */
 	UPROPERTY()
 	TObjectPtr<UAttackDataContainer> AttackContainer;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UScoreManager> ScoreManager;
+
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<UUIManager> UIManager;
 
 	/** シングルトンアクセス用のインスタンス */
 	static TWeakObjectPtr<ALevelManager> Instance;

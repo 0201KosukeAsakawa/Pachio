@@ -2,6 +2,8 @@
 #include "Components/BoxComponent.h"
 #include "Enemy/State/EnemyStateComponent.h"
 #include "Enemy/State/GoombaStateComponent.h"
+#include "Manager/LevelManager.h"
+#include "Manager/ScoreManager.h"
 
 // コンストラクタ：コンポーネントの初期化
 AEnemyCharacter::AEnemyCharacter()
@@ -48,10 +50,10 @@ void AEnemyCharacter::Tick(float DeltaTime)
 // ダメージを受けたときの処理（IDamageable インターフェイスの実装）
 bool AEnemyCharacter::TakeDamage(FAttackData Data, float damage)
 {
-
 	HP -= damage;
-	// 今後の処理実装予定。現時点ではダメージ処理なし。
-	Destroy();
+
+	ALevelManager::GetInstance(GetWorld())->GetScoreManager()->AddScore(Score);
+
 	return true;
 }
 

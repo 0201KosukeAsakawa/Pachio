@@ -41,12 +41,6 @@ public:
 	FString GetDropItemID() const { return DropItemID; }
 
 private:
-	// 衝突が始まった時に呼ばれるイベント
-	UFUNCTION()
-	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-private:
 	// ドロップアイテムのID
 	UPROPERTY(EditAnywhere)
 	FString DropItemID;

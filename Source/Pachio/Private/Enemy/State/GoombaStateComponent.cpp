@@ -2,6 +2,7 @@
 
 
 #include "Enemy/State/GoombaStateComponent.h"
+#include "Enemy/EnemyCharacter.h"
 #include "Components/MoveComponent.h"            // 自作の移動処理用コンポーネント
 #include "Components/PhysicsCalculator.h"        // 重力などの物理演算コンポーネント
 
@@ -34,7 +35,7 @@ bool UGoombaStateComponent::OnUpdate(float DeltaTime)
 {
 
 	// 移動コンポーネントが無ければ処理しない
-	if (!MoveComp)
+	if (!MoveComp || !mOwner)
 	{
 		return false;
 	}
@@ -44,6 +45,13 @@ bool UGoombaStateComponent::OnUpdate(float DeltaTime)
 
 	// 重力の適用（または物理的な補正処理）
 	PhysicsCal->AddGravity();
+
+
+	if (mOwner->IsDead())
+	{
+		// 今後の処理実装予定。現時点ではダメージ処理なし。
+		mOwner->Destroy();
+	}
 
 	return true;
 }

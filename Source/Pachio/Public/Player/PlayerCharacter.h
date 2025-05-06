@@ -82,6 +82,10 @@ private:
 private:
 	// ==== 状態・戦闘 ====
 
+		/** カメラのY座標最大値（右スクロール限界用） */
+	float MaxCameraY;
+
+	FVector CameraXZ;
 
 	UPROPERTY(EditAnywhere, Category = "State")
 	TSubclassOf<UStateManager> StateManagerClass;
@@ -100,7 +104,6 @@ private:
 	bool bIsDashing;
 
 	// 前フレームとカメラ位置補正用
-	FVector NewCameraLocation;
 	FVector PlayerOldLocation;
 
 	// ==== メッシュ・コリジョン ====

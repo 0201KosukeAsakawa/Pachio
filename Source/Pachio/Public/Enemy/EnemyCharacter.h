@@ -55,4 +55,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	float HP;
 
+	UPROPERTY(EditAnywhere)
+	int Score = 100;
 };

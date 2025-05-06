@@ -87,9 +87,14 @@ void APlayerCharacter::BeginPlay()
 		SpringArm->bInheritRoll = false;  // Roll（傾き）は継承しない
 	}
 
-	// カメラとプレイヤーの初期位置記録
-	NewCameraLocation = Camera->GetComponentLocation();
 	PlayerOldLocation = GetActorLocation();
+
+	// カメラのY座標最大値を初期化（初期カメラ位置）
+	if (Camera)
+	{
+		MaxCameraY = Camera->GetComponentLocation().Y;
+		CameraXZ = Camera->GetComponentLocation();
+	}
 
 	// 入力マッピングコンテキストの追加
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -113,52 +118,46 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	StateManager->Update(DeltaTime);
 
-	// プレイヤーの現在Y座標を取得
 	float PlayerY = GetActorLocation().Y;
 
-	// カメラが存在するならスクロール制御
 	if (SpringArm && Camera)
 	{
-		// --- 最大カメラY位置を記録（右スクロールのみ） ---
-		static float MaxCameraY = Camera->GetComponentLocation().Y;
+		// カメラの最大Y座標を更新（右スクロールのみ）
 		if (PlayerY > MaxCameraY)
 		{
 			MaxCameraY = PlayerY;
 		}
 
-		// --- カメラを最大Yに追従（戻らない） ---
-		FVector CurrentCamLoc = Camera->GetComponentLocation();
-		FVector TargetCamLoc = FVector(CurrentCamLoc.X, MaxCameraY, CurrentCamLoc.Z);
-		Camera->SetWorldLocation(TargetCamLoc);
-		NewCameraLocation = Camera->GetComponentLocation();
+		// カメラのY座標を固定（右スクロール固定）
+		FVector CameraLocation = Camera->GetComponentLocation();
+		
+		CameraLocation = FVector(CameraLocation.X,MaxCameraY, CameraXZ.Z);
+		Camera->SetWorldLocation(CameraLocation);
 
-		// --- カメラの視界の左端を計算（OrthoWidth → 横幅） ---
-		float OrthoWidth = Camera->OrthoWidth;
-		float AspectRatio = Camera->AspectRatio > 0 ? Camera->AspectRatio : 1.777f; // fallback 16:9
-		float CameraHalfWidth = (OrthoWidth * 0.5f) * AspectRatio;
-		float CameraBackLimitY = MaxCameraY - CameraHalfWidth;
-
-		// --- プレイヤーが視界外に戻らないよう制限 ---
+		// ===== プレイヤーの制限 =====
 		FVector Location = GetActorLocation();
-		if (Location.Y < CameraBackLimitY)
+
+		// カメラの左端を計算（横スクロール用）
+		const float HalfScreenWidth = 1200.0f; // 実際のゲームに応じて調整
+		float CameraLeftEdgeY = MaxCameraY - HalfScreenWidth;
+
+		// 左に行きすぎたら止める
+		if (Location.Y < CameraLeftEdgeY)
 		{
-			Location.Y = CameraBackLimitY;
+			Location.Y = CameraLeftEdgeY;
 			SetActorLocation(Location);
 		}
 	}
 
-	// --- 地上にいるとき、上攻撃＆踏みつけ判定を無効化 ---
+	// 空中でなければ攻撃判定を無効にする
 	if (!GetCharacterMovement()->IsFalling())
 	{
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
-	// --- プレイヤーの前フレーム位置を保存 ---
 	PlayerOldLocation = GetActorLocation();
 }
-
-
 
 // 入力のバインド
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
