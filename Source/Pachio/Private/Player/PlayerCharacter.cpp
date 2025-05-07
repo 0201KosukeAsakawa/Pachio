@@ -190,7 +190,7 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Log, TEXT("UPPER!"));
-	if (!AttackManager)
+	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
 	AttackManager->GetAttack("Upper")->PerformAttack(OtherActor);
@@ -201,7 +201,7 @@ void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Log, TEXT("Stomp!"));
-	if (!AttackManager)
+	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
 	AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor);
