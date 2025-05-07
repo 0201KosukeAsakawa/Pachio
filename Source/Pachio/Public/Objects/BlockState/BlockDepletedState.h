@@ -17,8 +17,8 @@ class PACHIO_API UBlockDepletedState : public UBlockState
 {
 	GENERATED_BODY()
 public:
-	bool OnEnter(AActor*, UWorld*)override;
-	bool OnUpdate(AActor*)override;
-	bool OnExit(AActor*)override;
-	bool OnHit(FVector, FAttackData)override;
+	bool OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*,const FString materialID = "None")override;
+	bool OnUpdate(ABaseBlock*)override;
+	bool OnExit(ABaseBlock*)override;
+	bool OnHit(FAttackData, FVector)override;
 };

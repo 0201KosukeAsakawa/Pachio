@@ -5,45 +5,62 @@
 #include "Interface/IDamageable.h"
 #include "BaseBlock.generated.h"
 
+// 前方宣言
 class UBlockState;
 class UBlockDataContainer;
+class UBoxComponent;
 
+// ABaseBlock クラスは AActor から派生したクラスで、IDamageable インターフェースを実装
 UCLASS()
-class PACHIO_API ABaseBlock : public AActor,public IDamageable
+class PACHIO_API ABaseBlock : public AActor, public IDamageable
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+
+public:
+	// このアクターのプロパティのデフォルト値を設定するコンストラクタ
 	ABaseBlock();
 
 protected:
-	// Called when the game starts or when spawned
+	// ゲーム開始時またはスポーン時に呼ばれる
 	virtual void BeginPlay() override;
-public:	
-	
-	// Called every frame
+
+public:
+	// 初期化関数 (StateID, DropItemID, OptionalなMaterialID)
+	void Init(FString stateID, FString dropItemID, const FString materialID = "None");
+
+	// 毎フレーム呼ばれる関数
 	virtual void Tick(float DeltaTime) override;
-	
-	//�_���[�W���󂯂鏈��
-	bool TakeDamage(FAttackData, float damage = 0)override;
+
+	// ダメージ処理のオーバーライド
+	bool TakeDamage(FAttackData attackData, float damage = 0) override;
+
+	// 状態を変更する関数
+	void ChangeState(UBlockState* nextState);
+
+	// DropItemIDを取得するゲッター関数
+	FString GetDropItemID() const { return DropItemID; }
 
 private:
-	//�o��������A�C�e����
+	// ドロップアイテムのID
 	UPROPERTY(EditAnywhere)
-	FString DropItemName;
+	FString DropItemID;
 
-	//�ŏ��̃N���X�̃^�O
+	// 現在のブロックの状態を識別するID
 	UPROPERTY(EditAnywhere)
 	FString StateID;
 
-	//�Ǘ�����X�e�[�g
+	// 現在のブロックの状態
 	UPROPERTY()
 	UBlockState* CurrentState;
 
+	// 衝突コンポーネント（Box型）
+	UPROPERTY()
+	UBoxComponent* Collision;
+
+	// 使用するBlockDataContainerのクラス
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UBlockDataContainer> ContainerClass;
 
-	UPROPERTY()
+	// 実際のBlockDataContainerのインスタンス
 	TObjectPtr<UBlockDataContainer> Container;
 };

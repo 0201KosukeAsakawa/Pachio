@@ -30,13 +30,13 @@ struct FWidgetData : public FTableRowBase
 /**
  * ゲーム全体で UI を一元管理する HUD 派生クラス
  */
-UCLASS()
-class PACHIO_API AUIManager : public AHUD
+UCLASS(Blueprintable)
+class PACHIO_API UUIManager : public UObject
 {
     GENERATED_BODY()
 
-protected:
-    virtual void BeginPlay() override;
+public:
+    virtual void Init();
 
 public:
     /** 指定したカテゴリと名前のウィジェットを表示する */

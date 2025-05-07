@@ -2,9 +2,11 @@
 
 
 #include "Components/BlockState.h"
+#include "DataContainer/BlockDataContainer.h"
 #include"Attack/AttackStrategy.h"
 #include "Materials/MaterialInterface.h"
 #include "FunctionLibrary.h"
+#include "Objects/BaseBlock.h"
 
 // Sets default values for this component's properties
 UBlockState::UBlockState()
@@ -16,22 +18,22 @@ UBlockState::UBlockState()
 	// ...
 }
 
-bool UBlockState::OnEnter(AActor*, UWorld*)
+bool UBlockState::OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*, FString)
 {
 	return false;
 }
 
-bool UBlockState::OnUpdate(AActor*)
+bool UBlockState::OnUpdate(ABaseBlock*)
 {
 	return false;
 }
 
-bool UBlockState::OnExit(AActor*)
+bool UBlockState::OnExit(ABaseBlock*)
 {
 	return false;
 }
 
-bool UBlockState::OnHit(FVector, FAttackData)
+bool UBlockState::OnHit(FAttackData, FVector)
 {
 	return false;
 }

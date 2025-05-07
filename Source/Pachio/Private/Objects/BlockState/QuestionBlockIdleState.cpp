@@ -3,63 +3,71 @@
 
 #include "Objects/BlockState/QuestionBlockIdleState.h"
 #include "Attack/AttackStrategy.h"
+#include "DataContainer/BlockDataContainer.h"
+#include "Objects/BaseBlock.h"
+#include "FunctionLibrary.h"
+#include "DataContainer/ItemDataContainer.h"
+#include "Manager/LevelManager.h"
 
-bool UQuestionBlockIdleState::OnEnter(AActor* owner, UWorld*)
+bool UQuestionBlockIdleState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer* c, FString materialName)
 {
 	if (!owner)
 		return false;
 
 	mOwner = owner;
 	count = 1;
+	Container = c;
+	pWorld = world;
 
-	// ƒAƒNƒ^[‚ÉƒAƒ^ƒbƒ`‚³‚ê‚Ä‚¢‚é‘S‚Ä‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg‚ğæ“¾
+	// ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ÉƒAï¿½^ï¿½bï¿½`ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Sï¿½Ä‚ÌƒRï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½æ“¾
 	UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
-	if (!NewMaterial)
-	{
-		// V‚µ‚¢ƒ}ƒeƒŠƒAƒ‹‚ğæ“¾i—á‚¦‚ÎAƒQ[ƒ€‚ÌƒAƒZƒbƒg‚©‚çj
-		NewMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("Material'/Game/Materials/NewMaterial.NewMaterial'"));
-	}
 
-	if (NewMaterial && MeshComp)
+	if (materialName == "None")
+		materialName = MaterialID;
+
+	UMaterialInterface* newMaterial = c->CreateMaterial(world, materialName);
+	if (MeshComp && newMaterial)
 	{
-		// ƒ}ƒeƒŠƒAƒ‹‚ğ•ÏX
-		MeshComp->SetMaterial(0, NewMaterial); // 0 ‚Íƒ}ƒeƒŠƒAƒ‹‚ÌƒCƒ“ƒfƒbƒNƒX
+		MeshComp->SetMaterial(0, newMaterial);
 	}
 
 	return true;
 }
 
-bool UQuestionBlockIdleState::OnUpdate(AActor*)
+bool UQuestionBlockIdleState::OnUpdate(ABaseBlock*)
 {
-	if (!mOwner)
+
+	return true;
+}
+
+
+bool UQuestionBlockIdleState::OnExit(ABaseBlock*)
+{
+	return true;
+}
+
+bool UQuestionBlockIdleState::OnHit(FAttackData, FVector)
+{
+	--count;
+	if ( !mOwner || !Container)
 		return false;
 
-	if (count > 0)
-		return true;
-	mOwner->Destroy();
-	return true;
-}
+	UBlockState* nextState = Container->CreateState(GetWorld(), "Empty");
+
+	if (!nextState)
+		return false;
+
+	//FVector v = (OtherActor->GetActorLocation() - mOwner->GetActorLocation()).GetSafeNormal();
+	//FVector OwnerRight = mOwner->GetActorRightVector(); // ãƒ­ãƒ¼ã‚«ãƒ«åº§æ¨™ç³»ã®Yè»¸ï¼ˆå³æ–¹å‘ï¼‰
+	//float YComponent = FVector::DotProduct(v, OwnerRight); // -1ã€œ1ã®ç¯„å›²ã§ã€å³æ–¹å‘ã¸ã®æˆåˆ†
+
+	//TODO:å¼•æ•°ã®ä¿®æ­£ã‚‚ã¨ã‚€ã€€
+	ALevelManager::GetInstance(GetWorld())->GetItemContainer()->GenerateItem(mOwner->GetDropItemID(), mOwner->GetActorLocation() + FVector(0, 5, 0), FVector(0, /*YComponent*/1, 0), 5.0f, FVector(0, 0, 1));
+
+	mOwner->ChangeState(nextState);
 
 
-bool UQuestionBlockIdleState::OnExit(AActor*)
-{
-	return true;
-}
 
-bool UQuestionBlockIdleState::OnHit(FVector , FAttackData attackData)
-{
-	//if (attackData.attackType == EAttackType::Enemy)
-	//	return false;
-
-	//if (attackData.breakLevel == EBreakLevel::Functional)
-	//{
-	//	//ItemDataContainer->DropItem(FString,FVector); 
-	//}
-
-	//else(attackData.breakLevel == EBreakLevel::Breakable)
-		//Destroy();
-
-	--count;
 	return true;
 }
 

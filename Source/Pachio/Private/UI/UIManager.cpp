@@ -1,15 +1,13 @@
 #include "UI/UIManager.h"
 #include "Blueprint/UserWidget.h"
 
-void AUIManager::BeginPlay()
+void UUIManager::Init()
 {
-    Super::BeginPlay();
-
     // ウィジェットの初期化（すべてのカテゴリに対して）
     InitAllWidgets();
 }
 
-void AUIManager::InitAllWidgets()
+void UUIManager::InitAllWidgets()
 {
     // すべてのカテゴリにあるウィジェットクラスからウィジェットを生成して初期化
     for (auto& Pair : WidgetDataMap)
@@ -18,7 +16,7 @@ void AUIManager::InitAllWidgets()
     }
 }
 
-void AUIManager::InitWidgetGroup(FWidgetData& WidgetGroup)
+void UUIManager::InitWidgetGroup(FWidgetData& WidgetGroup)
 {
     // ウィジェットインスタンスマップをリセット
     WidgetGroup.WidgetMap.Reset();
@@ -39,7 +37,7 @@ void AUIManager::InitWidgetGroup(FWidgetData& WidgetGroup)
     }
 }
 
-void AUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Classes, TArray<UUserWidget*>& Widgets)
+void UUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Classes, TArray<UUserWidget*>& Widgets)
 {
     // 汎用的なウィジェット初期化（配列ベース、例：クロスヘアなど）
     Widgets.Reset();
@@ -58,7 +56,7 @@ void AUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Class
     }
 }
 
-void AUIManager::ShowWidget(FName CategoryName, FName WidgetName)
+void UUIManager::ShowWidget(FName CategoryName, FName WidgetName)
 {
     // 指定カテゴリが存在しない場合は無視
     if (!WidgetDataMap.Contains(CategoryName)) 
@@ -77,7 +75,7 @@ void AUIManager::ShowWidget(FName CategoryName, FName WidgetName)
     }
 }
 
-void AUIManager::HideCurrentWidget(FName CategoryName)
+void UUIManager::HideCurrentWidget(FName CategoryName)
 {
     // 指定カテゴリが存在しない場合は無視
     if (!WidgetDataMap.Contains(CategoryName)) 
@@ -89,7 +87,7 @@ void AUIManager::HideCurrentWidget(FName CategoryName)
     RemoveWidgetFromViewport(Group.CurrentWidget);
 }
 
-void AUIManager::ToggleWidgetVisibility(FName CategoryName, bool bVisible)
+void UUIManager::ToggleWidgetVisibility(FName CategoryName, bool bVisible)
 {
     // 指定カテゴリが存在しない場合は無視
     if (!WidgetDataMap.Contains(CategoryName)) 
@@ -116,7 +114,7 @@ void AUIManager::ToggleWidgetVisibility(FName CategoryName, bool bVisible)
     }
 }
 
-bool AUIManager::IsWidgetVisible(FName CategoryName) const
+bool UUIManager::IsWidgetVisible(FName CategoryName) const
 {
     // 指定カテゴリのウィジェットがビューポート上で可視か判定
     if (const FWidgetData* Group = WidgetDataMap.Find(CategoryName))
@@ -126,7 +124,7 @@ bool AUIManager::IsWidgetVisible(FName CategoryName) const
     return false;
 }
 
-void AUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
+void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
 {
     // ウィジェットが存在していればビューポートから削除し、ポインタもリセット
     if (Widget)
