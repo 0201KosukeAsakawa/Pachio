@@ -56,11 +56,4 @@ private:
 	// 衝突コンポーネント（Box型）
 	UPROPERTY()
 	UBoxComponent* Collision;
-
-	// 使用するBlockDataContainerのクラス
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UBlockDataContainer> ContainerClass;
-
-	// 実際のBlockDataContainerのインスタンス
-	TObjectPtr<UBlockDataContainer> Container;
 };

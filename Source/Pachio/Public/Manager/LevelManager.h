@@ -13,6 +13,7 @@ class UObjectManager;
 class UItemDataContainer;
 class UScoreManager;
 class UUIManager;
+class UEnemyDataContainer;
 
 /**
  * ステージオブジェクト1つ分の配置情報（データテーブル用構造体）
@@ -78,6 +79,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	inline UScoreManager* GetScoreManager()const { return ScoreManager; }
 
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	inline UEnemyDataContainer* GetEnemyContainer()const { return EnemyContainer; }
+
 private:
 	void InitializeComponents();
 
@@ -94,6 +98,9 @@ private:
 	float InGameTimer = 500.0f;
 
 	FTimerHandle CountTimerHandle;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UEnemyDataContainer> EnemyContainerClass;
 
 	/** サウンドマネージャークラス（Blueprintで指定） */
 	UPROPERTY(EditAnywhere)
@@ -121,6 +128,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUIManager> UIManagerClass;
 
+
+
 	/** ステージオブジェクト配置データテーブル */
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UDataTable> StageData;
@@ -129,6 +138,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UDataTable> BlockData;
 
+
+
+
+	UPROPERTY()
+	TObjectPtr<UEnemyDataContainer> EnemyContainer;
 
 	/** 実行時に生成されたサウンドマネージャー */
 	UPROPERTY()

@@ -1,7 +1,8 @@
 #include "Objects/BaseBlock.h"
+#include "Components/BoxComponent.h"
 #include "Components/BlockState.h"
 #include "FunctionLibrary.h"
-#include "Components/BoxComponent.h"
+#include "Manager/LevelManager.h"
 #include "DataContainer/BlockDataContainer.h"
 
 // Sets default values
@@ -27,25 +28,21 @@ void ABaseBlock::Init(FString stateID, FString dorpItemID, FString materialID)
     StateID = stateID;
     DropItemID = dorpItemID;
 
-    // BlockDataContainerがまだない場合、新しく作成
-    if (!Container)
-    {
-        Container = NewObject<UBlockDataContainer>(this, ContainerClass);
-    }
+
 
     // Containerが有効な場合、現在の状態を設定
-    if (Container)
-    {
-        CurrentState = Container->CreateState(GetWorld(), StateID);
-    }
+
+
+    CurrentState = ALevelManager::GetInstance(GetWorld())->GetBlockContainer()->CreateState(GetWorld(), StateID);
+
 
     // 現在の状態が設定されている場合、状態に応じてOnEnter処理を実行
     if (CurrentState)
     {
         if (materialID == "None")
-            CurrentState->OnEnter(this, GetWorld(), Container);
+            CurrentState->OnEnter(this, GetWorld());
         else
-            CurrentState->OnEnter(this, GetWorld(), Container, materialID);
+            CurrentState->OnEnter(this, GetWorld(), materialID);
     }
 }
 
@@ -83,6 +80,5 @@ void ABaseBlock::ChangeState(UBlockState* nextState)
         CurrentState = nextState;
 
     // Containerが有効な場合、次の状態に対してOnEnterを呼び出す
-    if (Container)
-        CurrentState->OnEnter(this, GetWorld(), Container);
+    CurrentState->OnEnter(this, GetWorld());
 }
