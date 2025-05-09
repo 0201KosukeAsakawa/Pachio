@@ -35,6 +35,7 @@ void ALevelManager::InitializeComponents()
 	AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
 	ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
 	UIManager = NewObject<UUIManager>(this, UIManagerClass);
+	EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
 
 	if (UIManager)
 	{
