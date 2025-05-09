@@ -2,30 +2,29 @@
 
 
 #include "Objects/BlockState/QuestionBlockIdleState.h"
+#include "Objects/BaseBlock.h"
 #include "Attack/AttackStrategy.h"
 #include "DataContainer/BlockDataContainer.h"
-#include "Objects/BaseBlock.h"
-#include "FunctionLibrary.h"
 #include "DataContainer/ItemDataContainer.h"
+#include "FunctionLibrary.h"
 #include "Manager/LevelManager.h"
 
-bool UQuestionBlockIdleState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer* c, FString materialName)
+bool UQuestionBlockIdleState::OnEnter(ABaseBlock* owner, UWorld* world,  FString materialName)
 {
 	if (!owner)
 		return false;
 
 	mOwner = owner;
 	count = 1;
-	Container = c;
 	pWorld = world;
 
-	// �A�N�^�[�ɃA�^�b�`����Ă���S�ẴR���|�[�l���g��擾
+
 	UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
 
 	if (materialName == "None")
 		materialName = MaterialID;
 
-	UMaterialInterface* newMaterial = c->CreateMaterial(world, materialName);
+	UMaterialInterface* newMaterial = ALevelManager::GetInstance(GetWorld())->GetBlockContainer()->CreateMaterial(world, materialName);
 	if (MeshComp && newMaterial)
 	{
 		MeshComp->SetMaterial(0, newMaterial);
@@ -49,10 +48,10 @@ bool UQuestionBlockIdleState::OnExit(ABaseBlock*)
 bool UQuestionBlockIdleState::OnHit(FAttackData, FVector)
 {
 	--count;
-	if ( !mOwner || !Container)
+	if ( !mOwner)
 		return false;
 
-	UBlockState* nextState = Container->CreateState(GetWorld(), "Empty");
+	UBlockState* nextState = ALevelManager::GetInstance(GetWorld())->GetBlockContainer()->CreateState(GetWorld(), "Empty");
 
 	if (!nextState)
 		return false;
