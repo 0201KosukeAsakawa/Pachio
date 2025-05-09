@@ -47,21 +47,17 @@ void APlayerCharacter::BeginPlay()
 
 	// 攻撃コンポーネントの生成
 	AttackManager = NewObject<UAttackManagerComponent>(this);
+	StateManager = NewObject<UStateManager>(this, StateManagerClass);
+	if (!AttackManager || !StateManagerClass)
+		return;
 
-	if (AttackManager)
-	{
-		AttackManager->Init(GetWorld());
-		AttackManager->ResetMap();
-		AttackManager->RegisterAttackComponent("Stomp");
-		AttackManager->RegisterAttackComponent("Upper");
-	}
+	AttackManager->Init(GetWorld());
+	AttackManager->ResetMap();
+	AttackManager->RegisterAttackComponent("Stomp");
+	AttackManager->RegisterAttackComponent("Upper");
+	StateManager->RegisterComponent(); // Register as component
+	StateManager->Init(this, GetWorld());
 
-	if (StateManagerClass)
-	{
-		StateManager = NewObject<UStateManager>(this, StateManagerClass);
-		StateManager->RegisterComponent(); // Register as component
-		StateManager->Init(this, GetWorld());
-	}
 
 	// 攻撃判定用のボックスコンポーネントを探す
 	UpperAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Upper");

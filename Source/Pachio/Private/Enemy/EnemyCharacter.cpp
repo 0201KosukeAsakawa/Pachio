@@ -24,24 +24,14 @@ void AEnemyCharacter::BeginPlay()
 	// 敵の状態を管理するロジックコンポーネントを生成
 	Logic = NewObject<UGoombaStateComponent>(this);
 
-	if (AttackCollision)
-		AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
-
 	// 正常に生成できていれば、初期化を実行
-	if (Logic)
-	{
-		Logic->OnEnter(this, GetWorld());
-	}
+	if (!Logic || !AttackCollision)
+		return;
 
-	if (AttackCollision)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AttackCollision is valid"));
-		AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("AttackCollision is NULL"));
-	}
+	Logic->OnEnter(this, GetWorld());
+	UE_LOG(LogTemp, Warning, TEXT("AttackCollision is valid"));
+	AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
+
 }
 
 // 毎フレーム実行される処理
@@ -50,10 +40,11 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// ロジックが有効なら更新処理を実行
-	if (Logic)
-	{
-		Logic->OnUpdate(DeltaTime);
-	}
+	if (!Logic)
+		return;
+
+	Logic->OnUpdate(DeltaTime);
+
 }
 
 // ダメージを受けたときの処理（IDamageable インターフェイスの実装）
