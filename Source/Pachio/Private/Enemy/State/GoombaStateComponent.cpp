@@ -7,7 +7,7 @@
 #include "Components/MoveComponent.h"            // 自作の移動処理用コンポーネント
 #include "Components/PhysicsCalculator.h"        // 重力などの物理演算コンポーネント
 
-bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner , UWorld* currentLevel)
+bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner , UWorld* currentLevel, const FString materialID)
 {
 	if (!owner || !currentLevel)
 		return false;

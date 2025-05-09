@@ -23,10 +23,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+// 初期化関数 (StateID, DropItemID, OptionalなMaterialID)
+	void Init(FString stateID, const FString materialID = "None");
 	/**
  * ダメージを受ける処理を実装する関数
  * @param Data 攻撃の詳細情報（攻撃種別や属性など）
@@ -64,4 +68,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int Score = 100;
+
+	UPROPERTY(EditAnywhere)
+	FString LogicID;
 };
