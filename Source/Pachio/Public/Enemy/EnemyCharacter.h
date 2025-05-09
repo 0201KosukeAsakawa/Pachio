@@ -57,7 +57,10 @@ private:
 	UEnemyStateComponent* Logic;
 
 	UPROPERTY(EditAnywhere)
-	float HP;
+	float HP = 1.0f;
+
+	UPROPERTY(EditAnywhere)
+	float MoveSpeed = 0.0f;
 
 	UPROPERTY(EditAnywhere)
 	int Score = 100;

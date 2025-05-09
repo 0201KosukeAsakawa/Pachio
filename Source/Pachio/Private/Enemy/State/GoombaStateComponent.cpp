@@ -24,7 +24,7 @@ bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner , UWorld* currentLeve
 
 
 	MoveComp->Init(actor);  // キャラクター自身を渡して初期化
-	MoveComp->SetSpeed(0.0f);
+	MoveComp->SetSpeed(10.0f);
 
 	if (!Attack->Init(currentLevel, "DamageOnly"))
 		return false;
