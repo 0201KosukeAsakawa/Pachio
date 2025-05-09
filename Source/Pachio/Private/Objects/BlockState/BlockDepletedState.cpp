@@ -39,10 +39,8 @@ bool UBlockDepletedState::OnExit(ABaseBlock*)
 {
     return true;
 }
-bool UBlockDepletedState::OnHit(const AActor* hitActor, FVector)
+bool UBlockDepletedState::OnHit(FAttackData , FVector)
 {
-    if (!hitActor || !hitActor->ActorHasTag("Player"))
-        return false;
     mOwner->Destroy();
     return true;
 }

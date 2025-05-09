@@ -1,47 +1,51 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include <EnhancedInputLibrary.h>
 #include "StateManager.generated.h"
 
+// 前方宣言：プレイヤーの状態を管理する基底クラス
+class UPlayerStateComponent;
+class ACharacter;
 
-class UPlayerStateBase;
-class Player;
-
-
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+/**
+ * プレイヤーの状態（ステート）を切り替えて制御するコンポーネント
+ */
+UCLASS(Blueprintable)
 class PACHIO_API UStateManager : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
+public:
+	// コンストラクタ：デフォルト値の設定
 	UStateManager();
 
+	// ゲーム開始時の初期化処理
+	void Init(ACharacter* Owner, UWorld* World);
 
+	// 毎フレーム呼び出される更新処理（Tick 相当）
+	void Update(float DeltaTime);
 
-public:
-	// Called when the game starts
-	 void Init(ACharacter*,UWorld*);
+	// 状態を切り替える（タグ指定）
+	bool ChangeState(FString NextStateTag);
 
-public:	
-	// Called every frame
-	void Update(float deltaTime);
-
-	void ChangeState(FString nextState);
-
-	void Movement(const FInputActionValue& Value);
+	// 現在のステートを取得
+	inline UPlayerStateComponent* GetCurrentState() const { return CurrentState; }
 
 private:
-	TMap<FString, UPlayerStateBase*>StateMap;
+	// ステート名（文字列）とステートインスタンスのマップ
+	UPROPERTY(EditAnywhere)
+	TMap<FString, TSubclassOf<UPlayerStateComponent>> StateClassMap;
+
+	// ステートの所有キャラクター
 	UPROPERTY()
 	ACharacter* mOwner;
+
+	// 現在のアクティブなステート
 	UPROPERTY()
-	UPlayerStateBase* CurrentState;
+	UPlayerStateComponent* CurrentState;
+
+	// ワールドへの参照（Tick処理等で使用）
 	UPROPERTY()
 	UWorld* pWorld;
-		
 };
