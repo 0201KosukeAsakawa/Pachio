@@ -4,12 +4,12 @@
 #include "Attack/DamageOnlyStrategy.h"
 #include "Interface/IDamageable.h"
 
-void UDamageOnlyStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData attackData, float FinalDamage)
+bool UDamageOnlyStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData attackData, float FinalDamage)
 {
 	IDamageable* id = Cast<IDamageable>(Target);
 	if (!id)
-		return;
+	return false;
 
-	id->TakeDamage(attackData, FinalDamage);
+	return id->TakeDamage(attackData, FinalDamage);
 
 }

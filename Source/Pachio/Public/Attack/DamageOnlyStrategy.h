@@ -14,6 +14,6 @@ class PACHIO_API UDamageOnlyStrategy : public UAttackStrategy
 {
 	GENERATED_BODY()
 public:
-	virtual void ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage = 0)override;
+	virtual bool ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage = 0)override;
 	
 };

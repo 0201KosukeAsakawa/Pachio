@@ -16,7 +16,7 @@ public:
 
     /** 対象アクターに攻撃を実行する */
     UFUNCTION(BlueprintCallable, Category = "Attack")
-    const void PerformAttack(AActor* Target);
+    const bool PerformAttack(AActor* Target);
 
     /** 攻撃力を取得する */
     float GetAttackPower() const;
