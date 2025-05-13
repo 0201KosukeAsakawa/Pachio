@@ -65,5 +65,5 @@ public:
     UAttackStrategy();
 
     // 攻撃の実行
-    virtual void ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage = 0);
+    virtual bool ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage = 0);
 };

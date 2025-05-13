@@ -6,22 +6,22 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-void UUpperAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData attackData, float FinalDamage)
+bool UUpperAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData attackData, float FinalDamage)
 {
 	IDamageable* id = Cast<IDamageable>(Target);
-	if (!id)
-		return;
+	if (!id || !id->TakeDamage(attackData, FinalDamage))
+		return false;
 
-	// ダメージが通ったら（ブロックが破壊された等）、慣性を止める
-	if (id->TakeDamage(attackData, FinalDamage))
-	{
-		if (ACharacter* Character = Cast<ACharacter>(Attacker))
-		{
-			Character->GetCharacterMovement()->StopMovementImmediately();
+	ACharacter* Character = Cast<ACharacter>(Attacker);
 
-			// もしくは特定の方向に少し跳ね返るなども可能
-			 FVector BounceBack = FVector(0, 0, 300); 
-			 Character->LaunchCharacter(BounceBack, true, true);
-		}
-	}
+		// ダメージが通ったら（ブロックが破壊された等）、慣性を止める
+		if (!Character)
+			return false;
+
+		Character->GetCharacterMovement()->StopMovementImmediately();
+
+		// もしくは特定の方向に少し跳ね返るなども可能
+		 FVector BounceBack = FVector(0, 0, 300); 
+		 Character->LaunchCharacter(BounceBack, true, true);
+		 return true;
 }

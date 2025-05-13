@@ -10,7 +10,7 @@ bool UDeadPlayerState::OnEnter(ACharacter* Owner, UWorld* World)
 	if (!Owner || !World)
 		return false;
 
-	IStateControllable* is = Cast<IStateControllable>(mOwner);
+	IStateControllable* is = Cast<IStateControllable>(Owner);
 	if (!is)
 		return false;
 

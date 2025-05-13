@@ -37,12 +37,13 @@ bool UAttackComponent::Init(UWorld* world , FName NewStrategy)
     return true;
 }
 
-const void UAttackComponent::PerformAttack(AActor* Target)
+const bool UAttackComponent::PerformAttack(AActor* Target)
 {
     // 現在の攻撃戦略が存在し、対象が有効な場合に攻撃を実行
     if (CurrentStrategy && Target)
     {
         // 戦略に応じた攻撃効果を実行（ノックバックやエフェクトも含めて処理）
-        CurrentStrategy->ExecuteEffect(GetOwner(), Target, AttackData, AttackData.BaseDamage);
+        return CurrentStrategy->ExecuteEffect(GetOwner(), Target, AttackData, AttackData.BaseDamage);
     }
+    return false;
 }

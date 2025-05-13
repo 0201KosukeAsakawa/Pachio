@@ -7,7 +7,7 @@
 #include "Components/MoveComponent.h"            // 自作の移動処理用コンポーネント
 #include "Components/PhysicsCalculator.h"        // 重力などの物理演算コンポーネント
 
-bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner , UWorld* currentLevel)
+bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner , UWorld* currentLevel, const FString materialID)
 {
 	if (!owner || !currentLevel)
 		return false;
@@ -24,7 +24,7 @@ bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner , UWorld* currentLeve
 
 
 	MoveComp->Init(actor);  // キャラクター自身を渡して初期化
-	MoveComp->SetSpeed(0.0f);
+	MoveComp->SetSpeed(10.0f);
 
 	if (!Attack->Init(currentLevel, "DamageOnly"))
 		return false;

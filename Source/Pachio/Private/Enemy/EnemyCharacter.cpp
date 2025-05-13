@@ -1,6 +1,7 @@
 #include "Enemy/EnemyCharacter.h"
 #include "Enemy/State/EnemyStateComponent.h"
 #include "Enemy/State/GoombaStateComponent.h"
+#include "DataContainer/EnemyDataContainer.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ScoreManager.h"
 #include "Components/BoxComponent.h"
@@ -21,27 +22,34 @@ void AEnemyCharacter::BeginPlay()
 	// 当たり判定用のボックスコンポーネントを作成し、ルートに設定
 	AttackCollision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "C_Attack");
 
-	// 敵の状態を管理するロジックコンポーネントを生成
-	Logic = NewObject<UGoombaStateComponent>(this);
-
-	if (AttackCollision)
-		AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
+	Init(LogicID);
 
 	// 正常に生成できていれば、初期化を実行
-	if (Logic)
-	{
-		Logic->OnEnter(this, GetWorld());
-	}
+	if (!Logic || !AttackCollision)
+		return;
 
-	if (AttackCollision)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AttackCollision is valid"));
-		AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
-	}
+	Logic->OnEnter(this, GetWorld());
+	UE_LOG(LogTemp, Warning, TEXT("AttackCollision is valid"));
+	AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
+
+}
+
+void AEnemyCharacter::Init(FString logicID, const FString materialID)
+{
+	LogicID = logicID;
+
+	// Containerが有効な場合、現在の状態を設定
+	Logic = ALevelManager::GetInstance(GetWorld())->GetEnemyContainer()->CreateState(GetWorld(), LogicID);
+
+	// 現在の状態が設定されている場合、状態に応じてOnEnter処理を実行
+	if (!Logic)
+		return;
+
+	if (materialID == "None")
+		Logic->OnEnter(this, GetWorld());
 	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("AttackCollision is NULL"));
-	}
+		Logic->OnEnter(this, GetWorld(), materialID);
+
 }
 
 // 毎フレーム実行される処理
@@ -50,10 +58,11 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// ロジックが有効なら更新処理を実行
-	if (Logic)
-	{
-		Logic->OnUpdate(DeltaTime);
-	}
+	if (!Logic)
+		return;
+
+	Logic->OnUpdate(DeltaTime);
+
 }
 
 // ダメージを受けたときの処理（IDamageable インターフェイスの実装）

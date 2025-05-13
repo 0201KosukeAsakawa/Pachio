@@ -47,21 +47,17 @@ void APlayerCharacter::BeginPlay()
 
 	// 攻撃コンポーネントの生成
 	AttackManager = NewObject<UAttackManagerComponent>(this);
+	StateManager = NewObject<UStateManager>(this, StateManagerClass);
+	if (!AttackManager || !StateManagerClass)
+		return;
 
-	if (AttackManager)
-	{
-		AttackManager->Init(GetWorld());
-		AttackManager->ResetMap();
-		AttackManager->RegisterAttackComponent("Stomp");
-		AttackManager->RegisterAttackComponent("Upper");
-	}
+	AttackManager->Init(GetWorld());
+	AttackManager->ResetMap();
+	AttackManager->RegisterAttackComponent("Stomp");
+	AttackManager->RegisterAttackComponent("Upper");
+	StateManager->RegisterComponent(); // Register as component
+	StateManager->Init(this, GetWorld());
 
-	if (StateManagerClass)
-	{
-		StateManager = NewObject<UStateManager>(this, StateManagerClass);
-		StateManager->RegisterComponent(); // Register as component
-		StateManager->Init(this, GetWorld());
-	}
 
 	// 攻撃判定用のボックスコンポーネントを探す
 	UpperAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Upper");
@@ -92,8 +88,14 @@ void APlayerCharacter::BeginPlay()
 	// カメラのY座標最大値を初期化（初期カメラ位置）
 	if (Camera)
 	{
-		MaxCameraY = Camera->GetComponentLocation().Y;
+		MaxCameraY = Camera->GetComponentLocation().Y + 1000;
 		CameraXZ = Camera->GetComponentLocation();
+
+		// カメラのY座標を固定（右スクロール固定）
+		FVector CameraLocation = Camera->GetComponentLocation();
+
+		CameraLocation = FVector(CameraXZ.X, MaxCameraY, CameraXZ.Z);
+		Camera->SetWorldLocation(CameraLocation);
 	}
 
 	// 入力マッピングコンテキストの追加
@@ -131,7 +133,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 		// カメラのY座標を固定（右スクロール固定）
 		FVector CameraLocation = Camera->GetComponentLocation();
 		
-		CameraLocation = FVector(CameraLocation.X,MaxCameraY, CameraXZ.Z);
+		//CameraLocation = FVector(CameraLocation.X,MaxCameraY, CameraXZ.Z);
+		CameraLocation = FVector(CameraXZ.X, MaxCameraY, CameraXZ.Z);
 		Camera->SetWorldLocation(CameraLocation);
 
 		// ===== プレイヤーの制限 =====
@@ -167,7 +170,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		// ジャンプ開始／終了
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &APlayerCharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &APlayerCharacter::JumpStop);
 
 		// 移動
@@ -193,7 +196,14 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
-	AttackManager->GetAttack("Upper")->PerformAttack(OtherActor);
+	if (!AttackManager->GetAttack("Upper")->PerformAttack(OtherActor))
+		return;
+
+	//GetCharacterMovement()
+	FVector DownwardFprce = FVector(0, 0, -500);
+	LaunchCharacter(DownwardFprce, true,true);
+
+	ACharacter::StopJumping();
 }
 
 // 踏みつけ攻撃時のヒット処理
