@@ -2,8 +2,9 @@
 
 
 #include "Components/EnemyState.h"
+#include "Enemy/State/EnemyStateComponent.h"
 
-bool UEnemyState::OnEnter(AEnemyCharacter* owner, UWorld* world)
+bool UEnemyState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEnemyStateComponent* LogicComponet , FString)
 {
 	return false;
 }
@@ -14,6 +15,11 @@ bool UEnemyState::OnUpdate(float deltaTime)
 }
 
 bool UEnemyState::OnExit()
+{
+	return false;
+}
+
+bool UEnemyState::OnOverlap(AActor*)
 {
 	return false;
 }

@@ -7,6 +7,7 @@
 #include "EnemyState.generated.h"
 
 class AEnemyCharacter;
+class UEnemyStateComponent;
 
 UCLASS()
 class PACHIO_API UEnemyState : public UObject
@@ -14,11 +15,13 @@ class PACHIO_API UEnemyState : public UObject
 	GENERATED_BODY()
 	
 public:
-	virtual bool OnEnter(AEnemyCharacter* owner, UWorld* world);
+	virtual bool OnEnter(AEnemyCharacter* owner, UWorld* world , UEnemyStateComponent* LogicComponet ,const FString materialID =  " ");
 	virtual bool OnUpdate(float deltaTime);
 	virtual bool OnExit();
-
+	virtual bool OnOverlap(AActor*);
 protected:
 	UPROPERTY()
 	AEnemyCharacter* mOwner;
+	UPROPERTY()
+	UEnemyStateComponent* logicComponent;
 };

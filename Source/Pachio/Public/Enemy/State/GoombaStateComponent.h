@@ -9,6 +9,7 @@
 class UMoveComponent;
 class UPhysicsCalculator;
 class UAttackComponent;
+class UEnemyState;
 
 UCLASS()
 class PACHIO_API UGoombaStateComponent : public UEnemyStateComponent
