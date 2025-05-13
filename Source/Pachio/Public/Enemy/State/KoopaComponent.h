@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Enemy/State/EnemyStateComponent.h"
-#include "GoombaStateComponent.generated.h"
+#include "KoopaComponent.generated.h"
 
 class UMoveComponent;
 class UPhysicsCalculator;
@@ -12,22 +12,21 @@ class UAttackComponent;
 class UEnemyState;
 
 UCLASS()
-class PACHIO_API UGoombaStateComponent : public UEnemyStateComponent
+class PACHIO_API UKoopaComponent : public UEnemyStateComponent
 {
 	GENERATED_BODY()
 
-
 public:
-	// æ•µã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ãŒã“ã®çŠ¶æ…‹ã«å…¥ã£ãŸã¨ãã«å‘¼ã°ã‚Œã¾ã™ã€‚
-    // ã“ã“ã§ã¯ã€çŠ¶æ…‹ã«å¿œã˜ãŸåˆæœŸåŒ–ï¼ˆãƒ“ã‚¸ãƒ¥ã‚¢ãƒ«ã®å¤‰æ›´ãªã©ï¼‰ã‚’è¡Œã„ã¾ã™ã€‚
+	// “GƒLƒƒƒ‰ƒNƒ^[‚ª‚±‚Ìó‘Ô‚É“ü‚Á‚½‚Æ‚«‚ÉŒÄ‚Î‚ê‚Ü‚·B
+	// ‚±‚±‚Å‚ÍAó‘Ô‚É‰‚¶‚½‰Šú‰»iƒrƒWƒ…ƒAƒ‹‚Ì•ÏX‚È‚Çj‚ğs‚¢‚Ü‚·B
 	virtual bool OnEnter(AEnemyCharacter* Owner, UWorld*, const FString materialID = "None")override;
 
-	// çŠ¶æ…‹ã”ã¨ã®æŒ™å‹•ã‚’æ¯ãƒ•ãƒ¬ãƒ¼ãƒ æ›´æ–°ã—ã¾ã™ã€‚
-	// ã“ã®é–¢æ•°ã§ã€ç§»å‹•ã‚„æ”»æ’ƒãªã©ã€çŠ¶æ…‹ã«åŸºã¥ããƒ­ã‚¸ãƒƒã‚¯ã‚’å®Ÿè¡Œã—ã¾ã™ã€‚
+	// ó‘Ô‚²‚Æ‚Ì‹““®‚ğ–ˆƒtƒŒ[ƒ€XV‚µ‚Ü‚·B
+	// ‚±‚ÌŠÖ”‚ÅAˆÚ“®‚âUŒ‚‚È‚ÇAó‘Ô‚ÉŠî‚Ã‚­ƒƒWƒbƒN‚ğÀs‚µ‚Ü‚·B
 	virtual bool OnUpdate(float DeltaTime)override;
 
-	// æ•µã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ãŒçŠ¶æ…‹ã‚’çµ‚äº†ã™ã‚‹éš›ã«å‘¼ã°ã‚Œã¾ã™ã€‚
-	// ã“ã“ã§ã¯ã€çŠ¶æ…‹ã‹ã‚‰æŠœã‘ã‚‹éš›ã«å¿…è¦ãªãƒªã‚»ãƒƒãƒˆã‚„ã‚¯ãƒªãƒ¼ãƒ³ã‚¢ãƒƒãƒ—ã‚’è¡Œã„ã¾ã™ã€‚
+	// “GƒLƒƒƒ‰ƒNƒ^[‚ªó‘Ô‚ğI—¹‚·‚éÛ‚ÉŒÄ‚Î‚ê‚Ü‚·B
+	// ‚±‚±‚Å‚ÍAó‘Ô‚©‚ç”²‚¯‚éÛ‚É•K—v‚ÈƒŠƒZƒbƒg‚âƒNƒŠ[ƒ“ƒAƒbƒv‚ğs‚¢‚Ü‚·B
 	virtual bool OnExit()override;
 
 	void OnOverlap(AActor*)override;

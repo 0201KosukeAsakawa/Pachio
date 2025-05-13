@@ -3,6 +3,8 @@
 
 #include "Enemy/State/GoombaStateComponent.h"
 #include "Enemy/EnemyCharacter.h"
+#include "Enemy/Logic/GoombaAliveState.h"
+#include "Components/EnemyState.h"
 #include "Components/AttackComponent.h"
 #include "Components/MoveComponent.h"            // 自作の移動処理用コンポーネント
 #include "Components/PhysicsCalculator.h"        // 重力などの物理演算コンポーネント
@@ -12,62 +14,39 @@ bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner , UWorld* currentLeve
 	if (!owner || !currentLevel)
 		return false;
 
-	mOwner = owner;
-
-	// 移動コンポーネントのインスタンスを生成して初期化
-	MoveComp = NewObject<UMoveComponent>(mOwner);
-	Attack = NewObject<UAttackComponent>(mOwner);
-
-	AActor* actor = Cast<AActor>(mOwner);
-	if (!actor || !MoveComp || !Attack)
+	logic = NewObject<UGoombaAliveState>(this);
+	if (!logic)
 		return false;
 
-
-	MoveComp->Init(actor);  // キャラクター自身を渡して初期化
-	MoveComp->SetSpeed(10.0f);
-
-	if (!Attack->Init(currentLevel, "DamageOnly"))
-		return false;
-
-	// 物理計算コンポーネントの生成（重力など）
-	PhysicsCal = NewObject<UPhysicsCalculator>(actor);
+	logic->OnEnter(owner, currentLevel,this, materialID);
 
 	return true;
 }
 
 bool UGoombaStateComponent::OnUpdate(float DeltaTime)
 {
-	// 移動コンポーネントが無ければ処理しない
-	if (!MoveComp || !mOwner)
-	{
+	if (!logic)
 		return false;
-	}
 
-	// 移動処理（例：追跡、パトロールなど）
-	MoveComp->Movement(DeltaTime);
-
-	// 重力の適用（または物理的な補正処理）
-	PhysicsCal->AddGravity();
-
-
-	if (mOwner->IsDead())
-	{
-		// 今後の処理実装予定。現時点ではダメージ処理なし。
-		mOwner->Destroy();
-	}
+	logic->OnUpdate(DeltaTime);
 
 	return true;
 }
 
 bool UGoombaStateComponent::OnExit()
 {
+	if (!logic)
+		return false;
+
+	logic->OnExit();
+
 	return true;
 }
 
 void UGoombaStateComponent::OnOverlap(AActor* hitActor)
 {
-	if (!Attack)
+	if (!logic)
 		return;
 
-	Attack->PerformAttack(hitActor);
+	logic->OnOverlap(hitActor);
 }

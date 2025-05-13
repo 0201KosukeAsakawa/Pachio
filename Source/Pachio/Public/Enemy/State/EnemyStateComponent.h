@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Components/EnemyState.h"
 #include "EnemyStateComponent.generated.h"
 
 class AEnemyCharacter;
@@ -31,6 +32,9 @@ public:
 
 	virtual void OnOverlap(AActor*);
 
+	template<class T>
+	bool ChangeState(T* nextClass, AEnemyCharacter* owner);
+
 protected:
 	// このコンポーネントがアタッチされている敵キャラクターの参照
 	UPROPERTY()
@@ -41,4 +45,23 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UMaterialInterface> NewMaterial;
 
+	UPROPERTY()
+	UEnemyState* logic;
 };
+
+template<class T>
+inline bool UEnemyStateComponent::ChangeState(T* nextClass , AEnemyCharacter* owner)
+{
+	UEnemyState* nextState = Cast<UEnemyState>(nextClass);
+	if (!nextState)
+		return false;
+
+	if (logic)
+		logic->OnExit();
+
+	logic = nextState;
+
+	logic->OnEnter(owner ,GetWorld(),this);
+
+	return true;
+}
