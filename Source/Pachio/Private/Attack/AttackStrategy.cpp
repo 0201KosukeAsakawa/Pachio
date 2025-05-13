@@ -7,6 +7,7 @@ UAttackStrategy::UAttackStrategy()
 {
 }
 
-void UAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage)
+bool UAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage)
 {
+	return false;
 }

@@ -88,8 +88,14 @@ void APlayerCharacter::BeginPlay()
 	// カメラのY座標最大値を初期化（初期カメラ位置）
 	if (Camera)
 	{
-		MaxCameraY = Camera->GetComponentLocation().Y;
+		MaxCameraY = Camera->GetComponentLocation().Y + 1000;
 		CameraXZ = Camera->GetComponentLocation();
+
+		// カメラのY座標を固定（右スクロール固定）
+		FVector CameraLocation = Camera->GetComponentLocation();
+
+		CameraLocation = FVector(CameraXZ.X, MaxCameraY, CameraXZ.Z);
+		Camera->SetWorldLocation(CameraLocation);
 	}
 
 	// 入力マッピングコンテキストの追加
@@ -127,7 +133,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 		// カメラのY座標を固定（右スクロール固定）
 		FVector CameraLocation = Camera->GetComponentLocation();
 		
-		CameraLocation = FVector(CameraLocation.X,MaxCameraY, CameraXZ.Z);
+		//CameraLocation = FVector(CameraLocation.X,MaxCameraY, CameraXZ.Z);
+		CameraLocation = FVector(CameraXZ.X, MaxCameraY, CameraXZ.Z);
 		Camera->SetWorldLocation(CameraLocation);
 
 		// ===== プレイヤーの制限 =====
@@ -189,7 +196,14 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
-	AttackManager->GetAttack("Upper")->PerformAttack(OtherActor);
+	if (!AttackManager->GetAttack("Upper")->PerformAttack(OtherActor))
+		return;
+
+	//GetCharacterMovement()
+	FVector DownwardFprce = FVector(0, 0, -500);
+	LaunchCharacter(DownwardFprce, true,true);
+
+	ACharacter::StopJumping();
 }
 
 // 踏みつけ攻撃時のヒット処理
