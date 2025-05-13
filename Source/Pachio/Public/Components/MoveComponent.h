@@ -16,16 +16,17 @@ public:
 	// Sets default values for this component's properties
 	UMoveComponent();
 
-    void Init(AActor*);
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void Init(AActor* owner);
 
-    // 移動処理を行う関数
-    virtual void Movement(float DeltaTime);
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void Movement(float DeltaTime);
 
-    // 生成時にDirectionを設定
+    UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetDirection(FVector NewDirection);
 
+    UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetSpeed(float newSpeed) { Speed = newSpeed; }
-
 private:
     // 現在の移動方向
     FVector CurrentMovementDirection;
