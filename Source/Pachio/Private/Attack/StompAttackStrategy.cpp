@@ -1,12 +1,20 @@
 #include "Attack/StompAttackStrategy.h"
+#include "GameFramework/Character.h"
 #include "Interface/IDamageable.h"
 
 
-void UStompAttackStrategy::ExecuteEffect(AActor* InstigatorActor, AActor* TargetActor, FAttackData type ,float FinalDamage)
+bool UStompAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData attackData, float FinalDamage)
 {
-	//ここで各攻撃の処理をしてください
-	if (IDamageable* id = Cast<IDamageable>(TargetActor))
-	{
-		id->TakeDamage(type,FinalDamage);
-	}
+	IDamageable* id = Cast<IDamageable>(Target);
+	if (!id || !id->TakeDamage(attackData, FinalDamage))
+		return false;
+
+	ACharacter* Character = Cast<ACharacter>(Attacker);
+	// 攻撃成功：Attacker（オーナー）に上方向の力を加える
+	if (!Character)
+		return false;
+
+		FVector LaunchVelocity = FVector(0.0f, 0.0f, 600.0f);
+		Character->LaunchCharacter(LaunchVelocity, true, true);
+		return true;
 }

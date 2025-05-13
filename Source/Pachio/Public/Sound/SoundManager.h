@@ -31,7 +31,7 @@ class PACHIO_API USoundManager : public UObject, public ISoundable
 {
 	GENERATED_BODY()
 
-    friend class AInGameSoundManager;
+    friend class ALevelManager;
 
 public:	
 	// Sets default values for this component's properties
