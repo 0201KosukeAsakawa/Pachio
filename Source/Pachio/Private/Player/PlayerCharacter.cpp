@@ -7,9 +7,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/AttackManagerComponent.h"
 #include "Camera/CameraComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
@@ -36,6 +36,7 @@ APlayerCharacter::APlayerCharacter()
 	SpringArm->TargetArmLength = 500.0f;
 	SpringArm->SocketOffset = FVector(0.0f, 100.0f, 50.0f);
 	SpringArm->bUsePawnControlRotation = false; // プレイヤー回転と連動しない
+
 }
 
 // ゲーム開始時に呼ばれる関数
@@ -44,6 +45,10 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	bIsDashing = false; // 初期状態ではダッシュしていない
+
+	/*PlayerBoxCollision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "PlayerBox");
+	if (!PlayerBoxCollision)
+		return;*/
 
 	// 攻撃コンポーネントの生成
 	AttackManager = NewObject<UAttackManagerComponent>(this);
@@ -306,6 +311,12 @@ void APlayerCharacter::StopAction()
 		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 		bIsDashing = false;
 	}
+}
+
+void APlayerCharacter::PowerUpCollisionPosition()
+{
+	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 110));
+	StompAttackBox->SetRelativeLocation(FVector(0, 0, -110));
 }
 
 // 状態の変更（タグ指定）

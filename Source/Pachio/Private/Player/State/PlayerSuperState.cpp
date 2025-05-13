@@ -6,6 +6,9 @@
 #include "Interface/StateControllable.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/StaticMeshComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Player/PlayerCharacter.h"
 #include "FunctionLibrary.h"
 
 bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
@@ -28,8 +31,19 @@ bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
 		if (N != nullptr && StaticMeshComp)
 		{
 			StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
+
+			StaticMeshComp->SetRelativeScale3D(FVector(1.0,1.0,2.0));
 		}
 	}
+
+	mOwner->GetCharacterMovement()->Crouch();
+	mOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
+
+	APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
+	if (!aPlayer)
+		return false;
+
+	aPlayer->PowerUpCollisionPosition();
 
 	// 移動速度の初期値設定（ステート内で使用）
 	mMoveSpeed = 100.0f;
