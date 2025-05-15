@@ -1,6 +1,8 @@
 // Copyright notice を Description ページで記載
 
 // インクルード
+
+#include "Player/PlayerCharacter.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
@@ -14,7 +16,6 @@
 #include "FunctionLibrary.h"
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Player/PlayerCharacter.h"
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/StateManager.h"
 

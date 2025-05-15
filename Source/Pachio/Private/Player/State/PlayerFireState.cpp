@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+#include "Player/State/PlayerFireState.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "FunctionLibrary.h"
@@ -9,7 +9,6 @@
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
 #include "Player/PlayerCharacter.h"
-#include "Player/State/PlayerFireState.h"
 
 // ステートに入る際に実行される処理
 bool UPlayerFireState::OnEnter(ACharacter* owner, UWorld* world)

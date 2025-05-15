@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "Player/State/PlayerSuperState.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "FunctionLibrary.h"
@@ -8,7 +9,6 @@
 #include "Interface/StateControllable.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/PlayerCharacter.h"
-#include "Player/State/PlayerSuperState.h"
 
 //ステートに入った時の処理
 bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
