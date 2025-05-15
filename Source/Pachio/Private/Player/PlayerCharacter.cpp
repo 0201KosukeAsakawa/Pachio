@@ -1,22 +1,22 @@
 // Copyright notice を Description ページで記載
 
 // インクルード
-#include "Player/PlayerCharacter.h"
-#include "Player/State/PlayerDefaultState.h"
-#include "Player/State/StateManager.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AttackManagerComponent.h"
 #include "Camera/CameraComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "FunctionLibrary.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "InputAction.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Player/PlayerCharacter.h"
+#include "Player/State/PlayerDefaultState.h"
+#include "Player/State/StateManager.h"
 
 
 // コンストラクタ
@@ -88,11 +88,13 @@ void APlayerCharacter::BeginPlay()
 		SpringArm->bInheritRoll = false;  // Roll（傾き）は継承しない
 	}
 
+	//プレイヤーの座標を保存
 	PlayerOldLocation = GetActorLocation();
 
 	// カメラのY座標最大値を初期化（初期カメラ位置）
 	if (Camera)
 	{
+		//カメラの初期位置を少し右にずれるようにして設定
 		MaxCameraY = Camera->GetComponentLocation().Y + 1000;
 		CameraXZ = Camera->GetComponentLocation();
 
@@ -120,11 +122,14 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//攻撃の判定が消えていたら即時リターン
 	if (!UpperAttackBox || !StateManager)
 		return;
 
+	//ステートマネージャーの経過処理呼び出し
 	StateManager->Update(DeltaTime);
 
+	//プレイヤーのY座標取得
 	float PlayerY = GetActorLocation().Y;
 
 	if (SpringArm && Camera)
@@ -138,7 +143,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 		// カメラのY座標を固定（右スクロール固定）
 		FVector CameraLocation = Camera->GetComponentLocation();
 		
-		//CameraLocation = FVector(CameraLocation.X,MaxCameraY, CameraXZ.Z);
 		CameraLocation = FVector(CameraXZ.X, MaxCameraY, CameraXZ.Z);
 		Camera->SetWorldLocation(CameraLocation);
 
@@ -162,6 +166,17 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	//プレイヤーが無敵時間ならば処理する
+	if (bIsInvincible)
+	{
+		//無敵時間を減少させる
+		InvincibleTime -= DeltaTime;
+		if (InvincibleTime <= 0.0f)
+		{
+			bIsInvincible = false; // 無敵時間終了
+		}
 	}
 
 	PlayerOldLocation = GetActorLocation();
@@ -189,7 +204,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 bool APlayerCharacter::AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy)
 {
-
 	return true;
 }
 
@@ -208,6 +222,7 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 	FVector DownwardFprce = FVector(0, 0, -500);
 	LaunchCharacter(DownwardFprce, true,true);
 
+	//何かに当たったらジャンプを中止する
 	ACharacter::StopJumping();
 }
 
@@ -224,8 +239,15 @@ void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor
 
 bool APlayerCharacter::TakeDamage(FAttackData Data, float damage)
 {
+	if (bIsInvincible)
+		return false; // 無敵状態の場合、ダメージを無視
+
 	if (!StateManager)
 		return false;
+
+	// 無敵時間開始
+	bIsInvincible = true;
+	InvincibleTime = MaxInvincibleTime;
 
 	return StateManager->GetCurrentState()->TakeDamage();
 }
@@ -279,8 +301,10 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
+	//ジャンプが可能な状態なら
 	if (CanJump())
 	{
+		//プレイヤーをジャンプさせ、攻撃の判定を有効化する
 		ACharacter::Jump();
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -296,8 +320,10 @@ void APlayerCharacter::JumpStop(const FInputActionValue& Value)
 // ダッシュ開始（移動速度上昇）
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
+	//ダッシュ状態じゃなければ
 	if (!bIsDashing)
 	{
+		//プレイヤーの速度を上昇させ、フラグをオンにする
 		GetCharacterMovement()->MaxWalkSpeed = 1200.0f;
 		bIsDashing = true;
 	}
@@ -306,17 +332,37 @@ void APlayerCharacter::Action(const FInputActionValue& Value)
 // ダッシュ終了（移動速度戻す）
 void APlayerCharacter::StopAction()
 {
+	//ダッシュ状態なら
 	if (bIsDashing)
 	{
+		//プレイヤーの速度を元に戻し、フラグをオフにする
 		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 		bIsDashing = false;
 	}
 }
 
+//パワーアップ時にコリジョンの移動処理
 void APlayerCharacter::PowerUpCollisionPosition()
 {
+	//即時リターン
+	if (!UpperAttackBox || !StompAttackBox)
+		return;
+
+	//上と下の攻撃判定を拡大調整
 	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 110));
 	StompAttackBox->SetRelativeLocation(FVector(0, 0, -110));
+}
+
+//パワーダウン時にコリジョンの移動処理
+void APlayerCharacter::PowerDownCollisionPosition()
+{
+	//即時リターン
+	if (!UpperAttackBox || !StompAttackBox)
+		return;
+
+	//上と下の攻撃判定を縮小調整
+	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 55));
+	StompAttackBox->SetRelativeLocation(FVector(0, 0, -55));
 }
 
 // 状態の変更（タグ指定）

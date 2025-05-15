@@ -51,7 +51,9 @@ public:
 	// 攻撃戦略の登録
 	virtual bool AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy) override;
 
+	//プレイヤー変身時の当たり判定の変更
 	void PowerUpCollisionPosition();
+	void PowerDownCollisionPosition();
 
 private:
 	// ==== 入力アクション ====
@@ -90,6 +92,7 @@ private:
 
 	FVector CameraXZ;
 
+	//ステート管理のクラス
 	UPROPERTY(EditAnywhere, Category = "State")
 	TSubclassOf<UStateManager> StateManagerClass;
 
@@ -105,6 +108,11 @@ private:
 
 	// ダッシュ中フラグ
 	bool bIsDashing;
+
+	//無敵時間中フラグ
+	bool bIsInvincible = false;
+	float InvincibleTime = 0.0f; //無敵時間の計測タイマー
+	float MaxInvincibleTime = 2.0f; // 無敵時間を2秒と仮定
 
 	// 前フレームとカメラ位置補正用
 	FVector PlayerOldLocation;

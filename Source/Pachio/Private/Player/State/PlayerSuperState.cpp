@@ -1,18 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
-#include "Player/State/PlayerSuperState.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "FunctionLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Components/StaticMeshComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "Player/PlayerCharacter.h"
-#include "FunctionLibrary.h"
+#include "Player/State/PlayerSuperState.h"
 
+//ステートに入った時の処理
 bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
 {
+	//ownerとworldのnullチェック
 	if (owner == nullptr || world == nullptr)
 	{
 		return false;
@@ -32,17 +33,21 @@ bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
 		{
 			StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
 
+			//マテリアルのサイズを拡大
 			StaticMeshComp->SetRelativeScale3D(FVector(1.0,1.0,2.0));
 		}
 	}
 
+	//コリジョンのサイズ変更
 	mOwner->GetCharacterMovement()->Crouch();
 	mOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
 
+	//即時リターン
 	APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
 	if (!aPlayer)
 		return false;
 
+	//コリジョン位置調整
 	aPlayer->PowerUpCollisionPosition();
 
 	// 移動速度の初期値設定（ステート内で使用）
@@ -51,21 +56,25 @@ bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
 	return true; // ステートの切り替え成功
 }
 
+// ステートの毎フレーム更新処理（現時点では何もしない）
 bool UPlayerSuperState::OnUpdate(float)
 {
 	return false;
 }
 
+// ステートを離脱するときの処理（現時点では何もしない）
 bool UPlayerSuperState::OnExit(ACharacter*)
 {
 	return false;
 }
 
+// スキルボタン入力時の処理（現時点では何もしない）
 bool UPlayerSuperState::OnSkill(const FInputActionValue&)
 {
 	return false;
 }
 
+//このステートのダメージ処理
 bool UPlayerSuperState::TakeDamage()
 {
 	if (!mOwner)
