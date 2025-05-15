@@ -29,9 +29,7 @@ void AEnemyCharacter::BeginPlay()
 
 	// 正常に生成できていれば、初期化を実行
 	if (!Logic || !AttackCollision)
-		return;
-
-	Logic->OnEnter(this, GetWorld());
+		return;;
 	UE_LOG(LogTemp, Warning, TEXT("AttackCollision is valid"));
 	AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
 
