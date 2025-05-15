@@ -51,6 +51,8 @@ public:
 	// 攻撃戦略の登録
 	virtual bool AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy) override;
 
+	void PowerUpCollisionPosition();
+
 private:
 	// ==== 入力アクション ====
 	// 移動入力
@@ -120,6 +122,10 @@ private:
 	// 踏みつけ攻撃用の当たり判定
 	UPROPERTY()
 	UBoxComponent* StompAttackBox;
+
+	/*調整用の当たり判定
+	UPROPERTY()
+	UBoxComponent* PlayerBoxCollision;*/
 
 	// ==== カメラ ====
 

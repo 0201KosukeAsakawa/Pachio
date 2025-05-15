@@ -12,6 +12,7 @@ AEnemyCharacter::AEnemyCharacter()
 {
 	// 毎フレーム Tick を呼び出すように設定
 	PrimaryActorTick.bCanEverTick = true;
+	
 }
 
 // ゲーム開始時に呼び出される初期化処理
@@ -21,8 +22,10 @@ void AEnemyCharacter::BeginPlay()
 
 	// 当たり判定用のボックスコンポーネントを作成し、ルートに設定
 	AttackCollision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "C_Attack");
-
-	Init(LogicID);
+	// MeshComponentの初期化
+	meshComponent = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("MeshComp"));
+	RootComponent = meshComponent;
+	Init(LogicID , MaterialID);
 
 	// 正常に生成できていれば、初期化を実行
 	if (!Logic || !AttackCollision)
@@ -89,7 +92,7 @@ void AEnemyCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
 		return;
 
 	// プレイヤーの攻撃判定と衝突した場合は無視
-	if (OtherComp->ComponentHasTag("PlayerAttack"))
+	if (OtherComp->ComponentHasTag("Attack"))
 		return;
 
 	if (Logic)
