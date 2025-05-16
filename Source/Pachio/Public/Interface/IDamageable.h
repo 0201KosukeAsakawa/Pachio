@@ -27,7 +27,7 @@ public:
 	 * @param damage 攻撃による数値的なダメージ（省略可能、Dataからも判定可能な場合）
 	 * @return true：ダメージが正常に処理された / false：何らかの理由で処理されなかった
 	 */
-	virtual bool TakeDamage(FAttackData Data, float damage = 0);
+	virtual bool TakeDamage(FAttackData Data,const float damage = 0 , const AActor * hitActor = nullptr);
 
 	/**
 	 * 現在のアクターが死亡状態かどうかを返す
