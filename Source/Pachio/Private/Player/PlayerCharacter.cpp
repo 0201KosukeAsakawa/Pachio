@@ -172,12 +172,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	//プレイヤーが無敵時間ならば処理する
 	if (bIsInvincible)
 	{
-		//無敵時間を減少させる
-		InvincibleTime -= DeltaTime;
-		if (InvincibleTime <= 0.0f)
-		{
-			bIsInvincible = false; // 無敵時間終了
-		}
+		UpdateInvincible(DeltaTime);
 	}
 
 	PlayerOldLocation = GetActorLocation();
@@ -196,6 +191,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		// 移動
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Movement);
+
+		//しゃがみ
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Crouch);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &APlayerCharacter::StandUp);
 
 		// ダッシュ（スペシャルアクション）
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
@@ -304,6 +303,32 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 	return;
 }
 
+void APlayerCharacter::Crouch(const FInputActionValue& Value)
+{
+	if (!UpperAttackBox || !StompAttackBox)
+		return;
+
+	if (Cast<UPlayerDefaultState>(StateManager->GetCurrentState()))
+		return;
+
+	PowerDownCollisionPosition();
+	
+	//コリジョンのサイズ変更
+	GetCharacterMovement()->Crouch();
+	GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
+}
+
+void APlayerCharacter::StandUp()
+{
+	if (Cast<UPlayerDefaultState>(StateManager->GetCurrentState()))
+		return;
+
+	PowerUpCollisionPosition();
+	//コリジョンのサイズ変更
+	GetCharacterMovement()->Crouch();
+	GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
+}
+
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
@@ -369,6 +394,51 @@ void APlayerCharacter::PowerDownCollisionPosition()
 	//上と下の攻撃判定を縮小調整
 	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 55));
 	StompAttackBox->SetRelativeLocation(FVector(0, 0, -55));
+}
+
+void APlayerCharacter::ToggleVisibility()
+{
+	UStaticMeshComponent* pMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, "StaticMesh");
+	if (pMesh == nullptr)
+		return;
+
+	if (bIsVisible)
+	{
+		pMesh->SetVisibility(false);
+	}
+	else
+	{
+		pMesh->SetVisibility(true);
+	}
+
+	// 状態を反転
+	bIsVisible = !bIsVisible;
+}
+
+void APlayerCharacter::UpdateInvincible(float DeltaTime)
+{
+	UStaticMeshComponent* pMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, "StaticMesh");
+	if (pMesh == nullptr)
+		return;
+
+	// 無敵時間を減少させる
+	InvincibleTime -= DeltaTime;
+
+	if (InvincibleTime <= 0.0f)
+	{
+		bIsInvincible = false; // 無敵時間終了
+		GetWorld()->GetTimerManager().ClearTimer(BlinkTimerHandle);  // タイマーの停止
+		pMesh->SetVisibility(true);  // 最後にメッシュを表示状態に戻す
+	}
+	else
+	{
+		// 点滅の処理
+		if (!GetWorld()->GetTimerManager().IsTimerActive(BlinkTimerHandle))
+		{
+			// タイマーを設定して、定期的に点滅させる
+			GetWorld()->GetTimerManager().SetTimer(BlinkTimerHandle, this, &APlayerCharacter::ToggleVisibility, 0.1f, true);
+		}
+	}
 }
 
 // 状態の変更（タグ指定）
