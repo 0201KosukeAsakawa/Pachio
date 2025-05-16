@@ -75,7 +75,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 }
 
 // ダメージを受けたときの処理（IDamageable インターフェイスの実装）
-bool AEnemyCharacter::TakeDamage(FAttackData Data, float damage)
+bool AEnemyCharacter::TakeDamage(FAttackData Data, float damage , const AActor*)
 {
     // HPからダメージを減算
     HP -= damage;

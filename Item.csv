@@ -1,13 +1,13 @@
 ,MaterialID,StateID,DropItem,Location_X,Location_Y,Location_Z,Rotate_X,Rotate_Y,Rotate_Z,Scale_X,Scale_Y,Scale_Z
 1,Question,Question,Coin,1000,1560,600,0,0,0,1,1,1
 2,brick_block_Mat,Break,None,1000,1960,600,0,0,0,1,1,1
-3,Question,Question,Power UP,1000,2060,600,0,0,0,1,1,1
+3,Question,Question,PowerUP,1000,2060,600,0,0,0,1,1,1
 4,brick_block_Mat,Break,None,1000,2160,600,0,0,0,1,1,1
 5,Question,Question,Coin,1000,2260,600,0,0,0,1,1,1
 6,brick_block_Mat,Break,None,1000,2360,600,0,0,0,1,1,1
 7,Question,Question,Coin,1000,2160,1000,0,0,0,1,1,1
 8,transmission,Question,None,1000,6360,700,0,0,0,1,1,1
-9,Question,Question,Power UP,1000,7860,600,0,0,0,1,1,1
+9,Question,Question,PowerUP,1000,7860,600,0,0,0,1,1,1
 10,brick_block_Mat,Break,None,1000,16860,600,0,0,0,1,1,1
 11,brick_block_Mat,Break,None,1000,16960,600,0,0,0,1,1,1
 12,Question,Question,Coin,1000,17060,600,0,0,0,1,1,1
@@ -31,7 +31,7 @@
 30,brick_block_Mat,Break,None,1000,10260,600,0,0,0,1,1,1
 31,Question,Question,Coin,1000,10760,600,0,0,0,1,1,1
 32,Question,Question,Coin,1000,11060,600,0,0,0,1,1,1
-33,Question,Question,Power UP,1000,11060,1000,0,0,0,1,1,1
+33,Question,Question,PowerUP,1000,11060,1000,0,0,0,1,1,1
 34,Question,Question,Coin,1000,11360,600,0,0,0,1,1,1
 35,brick_block_Mat,Break,None,1000,11960,600,0,0,0,1,1,1
 36,brick_block_Mat,Break,None,1000,12260,1000,0,0,0,1,1,1

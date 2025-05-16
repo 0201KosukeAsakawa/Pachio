@@ -90,7 +90,7 @@ private:
 
 	// ステートの変更（タグ指定）
 	bool ChangeState(FString Tag)override;
-	bool TakeDamage(FAttackData Data, float damage = 0)override;
+	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr)override;
 
 private:
 	// ==== 状態・戦闘 ====

@@ -59,7 +59,7 @@ bool UMoveComponent::IsCollidingWithWall(FVector Direction)
         return true;
 
     FVector Start = mOwner->GetActorLocation();
-    FVector End = Start + (Direction * Speed * 0.1f);  // 少しだけ前進して衝突をチェック
+    FVector End = Start + (Direction * Speed * 0.0001f);  // 少しだけ前進して衝突をチェック
 
     FHitResult HitResult;
     FCollisionQueryParams CollisionParams;
@@ -67,6 +67,7 @@ bool UMoveComponent::IsCollidingWithWall(FVector Direction)
 
     // レイキャストで衝突判定を行う
     bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
-
+    if (Cast<ACharacter>(HitResult.GetActor()))
+        return false;
     return bHit;
 }

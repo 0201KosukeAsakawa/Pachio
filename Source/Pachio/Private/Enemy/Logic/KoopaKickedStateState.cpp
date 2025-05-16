@@ -35,6 +35,9 @@ bool UKoopaKickedStateState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEne
     if (!actor || !MoveComp || !Attack || !Attack->Init(world, "DamageOnly"))
         return false;
 
+    // 攻撃データの設定（敵キャラクターに対する攻撃、壊れない攻撃）
+    Attack->SetAttackData(EAttackType::Indiscriminate, EBreakLevel::Breakable);
+
     // キャラクターの移動コンポーネントの初期化
     MoveComp->Init(actor);
     MoveComp->SetSpeed(1000.0f); // 移動速度設定
