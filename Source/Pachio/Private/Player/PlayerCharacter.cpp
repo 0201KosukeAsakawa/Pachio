@@ -162,6 +162,12 @@ void APlayerCharacter::Tick(float DeltaTime)
 		}
 	}
 
+	// 空中ならば攻撃判定を有効にする
+	if (GetCharacterMovement()->IsFalling())
+	{
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
 	// 空中でなければ攻撃判定を無効にする
 	if (!GetCharacterMovement()->IsFalling())
 	{
@@ -337,8 +343,8 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 	{
 		//プレイヤーをジャンプさせ、攻撃の判定を有効化する
 		ACharacter::Jump();
-		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		//UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		//StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 }
 
