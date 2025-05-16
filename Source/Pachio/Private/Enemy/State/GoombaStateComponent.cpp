@@ -28,9 +28,7 @@ bool UGoombaStateComponent::OnUpdate(float DeltaTime)
 	if (!logic)
 		return false;
 
-	logic->OnUpdate(DeltaTime);
-
-	return true;
+	return logic->OnUpdate(DeltaTime);
 }
 
 bool UGoombaStateComponent::OnExit()

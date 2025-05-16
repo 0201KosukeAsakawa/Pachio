@@ -1,12 +1,14 @@
 // プロジェクト設定の Description ページに著作権情報を記入
 
 #include "Player/State/PlayerDefaultState.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "FunctionLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "FunctionLibrary.h"
-#include "Components/StaticMeshComponent.h"
-
+#include "Player/PlayerCharacter.h"
 
 // ステートに入る際に実行される処理
 bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
@@ -30,8 +32,22 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 		if (N != nullptr && StaticMeshComp)
 		{
 			StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
+
+			//マテリアルのサイズを縮小
+			StaticMeshComp->SetRelativeScale3D(FVector(1.0, 1.0, 1.0));
 		}
 	}
+
+	//コリジョンのサイズ変更
+	mOwner->GetCharacterMovement()->Crouch();
+	mOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
+
+	APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
+	if (!aPlayer)
+		return false;
+
+	//コリジョン位置調整
+	aPlayer->PowerDownCollisionPosition();
 
 	// 移動速度の初期値設定（ステート内で使用）
 	mMoveSpeed = 100.0f;
@@ -57,6 +73,7 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue&)
 	return true;
 }
 
+//ダメージを受けたときの処理
 bool UPlayerDefaultState::TakeDamage()
 {
 	if (!mOwner)

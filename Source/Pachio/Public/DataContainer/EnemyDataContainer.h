@@ -9,9 +9,16 @@
 class AEnemyCharacter;
 class UEnemyStateComponent;
 
-/**
- * 
- */
+USTRUCT()
+struct FMaterialData : public FTableRowBase
+{
+    GENERATED_USTRUCT_BODY()
+
+public:
+    UPROPERTY(EditAnywhere, Category = "MaterialType")
+    TMap<FString, TSoftObjectPtr<UMaterialInterface>> material;
+};
+
 UCLASS(Blueprintable)
 class PACHIO_API UEnemyDataContainer : public UObject
 {
@@ -19,16 +26,17 @@ class PACHIO_API UEnemyDataContainer : public UObject
 public:
 
     UEnemyStateComponent* CreateState(UObject*, FString) const;
-    UMaterialInterface* CreateMaterial(UObject* WorldContext, FString StateName);
+    UMaterialInterface* CreateMaterial(UObject* WorldContext, FString StateName ,const FString = "Default");
     bool GenerateEnemy(FString stateID, FString dropItemID, FString materialID, FVector location, FVector scale, FRotator rotator);
 
 
 private:
     UPROPERTY(EditAnywhere, Category = "Data")
-    TMap<FString, TSubclassOf<UEnemyStateComponent>> BlockClassMap;
+    TMap<FString, TSubclassOf<UEnemyStateComponent>> EnemyClassMap;
 
     UPROPERTY(EditAnywhere, Category = "Data")
-    TMap<FString, TSoftObjectPtr<UMaterialInterface>> MaterialMap;
+    TMap<FString, FMaterialData> MaterialMap;
+
     UPROPERTY(EditAnywhere, Category = "Data")
     TSubclassOf<AEnemyCharacter> EnemyCharacter;
 };
