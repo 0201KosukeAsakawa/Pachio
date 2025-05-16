@@ -8,91 +8,106 @@
 #include "FunctionLibrary.h"
 
 // コンストラクタ：コンポーネントの初期化
+// コンストラクタ: 初期設定を行う
 AEnemyCharacter::AEnemyCharacter()
 {
-	// 毎フレーム Tick を呼び出すように設定
-	PrimaryActorTick.bCanEverTick = true;
-	
+    // 毎フレーム Tick を呼び出すように設定
+    PrimaryActorTick.bCanEverTick = true;
 }
 
 // ゲーム開始時に呼び出される初期化処理
 void AEnemyCharacter::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	// 当たり判定用のボックスコンポーネントを作成し、ルートに設定
-	AttackCollision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "C_Attack");
-	// MeshComponentの初期化
-	meshComponent = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("MeshComp"));
-	RootComponent = meshComponent;
-	Init(LogicID , MaterialID);
+    // 当たり判定用のボックスコンポーネントを探し、AttackCollisionに設定
+    AttackCollision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "C_Attack");
 
-	// 正常に生成できていれば、初期化を実行
-	if (!Logic || !AttackCollision)
-		return;;
-	UE_LOG(LogTemp, Warning, TEXT("AttackCollision is valid"));
-	AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
+    // メッシュコンポーネントを探し、meshComponentに設定
+    meshComponent = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("MeshComp"));
 
+    // メッシュコンポーネントをルートコンポーネントとして設定
+    RootComponent = meshComponent;
+
+    // ロジックIDとマテリアルIDを使って初期化
+    Init(LogicID, MaterialID);
+
+    // ロジックまたは当たり判定が無効なら、処理を中断
+    if (!Logic || !AttackCollision)
+        return;
+
+    // AttackCollisionが正常に設定されていれば、OnOverlapBeginイベントをバインド
+    UE_LOG(LogTemp, Warning, TEXT("AttackCollision is valid"));
+    AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
 }
 
+// 初期化処理
 void AEnemyCharacter::Init(FString logicID, const FString materialID)
 {
-	LogicID = logicID;
+    // LogicIDを設定
+    LogicID = logicID;
 
-	// Containerが有効な場合、現在の状態を設定
-	Logic = ALevelManager::GetInstance(GetWorld())->GetEnemyContainer()->CreateState(GetWorld(), LogicID);
+    // EnemyContainerからLogic状態を作成して設定
+    Logic = ALevelManager::GetInstance(GetWorld())->GetEnemyContainer()->CreateState(GetWorld(), LogicID);
 
-	// 現在の状態が設定されている場合、状態に応じてOnEnter処理を実行
-	if (!Logic)
-		return;
+    // Logicが無効なら、処理を中断
+    if (!Logic)
+        return;
 
-	if (materialID == "None")
-		Logic->OnEnter(this, GetWorld());
-	else
-		Logic->OnEnter(this, GetWorld(), materialID);
-
+    // マテリアルIDが "None" でない場合、ロジックにマテリアルIDを渡してOnEnter処理を実行
+    if (materialID == "None")
+        Logic->OnEnter(this, GetWorld());
+    else
+        Logic->OnEnter(this, GetWorld(), materialID);
 }
 
-// 毎フレーム実行される処理
+// 毎フレーム実行される更新処理
 void AEnemyCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
-	// ロジックが有効なら更新処理を実行
-	if (!Logic)
-		return;
+    // Logicが無効なら更新処理を実行しない
+    if (!Logic)
+        return;
 
-	Logic->OnUpdate(DeltaTime);
-
+    // LogicのOnUpdateメソッドを呼び出して、毎フレームの更新を実行
+    Logic->OnUpdate(DeltaTime);
 }
 
 // ダメージを受けたときの処理（IDamageable インターフェイスの実装）
 bool AEnemyCharacter::TakeDamage(FAttackData Data, float damage)
 {
-	HP -= damage;
+    // HPからダメージを減算
+    HP -= damage;
 
-	ALevelManager::GetInstance(GetWorld())->GetScoreManager()->AddScore(Score);
+    // スコアを加算
+    ALevelManager::GetInstance(GetWorld())->GetScoreManager()->AddScore(Score);
 
-	return true;
+    // ダメージ処理が成功したことを返す
+    return true;
 }
 
 // 生存状態かどうかの判定（IDamageable インターフェイスの実装）
 bool AEnemyCharacter::IsDead() const
 {
-	// HP が 0 以下なら死亡扱い
-	return HP <= 0;
+    // HPが0以下なら死亡扱い
+    return HP <= 0;
 }
 
-void AEnemyCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+// 当たり判定開始時の処理（他のアクターとの衝突時に呼び出される）
+void AEnemyCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+    const FHitResult& SweepResult)
 {
-	// 自分自身 or 無効な相手を無視
-	if (OtherActor == this || !OtherActor)
-		return;
+    // 自分自身または無効な相手を無視
+    if (OtherActor == this || !OtherActor)
+        return;
 
-	// プレイヤーの攻撃判定と衝突した場合は無視
-	if (OtherComp->ComponentHasTag("Attack"))
-		return;
+    // プレイヤーの攻撃判定と衝突した場合は無視
+    if (OtherComp->ComponentHasTag("Attack"))
+        return;
 
-	if (Logic)
-		Logic->OnOverlap(OtherActor);
+    // ロジックが有効であれば、そのロジックのOnOverlap処理を呼び出す
+    if (Logic)
+        Logic->OnOverlap(OtherActor);
 }

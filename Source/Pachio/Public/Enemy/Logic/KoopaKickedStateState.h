@@ -22,6 +22,8 @@ class PACHIO_API UKoopaKickedStateState : public UEnemyState
 	virtual bool OnUpdate(float deltaTime)override;
 	virtual bool OnExit()override;
 	virtual bool OnOverlap(AActor*)override;
+public:
+	void SetDirection(FVector);
 
 private:
 	UPROPERTY();

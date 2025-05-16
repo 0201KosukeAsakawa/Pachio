@@ -208,6 +208,11 @@ bool APlayerCharacter::AssignAttackStrategy(FName AttackID, UAttackStrategy* New
 	return true;
 }
 
+UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
+{
+	return StateManager->GetCurrentState();
+}
+
 // 上攻撃時のヒット処理
 void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

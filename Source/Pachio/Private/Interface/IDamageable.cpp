@@ -14,3 +14,8 @@ bool IDamageable::IsDead() const
 {
     return false;
 }
+
+bool IDamageable::CanBeStomped() const
+{
+    return false;
+}

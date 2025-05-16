@@ -34,4 +34,6 @@ public:
 	 * @return true：死亡している / false：生存している
 	 */
 	virtual bool IsDead() const;
+
+	virtual bool CanBeStomped() const;
 };

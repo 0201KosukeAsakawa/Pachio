@@ -51,6 +51,8 @@ public:
 	// 攻撃戦略の登録
 	virtual bool AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy) override;
 
+	UPlayerStateComponent* GetPlayerState() const override;
+
 	//プレイヤー変身時の当たり判定の変更
 	void PowerUpCollisionPosition();
 	void PowerDownCollisionPosition();

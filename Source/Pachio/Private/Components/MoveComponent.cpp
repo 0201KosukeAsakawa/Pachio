@@ -33,8 +33,12 @@ void UMoveComponent::Movement(float DeltaTime)
     // 衝突判定
     if (IsCollidingWithWall(CurrentMovementDirection))
     {
-        // 衝突した場合、移動方向を反転させる
-        CurrentMovementDirection = -CurrentMovementDirection;
+        // Y軸方向に反転させる
+        CurrentMovementDirection.Y = -CurrentMovementDirection.Y;
+
+        // 反転後の方向に基づいて、移動するためのActorの回転を設定
+        FRotator NewRotation = CurrentMovementDirection.ToOrientationRotator();
+        mOwner->SetActorRotation(NewRotation); // 新しい回転を設定
     }
 
     // 移動処理

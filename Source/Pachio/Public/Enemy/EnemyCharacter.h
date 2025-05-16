@@ -51,7 +51,9 @@ public:
 
 	inline UStaticMeshComponent* GetMesh() { return meshComponent; }
 	inline UBoxComponent* GetAttackCollision() { return AttackCollision; }
-
+	inline void SetHp(float hp) { HP = hp; }
+	inline void SetCanJamp(bool isStomp) { canStomp = isStomp; }
+	inline bool CanBeStomped()const { return canStomp; }
 private:
 	UPROPERTY()
 	UBoxComponent* AttackCollision;
@@ -77,4 +79,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	FString MaterialID;
+
+	bool canStomp;
 };

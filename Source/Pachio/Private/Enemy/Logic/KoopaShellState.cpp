@@ -2,6 +2,8 @@
 
 
 #include "Enemy/Logic/KoopaShellState.h"
+#include "Enemy/Logic/KoopaAliveState.h"
+#include "Enemy/Logic/KoopaKickedStateState.h"
 #include "Enemy/EnemyCharacter.h"
 #include "Enemy/State/EnemyStateComponent.h"
 #include "Components/AttackComponent.h"
@@ -17,13 +19,11 @@ bool UKoopaShellState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEn
 
 	mOwner = owner;
 	logicComponent = LogicComponet;
-
-	AActor* actor = Cast<AActor>(mOwner);
-	if (!actor)
-		return false;
-
-
-	if (!owner->GetMesh()) // メッシュが存在しない場合
+	pWorld = currentLevel;
+	timer = 0;
+	mOwner->SetHp(1.0f);
+	mOwner->SetCanJamp(false);
+	if (!owner->GetMesh())
 		return false;
 
 	owner->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // メッシュのコリジョンを無効にする
@@ -39,16 +39,36 @@ bool UKoopaShellState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEn
 
 bool UKoopaShellState::OnUpdate(float deltaTime)
 {
+	if (!pWorld)
+		return false;
+
+	timer += pWorld->DeltaTimeSeconds;
+
+	if (timer < 5)
+		return true;
+
+	UKoopaAliveState* nextState = NewObject<UKoopaAliveState>(mOwner);
+
+	logicComponent->ChangeState(nextState, mOwner);
+
 	return true;
 }
 
 bool UKoopaShellState::OnExit()
 {
+	timer = 0;
 	return true;
 }
 
 bool UKoopaShellState::OnOverlap(AActor* hitActor)
 {
 	//TODO:後で直して
+	FVector direc = FVector{ 0,0,0 };
+
+	direc.Y = mOwner->GetActorLocation().Y-hitActor->GetActorLocation().Y;
+
+	UKoopaKickedStateState* nextState = NewObject<UKoopaKickedStateState>(mOwner);
+	logicComponent->ChangeState(nextState, mOwner);
+	nextState->SetDirection(direc);
 	return true;
 }

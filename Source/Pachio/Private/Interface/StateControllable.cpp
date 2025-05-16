@@ -9,3 +9,8 @@ bool IStateControllable::ChangeState(FString Tag)
 {
 	return false;
 }
+
+UPlayerStateComponent* IStateControllable::GetPlayerState() const
+{
+	return nullptr;
+}
