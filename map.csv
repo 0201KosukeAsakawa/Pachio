@@ -556,3 +556,7 @@
 555,DirtBlock,FortLWindow_Mat,1100,20460,600,0,0,0,1,1,1
 556,DirtBlock,FortRWindow_Mat,1100,20660,600,0,0,0,1,1,1
 557,DirtBlock,FortFlag_Mat,1100,20560,800,0,0,0,1,1,1
+558,DirtBlock,ClayPipe13_Mat,1000,16510,405,0,0,0,1,2,0.9
+559,DirtBlock,ClayPipe13_Mat,1000,18110,400,0,0,0,1,2,0.9
+560,DirtBlock,ClayPipe16_Mat,1000,16510,305,0,0,0,1,1.75,1.1
+561,DirtBlock,ClayPipe16_Mat,1000,18110,305,0,0,0,1,1.75,1.1
