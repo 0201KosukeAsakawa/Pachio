@@ -41,7 +41,7 @@ bool UGoombaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UE
 
     // 移動コンポーネントを初期化
     MoveComp->Init(actor);
-    MoveComp->SetSpeed(10.0f); // 移動速度を設定
+    MoveComp->SetSpeed(1000.0f); // 移動速度を設定
 
     // 物理計算コンポーネント（重力など）を生成
     PhysicsCal = NewObject<UPhysicsCalculator>(actor);

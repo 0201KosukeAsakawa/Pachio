@@ -242,7 +242,7 @@ void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor
 	AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor);
 }
 
-bool APlayerCharacter::TakeDamage(FAttackData Data, float damage)
+bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*)
 {
 	if (bIsInvincible)
 		return false; // 無敵状態の場合、ダメージを無視

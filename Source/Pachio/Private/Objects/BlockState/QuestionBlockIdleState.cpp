@@ -8,6 +8,7 @@
 #include "DataContainer/ItemDataContainer.h"
 #include "FunctionLibrary.h"
 #include "Manager/LevelManager.h"
+#include "Manager/ScoreManager.h"
 #include "Interface/StateControllable.h"
 #include "Player/State/PlayerDefaultState.h"
 
@@ -58,7 +59,11 @@ bool UQuestionBlockIdleState::OnHit(FAttackData, FVector , const AActor* hitActo
 	if (!nextState)
 		return false;
 	
-	if (mOwner->GetDropItemID() != "PowerUP")
+	if (mOwner->GetDropItemID() == "Coin")
+	{
+		ALevelManager::GetInstance(GetWorld())->GetScoreManager()->AddScore(100);
+	}
+	else if (mOwner->GetDropItemID() != "PowerUP")
 	{
 		ALevelManager::GetInstance(GetWorld())->GetItemContainer()->GenerateItem(mOwner->GetDropItemID(), mOwner->GetActorLocation() + FVector(0, 5, 0), FVector(0, /*YComponent*/1, 0), 5.0f, FVector(0, 0, 1));
 	}
