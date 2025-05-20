@@ -3,6 +3,7 @@
 // インクルード
 
 #include "Player/PlayerCharacter.h"
+#include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
@@ -54,6 +55,10 @@ void APlayerCharacter::BeginPlay()
 	// 攻撃コンポーネントの生成
 	AttackManager = NewObject<UAttackManagerComponent>(this);
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
+
+	physics = NewObject<UPhysicsCalculator>(this);
+	physics->RegisterComponent();            // Tick対象になる
+
 	if (!AttackManager || !StateManagerClass)
 		return;
 
@@ -180,7 +185,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UpdateInvincible(DeltaTime);
 	}
-
+	//physics->AddGravity();
 	PlayerOldLocation = GetActorLocation();
 }
 
@@ -338,14 +343,16 @@ void APlayerCharacter::StandUp()
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	//ジャンプが可能な状態なら
-	if (CanJump())
-	{
-		//プレイヤーをジャンプさせ、攻撃の判定を有効化する
-		ACharacter::Jump();
-		//UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		//StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
+	////ジャンプが可能な状態なら
+	//if (CanJump())
+	//{
+	//	//プレイヤーをジャンプさせ、攻撃の判定を有効化する
+	//	ACharacter::Jump();
+	//	//UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//	//StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//}
+
+	physics->AddForce(GetActorUpVector(), 50);
 }
 
 // ジャンプ終了処理
