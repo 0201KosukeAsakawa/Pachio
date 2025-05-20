@@ -7,14 +7,16 @@
 
 #include "Components/ThrowComponent.h"
 #include "Objects/ThrowableBase.h"
-#include "Components/PhysicsCalculator.h"
 #include "Engine/World.h"
 
 
 //‚à‚Ì‚ð“Š‚°‚éŠÖ”
-void UThrowComponent::ThrowObject(FVector Direction, float Force)
+void UThrowComponent::ThrowObject(FVector direction, float force)
 {
+	if (!ThrownObjectPtr)
+		return;
 
+	ThrownObjectPtr->ThrowObject(direction, force);
 }
 
 //“Š‚°‚éObject‚ðŒˆ’è‚·‚éŠÖ”
@@ -31,11 +33,4 @@ void UThrowComponent::SelectThrownObject(UThrowableBase* thrownObjectPtr)
 
 }
 
-void UThrowComponent::SetDirection(FVector direction , float force)
-{
-	if (!ThrownObjectPtr)
-		return;
-
-	ThrownObjectPtr->ThrowObject(direction, force);
-}
 
