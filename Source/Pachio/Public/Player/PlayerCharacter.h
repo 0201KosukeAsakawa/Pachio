@@ -21,7 +21,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UBoxComponent;
 class UInputAction;
-class UMoveComponent;
+class UPhysicsCalculator;
 
 struct FInputActionValue;
 /**
@@ -128,10 +128,6 @@ private:
 	// 前フレームとカメラ位置補正用
 	FVector PlayerOldLocation;
 
-private:
-	UPROPERTY()
-	UMoveComponent* MoveComp;
-
 	// ==== メッシュ・コリジョン ====
 
 	// キャラクター用のカプセルメッシュ（カスタム追加の場合）
@@ -182,4 +178,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
+
+	UPhysicsCalculator* physics;
 };

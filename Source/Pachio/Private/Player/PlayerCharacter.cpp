@@ -3,12 +3,12 @@
 // インクルード
 
 #include "Player/PlayerCharacter.h"
+#include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AttackManagerComponent.h"
-#include "Components/MoveComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -19,7 +19,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/StateManager.h"
-
 
 
 // コンストラクタ
@@ -47,10 +46,6 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	MoveComp = NewObject<UMoveComponent>(this);
-	UMoveComponent* movelogic = NewObject<UMoveComponent>();
-	MoveComp->SetMoveLogic(movelogic);
-
 	bIsDashing = false; // 初期状態ではダッシュしていない
 
 	/*PlayerBoxCollision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "PlayerBox");
@@ -60,6 +55,10 @@ void APlayerCharacter::BeginPlay()
 	// 攻撃コンポーネントの生成
 	AttackManager = NewObject<UAttackManagerComponent>(this);
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
+
+	physics = NewObject<UPhysicsCalculator>(this);
+	physics->RegisterComponent();            // Tick対象になる
+
 	if (!AttackManager || !StateManagerClass)
 		return;
 
@@ -186,7 +185,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UpdateInvincible(DeltaTime);
 	}
-
+	//physics->AddGravity();
 	PlayerOldLocation = GetActorLocation();
 }
 
@@ -272,11 +271,7 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*
 // 移動処理（StateManager 経由）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	if (!MoveComp)
-		return;
-
-		MoveComp->Movement(0, Owner,Value);
-	/*/ 入力値（X = 左右, Y = 前後）
+	// 入力値（X = 左右, Y = 前後）
 	FVector2D MoveInput = Value.Get<FVector2D>();
 
 	// カメラの回転から前方・右方向ベクトルを取得
@@ -316,7 +311,7 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 		SetActorRotation(SmoothRot);
 	}
 
-	return;*/
+	return;
 }
 
 void APlayerCharacter::Crouch(const FInputActionValue& Value)
@@ -348,13 +343,16 @@ void APlayerCharacter::StandUp()
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	//ジャンプが可能な状態なら
-	if (CanJump())
-	{
-		//プレイヤーをジャンプさせ、攻撃の判定を有効化する
-		ACharacter::Jump();
-		//UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
+	////ジャンプが可能な状態なら
+	//if (CanJump())
+	//{
+	//	//プレイヤーをジャンプさせ、攻撃の判定を有効化する
+	//	ACharacter::Jump();
+	//	//UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//	//StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//}
+
+	physics->AddForce(GetActorUpVector(), 50);
 }
 
 // ジャンプ終了処理
