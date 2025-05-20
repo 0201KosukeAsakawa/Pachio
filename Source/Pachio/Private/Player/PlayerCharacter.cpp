@@ -8,6 +8,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AttackManagerComponent.h"
+#include "Components/MoveComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -18,6 +19,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/StateManager.h"
+
 
 
 // コンストラクタ
@@ -44,6 +46,10 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	MoveComp = NewObject<UMoveComponent>(this);
+	UMoveComponent* movelogic = NewObject<UMoveComponent>();
+	MoveComp->SetMoveLogic(movelogic);
 
 	bIsDashing = false; // 初期状態ではダッシュしていない
 
@@ -266,7 +272,11 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*
 // 移動処理（StateManager 経由）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	// 入力値（X = 左右, Y = 前後）
+	if (!MoveComp)
+		return;
+
+		MoveComp->Movement(0, Owner,Value);
+	/*/ 入力値（X = 左右, Y = 前後）
 	FVector2D MoveInput = Value.Get<FVector2D>();
 
 	// カメラの回転から前方・右方向ベクトルを取得
@@ -306,7 +316,7 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 		SetActorRotation(SmoothRot);
 	}
 
-	return;
+	return;*/
 }
 
 void APlayerCharacter::Crouch(const FInputActionValue& Value)
@@ -344,7 +354,6 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 		//プレイヤーをジャンプさせ、攻撃の判定を有効化する
 		ACharacter::Jump();
 		//UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		//StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 }
 

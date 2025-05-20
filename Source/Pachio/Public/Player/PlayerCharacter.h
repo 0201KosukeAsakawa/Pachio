@@ -21,6 +21,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UBoxComponent;
 class UInputAction;
+class UMoveComponent;
 
 struct FInputActionValue;
 /**
@@ -126,6 +127,10 @@ private:
 
 	// 前フレームとカメラ位置補正用
 	FVector PlayerOldLocation;
+
+private:
+	UPROPERTY()
+	UMoveComponent* MoveComp;
 
 	// ==== メッシュ・コリジョン ====
 

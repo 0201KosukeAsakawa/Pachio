@@ -76,7 +76,7 @@ bool UGoombaAliveState::OnUpdate(float DeltaTime)
     }
 
     // 移動処理（追跡やパトロールなど）
-    MoveComp->Movement(DeltaTime);
+    MoveComp->Movement(DeltaTime,mOwner);
 
     // 重力を適用する
     PhysicsCal->AddGravity();
