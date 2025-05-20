@@ -18,5 +18,5 @@ public:
 	virtual bool OnEnter(ABaseBlock*, UWorld*,const FString materialID = "None")override;
 	virtual bool OnUpdate(ABaseBlock*)override;
 	virtual bool OnExit(ABaseBlock*)override;
-	virtual bool OnHit(FAttackData, const FVector = FVector(0,0,0))override;
+	virtual bool OnHit(FAttackData, const FVector = FVector(0,0,0),const AActor* = nullptr)override;
 };

@@ -6,21 +6,30 @@
 
 UEnemyStateComponent* UEnemyDataContainer::CreateState(UObject* WorldContext, FString StateName) const
 {
-    if (const TSubclassOf<UEnemyStateComponent>* BlockStateClass = BlockClassMap.Find(StateName))
+    if (const TSubclassOf<UEnemyStateComponent>* BlockStateClass = EnemyClassMap.Find(StateName))
     {
         return NewObject<UEnemyStateComponent>(WorldContext, *BlockStateClass);
     }
     return nullptr;
 }
 
-UMaterialInterface* UEnemyDataContainer::CreateMaterial(UObject* WorldContext, FString StateName)
+UMaterialInterface* UEnemyDataContainer::CreateMaterial(UObject* WorldContext, FString StateName, FString Type)
 {
-    if (const TSoftObjectPtr<UMaterialInterface>* MaterialPtr = MaterialMap.Find(StateName))
+    // StateName に対応する FMaterialData を MaterialMap から取得
+    if (const FMaterialData* MaterialData = MaterialMap.Find(StateName))
     {
-        return MaterialPtr->LoadSynchronous();
+        // Type に対応するマテリアルを取得
+        if (const TSoftObjectPtr<UMaterialInterface>* MaterialPtr = MaterialData->material.Find(Type))
+        {
+            // マテリアルを同期的にロードして返す
+            return MaterialPtr->LoadSynchronous();
+        }
     }
+
+    // 見つからなかった場合は nullptr を返す
     return nullptr;
 }
+
 
 bool UEnemyDataContainer::GenerateEnemy(FString stateID, FString dropItemID, FString materialID, FVector location, FVector scale, FRotator rotator)
 {

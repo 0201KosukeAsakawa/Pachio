@@ -11,10 +11,10 @@ bool UStompAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAtta
 
 	ACharacter* Character = Cast<ACharacter>(Attacker);
 	// 攻撃成功：Attacker（オーナー）に上方向の力を加える
-	if (!Character)
+	if (!Character || !id->CanBeStomped())
 		return false;
 
-		FVector LaunchVelocity = FVector(0.0f, 0.0f, 600.0f);
-		Character->LaunchCharacter(LaunchVelocity, true, true);
-		return true;
+	FVector LaunchVelocity = FVector(0.0f, 0.0f, 600.0f);
+	Character->LaunchCharacter(LaunchVelocity, true, true);
+	return true;
 }

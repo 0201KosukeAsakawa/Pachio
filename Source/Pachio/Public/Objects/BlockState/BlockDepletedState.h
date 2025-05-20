@@ -20,5 +20,5 @@ public:
 	bool OnEnter(ABaseBlock*, UWorld*,const FString materialID = "None")override;
 	bool OnUpdate(ABaseBlock*)override;
 	bool OnExit(ABaseBlock*)override;
-	bool OnHit(FAttackData, FVector)override;
+	bool OnHit(FAttackData, FVector,const AActor*)override;
 };

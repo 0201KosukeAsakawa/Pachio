@@ -51,10 +51,22 @@ public:
 	// 攻撃戦略の登録
 	virtual bool AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy) override;
 
+	UPlayerStateComponent* GetPlayerState() const override;
+
+	//プレイヤー変身時の当たり判定の変更
+	void PowerUpCollisionPosition();
+	void PowerDownCollisionPosition();
+
+	void ToggleVisibility();  // メッシュの表示/非表示を切り替える
+	void UpdateInvincible(float DeltaTime);  // 無敵時間の管理
 private:
 	// ==== 入力アクション ====
 	// 移動入力
 	void Movement(const FInputActionValue& Value);
+
+	//しゃがみ移行、立ち上がり
+	void Crouch(const FInputActionValue& Value);
+	void StandUp();
 
 	// ジャンプ開始・終了
 	void Jump(const FInputActionValue& Value);
@@ -78,7 +90,7 @@ private:
 
 	// ステートの変更（タグ指定）
 	bool ChangeState(FString Tag)override;
-	bool TakeDamage(FAttackData Data, float damage = 0)override;
+	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr)override;
 
 private:
 	// ==== 状態・戦闘 ====
@@ -88,6 +100,7 @@ private:
 
 	FVector CameraXZ;
 
+	//ステート管理のクラス
 	UPROPERTY(EditAnywhere, Category = "State")
 	TSubclassOf<UStateManager> StateManagerClass;
 
@@ -103,6 +116,13 @@ private:
 
 	// ダッシュ中フラグ
 	bool bIsDashing;
+
+	//無敵時間中フラグ
+	bool bIsInvincible = false;
+	bool bIsVisible = true; //無敵時間時の点滅フラグ
+	float InvincibleTime = 0.0f; //無敵時間の計測タイマー
+	float MaxInvincibleTime = 2.0f; // 無敵時間を2秒と仮定
+	FTimerHandle BlinkTimerHandle;
 
 	// 前フレームとカメラ位置補正用
 	FVector PlayerOldLocation;
@@ -120,6 +140,10 @@ private:
 	// 踏みつけ攻撃用の当たり判定
 	UPROPERTY()
 	UBoxComponent* StompAttackBox;
+
+	/*調整用の当たり判定
+	UPROPERTY()
+	UBoxComponent* PlayerBoxCollision;*/
 
 	// ==== カメラ ====
 
@@ -143,6 +167,10 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	// 各種アクション設定
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* CrouchAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
