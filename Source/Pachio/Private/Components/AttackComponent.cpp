@@ -37,6 +37,16 @@ bool UAttackComponent::Init(UWorld* world , FName NewStrategy)
     return true;
 }
 
+void UAttackComponent::SetAttackData(EAttackType type, EBreakLevel level,const float damage,const bool projectile,const bool destroy,const UParticleSystem* effect)
+{
+    AttackData.attackType = type;
+    AttackData.breakLevel = level;
+    AttackData.BaseDamage = damage;
+    AttackData.bIsProjectile = projectile;
+    AttackData.bDestroyAfterHit = destroy;
+    AttackData.AttackEffect = effect;
+}
+
 const bool UAttackComponent::PerformAttack(AActor* Target)
 {
     // 現在の攻撃戦略が存在し、対象が有効な場合に攻撃を実行

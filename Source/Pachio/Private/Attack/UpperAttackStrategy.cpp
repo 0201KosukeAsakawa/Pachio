@@ -9,7 +9,7 @@
 bool UUpperAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData attackData, float FinalDamage)
 {
 	IDamageable* id = Cast<IDamageable>(Target);
-	if (!id || !id->TakeDamage(attackData, FinalDamage))
+	if (!id || !id->TakeDamage(attackData, FinalDamage , Attacker))
 		return false;
 
 	ACharacter* Character = Cast<ACharacter>(Attacker);

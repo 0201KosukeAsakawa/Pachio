@@ -32,7 +32,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// ダメージ処理のオーバーライド
-	bool TakeDamage(FAttackData attackData, float damage = 0) override;
+	bool TakeDamage(FAttackData attackData,const float damage = 0 ,const AActor * hitActor = nullptr) override;
 
 	// 状態を変更する関数
 	void ChangeState(UBlockState* nextState);

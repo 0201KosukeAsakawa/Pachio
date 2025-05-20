@@ -45,7 +45,7 @@ public:
     bool bDestroyAfterHit;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-    UParticleSystem* AttackEffect;
+    const UParticleSystem* AttackEffect;
 
     // コンストラクタで初期値を設定
     FAttackData()

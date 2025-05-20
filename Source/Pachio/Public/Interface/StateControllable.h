@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "StateControllable.generated.h"
 
+class UPlayerStateComponent;
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UStateControllable : public UInterface
@@ -23,4 +25,5 @@ class PACHIO_API IStateControllable
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	virtual bool ChangeState(FString Tag);
+	virtual UPlayerStateComponent* GetPlayerState()const;
 };

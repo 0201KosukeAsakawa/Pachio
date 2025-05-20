@@ -24,6 +24,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Attack")
     bool Init(UWorld* world, FName NewStrategy);
 
+    void SetAttackData(EAttackType, EBreakLevel, const float = 1, const bool = false, const bool = false, const UParticleSystem* = nullptr);
+
 protected:
     virtual void BeginPlay() override;
 
