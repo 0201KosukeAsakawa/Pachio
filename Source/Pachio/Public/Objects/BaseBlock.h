@@ -32,19 +32,13 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// ダメージ処理のオーバーライド
-	bool TakeDamage(FAttackData attackData, float damage = 0) override;
+	bool TakeDamage(FAttackData attackData,const float damage = 0 ,const AActor * hitActor = nullptr) override;
 
 	// 状態を変更する関数
 	void ChangeState(UBlockState* nextState);
 
 	// DropItemIDを取得するゲッター関数
 	FString GetDropItemID() const { return DropItemID; }
-
-private:
-	// 衝突が始まった時に呼ばれるイベント
-	UFUNCTION()
-	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 private:
 	// ドロップアイテムのID
@@ -62,11 +56,4 @@ private:
 	// 衝突コンポーネント（Box型）
 	UPROPERTY()
 	UBoxComponent* Collision;
-
-	// 使用するBlockDataContainerのクラス
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UBlockDataContainer> ContainerClass;
-
-	// 実際のBlockDataContainerのインスタンス
-	TObjectPtr<UBlockDataContainer> Container;
 };

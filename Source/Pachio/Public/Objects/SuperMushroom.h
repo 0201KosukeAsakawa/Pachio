@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interface/ItemEffectSource.h"
+#include "Components/ItemEffectSource.h"
 #include "SuperMushroom.generated.h"
 
 

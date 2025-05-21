@@ -4,18 +4,20 @@
 #include "UObject/NoExportTypes.h"
 #include "AttackStrategy.generated.h"
 
-enum class EAttackType : uint8
-{
-    Player,
-    Enemy,
-    Indiscriminate,
-};
-
+UENUM(BlueprintType)
 enum class EBreakLevel : uint8
 {
-    Unbreakable,  // 壊せない
-    Functional,   // 作動できる
-    Breakable     // 壊せる
+    Unbreakable   UMETA(DisplayName = "Unbreakable"),
+    Functional    UMETA(DisplayName = "Functional"),
+    Breakable     UMETA(DisplayName = "Breakable")
+};
+
+UENUM(BlueprintType)
+enum class EAttackType : uint8
+{
+    Player           UMETA(DisplayName = "Player"),
+    Enemy            UMETA(DisplayName = "Enemy"),
+    Indiscriminate   UMETA(DisplayName = "Indiscriminate")
 };
 
 USTRUCT()
@@ -25,9 +27,11 @@ struct FAttackData : public FTableRowBase
 
 public:
     // 誰の発信の攻撃か
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack Strategy")
     EAttackType attackType;
 
     // ブロックに対する影響力
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack Strategy")
     EBreakLevel breakLevel;
 
     // 攻撃に必要な基本プロパティ
@@ -41,7 +45,7 @@ public:
     bool bDestroyAfterHit;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-    UParticleSystem* AttackEffect;
+    const UParticleSystem* AttackEffect;
 
     // コンストラクタで初期値を設定
     FAttackData()
@@ -58,26 +62,8 @@ class PACHIO_API UAttackStrategy : public UObject
     GENERATED_BODY()
 
 public:
-    //// コンストラクタで攻撃データを設定
-    //UAttackStrategy(const FAttackData& NewAttackData)
-    //    : attackData(NewAttackData)
-    //{
-    //}
-
     UAttackStrategy();
 
     // 攻撃の実行
-    virtual void ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage = 0);
-
-    // 攻撃力を取得
-    float GetBaseDamage() const { return attackData.BaseDamage; }
-
-    // 飛び道具かどうかを取得
-    bool IsProjectile() const { return attackData.bIsProjectile; }
-
-    // 攻撃が当たった後にオブジェクトが消えるか
-    bool ShouldDestroyAfterHit() const { return attackData.bDestroyAfterHit; }
-
-protected:
-    FAttackData attackData;
+    virtual bool ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage = 0);
 };

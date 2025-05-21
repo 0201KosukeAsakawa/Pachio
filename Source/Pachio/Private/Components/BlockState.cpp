@@ -18,7 +18,7 @@ UBlockState::UBlockState()
 	// ...
 }
 
-bool UBlockState::OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*, FString)
+bool UBlockState::OnEnter(ABaseBlock*, UWorld*, FString)
 {
 	return false;
 }
@@ -33,7 +33,7 @@ bool UBlockState::OnExit(ABaseBlock*)
 	return false;
 }
 
-bool UBlockState::OnHit(FAttackData, FVector)
+bool UBlockState::OnHit(FAttackData, FVector,const AActor*)
 {
 	return false;
 }

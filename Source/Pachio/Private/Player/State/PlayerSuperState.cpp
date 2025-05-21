@@ -1,82 +1,89 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Player/State/PlayerSuperState.h"
-#include "InputActionValue.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "FunctionLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "InputActionValue.h"
+#include "Interface/StateControllable.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Player/PlayerCharacter.h"
 
+//ステートに入った時の処理
 bool UPlayerSuperState::OnEnter(ACharacter* owner, UWorld* world)
 {
+	//ownerとworldのnullチェック
 	if (owner == nullptr || world == nullptr)
 	{
 		return false;
 	}
 
+	// 内部に所有者とワールドを保存
 	mOwner = owner;
 	pWorld = world;
 
-	if (NewMaterial != nullptr)
+	// マテリアルの設定（デフォルトステート用）
+	//if (NewMaterial)
 	{
-		UStaticMeshComponent* StaticMeshComp = owner->FindComponentByClass<UStaticMeshComponent>();
-		UMaterialInterface* N = NewMaterial.LoadSynchronous();
-		if (N != nullptr)
+		// キャラクターが持つ StaticMeshComponent を取得
+		UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
+		UMaterialInterface* N = NewMaterial.LoadSynchronous(); // 非同期ロードに対応
+		if (N != nullptr && StaticMeshComp)
 		{
-			StaticMeshComp->SetMaterial(0, N);
+			StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
+
+			//マテリアルのサイズを拡大
+			StaticMeshComp->SetRelativeScale3D(FVector(1.0,1.0,2.0));
 		}
 	}
 
+	//コリジョンのサイズ変更
+	mOwner->GetCharacterMovement()->Crouch();
+	mOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
+
+	//即時リターン
+	APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
+	if (!aPlayer)
+		return false;
+
+	//コリジョン位置調整
+	aPlayer->PowerUpCollisionPosition();
+
+	// 移動速度の初期値設定（ステート内で使用）
 	mMoveSpeed = 100.0f;
 
-
-	return true;
+	return true; // ステートの切り替え成功
 }
 
+// ステートの毎フレーム更新処理（現時点では何もしない）
 bool UPlayerSuperState::OnUpdate(float)
 {
 	return false;
 }
 
+// ステートを離脱するときの処理（現時点では何もしない）
 bool UPlayerSuperState::OnExit(ACharacter*)
 {
 	return false;
 }
 
+// スキルボタン入力時の処理（現時点では何もしない）
 bool UPlayerSuperState::OnSkill(const FInputActionValue&)
 {
 	return false;
 }
 
-void UPlayerSuperState::Jump(const FInputActionValue& Value)
+//このステートのダメージ処理
+bool UPlayerSuperState::TakeDamage()
 {
-}
+	if (!mOwner)
+		return false;
 
-//�eState�̈ړ�����
-void UPlayerSuperState::Movement(const FInputActionValue& Value)
-{
-	if (!mOwner || !pWorld)
-		return;
-	FVector2D MoveInput = Value.Get<FVector2D>();
-	FRotator CamRot = mOwner->GetControlRotation();
-	FVector CamForward = CamRot.Vector();
-	FVector CamRight = FRotationMatrix(CamRot).GetUnitAxis(EAxis::Y);
+	IStateControllable* is = Cast<IStateControllable>(mOwner);
+	if (!is)
+		return false;
 
-	// ===========================
-	// �ʏ�ړ�
-	// ===========================
-
-		// �ړ�����
-	FVector MoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();
-	mOwner->AddMovementInput(MoveDir, mMoveSpeed);
-
-	// ��]�����i�O�����Ɍ����j
-	if (!MoveDir.IsNearlyZero())
-	{
-		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(mOwner->GetActorLocation(), mOwner->GetActorLocation() + MoveDir);
-		TargetRot.Pitch = 0.0f;
-		TargetRot.Roll = 0.0f;
-		FRotator SmoothRot = FMath::RInterpTo(mOwner->GetActorRotation(), TargetRot, pWorld->GetDeltaSeconds(), 10.0f);
-		mOwner->SetActorRotation(SmoothRot);
-	}
-	return;
+	is->ChangeState("Default");
+	return true;
 }
