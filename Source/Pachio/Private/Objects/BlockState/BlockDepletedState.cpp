@@ -40,7 +40,7 @@ bool UBlockDepletedState::OnExit(ABaseBlock*)
 {
     return true;
 }
-bool UBlockDepletedState::OnHit(FAttackData , FVector)
+bool UBlockDepletedState::OnHit(FAttackData , FVector , const AActor*)
 {
     mOwner->Destroy();
     return true;

@@ -3,6 +3,7 @@
 // インクルード
 
 #include "Player/PlayerCharacter.h"
+#include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
@@ -54,6 +55,10 @@ void APlayerCharacter::BeginPlay()
 	// 攻撃コンポーネントの生成
 	AttackManager = NewObject<UAttackManagerComponent>(this);
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
+
+	physics = NewObject<UPhysicsCalculator>(this);
+	physics->RegisterComponent();            // Tick対象になる
+
 	if (!AttackManager || !StateManagerClass)
 		return;
 
@@ -162,6 +167,12 @@ void APlayerCharacter::Tick(float DeltaTime)
 		}
 	}
 
+	// 空中ならば攻撃判定を有効にする
+	if (GetCharacterMovement()->IsFalling())
+	{
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
 	// 空中でなければ攻撃判定を無効にする
 	if (!GetCharacterMovement()->IsFalling())
 	{
@@ -172,14 +183,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 	//プレイヤーが無敵時間ならば処理する
 	if (bIsInvincible)
 	{
-		//無敵時間を減少させる
-		InvincibleTime -= DeltaTime;
-		if (InvincibleTime <= 0.0f)
-		{
-			bIsInvincible = false; // 無敵時間終了
-		}
+		UpdateInvincible(DeltaTime);
 	}
-
+	//physics->AddGravity();
 	PlayerOldLocation = GetActorLocation();
 }
 
@@ -197,6 +203,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		// 移動
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Movement);
 
+		//しゃがみ
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Crouch);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &APlayerCharacter::StandUp);
+
 		// ダッシュ（スペシャルアクション）
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAction);
@@ -206,6 +216,11 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 bool APlayerCharacter::AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy)
 {
 	return true;
+}
+
+UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
+{
+	return StateManager->GetCurrentState();
 }
 
 // 上攻撃時のヒット処理
@@ -238,7 +253,7 @@ void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor
 	AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor);
 }
 
-bool APlayerCharacter::TakeDamage(FAttackData Data, float damage)
+bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*)
 {
 	if (bIsInvincible)
 		return false; // 無敵状態の場合、ダメージを無視
@@ -299,17 +314,45 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 	return;
 }
 
+void APlayerCharacter::Crouch(const FInputActionValue& Value)
+{
+	if (!UpperAttackBox || !StompAttackBox)
+		return;
+
+	if (Cast<UPlayerDefaultState>(StateManager->GetCurrentState()))
+		return;
+
+	PowerDownCollisionPosition();
+	
+	//コリジョンのサイズ変更
+	GetCharacterMovement()->Crouch();
+	GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
+}
+
+void APlayerCharacter::StandUp()
+{
+	if (Cast<UPlayerDefaultState>(StateManager->GetCurrentState()))
+		return;
+
+	PowerUpCollisionPosition();
+	//コリジョンのサイズ変更
+	GetCharacterMovement()->Crouch();
+	GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
+}
+
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	//ジャンプが可能な状態なら
-	if (CanJump())
-	{
-		//プレイヤーをジャンプさせ、攻撃の判定を有効化する
-		ACharacter::Jump();
-		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
+	////ジャンプが可能な状態なら
+	//if (CanJump())
+	//{
+	//	//プレイヤーをジャンプさせ、攻撃の判定を有効化する
+	//	ACharacter::Jump();
+	//	//UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//	//StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//}
+
+	physics->AddForce(GetActorUpVector(), 50);
 }
 
 // ジャンプ終了処理
@@ -364,6 +407,51 @@ void APlayerCharacter::PowerDownCollisionPosition()
 	//上と下の攻撃判定を縮小調整
 	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 55));
 	StompAttackBox->SetRelativeLocation(FVector(0, 0, -55));
+}
+
+void APlayerCharacter::ToggleVisibility()
+{
+	UStaticMeshComponent* pMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, "StaticMesh");
+	if (pMesh == nullptr)
+		return;
+
+	if (bIsVisible)
+	{
+		pMesh->SetVisibility(false);
+	}
+	else
+	{
+		pMesh->SetVisibility(true);
+	}
+
+	// 状態を反転
+	bIsVisible = !bIsVisible;
+}
+
+void APlayerCharacter::UpdateInvincible(float DeltaTime)
+{
+	UStaticMeshComponent* pMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, "StaticMesh");
+	if (pMesh == nullptr)
+		return;
+
+	// 無敵時間を減少させる
+	InvincibleTime -= DeltaTime;
+
+	if (InvincibleTime <= 0.0f)
+	{
+		bIsInvincible = false; // 無敵時間終了
+		GetWorld()->GetTimerManager().ClearTimer(BlinkTimerHandle);  // タイマーの停止
+		pMesh->SetVisibility(true);  // 最後にメッシュを表示状態に戻す
+	}
+	else
+	{
+		// 点滅の処理
+		if (!GetWorld()->GetTimerManager().IsTimerActive(BlinkTimerHandle))
+		{
+			// タイマーを設定して、定期的に点滅させる
+			GetWorld()->GetTimerManager().SetTimer(BlinkTimerHandle, this, &APlayerCharacter::ToggleVisibility, 0.1f, true);
+		}
+	}
 }
 
 // 状態の変更（タグ指定）

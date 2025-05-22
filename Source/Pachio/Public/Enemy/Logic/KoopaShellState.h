@@ -18,4 +18,9 @@ private:
 	virtual bool OnUpdate(float deltaTime)override;
 	virtual bool OnExit()override;
 	virtual bool OnOverlap(AActor*)override;
+
+private:
+	float timer;
+	UPROPERTY()
+	UWorld* pWorld;
 };
