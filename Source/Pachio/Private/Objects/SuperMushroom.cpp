@@ -25,7 +25,7 @@ void USuperMushroomComponent::Init(AItemBase* owner)
 
     // 移動コンポーネントの初期化
     moveComp = NewObject<UMoveComponent>(this);
-    moveComp->Init(mOwner);  // 移動コンポーネントに所有者を設定
+    moveComp->Init(mOwner, this);  // 移動コンポーネントに所有者を設定
     moveComp->SetSpeed(0.0f);
 }
 

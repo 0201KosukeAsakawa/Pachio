@@ -19,11 +19,13 @@ UMoveComponent::UMoveComponent()
     CurrentMovementDirection.Normalize(); // 方向ベクトルを正規化して長さを1にする
 }
 
-void UMoveComponent::Init(AActor* owner)
+void UMoveComponent::Init(AActor* owner, TScriptInterface<IMoveLogic>moveLogic)
 {
     if (!owner)
         return;
     mOwner = owner;
+
+    MoveLogic = moveLogic;
 }
 
 FVector UMoveComponent::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)

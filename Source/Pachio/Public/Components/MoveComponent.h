@@ -18,7 +18,7 @@ public:
 	UMoveComponent();
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
-    void Init(AActor* owner);
+    void Init(AActor* owner, TScriptInterface<IMoveLogic>MoveLogic);
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
     FVector Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value = FInputActionValue());
