@@ -95,7 +95,7 @@ bool UKoopaKickedStateState::OnUpdate(float DeltaTime)
     }
 
     // 移動処理（蹴られて移動する）
-    MoveComp->Movement(DeltaTime);
+    MoveComp->Movement(DeltaTime,mOwner);
 
     // 物理計算（重力など）を適用
     PhysicsCal->AddGravity();

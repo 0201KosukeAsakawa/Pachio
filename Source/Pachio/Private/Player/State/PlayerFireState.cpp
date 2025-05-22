@@ -52,7 +52,6 @@ bool UPlayerFireState::OnEnter(ACharacter* owner, UWorld* world)
 	mMoveSpeed = 100.0f;
 
 	return true; // ステートの切り替え成功
-	return false;
 }
 
 // ステートの毎フレーム更新処理（現時点では何もしない）

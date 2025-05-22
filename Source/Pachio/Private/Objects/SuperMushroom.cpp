@@ -36,7 +36,7 @@ void USuperMushroomComponent::Update(float DeltaTime)
         return;
 
     // 移動コンポーネントで移動処理を行う
-    moveComp->Movement(DeltaTime);
+    moveComp->Movement(DeltaTime,mOwner);
 
     // 物理計算コンポーネントを使用して重力を加える
     mOwner->GetPhysics()->AddGravity();

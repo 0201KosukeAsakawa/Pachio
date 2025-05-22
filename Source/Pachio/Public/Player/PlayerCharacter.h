@@ -21,6 +21,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UBoxComponent;
 class UInputAction;
+class UPhysicsCalculator;
 
 struct FInputActionValue;
 /**
@@ -177,4 +178,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
+
+	UPhysicsCalculator* physics;
 };

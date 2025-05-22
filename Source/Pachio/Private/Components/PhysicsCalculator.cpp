@@ -30,12 +30,8 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction); // 親クラスのTickComponentを呼び出す
 
-	// 力の強さが0以下の場合、力を加えない
-	if (ForceScale <= 0)
-		return;
-
 	// 力の強さを減少させる（時間経過で徐々に減る）
-	ForceScale = FMath::Max(0.0f, ForceScale - GetWorld()->DeltaTimeSeconds * 2.0f);
+	ForceScale = ForceScale - GetWorld()->DeltaTimeSeconds;
 
 	// オーナー（このコンポーネントがアタッチされているアクター）に力を加える
 	GetOwner()->AddActorLocalOffset(ForceDirection * ForceScale, bIsSweep);
@@ -44,14 +40,22 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	FVector currentPosition = GetOwner()->GetActorLocation();
 	FVector direction = currentPosition - PreviousPosition;
 
-	// 移動距離が非常に小さい場合は、力を0にして物理計算を停止
-	if (direction.SizeSquared() <= FMath::Square(1.0f))
+	
+	float distance = GetOwner()->GetActorLocation().Z - PreviousPosition.Z;
+	UE_LOG(LogTemp, Warning, TEXT("distance = %f"), distance);
+	if (distance < 0)
 	{
-		ForceScale = 0;
-		bIsPhysicsEnabled = true; // 物理計算が完了したことを示す
-		return;
+		hoge = true;
+	}
+	else
+	{
+		hoge = false;
 	}
 
+	if (hoge == true && !CanFall(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()))
+	{
+		ForceDirection.Z = 0;
+	}
 	// 現在の位置を記録して次回の比較に使う
 	PreviousPosition = currentPosition;
 }

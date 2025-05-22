@@ -71,7 +71,7 @@ bool UKoopaAliveState::OnUpdate(float DeltaTime)
     }
 
     // 移動処理（追跡やパトロールなど）
-    MoveComp->Movement(DeltaTime);
+    MoveComp->Movement(DeltaTime,mOwner);
 
     // 物理演算（重力など）を適用
     PhysicsCal->AddGravity();
