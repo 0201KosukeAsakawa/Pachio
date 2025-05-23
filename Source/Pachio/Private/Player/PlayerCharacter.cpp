@@ -9,6 +9,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AttackManagerComponent.h"
+#include "Components/MoveComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -19,6 +20,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/StateManager.h"
+#include "Logic/Movement/PlayerMoveLogic.h"
 
 
 // コンストラクタ
@@ -45,6 +47,12 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	MoveComp =  NewObject<UMoveComponent>(this);
+	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
+	MoveComp->Init(this,PlayerLogic);
+
+
 
 	bIsDashing = false; // 初期状態ではダッシュしていない
 
@@ -267,7 +275,10 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*
 // 移動処理（StateManager 経由）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	// 入力値（X = 左右, Y = 前後）
+	if (!MoveComp)
+		return;
+
+	/*/ 入力値（X = 左右, Y = 前後）
 	FVector2D MoveInput = Value.Get<FVector2D>();
 
 	// カメラの回転から前方・右方向ベクトルを取得
@@ -277,18 +288,19 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 	// ========== 実際の移動処理 ==========
 	// 入力値に基づく移動方向を計算し、正規化
-	FVector MoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();
+	FVector MoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();*/
 
-	// キャラクターを移動させる
-	AddMovementInput(MoveDir, StateManager->GetCurrentState()->GetMoveSpeed());
+	FVector direction = (MoveComp->Movement(0, this, Value));
+	//キャラクターを移動させる
+	AddMovementInput(direction, StateManager->GetCurrentState()->GetMoveSpeed());
 
 	// 入力がある場合のみ、キャラクターの向きを滑らかに回転させる
-	if (!MoveDir.IsNearlyZero())
+	if (!direction.IsNearlyZero())
 	{
 		// 向くべき方向を計算
 		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(
 			GetActorLocation(),
-			GetActorLocation() + MoveDir
+			GetActorLocation() + direction
 		);
 
 		// Pitch（上下）、Roll（傾き）は固定

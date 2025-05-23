@@ -22,6 +22,8 @@ class UCameraComponent;
 class UBoxComponent;
 class UInputAction;
 class UPhysicsCalculator;
+class UMoveComponent;
+class IMoveLogic;
 
 struct FInputActionValue;
 /**
@@ -127,6 +129,9 @@ private:
 
 	// 前フレームとカメラ位置補正用
 	FVector PlayerOldLocation;
+
+	UMoveComponent* MoveComp;
+	//TScriptInterface<IMoveLogic> PlayerLogic;
 
 	// ==== メッシュ・コリジョン ====
 

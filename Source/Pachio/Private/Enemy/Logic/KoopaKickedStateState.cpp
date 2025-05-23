@@ -39,7 +39,7 @@ bool UKoopaKickedStateState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEne
     Attack->SetAttackData(EAttackType::Indiscriminate, EBreakLevel::Breakable);
 
     // キャラクターの移動コンポーネントの初期化
-    MoveComp->Init(actor);
+    MoveComp->Init(actor, this);
     MoveComp->SetSpeed(1000.0f); // 移動速度設定
 
     // 物理計算コンポーネントの初期化（重力の適用など）
