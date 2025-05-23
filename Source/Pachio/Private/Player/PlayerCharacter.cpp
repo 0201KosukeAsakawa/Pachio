@@ -190,7 +190,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UpdateInvincible(DeltaTime);
 	}
-	physics->AddGravity();
+	physics->AddGravity(5.0);
 	PlayerOldLocation = GetActorLocation();
 }
 

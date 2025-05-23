@@ -45,7 +45,7 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	
 	float distance = GetOwner()->GetActorLocation().Z - PreviousPosition.Z;
 
-	if (distance < 0 && CanFall(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()))
+	if (distance < 0 && OnGround(GetOwner()->GetActorLocation(), FVector(GetOwner()->GetActorLocation().X, GetOwner()->GetActorLocation().Y, GetOwner()->GetActorLocation().Z - 10)))
 	{
 		ForceDirection.Z = 0;
 		ForceScale = 0;
@@ -74,10 +74,10 @@ void UPhysicsCalculator::ResetForce()
 }
 
 // 重力をオブジェクトに加える
-void UPhysicsCalculator::AddGravity()
+void UPhysicsCalculator::AddGravity(const float gravityScalse)
 {
 	// オブジェクトが落下可能かどうかを判定
-	if (CanFall(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()))
+	if (OnGround(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()))
 	{
 		Timer = 0; // 落下できる場合はタイマーをリセット
 		return;
@@ -85,35 +85,48 @@ void UPhysicsCalculator::AddGravity()
 
 	// タイマーを進めて、重力を加える
 	Timer += GetWorld()->DeltaTimeSeconds;
-	GetOwner()->AddActorLocalOffset(FVector(0, 0, -9.8f) * Timer, true); // -9.8m/s²の重力を加える
+	GetOwner()->AddActorLocalOffset(FVector(0, 0, -gravityScalse) * Timer, true); // -9.8m/s²の重力を加える
 }
 
-// オブジェクトが落下可能かをチェックする
-bool UPhysicsCalculator::CanFall(FVector Start, FVector End) const
+bool UPhysicsCalculator::OnGround(FVector Start, FVector End) const
 {
-	// Actor の位置を取得
 	FVector ActorLocation = GetOwner()->GetActorLocation();
 
-	// Actor のスケールを取得
-	FVector ActorScale = GetOwner()->GetActorScale();
+	// 足元のボックスサイズ（横は広め、縦は浅め）
+	FVector BoxExtent = FVector(20.0f, 20.0f, 2.0f);
 
-	// 足元の位置を計算（Z座標がActorの高さの半分の位置）
-	FVector FeetPosition = ActorLocation;
-	FeetPosition.Z -= ActorScale.Z * 50.0f; // 高さの半分を引いて足元の位置
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetOwner());
 
-	// 足元から下方向にレイを飛ばして衝突判定を行う
-	FVector FallEnd = FeetPosition -FVector(0.0f, 0.0f, 10.0f); // 足元から下方向に10ユニット
+	FHitResult Hit;
 
-	// 衝突判定のためのパラメータ
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(GetOwner()); // このアクターを衝突判定から除外
+	// Actor の足元の位置に設定
+	FVector StartTrace = ActorLocation;
+	StartTrace.Z -= GetOwner()->GetActorScale().Z * 50.0f;
 
-	// 衝突結果を格納する変数
-	FHitResult HitResult;
+	// 少しだけ下に移動した位置にトレース
+	FVector EndTrace = StartTrace - FVector(0.0f, 0.0f, 5.0f);
 
-	// レイキャストで衝突判定を行う
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, FeetPosition, FallEnd, ECC_Visibility, CollisionParams);
+	// Sweep (BoxTrace)
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		StartTrace,
+		EndTrace,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeBox(BoxExtent),
+		Params
+	);
 
-	// 衝突がない場合、落下できると判断
-	return bHit;
+	DrawDebugBox(
+		GetWorld(),
+		StartTrace,
+		BoxExtent,
+		FQuat::Identity,
+		bHit ? FColor::Green : FColor::Red,
+		false, 1.0f
+	);
+
+
+	return bHit; // ヒットしなければ「落下可能」
 }
