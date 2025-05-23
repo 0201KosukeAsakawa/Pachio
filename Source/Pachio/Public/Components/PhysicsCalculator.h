@@ -33,7 +33,7 @@ public:
 	void AddGravity(const float gravityScalse = 9.8f);
 
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
-	bool OnGround(FVector Start, FVector End) const;
+	bool OnGround(const FVector Start) const;
 
 	// 物理計算が有効かどうかを返す
 	bool IsPhysicsEnabled() const { return bIsPhysicsEnabled; }
@@ -65,4 +65,7 @@ private:
 	// 物理計算が有効かどうかのフラグ
 	UPROPERTY(EditAnywhere)
 	bool bIsPhysicsEnabled;		
+
+	// ヘッダーに追加
+	FVector Velocity = FVector::ZeroVector;
 };

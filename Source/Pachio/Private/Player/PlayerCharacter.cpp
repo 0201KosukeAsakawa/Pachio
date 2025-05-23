@@ -190,7 +190,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UpdateInvincible(DeltaTime);
 	}
-	physics->AddGravity(5.0);
+	physics->AddGravity(10.0f);
 	PlayerOldLocation = GetActorLocation();
 }
 
@@ -351,15 +351,8 @@ void APlayerCharacter::StandUp()
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	////ジャンプが可能な状態なら
-	//if (CanJump())
-	//{
-	//	//プレイヤーをジャンプさせ、攻撃の判定を有効化する
-	//	ACharacter::Jump();
-	//	//UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	//	//StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	//}
-
+	//ジャンプが可能な状態なら
+	if(physics->OnGround(GetActorLocation()))
 	physics->AddForce(GetActorUpVector(),10);
 }
 
