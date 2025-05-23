@@ -30,10 +30,10 @@ public:
 	void ResetForce();
 
 	// オブジェクトに重力を加える
-	void AddGravity();
+	void AddGravity(const float gravityScalse = 9.8f);
 
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
-	bool CanFall(FVector Start, FVector End) const;
+	bool OnGround(FVector Start, FVector End) const;
 
 	// 物理計算が有効かどうかを返す
 	bool IsPhysicsEnabled() const { return bIsPhysicsEnabled; }
@@ -64,8 +64,5 @@ private:
 
 	// 物理計算が有効かどうかのフラグ
 	UPROPERTY(EditAnywhere)
-	bool bIsPhysicsEnabled;
-
-	bool hoge = false;
-		
+	bool bIsPhysicsEnabled;		
 };
