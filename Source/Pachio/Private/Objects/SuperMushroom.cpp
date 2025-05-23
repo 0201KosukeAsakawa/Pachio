@@ -8,6 +8,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Interface/StateControllable.h"
 #include "Objects/ItemBase.h"
+#include <Logic/Movement/EnemyMoveLogic.h>
 
 USuperMushroomComponent::USuperMushroomComponent()
 {
@@ -25,8 +26,8 @@ void USuperMushroomComponent::Init(AItemBase* owner)
 
     // 移動コンポーネントの初期化
     moveComp = NewObject<UMoveComponent>(this);
-    moveComp->Init(mOwner);  // 移動コンポーネントに所有者を設定
-    moveComp->SetSpeed(0.0f);
+    moveComp->Init(mOwner, NewObject<UEnemyMoveLogic>(this), 50.0f, FVector(0, 1, 0));  // 移動コンポーネントに所有者を設定
+    //moveComp->SetSpeed(0.0f);
 }
 
 void USuperMushroomComponent::Update(float DeltaTime)
@@ -36,7 +37,9 @@ void USuperMushroomComponent::Update(float DeltaTime)
         return;
 
     // 移動コンポーネントで移動処理を行う
-    moveComp->Movement(DeltaTime,mOwner);
+    FVector v = moveComp->Movement(DeltaTime, mOwner);
+    FVector m = v - mOwner->GetActorLocation();
+    mOwner->SetActorLocation(v);
 
     // 物理計算コンポーネントを使用して重力を加える
     mOwner->GetPhysics()->AddGravity();

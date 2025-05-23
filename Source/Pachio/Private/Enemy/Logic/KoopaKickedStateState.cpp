@@ -10,6 +10,7 @@
 #include "Components/PhysicsCalculator.h"        // 重力などの物理演算コンポーネント
 #include "Manager/LevelManager.h"
 #include "DataContainer/EnemyDataContainer.h"
+#include "Logic/Movement/EnemyMoveLogic.h"
 
 // コーパキャラクターが「蹴られた」状態に入る時の処理
 bool UKoopaKickedStateState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEnemyStateComponent* LogicComponet, const FString materialID)
@@ -39,8 +40,8 @@ bool UKoopaKickedStateState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEne
     Attack->SetAttackData(EAttackType::Indiscriminate, EBreakLevel::Breakable);
 
     // キャラクターの移動コンポーネントの初期化
-    MoveComp->Init(actor);
-    MoveComp->SetSpeed(1000.0f); // 移動速度設定
+    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this), 50.0f,Direction);
+    //MoveComp->SetSpeed(1000.0f); // 移動速度設定
 
     // 物理計算コンポーネントの初期化（重力の適用など）
     PhysicsCal = NewObject<UPhysicsCalculator>(actor);
@@ -95,7 +96,9 @@ bool UKoopaKickedStateState::OnUpdate(float DeltaTime)
     }
 
     // 移動処理（蹴られて移動する）
-    MoveComp->Movement(DeltaTime,mOwner);
+    FVector v = MoveComp->Movement(DeltaTime, mOwner);
+    FVector m = v - mOwner->GetActorLocation();
+    mOwner->SetActorLocation(v);
 
     // 物理計算（重力など）を適用
     PhysicsCal->AddGravity();
@@ -131,8 +134,9 @@ bool UKoopaKickedStateState::OnOverlap(AActor* hitActor)
 }
 
 // 移動方向の設定
-void UKoopaKickedStateState::SetDirection(FVector direction)
+void UKoopaKickedStateState::SetDirection(FVector d)
 {
     // 移動コンポーネントに移動方向を設定ta
-    MoveComp->SetDirection(direction);
+    MoveComp->SetDirection(d);
+    Direction = d;
 }

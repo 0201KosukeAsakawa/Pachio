@@ -9,6 +9,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AttackManagerComponent.h"
+#include "Components/MoveComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -19,6 +20,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/StateManager.h"
+#include "Logic/Movement/PlayerMoveLogic.h"
 
 
 // コンストラクタ
@@ -46,13 +48,15 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	MoveComp =  NewObject<UMoveComponent>(this);
+	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
+	MoveComp->Init(this,PlayerLogic);
+
+
+
 	bIsDashing = false; // 初期状態ではダッシュしていない
 
-	/*PlayerBoxCollision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "PlayerBox");
-	if (!PlayerBoxCollision)
-		return;*/
-
-	// 攻撃コンポーネントの生成
+		// 攻撃コンポーネントの生成
 	AttackManager = NewObject<UAttackManagerComponent>(this);
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
 
@@ -119,9 +123,10 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
+	GetCharacterMovement()->BrakingFrictionFactor = 2.0f; // 止まる速さを上げる
+	GetCharacterMovement()->GroundFriction = 8.0f; // 地面との摩擦を強化
 	// 重力スケールを強化（より素早い落下）
-	GetCharacterMovement()->GravityScale = 3.0f;
+	GetCharacterMovement()->GravityScale = 0.0f;
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -185,7 +190,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UpdateInvincible(DeltaTime);
 	}
-	//physics->AddGravity();
+	physics->AddGravity(10.0f);
 	PlayerOldLocation = GetActorLocation();
 }
 
@@ -234,12 +239,8 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 	if (!AttackManager->GetAttack("Upper")->PerformAttack(OtherActor))
 		return;
 
-	//GetCharacterMovement()
-	FVector DownwardFprce = FVector(0, 0, -500);
-	LaunchCharacter(DownwardFprce, true,true);
 
-	//何かに当たったらジャンプを中止する
-	ACharacter::StopJumping();
+	physics->ResetForce();
 }
 
 // 踏みつけ攻撃時のヒット処理
@@ -250,7 +251,10 @@ void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
-	AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor);
+	if (AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor))
+	{
+		physics->AddForce(GetActorUpVector(), 3);
+	}
 }
 
 bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*)
@@ -271,7 +275,10 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*
 // 移動処理（StateManager 経由）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	// 入力値（X = 左右, Y = 前後）
+	if (!MoveComp)
+		return;
+
+	/*/ 入力値（X = 左右, Y = 前後）
 	FVector2D MoveInput = Value.Get<FVector2D>();
 
 	// カメラの回転から前方・右方向ベクトルを取得
@@ -281,18 +288,19 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 	// ========== 実際の移動処理 ==========
 	// 入力値に基づく移動方向を計算し、正規化
-	FVector MoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();
+	FVector MoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();*/
 
-	// キャラクターを移動させる
-	AddMovementInput(MoveDir, StateManager->GetCurrentState()->GetMoveSpeed());
+	FVector direction = (MoveComp->Movement(0, this, Value));
+	//キャラクターを移動させる
+	AddMovementInput(direction, StateManager->GetCurrentState()->GetMoveSpeed());
 
 	// 入力がある場合のみ、キャラクターの向きを滑らかに回転させる
-	if (!MoveDir.IsNearlyZero())
+	if (!direction.IsNearlyZero())
 	{
 		// 向くべき方向を計算
 		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(
 			GetActorLocation(),
-			GetActorLocation() + MoveDir
+			GetActorLocation() + direction
 		);
 
 		// Pitch（上下）、Roll（傾き）は固定
@@ -343,16 +351,9 @@ void APlayerCharacter::StandUp()
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	////ジャンプが可能な状態なら
-	//if (CanJump())
-	//{
-	//	//プレイヤーをジャンプさせ、攻撃の判定を有効化する
-	//	ACharacter::Jump();
-	//	//UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	//	//StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	//}
-
-	physics->AddForce(GetActorUpVector(), 50);
+	//ジャンプが可能な状態なら
+	if(physics->OnGround(GetActorLocation()))
+	physics->AddForce(GetActorUpVector(),10);
 }
 
 // ジャンプ終了処理

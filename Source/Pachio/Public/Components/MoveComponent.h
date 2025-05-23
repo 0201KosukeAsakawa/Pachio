@@ -18,7 +18,7 @@ public:
 	UMoveComponent();
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
-    void Init(AActor* owner);
+    void Init(AActor* owner, TScriptInterface<IMoveLogic>MoveLogic,const float Speed = 1,const FVector NewDirection = FVector(0,0,0));
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
     FVector Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value = FInputActionValue());
@@ -26,8 +26,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetDirection(FVector NewDirection);
 
-    UFUNCTION(BlueprintCallable, Category = "Movement")
-    void SetSpeed(float newSpeed) { Speed = newSpeed; }
+
+    //UFUNCTION(BlueprintCallable, Category = "Movement")
+    //void SetSpeed(float newSpeed);
 
 public:
     bool SetMoveLogic(TScriptInterface<IMoveLogic>Logic);

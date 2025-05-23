@@ -9,6 +9,8 @@
 #include "Components/MoveComponent.h"            // 自作の移動処理用コンポーネント
 #include "Components/PhysicsCalculator.h"        // 重力などの物理演算コンポーネント
 #include "Manager/LevelManager.h"
+#include "Logic/Movement/EnemyMoveLogic.h"
+#include "Interface/MoveLogic.h"
 #include "DataContainer/EnemyDataContainer.h"
 
 // ゴンバの生存状態に入る時の処理
@@ -40,8 +42,8 @@ bool UGoombaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UE
         return false;
 
     // 移動コンポーネントを初期化
-    MoveComp->Init(actor);
-    MoveComp->SetSpeed(1000.0f); // 移動速度を設定
+    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this),1000,FVector(0,-1,0));
+    //MoveComp->SetSpeed(1000.0f); // 移動速度を設定
 
     // 物理計算コンポーネント（重力など）を生成
     PhysicsCal = NewObject<UPhysicsCalculator>(actor);
@@ -76,7 +78,9 @@ bool UGoombaAliveState::OnUpdate(float DeltaTime)
     }
 
     // 移動処理（追跡やパトロールなど）
-    MoveComp->Movement(DeltaTime,mOwner);
+    FVector v = MoveComp->Movement(DeltaTime,mOwner);
+    FVector m = v-mOwner->GetActorLocation();
+    mOwner->SetActorLocation(v);
 
     // 重力を適用する
     PhysicsCal->AddGravity();

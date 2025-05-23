@@ -3,19 +3,15 @@
 
 #include "Logic/Movement/EnemyMoveLogic.h"
 
-EnemyMoveLogic::EnemyMoveLogic()
+UEnemyMoveLogic::UEnemyMoveLogic()
 {
 
 }
 
-EnemyMoveLogic::~EnemyMoveLogic()
-{
 
-}
-
-FVector EnemyMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)
+FVector UEnemyMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)
 {
-    if (Owner)
+    if (!Owner)
         return FVector(0,0,0);
 
     // Õ“Ë”»’è
@@ -33,7 +29,7 @@ FVector EnemyMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputAct
     return Owner->GetActorLocation() + (CurrentMovementDirection * Speed * DeltaTime);
 }
 
-bool EnemyMoveLogic::IsCollidingWithWall(FVector Direction,const AActor* Owner)
+bool UEnemyMoveLogic::IsCollidingWithWall(FVector Direction,const AActor* Owner)
 {
     if (!Owner)
         return true;
@@ -50,4 +46,10 @@ bool EnemyMoveLogic::IsCollidingWithWall(FVector Direction,const AActor* Owner)
     if (Cast<ACharacter>(HitResult.GetActor()))
         return false;
     return bHit;
+}
+
+void UEnemyMoveLogic::Init(float speed,const FVector d)
+{
+    Speed = speed;
+    CurrentMovementDirection = d;
 }
