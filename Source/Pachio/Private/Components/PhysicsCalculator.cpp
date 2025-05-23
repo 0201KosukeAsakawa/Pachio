@@ -29,6 +29,8 @@ void UPhysicsCalculator::BeginPlay()
 void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction); // 親クラスのTickComponentを呼び出す
+	if (bIsPhysicsEnabled)
+		return;
 
 	// 力の強さを減少させる（時間経過で徐々に減る）
 	ForceScale = ForceScale - GetWorld()->DeltaTimeSeconds;
@@ -38,23 +40,16 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	// 前回の位置と現在の位置を比較して、移動がほとんどない場合は力を0にする
 	FVector currentPosition = GetOwner()->GetActorLocation();
-	FVector direction = currentPosition - PreviousPosition;
 
+	FVector direction = currentPosition - PreviousPosition;
 	
 	float distance = GetOwner()->GetActorLocation().Z - PreviousPosition.Z;
-	UE_LOG(LogTemp, Warning, TEXT("distance = %f"), distance);
-	if (distance < 0)
-	{
-		hoge = true;
-	}
-	else
-	{
-		hoge = false;
-	}
 
-	if (hoge == true && !CanFall(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()))
+	if (distance < 0 && CanFall(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()))
 	{
 		ForceDirection.Z = 0;
+		ForceScale = 0;
+		bIsPhysicsEnabled = true;
 	}
 	// 現在の位置を記録して次回の比較に使う
 	PreviousPosition = currentPosition;
@@ -68,6 +63,14 @@ void UPhysicsCalculator::AddForce(FVector Direction, float Force,const bool bSwe
 	Timer = 0; // タイマーをリセット
 	bIsSweep = bSweep; // スイープ衝突判定を設定
 	bIsPhysicsEnabled = false;
+}
+
+void UPhysicsCalculator::ResetForce()
+{
+	ForceDirection = FVector(0,0,0); // 力の方向を設定
+	ForceScale = 0; // 力のスケール（強さ）を設定
+	Timer = 0;
+	bIsPhysicsEnabled = true;
 }
 
 // 重力をオブジェクトに加える

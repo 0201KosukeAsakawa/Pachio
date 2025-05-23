@@ -48,11 +48,7 @@ void APlayerCharacter::BeginPlay()
 
 	bIsDashing = false; // 初期状態ではダッシュしていない
 
-	/*PlayerBoxCollision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "PlayerBox");
-	if (!PlayerBoxCollision)
-		return;*/
-
-	// 攻撃コンポーネントの生成
+		// 攻撃コンポーネントの生成
 	AttackManager = NewObject<UAttackManagerComponent>(this);
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
 
@@ -119,9 +115,10 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
+	GetCharacterMovement()->BrakingFrictionFactor = 2.0f; // 止まる速さを上げる
+	GetCharacterMovement()->GroundFriction = 8.0f; // 地面との摩擦を強化
 	// 重力スケールを強化（より素早い落下）
-	GetCharacterMovement()->GravityScale = 3.0f;
+	GetCharacterMovement()->GravityScale = 0.0f;
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -185,7 +182,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UpdateInvincible(DeltaTime);
 	}
-	//physics->AddGravity();
+	physics->AddGravity();
 	PlayerOldLocation = GetActorLocation();
 }
 
@@ -234,12 +231,8 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 	if (!AttackManager->GetAttack("Upper")->PerformAttack(OtherActor))
 		return;
 
-	//GetCharacterMovement()
-	FVector DownwardFprce = FVector(0, 0, -500);
-	LaunchCharacter(DownwardFprce, true,true);
 
-	//何かに当たったらジャンプを中止する
-	ACharacter::StopJumping();
+	physics->ResetForce();
 }
 
 // 踏みつけ攻撃時のヒット処理
@@ -250,7 +243,10 @@ void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
-	AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor);
+	if (AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor))
+	{
+		physics->AddForce(GetActorUpVector(), 3);
+	}
 }
 
 bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*)
@@ -352,7 +348,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 	//	//StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	//}
 
-	physics->AddForce(GetActorUpVector(), 50);
+	physics->AddForce(GetActorUpVector(),10);
 }
 
 // ジャンプ終了処理

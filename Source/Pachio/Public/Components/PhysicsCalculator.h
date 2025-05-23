@@ -27,6 +27,8 @@ public:
 	// オブジェクトに力を加える
 	void AddForce(FVector Direction, float Force, const bool bSweep = true);
 
+	void ResetForce();
+
 	// オブジェクトに重力を加える
 	void AddGravity();
 
