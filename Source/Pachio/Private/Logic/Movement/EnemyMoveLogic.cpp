@@ -47,3 +47,9 @@ bool UEnemyMoveLogic::IsCollidingWithWall(FVector Direction,const AActor* Owner)
         return false;
     return bHit;
 }
+
+void UEnemyMoveLogic::Init(float speed,const FVector d)
+{
+    Speed = speed;
+    CurrentMovementDirection = d;
+}

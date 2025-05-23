@@ -19,20 +19,30 @@ UMoveComponent::UMoveComponent()
     CurrentMovementDirection.Normalize(); // 方向ベクトルを正規化して長さを1にする
 }
 
-void UMoveComponent::Init(AActor* owner, TScriptInterface<IMoveLogic>moveLogic)
+void UMoveComponent::Init(AActor* owner, TScriptInterface<IMoveLogic>moveLogic, const float speed, const FVector NewDirection)
 {
     if (!owner)
         return;
     mOwner = owner;
 
+    //MoveLogic.SetInterface(moveLogic.GetInterface());
+    //MoveLogic.SetObject(owner);
     MoveLogic = moveLogic;
+
+    MoveLogic->Init(speed,NewDirection);
+    //Speed = speed;
+
+    //// Directionの設定
+    //CurrentMovementDirection = NewDirection;
+    //CurrentMovementDirection.Normalize();  // 新しい方向を正規化
 }
 
 FVector UMoveComponent::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)
 {
     if (!MoveLogic)
-        return FVector(0,0,0);
-
+    {
+        return FVector(0, 0, 0);
+    }
         return MoveLogic->Movement(DeltaTime,Owner,Value);
 }
 void UMoveComponent::SetDirection(FVector NewDirection)

@@ -55,3 +55,8 @@ FVector UPlayerMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputA
 
 	return;*/
 }
+
+void UPlayerMoveLogic::Init(float speed,const FVector)
+{
+	return;
+}
