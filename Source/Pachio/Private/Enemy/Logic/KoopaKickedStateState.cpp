@@ -40,8 +40,7 @@ bool UKoopaKickedStateState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEne
     Attack->SetAttackData(EAttackType::Indiscriminate, EBreakLevel::Breakable);
 
     // キャラクターの移動コンポーネントの初期化
-    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this), 50.0f,Direction);
-    //MoveComp->SetSpeed(1000.0f); // 移動速度設定
+    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this), 500.0f,FVector(0,0,0));
 
     // 物理計算コンポーネントの初期化（重力の適用など）
     PhysicsCal = NewObject<UPhysicsCalculator>(actor);
@@ -138,5 +137,4 @@ void UKoopaKickedStateState::SetDirection(FVector d)
 {
     // 移動コンポーネントに移動方向を設定ta
     MoveComp->SetDirection(d);
-    Direction = d;
 }

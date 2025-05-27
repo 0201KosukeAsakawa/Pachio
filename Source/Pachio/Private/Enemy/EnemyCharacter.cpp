@@ -42,7 +42,7 @@ void AEnemyCharacter::BeginPlay()
 }
 
 // 初期化処理
-void AEnemyCharacter::Init(FString logicID, const FString materialID)
+void AEnemyCharacter::Init(const EEnemyCategory logicID,const FString materialID)
 {
     // LogicIDを設定
     LogicID = logicID;

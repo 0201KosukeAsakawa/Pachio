@@ -69,6 +69,6 @@ bool UKoopaShellState::OnOverlap(AActor* hitActor)
 
 	UKoopaKickedStateState* nextState = NewObject<UKoopaKickedStateState>(mOwner);
 	logicComponent->ChangeState(nextState, mOwner);
-	nextState->SetDirection(direc);
+	nextState->SetDirection(direc.GetSafeNormal());
 	return true;
 }

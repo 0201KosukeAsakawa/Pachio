@@ -247,14 +247,14 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	/*UE_LOG(LogTemp, Log, TEXT("Stomp!"));
+	UE_LOG(LogTemp, Log, TEXT("Stomp!"));
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
 	if (AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor))
 	{
 		physics->AddForce(GetActorUpVector(), 3);
-	}*/
+	}
 }
 
 bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*)

@@ -26,9 +26,6 @@ public:
 	void SetDirection(FVector);
 
 private:
-	FVector Direction;
-
-private:
 	UPROPERTY();
 	UMoveComponent* MoveComp;
 

@@ -14,7 +14,7 @@
 #include "DataContainer/EnemyDataContainer.h"
 
 // ゴンバの生存状態に入る時の処理
-bool UGoombaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, FString materialID)
+bool UGoombaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, EEnemyCategory materialID)
 {
     // 必要なポインタが無効であれば処理を終了
     if (!owner || !currentLevel || !LogicComponet)

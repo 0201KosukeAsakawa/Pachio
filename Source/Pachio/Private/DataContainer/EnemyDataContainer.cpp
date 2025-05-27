@@ -4,7 +4,7 @@
 #include "DataContainer/EnemyDataContainer.h"
 #include "Enemy/EnemyCharacter.h"
 
-UEnemyStateComponent* UEnemyDataContainer::CreateState(UObject* WorldContext, FString StateName) const
+UEnemyStateComponent* UEnemyDataContainer::CreateState(UObject* WorldContext, EEnemyCategory StateName) const
 {
     if (const TSubclassOf<UEnemyStateComponent>* BlockStateClass = EnemyClassMap.Find(StateName))
     {
@@ -13,7 +13,7 @@ UEnemyStateComponent* UEnemyDataContainer::CreateState(UObject* WorldContext, FS
     return nullptr;
 }
 
-UMaterialInterface* UEnemyDataContainer::CreateMaterial(UObject* WorldContext, FString StateName, FString Type)
+UMaterialInterface* UEnemyDataContainer::CreateMaterial(UObject* WorldContext, EEnemyCategory StateName, FString Type)
 {
     // StateName ‚É‘Î‰ž‚·‚é FMaterialData ‚ð MaterialMap ‚©‚çŽæ“¾
     if (const FMaterialData* MaterialData = MaterialMap.Find(StateName))
@@ -31,7 +31,7 @@ UMaterialInterface* UEnemyDataContainer::CreateMaterial(UObject* WorldContext, F
 }
 
 
-bool UEnemyDataContainer::GenerateEnemy(FString stateID, FString dropItemID, FString materialID, FVector location, FVector scale, FRotator rotator)
+bool UEnemyDataContainer::GenerateEnemy(EEnemyCategory stateID, FString dropItemID, FString materialID, FVector location, FVector scale, FRotator rotator)
 {
     if (!EnemyCharacter) return false;
 
