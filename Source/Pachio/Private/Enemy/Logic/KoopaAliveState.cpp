@@ -10,6 +10,7 @@
 #include "Components/PhysicsCalculator.h"        // 重力などの物理演算コンポーネント
 #include "Manager/LevelManager.h"
 #include "DataContainer/EnemyDataContainer.h"
+#include "Logic/Movement/EnemyMoveLogic.h"
 
 // コーパキャラクターが「生存」状態に入る時の処理
 bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, const FString materialID)
@@ -35,8 +36,8 @@ bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEn
         return false;
     Attack->SetAttackData(EAttackType::Enemy, EBreakLevel::Unbreakable);
     // キャラクターの移動コンポーネント初期化
-    MoveComp->Init(actor);
-    MoveComp->SetSpeed(10.0f); // 移動速度設定
+    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this),10.0f,FVector(0,-1,0));
+    //MoveComp->SetSpeed(10.0f); // 移動速度設定
 
     // 物理計算コンポーネントを初期化（重力などの適用）
     PhysicsCal = NewObject<UPhysicsCalculator>(actor);
@@ -71,7 +72,9 @@ bool UKoopaAliveState::OnUpdate(float DeltaTime)
     }
 
     // 移動処理（追跡やパトロールなど）
-    MoveComp->Movement(DeltaTime);
+    FVector v = MoveComp->Movement(DeltaTime, mOwner);
+    FVector m = v - mOwner->GetActorLocation();
+    mOwner->SetActorLocation(v);
 
     // 物理演算（重力など）を適用
     PhysicsCal->AddGravity();

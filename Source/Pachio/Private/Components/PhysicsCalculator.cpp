@@ -26,40 +26,42 @@ void UPhysicsCalculator::BeginPlay()
 }
 
 // 毎フレーム呼ばれる
+
+// TickComponentの中などで毎フレーム更新
 void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction); // 親クラスのTickComponentを呼び出す
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// 力の強さを減少させる（時間経過で徐々に減る）
-	ForceScale = ForceScale - GetWorld()->DeltaTimeSeconds;
-
-	// オーナー（このコンポーネントがアタッチされているアクター）に力を加える
-	GetOwner()->AddActorLocalOffset(ForceDirection * ForceScale, bIsSweep);
-
-	// 前回の位置と現在の位置を比較して、移動がほとんどない場合は力を0にする
-	FVector currentPosition = GetOwner()->GetActorLocation();
-	FVector direction = currentPosition - PreviousPosition;
-
-	
-	float distance = GetOwner()->GetActorLocation().Z - PreviousPosition.Z;
-	UE_LOG(LogTemp, Warning, TEXT("distance = %f"), distance);
-	if (distance < 0)
+	if (!bIsPhysicsEnabled)
 	{
-		hoge = true;
-	}
-	else
-	{
-		hoge = false;
+		// 力の減衰
+		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f);
+
+		GetOwner()->AddActorLocalOffset(ForceDirection * ForceScale, bIsSweep);
+
+		FVector currentPosition = GetOwner()->GetActorLocation();
+		float distanceZ = currentPosition.Z - PreviousPosition.Z;
+
+		if (distanceZ < 0 && OnGround(currentPosition))
+		{
+			ForceDirection.Z = 0;
+			ForceScale = 0;
+			bIsPhysicsEnabled = true;
+			Velocity = FVector::ZeroVector; // 着地したので速度リセット
+		}
+		UE_LOG(LogTemp, Warning, TEXT("ForceValue: %f"), ForceScale);
+		PreviousPosition = currentPosition;
+		return;
 	}
 
-	if (hoge == true && !CanFall(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()))
-	{
-		ForceDirection.Z = 0;
-	}
-	// 現在の位置を記録して次回の比較に使う
-	PreviousPosition = currentPosition;
+	// 重力を速度に加算
+	Velocity.Z -= GravityScale * DeltaTime;
+
+	// 速度を位置に反映
+	GetOwner()->AddActorLocalOffset(Velocity * DeltaTime, true);
+
+	PreviousPosition = GetOwner()->GetActorLocation();
 }
-
 // 指定した方向に力を加える
 void UPhysicsCalculator::AddForce(FVector Direction, float Force,const bool bSweep)
 {
@@ -70,47 +72,74 @@ void UPhysicsCalculator::AddForce(FVector Direction, float Force,const bool bSwe
 	bIsPhysicsEnabled = false;
 }
 
-// 重力をオブジェクトに加える
-void UPhysicsCalculator::AddGravity()
+void UPhysicsCalculator::ResetForce()
 {
-	// オブジェクトが落下可能かどうかを判定
-	if (CanFall(GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation()))
+	ForceDirection = FVector(0,0,0); // 力の方向を設定
+	ForceScale = 0; // 力のスケール（強さ）を設定
+	Timer = 0;
+	bIsPhysicsEnabled = true;
+}
+
+// 重力をオブジェクトに加える
+void UPhysicsCalculator::AddGravity(const float gravityScale)
+{
+	if (OnGround(GetOwner()->GetActorLocation()))
 	{
-		Timer = 0; // 落下できる場合はタイマーをリセット
+		Timer = 0;
 		return;
 	}
 
-	// タイマーを進めて、重力を加える
 	Timer += GetWorld()->DeltaTimeSeconds;
-	GetOwner()->AddActorLocalOffset(FVector(0, 0, -9.8f) * Timer, true); // -9.8m/s²の重力を加える
+	GetOwner()->AddActorLocalOffset(FVector(0, 0, -gravityScale) * Timer, true);
 }
 
-// オブジェクトが落下可能かをチェックする
-bool UPhysicsCalculator::CanFall(FVector Start, FVector End) const
+bool UPhysicsCalculator::OnGround(const FVector Start) const
 {
-	// Actor の位置を取得
-	FVector ActorLocation = GetOwner()->GetActorLocation();
+	AActor* Owner = GetOwner();
+	if (!Owner) return false;
 
-	// Actor のスケールを取得
-	FVector ActorScale = GetOwner()->GetActorScale();
+	// 1. 現在の位置とスケールを取得
+	FVector ActorLocation = Owner->GetActorLocation();
+	FVector ActorScale = Owner->GetActorScale();
 
-	// 足元の位置を計算（Z座標がActorの高さの半分の位置）
-	FVector FeetPosition = ActorLocation;
-	FeetPosition.Z -= ActorScale.Z * 50.0f; // 高さの半分を引いて足元の位置
+	// 2. ボックスサイズ（スケールに基づいて拡張）
+	FVector BoxExtent = FVector(20.0f * ActorScale.X, 20.0f * ActorScale.Y, 2.0f); // Zは浅く
 
-	// 足元から下方向にレイを飛ばして衝突判定を行う
-	FVector FallEnd = FeetPosition -FVector(0.0f, 0.0f, 10.0f); // 足元から下方向に10ユニット
+	// 3. 足元の位置 = 中心から高さの半分を引く
+	float HalfHeight = Owner->GetSimpleCollisionHalfHeight(); // Capsule などに対応
+	FVector FootLocation = ActorLocation - FVector(0, 0, HalfHeight);
 
-	// 衝突判定のためのパラメータ
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(GetOwner()); // このアクターを衝突判定から除外
+	// 4. レイの開始・終了位置（5ユニット下）
+	FVector StartTrace = FootLocation;
+	FVector EndTrace = FootLocation - FVector(0, 0, 5.0f);
 
-	// 衝突結果を格納する変数
-	FHitResult HitResult;
+	// 5. 衝突判定設定
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Owner);
+	FHitResult Hit;
 
-	// レイキャストで衝突判定を行う
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, FeetPosition, FallEnd, ECC_Visibility, CollisionParams);
+	// 6. Sweep（Box Trace）
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		StartTrace,
+		EndTrace,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeBox(BoxExtent),
+		Params
+	);
 
-	// 衝突がない場合、落下できると判断
+	// 7. デバッグ表示
+#if WITH_EDITOR
+	DrawDebugBox(
+		GetWorld(),
+		StartTrace,
+		BoxExtent,
+		FQuat::Identity,
+		bHit ? FColor::Green : FColor::Red,
+		false, 1.0f
+	);
+#endif
+
 	return bHit;
 }

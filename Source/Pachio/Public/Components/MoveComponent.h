@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Interface/MoveLogic.h"
 #include "MoveComponent.generated.h"
 
 
@@ -17,16 +18,21 @@ public:
 	UMoveComponent();
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
-    void Init(AActor* owner);
+    void Init(AActor* owner, TScriptInterface<IMoveLogic>MoveLogic,const float Speed = 1,const FVector NewDirection = FVector(0,0,0));
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
-    void Movement(float DeltaTime);
+    FVector Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value = FInputActionValue());
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetDirection(FVector NewDirection);
 
-    UFUNCTION(BlueprintCallable, Category = "Movement")
-    void SetSpeed(float newSpeed) { Speed = newSpeed; }
+
+    //UFUNCTION(BlueprintCallable, Category = "Movement")
+    //void SetSpeed(float newSpeed);
+
+public:
+    bool SetMoveLogic(TScriptInterface<IMoveLogic>Logic);
+
 private:
     // 現在の移動方向
     FVector CurrentMovementDirection;
@@ -36,8 +42,12 @@ private:
 
 private:
     // コリジョン判定（壁に当たったかどうか）
-    bool IsCollidingWithWall(FVector Direction);
+    //bool IsCollidingWithWall(FVector Direction);
 		
     UPROPERTY()
     AActor* mOwner;
+
+private:
+    UPROPERTY()
+    TScriptInterface<IMoveLogic>MoveLogic;
 };

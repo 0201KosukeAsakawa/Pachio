@@ -7,6 +7,7 @@
 #include "Components/PrimitiveComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Math/UnrealMathUtility.h"
+#include "Interface/MoveLogic.h"
 
 // Sets default values for this component's properties
 UMoveComponent::UMoveComponent()
@@ -18,34 +19,32 @@ UMoveComponent::UMoveComponent()
     CurrentMovementDirection.Normalize(); // 方向ベクトルを正規化して長さを1にする
 }
 
-void UMoveComponent::Init(AActor* owner)
+void UMoveComponent::Init(AActor* owner, TScriptInterface<IMoveLogic>moveLogic, const float speed, const FVector NewDirection)
 {
     if (!owner)
         return;
     mOwner = owner;
+
+    //MoveLogic.SetInterface(moveLogic.GetInterface());
+    //MoveLogic.SetObject(owner);
+    MoveLogic = moveLogic;
+
+    MoveLogic->Init(speed,NewDirection);
+    //Speed = speed;
+
+    //// Directionの設定
+    //CurrentMovementDirection = NewDirection;
+    //CurrentMovementDirection.Normalize();  // 新しい方向を正規化
 }
 
-void UMoveComponent::Movement(float DeltaTime)
+FVector UMoveComponent::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)
 {
-    if (!mOwner)
-        return;
-
-    // 衝突判定
-    if (IsCollidingWithWall(CurrentMovementDirection))
+    if (!MoveLogic)
     {
-        // Y軸方向に反転させる
-        CurrentMovementDirection.Y = -CurrentMovementDirection.Y;
-
-        // 反転後の方向に基づいて、移動するためのActorの回転を設定
-        FRotator NewRotation = CurrentMovementDirection.ToOrientationRotator();
-        mOwner->SetActorRotation(NewRotation); // 新しい回転を設定
+        return FVector(0, 0, 0);
     }
-
-    // 移動処理
-    FVector NewLocation = mOwner->GetActorLocation() + (CurrentMovementDirection * Speed * DeltaTime);
-    mOwner->SetActorLocation(NewLocation);
+        return MoveLogic->Movement(DeltaTime,Owner,Value);
 }
-
 void UMoveComponent::SetDirection(FVector NewDirection)
 {
     // Directionの設定
@@ -53,21 +52,11 @@ void UMoveComponent::SetDirection(FVector NewDirection)
     CurrentMovementDirection.Normalize();  // 新しい方向を正規化
 }
 
-bool UMoveComponent::IsCollidingWithWall(FVector Direction)
+bool UMoveComponent::SetMoveLogic(TScriptInterface<IMoveLogic>Logic)
 {
-    if (!mOwner)
-        return true;
+    if(!Logic)
+    return false;
 
-    FVector Start = mOwner->GetActorLocation();
-    FVector End = Start + (Direction * Speed * 0.0001f);  // 少しだけ前進して衝突をチェック
-
-    FHitResult HitResult;
-    FCollisionQueryParams CollisionParams;
-    CollisionParams.AddIgnoredActor(mOwner);  // 自身を無視して衝突判定を行う
-
-    // レイキャストで衝突判定を行う
-    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
-    if (Cast<ACharacter>(HitResult.GetActor()))
-        return false;
-    return bHit;
+    MoveLogic = Logic;
+    return true;
 }
