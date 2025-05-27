@@ -18,7 +18,5 @@ bool UUpperAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAtta
 	if (!Character)
 		return false;
 
-	
-
 	return true;
 }

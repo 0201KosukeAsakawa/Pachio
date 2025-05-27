@@ -49,7 +49,7 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			bIsPhysicsEnabled = true;
 			Velocity = FVector::ZeroVector; // 着地したので速度リセット
 		}
-
+		UE_LOG(LogTemp, Warning, TEXT("ForceValue: %f"), ForceScale);
 		PreviousPosition = currentPosition;
 		return;
 	}
@@ -59,12 +59,6 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	// 速度を位置に反映
 	GetOwner()->AddActorLocalOffset(Velocity * DeltaTime, true);
-
-	//// 着地判定
-	//if (OnGround(GetOwner()->GetActorLocation()))
-	//{
-	//	Velocity.Z = 0;
-	//}
 
 	PreviousPosition = GetOwner()->GetActorLocation();
 }

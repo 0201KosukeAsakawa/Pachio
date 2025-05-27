@@ -232,12 +232,12 @@ UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("UPPER!"));
+	/*UE_LOG(LogTemp, Log, TEXT("UPPER!"));
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
 	if (!AttackManager->GetAttack("Upper")->PerformAttack(OtherActor))
-		return;
+		return;*/
 
 
 	physics->ResetForce();
@@ -247,14 +247,14 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("Stomp!"));
+	/*UE_LOG(LogTemp, Log, TEXT("Stomp!"));
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
 	if (AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor))
 	{
 		physics->AddForce(GetActorUpVector(), 3);
-	}
+	}*/
 }
 
 bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*)
@@ -277,18 +277,6 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
 	if (!MoveComp)
 		return;
-
-	/*/ 入力値（X = 左右, Y = 前後）
-	FVector2D MoveInput = Value.Get<FVector2D>();
-
-	// カメラの回転から前方・右方向ベクトルを取得
-	FRotator CamRot = GetControlRotation();
-	FVector CamForward = CamRot.Vector(); // 前方ベクトル
-	FVector CamRight = FRotationMatrix(CamRot).GetUnitAxis(EAxis::Y); // 右方向ベクトル
-
-	// ========== 実際の移動処理 ==========
-	// 入力値に基づく移動方向を計算し、正規化
-	FVector MoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();*/
 
 	FVector direction = (MoveComp->Movement(0, this, Value));
 	//キャラクターを移動させる
@@ -352,8 +340,8 @@ void APlayerCharacter::StandUp()
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
 	//ジャンプが可能な状態なら
-	if(physics->OnGround(GetActorLocation()))
-	physics->AddForce(GetActorUpVector(),10);
+	if (physics->OnGround(GetActorLocation()))
+		physics->AddForce(GetActorUpVector(), 10, false);
 }
 
 // ジャンプ終了処理
