@@ -131,7 +131,11 @@ void APlayerCharacter::BeginPlay()
 
 void APlayerCharacter::Tick(float DeltaTime)
 {
+	FVector temp = GetVelocity();
+
 	Super::Tick(DeltaTime);
+
+	temp = GetVelocity();
 
 	//攻撃の判定が消えていたら即時リターン
 	if (!UpperAttackBox || !StateManager)
@@ -232,12 +236,12 @@ UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	/*UE_LOG(LogTemp, Log, TEXT("UPPER!"));
+	UE_LOG(LogTemp, Log, TEXT("UPPER!"));
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
 	if (!AttackManager->GetAttack("Upper")->PerformAttack(OtherActor))
-		return;*/
+		return;
 
 
 	physics->ResetForce();
@@ -247,14 +251,14 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	/*UE_LOG(LogTemp, Log, TEXT("Stomp!"));
+	UE_LOG(LogTemp, Log, TEXT("Stomp!"));
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
 	if (AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor))
 	{
 		physics->AddForce(GetActorUpVector(), 3);
-	}*/
+	}
 }
 
 bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*)
@@ -341,7 +345,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
 	//ジャンプが可能な状態なら
 	if (physics->OnGround(GetActorLocation()))
-		physics->AddForce(GetActorUpVector(), 10, false);
+		physics->AddForce(GetActorUpVector(), 10);
 }
 
 // ジャンプ終了処理
