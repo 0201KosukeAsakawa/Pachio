@@ -22,6 +22,7 @@ void ALevelManager::BeginPlay()
 {
 	Super::BeginPlay();
 	Instance = this;
+
 	// コンポーネント初期化
 	InitializeComponents();
 
@@ -29,6 +30,9 @@ void ALevelManager::BeginPlay()
 
 void ALevelManager::InitializeComponents()
 {
+	if (bInitialize)
+		return;
+
 	if (!IsValid(BlockContainer))
 		BlockContainer = NewObject<UBlockDataContainer>(this, BlockContainerClass);
 
@@ -71,6 +75,8 @@ void ALevelManager::InitializeComponents()
 
 	GenerateStage();
 	GenerateBlock();
+
+	bInitialize = true;
 }
 
 void ALevelManager::Tick(float DeltaTime)
