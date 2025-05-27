@@ -14,16 +14,17 @@ TWeakObjectPtr<ALevelManager> ALevelManager::Instance = nullptr;
 // コンストラクタ：Tickの有効化
 ALevelManager::ALevelManager()
 {
-	PrimaryActorTick.bCanEverTick = true; // Tickを有効にする
+	PrimaryActorTick.bCanEverTick = true; // Tickを有効にする	
+
 }
 
 void ALevelManager::BeginPlay()
 {
 	Super::BeginPlay();
 	Instance = this;
-
 	// コンポーネント初期化
 	InitializeComponents();
+
 }
 
 void ALevelManager::InitializeComponents()
