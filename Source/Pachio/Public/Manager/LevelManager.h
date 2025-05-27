@@ -94,6 +94,8 @@ private:
 	void CountDown();
 
 private:
+	 bool bInitialize;
+
 	UPROPERTY(EditAnywhere)
 	float InGameTimer = 500.0f;
 
@@ -137,9 +139,6 @@ private:
 	/** ブロック配置データテーブル */
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UDataTable> BlockData;
-
-
-
 
 	UPROPERTY()
 	TObjectPtr<UEnemyDataContainer> EnemyContainer;

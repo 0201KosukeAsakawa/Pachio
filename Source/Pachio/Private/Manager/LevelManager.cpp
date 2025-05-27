@@ -14,7 +14,8 @@ TWeakObjectPtr<ALevelManager> ALevelManager::Instance = nullptr;
 // コンストラクタ：Tickの有効化
 ALevelManager::ALevelManager()
 {
-	PrimaryActorTick.bCanEverTick = true; // Tickを有効にする
+	PrimaryActorTick.bCanEverTick = true; // Tickを有効にする	
+
 }
 
 void ALevelManager::BeginPlay()
@@ -24,10 +25,14 @@ void ALevelManager::BeginPlay()
 
 	// コンポーネント初期化
 	InitializeComponents();
+
 }
 
 void ALevelManager::InitializeComponents()
 {
+	if (bInitialize)
+		return;
+
 	if (!IsValid(BlockContainer))
 		BlockContainer = NewObject<UBlockDataContainer>(this, BlockContainerClass);
 
@@ -70,6 +75,8 @@ void ALevelManager::InitializeComponents()
 
 	GenerateStage();
 	GenerateBlock();
+
+	bInitialize = true;
 }
 
 void ALevelManager::Tick(float DeltaTime)
