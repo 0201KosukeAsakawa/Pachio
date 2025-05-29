@@ -28,7 +28,7 @@ bool UKoopaShellState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEn
 
 	owner->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // メッシュのコリジョンを無効にする
 
-	UMaterialInterface* newMaterial = ALevelManager::GetInstance(currentLevel)->GetEnemyContainer()->CreateMaterial(currentLevel, materialID/*"Koopa"*/ , "Shell");
+	UMaterialInterface* newMaterial = ALevelManager::GetInstance(currentLevel)->GetEnemyContainer()->CreateMaterial(currentLevel, EEnemyCategory::Koopa /*"Koopa"*/ , "Shell");
 	if (!newMaterial)
 		return false;
 
