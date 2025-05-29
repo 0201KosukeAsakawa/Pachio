@@ -37,6 +37,7 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		// 力の減衰
 		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f);
 
+		FVector temp = GetOwner()->GetVelocity();
 		GetOwner()->AddActorLocalOffset(ForceDirection * ForceScale, bIsSweep);
 
 		FVector currentPosition = GetOwner()->GetActorLocation();
@@ -51,6 +52,10 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		}
 		UE_LOG(LogTemp, Warning, TEXT("ForceValue: %f"), ForceScale);
 		PreviousPosition = currentPosition;
+
+		temp = GetOwner()->GetVelocity();
+
+
 		return;
 	}
 

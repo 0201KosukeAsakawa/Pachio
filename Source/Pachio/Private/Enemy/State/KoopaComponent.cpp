@@ -4,7 +4,7 @@
 #include "Enemy/State/KoopaComponent.h"
 #include "Enemy/Logic/KoopaAliveState.h"
 
-bool UKoopaComponent::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, const FString materialID)
+bool UKoopaComponent::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, const EEnemyCategory materialID)
 {
 	if(!owner || !currentLevel)
 		return false;

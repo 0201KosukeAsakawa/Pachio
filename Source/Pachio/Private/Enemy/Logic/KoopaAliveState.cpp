@@ -13,7 +13,7 @@
 #include "Logic/Movement/EnemyMoveLogic.h"
 
 // コーパキャラクターが「生存」状態に入る時の処理
-bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, const FString materialID)
+bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, const EEnemyCategory materialID)
 {
     // オーナー、レベル、ロジックコンポーネントが無効な場合は処理を終了
     if (!owner || !currentLevel || !LogicComponet)

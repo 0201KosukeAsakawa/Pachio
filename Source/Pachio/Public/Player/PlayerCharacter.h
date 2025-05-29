@@ -32,7 +32,7 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController,public IStateControllable,public IDamageable
+class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController, public IStateControllable, public IDamageable
 {
 	GENERATED_BODY()
 
@@ -184,5 +184,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
 
+	UPROPERTY()
 	UPhysicsCalculator* physics;
 };

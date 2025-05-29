@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "Enemy/EnemyCategory.h"
 #include "EnemyDataContainer.generated.h"
 
 class AEnemyCharacter;
@@ -25,17 +26,17 @@ class PACHIO_API UEnemyDataContainer : public UObject
 	GENERATED_BODY()
 public:
 
-    UEnemyStateComponent* CreateState(UObject*, FString) const;
-    UMaterialInterface* CreateMaterial(UObject* WorldContext, FString StateName ,const FString = "Default");
-    bool GenerateEnemy(FString stateID, FString dropItemID, FString materialID, FVector location, FVector scale, FRotator rotator);
+    UEnemyStateComponent* CreateState(UObject*, EEnemyCategory) const;
+    UMaterialInterface* CreateMaterial(UObject* WorldContext, EEnemyCategory StateName ,const FString = "Default");
+    bool GenerateEnemy(EEnemyCategory stateID, FString dropItemID, EEnemyCategory materialID, FVector location, FVector scale, FRotator rotator);
 
 
 private:
     UPROPERTY(EditAnywhere, Category = "Data")
-    TMap<FString, TSubclassOf<UEnemyStateComponent>> EnemyClassMap;
+    TMap<EEnemyCategory, TSubclassOf<UEnemyStateComponent>> EnemyClassMap;
 
     UPROPERTY(EditAnywhere, Category = "Data")
-    TMap<FString, FMaterialData> MaterialMap;
+    TMap<EEnemyCategory,FMaterialData> MaterialMap;
 
     UPROPERTY(EditAnywhere, Category = "Data")
     TSubclassOf<AEnemyCharacter> EnemyCharacter;

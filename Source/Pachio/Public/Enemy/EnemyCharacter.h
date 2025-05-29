@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Interface/IDamageable.h"
+#include "Enemy/EnemyCategory.h"
 #include "EnemyCharacter.generated.h"
 
 class UBoxComponent;
@@ -30,7 +31,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 // 初期化関数 (StateID, DropItemID, OptionalなMaterialID)
-	void Init(FString stateID, const FString materialID = "None");
+	void Init(const EEnemyCategory stateID,const EEnemyCategory materialID);
 	/**
  * ダメージを受ける処理を実装する関数
  * @param Data 攻撃の詳細情報（攻撃種別や属性など）
@@ -75,10 +76,10 @@ private:
 	int Score = 100;
 
 	UPROPERTY(EditAnywhere)
-	FString LogicID;
+	EEnemyCategory LogicID;
 
 	UPROPERTY(EditAnywhere)
-	FString MaterialID;
+	EEnemyCategory MaterialID;
 
 	bool canStomp;
 };
