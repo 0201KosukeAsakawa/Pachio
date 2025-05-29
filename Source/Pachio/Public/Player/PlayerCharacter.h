@@ -22,6 +22,8 @@ class UCameraComponent;
 class UBoxComponent;
 class UInputAction;
 class UPhysicsCalculator;
+class UMoveComponent;
+class IMoveLogic;
 
 struct FInputActionValue;
 /**
@@ -30,7 +32,7 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController,public IStateControllable,public IDamageable
+class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController, public IStateControllable, public IDamageable
 {
 	GENERATED_BODY()
 
@@ -128,6 +130,9 @@ private:
 	// 前フレームとカメラ位置補正用
 	FVector PlayerOldLocation;
 
+	UMoveComponent* MoveComp;
+	//TScriptInterface<IMoveLogic> PlayerLogic;
+
 	// ==== メッシュ・コリジョン ====
 
 	// キャラクター用のカプセルメッシュ（カスタム追加の場合）
@@ -179,5 +184,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
 
+	UPROPERTY()
 	UPhysicsCalculator* physics;
 };

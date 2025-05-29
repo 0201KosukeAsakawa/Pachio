@@ -20,7 +20,7 @@ public:
 public:
 	// 敵キャラクターがこの状態に入ったときに呼ばれます。
 	// ここでは、状態に応じた初期化（ビジュアルの変更など）を行います。
-	virtual bool OnEnter(AEnemyCharacter* Owner, UWorld* currentLevel, const FString materialID = "None");
+	virtual bool OnEnter(AEnemyCharacter* Owner, UWorld* currentLevel, const EEnemyCategory materialID);
 
 	// 状態ごとの挙動を毎フレーム更新します。
 	// この関数で、移動や攻撃など、状態に基づくロジックを実行します。

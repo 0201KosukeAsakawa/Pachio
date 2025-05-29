@@ -10,7 +10,7 @@
 #include "Components/PhysicsCalculator.h"        // 重力などの物理演算コンポーネント
 
 // ゴンバの状態が「Enter」した時の処理
-bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, const FString materialID)
+bool UGoombaStateComponent::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, const EEnemyCategory materialID)
 {
     // オーナーやレベルが無効な場合、処理を終了
     if (!owner || !currentLevel)

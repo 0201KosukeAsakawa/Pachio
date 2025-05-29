@@ -13,6 +13,8 @@ FVector UPlayerMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputA
 	FVector2D MoveInput = Value.Get<FVector2D>();
 
 	ACharacter* Character = Cast<ACharacter>(Owner);
+	if (!Character)
+		return FVector(0,0,0);
 
 	// カメラの回転から前方・右方向ベクトルを取得
 	FRotator CamRot = Character->GetControlRotation();
@@ -52,4 +54,9 @@ FVector UPlayerMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputA
 	}
 
 	return;*/
+}
+
+void UPlayerMoveLogic::Init(float speed,const FVector)
+{
+	return;
 }

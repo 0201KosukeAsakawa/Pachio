@@ -42,7 +42,7 @@ void AEnemyCharacter::BeginPlay()
 }
 
 // 初期化処理
-void AEnemyCharacter::Init(FString logicID, const FString materialID)
+void AEnemyCharacter::Init(const EEnemyCategory logicID,const EEnemyCategory materialID)
 {
     // LogicIDを設定
     LogicID = logicID;
@@ -55,9 +55,6 @@ void AEnemyCharacter::Init(FString logicID, const FString materialID)
         return;
 
     // マテリアルIDが "None" でない場合、ロジックにマテリアルIDを渡してOnEnter処理を実行
-    if (materialID == "None")
-        Logic->OnEnter(this, GetWorld());
-    else
         Logic->OnEnter(this, GetWorld(), materialID);
 }
 

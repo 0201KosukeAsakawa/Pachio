@@ -8,7 +8,7 @@
 #include "DataContainer/EnemyDataContainer.h"
 
 // ゴンバが死亡状態に入る時の処理
-bool UGoombaDeadState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEnemyStateComponent* LogicComponet, FString materialID)
+bool UGoombaDeadState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEnemyStateComponent* LogicComponet, EEnemyCategory materialID)
 {
     // 必要なポインタが無効であれば処理を終了
     if (!owner || !world || !owner->GetMesh())
