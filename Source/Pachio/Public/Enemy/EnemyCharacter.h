@@ -31,7 +31,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 // 初期化関数 (StateID, DropItemID, OptionalなMaterialID)
-	void Init(const EEnemyCategory stateID,const FString materialID);
+	void Init(const EEnemyCategory stateID,const EEnemyCategory materialID);
 	/**
  * ダメージを受ける処理を実装する関数
  * @param Data 攻撃の詳細情報（攻撃種別や属性など）
@@ -79,7 +79,7 @@ private:
 	EEnemyCategory LogicID;
 
 	UPROPERTY(EditAnywhere)
-	FString MaterialID;
+	EEnemyCategory MaterialID;
 
 	bool canStomp;
 };
