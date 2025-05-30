@@ -339,8 +339,7 @@ void APlayerCharacter::Crouch(const FInputActionValue& Value)
 	PowerDownCollisionPosition();
 	
 	//コリジョンのサイズ変更
-	GetCharacterMovement()->Crouch();
-	GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
+	//GetCharacterMovement()->Crouch();
 }
 
 void APlayerCharacter::StandUp()
@@ -350,8 +349,7 @@ void APlayerCharacter::StandUp()
 
 	PowerUpCollisionPosition();
 	//コリジョンのサイズ変更
-	GetCharacterMovement()->Crouch();
-	GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
+	//GetCharacterMovement()->Crouch();
 }
 
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
@@ -405,6 +403,13 @@ void APlayerCharacter::PowerUpCollisionPosition()
 	//上と下の攻撃判定を拡大調整
 	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 110));
 	StompAttackBox->SetRelativeLocation(FVector(0, 0, -110));
+
+	// 足元を維持するために中心を元に戻す（上へずらす）
+	FVector CapsuleOffset = GetCapsuleComponent()->GetRelativeLocation();
+	CapsuleOffset.Z += 55.0f;
+	GetCapsuleComponent()->SetRelativeLocation(CapsuleOffset);
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
 }
 
 //パワーダウン時にコリジョンの移動処理
@@ -417,6 +422,8 @@ void APlayerCharacter::PowerDownCollisionPosition()
 	//上と下の攻撃判定を縮小調整
 	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 55));
 	StompAttackBox->SetRelativeLocation(FVector(0, 0, -55));
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
 }
 
 void APlayerCharacter::ToggleVisibility()
