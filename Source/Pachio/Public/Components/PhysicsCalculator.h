@@ -33,7 +33,7 @@ public:
 	void AddGravity(const float gravityScalse = 9.8f);
 
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
-	bool OnGround(const FVector Start) const;
+	bool OnGround() const;
 
 	// 物理計算が有効かどうかを返す
 	bool IsPhysicsEnabled() const { return bIsPhysicsEnabled; }

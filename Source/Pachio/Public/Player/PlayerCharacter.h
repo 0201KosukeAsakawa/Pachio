@@ -117,6 +117,9 @@ private:
 
 	// ==== フラグ・座標 ====
 
+	//初期位置を保存
+	FVector PreviousLocation;
+
 	// ダッシュ中フラグ
 	bool bIsDashing;
 

@@ -52,6 +52,8 @@ void APlayerCharacter::BeginPlay()
 	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
 	MoveComp->Init(this,PlayerLogic);
 
+	// 初期位置を保存
+	PreviousLocation = GetActorLocation();
 
 
 	bIsDashing = false; // 初期状態ではダッシュしていない
@@ -176,18 +178,30 @@ void APlayerCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	// 空中ならば攻撃判定を有効にする
-	if (GetCharacterMovement()->IsFalling())
-	{
-		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
-	// 空中でなければ攻撃判定を無効にする
-	if (!GetCharacterMovement()->IsFalling())
+	// 地上ならば攻撃判定を無効にする
+	if (physics->OnGround())
 	{
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+	// 空中ならば攻撃判定を有効にする
+	else
+	{
+		// UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+
+	if (GetActorLocation().Z < PreviousLocation.Z)
+	{
+		// 前のフレームよりも下に移動したときの処理
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	else
+	{
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	// 現在の位置を保存
+	PreviousLocation.Z = GetActorLocation().Z;
 
 	//プレイヤーが無敵時間ならば処理する
 	if (bIsInvincible)
@@ -344,8 +358,11 @@ void APlayerCharacter::StandUp()
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
 	//ジャンプが可能な状態なら
-	if (physics->OnGround(GetActorLocation()))
-		physics->AddForce(GetActorUpVector(), 10);
+	if (!physics->OnGround())
+		return;
+
+		physics->AddForce(GetActorUpVector(), 12);
+		/*UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);*/
 }
 
 // ジャンプ終了処理
