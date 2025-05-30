@@ -9,6 +9,8 @@
 /**
  * 
  */
+class UImage;
+
 UCLASS()
 class PACHIO_API UColorLens : public UUserWidget
 {
@@ -21,5 +23,5 @@ public:
 protected:
 	// 例えば画面の色を変えるためのUIパーツ
 	UPROPERTY(meta = (BindWidget))
-	class UImage* FilterColorImage;
+	UImage* FilterColorImage;
 };
