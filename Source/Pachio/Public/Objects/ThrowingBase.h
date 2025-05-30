@@ -23,28 +23,29 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	//ものを投げる関数
+	//Function to throw things
 	//第1引数：ものを投げる向き
 	//第2引数：投げる際にかける力
 	virtual void ThrowObject(FVector AimDirection, float Impulse);
 
-	//投げるObjectを決定する関数
+	//A function that determines the Object to throw.
 	//第1引数：投げるものの詳細
 	virtual void SetThrownObject(AThrowingBase*);
 
-	//向きと力量をセットする関数
+	//Function to set direction and force
 	virtual void SetDirection(FVector newDirection) { Direction = newDirection; }
 	virtual void SetForce(float newForce) { Force = newForce; }
-
 
 protected:
 	UPROPERTY()
 	UPhysicsCalculator* Physics;
 
-public:
 	UPROPERTY()
-	FVector Direction = FVector(0.0f, 30.0f, 0.0f);
+	FVector Direction = FVector(0.0f, 30.0f, 0.0f).GetSafeNormal();		//向き
 
 	UPROPERTY()
-	float Force = 1.0f;
+	float Force = 1.0f;		//力
+
+	UPROPERTY()
+	bool bHit = false;		//地面に設置したかどうかの判定
 };

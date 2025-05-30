@@ -13,13 +13,13 @@ void AThrowingBase::BeginPlay()
 }
 
 
-//‚à‚Ì‚ğ“Š‚°‚éŠÖ”
+//Function to throw things
 //î•ñ‚ğ“n‚·ŠÖ”
 void AThrowingBase::ThrowObject(FVector AimDirection, float Impulse)
 {		
 }
 
-//“Š‚°‚éObject‚ğŒˆ’è‚·‚éŠÖ”
+//A function that determines the Object to throw.
 void AThrowingBase::SetThrownObject(AThrowingBase* thrownObjectPtr)
 {
 }

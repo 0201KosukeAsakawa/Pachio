@@ -26,11 +26,11 @@ public:
 	// Tick関数のオーバーライド宣言
 	virtual void Tick(float DeltaTime) override;
 
-	//投げる処理
+	//Function to throw things
 	UFUNCTION(BlueprintCallable, Category = "Throwing")
 	virtual void ThrowObject(FVector AimDirection, float Impulse) override;
 
-	//向きと力量をセットする関数
+	//Function to set direction and force
 	virtual void SetDirection(FVector newDirection)override { Direction = newDirection; }
 	virtual void SetForce(float newForce)override { Force = newForce; }
 
