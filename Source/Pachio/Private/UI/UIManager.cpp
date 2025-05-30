@@ -1,6 +1,6 @@
 #include "UI/UIManager.h"
 #include "UI/ColorLens.h"
-#include "Components/ColorLensComponent.h"
+#include "Components/ColorControllerComponent.h"
 #include "Blueprint/UserWidget.h"
 
 void UUIManager::Init()
@@ -122,7 +122,7 @@ void UUIManager::BindColorLensComponent()
     APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
     if (!PlayerPawn) return;
 
-    UColorLensComponent* LensComp = PlayerPawn->FindComponentByClass<UColorLensComponent>();
+    UColorControllerComponent* LensComp = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
     if (!LensComp) return;
 
     // ウィジェットの取得

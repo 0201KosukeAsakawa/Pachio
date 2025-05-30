@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "ColorLensComponent.generated.h"
+#include "ColorControllerComponent.generated.h"
 
 // デリゲート宣言（FLinearColorを引数に取る）
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnColorChangedSignature, const FLinearColor&, NewColor);
@@ -19,12 +19,12 @@ enum class EColorChannel : uint8
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class PACHIO_API UColorLensComponent : public UActorComponent
+class PACHIO_API UColorControllerComponent : public UActorComponent
 {
     GENERATED_BODY()
 
 public:
-    UColorLensComponent();
+    UColorControllerComponent();
 
     // デリゲート（Blueprintからバインド可能）
     UPROPERTY(BlueprintAssignable, Category = "Color")

@@ -1,15 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Components/ColorLensComponent.h"
+#include "Components/ColorControllerComponent.h"
 
 // Sets default values for this component's properties
-UColorLensComponent::UColorLensComponent()
+UColorControllerComponent::UColorControllerComponent()
 {
 
 }
 
-void UColorLensComponent::AdjustColor(EColorChannel Channel, float Delta)
+void UColorControllerComponent::AdjustColor(EColorChannel Channel, float Delta)
 {
     switch (Channel)
     {
