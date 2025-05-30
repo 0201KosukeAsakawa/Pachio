@@ -6,31 +6,71 @@
 
 
 #include "Components/ThrowComponent.h"
-#include "Objects/ThrowableBase.h"
+#include "Objects/ThrowingBase.h"
 #include "Engine/World.h"
 
+//初期設定
+void UThrowComponent::Init()
+{
+	mOwner = GetOwner();
+	
+}
+
+void UThrowComponent::BeginPlay()
+{
+	Super::BeginPlay(); // 親クラスのBeginPlayを呼び出す
+
+	Init();
+}
 
 //ものを投げる関数
 void UThrowComponent::ThrowObject(FVector direction, float force)
 {
-	if (!ThrownObjectPtr)
+	//クラスの設定があるかを確認
+	if (!IsValid(ThrownObjectClass))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No object to spawn!"));
 		return;
+	}
 
-	ThrownObjectPtr->ThrowObject(direction, force);
+	// スポーン位置と回転を決定
+	FVector SpawnLocation = mOwner->GetActorLocation() + FVector(0, 50, 0);  //位置
+	FRotator SpawnRotation = FRotator::ZeroRotator;  //回転位置
+
+	// UWorld を取得
+	UWorld* World = GetWorld();
+	if (!IsValid(World)) { 
+		return; 
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = nullptr;
+	SpawnParams.Instigator = 0;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	// 投げるオブジェクトをスポーン
+	AThrowingBase* SpawnedActor = World->SpawnActor<AThrowingBase>(ThrownObjectClass, SpawnLocation, SpawnRotation, SpawnParams);
+	if (!IsValid(SpawnedActor))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn the object."));
+		return;
+	}
+
+	//スポーンアクタの向きと加速度を渡す
+	SpawnedActor->SetDirection(FVector(0.0f, 20.0f, 0.0f));
+	SpawnedActor->SetForce(1.0f);
 }
 
 //投げるObjectを決定する関数
-void UThrowComponent::SelectThrownObject(UThrowableBase* thrownObjectPtr)
+void UThrowComponent::SetThrownObject(TSubclassOf<AThrowingBase> thrownObjectClass)
 {
-	if (thrownObjectPtr == nullptr)
+	if (!IsValid(thrownObjectClass))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed SelectThrownObject Function"));
 		return;
 	}
 
 	//引数thrownObjectPtrを変数ThrownObjectPtrに代入
-	ThrownObjectPtr = thrownObjectPtr;
+	ThrownObjectClass = thrownObjectClass;
 
 }
-
-
