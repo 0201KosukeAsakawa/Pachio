@@ -36,7 +36,7 @@ bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEn
         return false;
     Attack->SetAttackData(EAttackType::Enemy, EBreakLevel::Unbreakable);
     // キャラクターの移動コンポーネント初期化
-    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this),10.0f,FVector(0,-1,0));
+    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this),100.0f,FVector(0,-1,0));
     //MoveComp->SetSpeed(10.0f); // 移動速度設定
 
     // 物理計算コンポーネントを初期化（重力などの適用）
