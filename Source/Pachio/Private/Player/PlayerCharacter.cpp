@@ -19,6 +19,7 @@
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/State/PlayerDefaultState.h"
+#include "Player/State/PlayerFireState.h"
 #include "Player/State/StateManager.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 
@@ -372,6 +373,23 @@ void APlayerCharacter::JumpStop(const FInputActionValue& Value)
 // ダッシュ開始（移動速度上昇）
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
+	if (!bHasUsedSkill)
+	{
+		// StateManagerから現在のステートを取得
+		UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
+		if (CurrentState)
+		{
+			// UPlayerFireState にキャストできれば
+			UPlayerFireState* FireState = Cast<UPlayerFireState>(CurrentState);
+			if (FireState)
+			{
+				// 引数が未使用なので空の値を渡す
+				FInputActionValue DummyValue;
+				FireState->OnSkill(DummyValue);
+				bHasUsedSkill = true;
+			}
+		}
+	}
 	//ダッシュ状態じゃなければ
 	if (!bIsDashing)
 	{
@@ -390,6 +408,7 @@ void APlayerCharacter::StopAction()
 		//プレイヤーの速度を元に戻し、フラグをオフにする
 		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 		bIsDashing = false;
+		bHasUsedSkill = false;
 	}
 }
 

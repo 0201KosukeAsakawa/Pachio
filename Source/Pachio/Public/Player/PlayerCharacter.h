@@ -121,7 +121,9 @@ private:
 	FVector PreviousLocation;
 
 	// ダッシュ中フラグ
-	bool bIsDashing;
+	bool bIsDashing = false;
+	//スキルフラグ
+	bool bHasUsedSkill = false;
 
 	//無敵時間中フラグ
 	bool bIsInvincible = false;
