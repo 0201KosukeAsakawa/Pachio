@@ -7,6 +7,8 @@ void UUIManager::Init()
 {
     // ウィジェットの初期化（すべてのカテゴリに対して）
     InitAllWidgets();
+    BindColorLensComponent();
+    ShowWidget(EWidgetCategory::Lens, "ColorLensWidget");
 }
 
 void UUIManager::InitAllWidgets()
@@ -41,7 +43,7 @@ void UUIManager::InitWidgetGroup(FWidgetData& WidgetGroup)
 
 void UUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Classes, TArray<UUserWidget*>& Widgets)
 {
-    // 汎用的なウィジェット初期化（配列ベース、例：クロスヘアなど）
+    // 汎用的なウィジェット初期化
     Widgets.Reset();
 
     for (auto& WidgetClass : Classes)
@@ -58,7 +60,7 @@ void UUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Class
     }
 }
 
-void UUIManager::ShowWidget(FName CategoryName, FName WidgetName)
+void UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetName)
 {
     // 指定カテゴリが存在しない場合は無視
     if (!WidgetDataMap.Contains(CategoryName)) 
@@ -66,64 +68,43 @@ void UUIManager::ShowWidget(FName CategoryName, FName WidgetName)
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
 
-    // 現在表示中のウィジェットがあれば削除
-    RemoveWidgetFromViewport(Group.CurrentWidget);
+    //// 現在表示中のウィジェットがあれば削除
+    //RemoveWidgetFromViewport(Group.CurrentWidget);
 
     // 指定名のウィジェットを検索し、ビューポートに表示
     if (UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName))
     {
-        Group.CurrentWidget = *FoundWidget;
-        Group.CurrentWidget->AddToViewport();
+        Group.CurrentWidget.Add(WidgetName, *FoundWidget);
+        Group.CurrentWidget[WidgetName]->AddToViewport();
     }
 }
 
-void UUIManager::HideCurrentWidget(FName CategoryName)
+void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName)
 {
     // 指定カテゴリが存在しない場合は無視
     if (!WidgetDataMap.Contains(CategoryName)) 
         return;
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
+    if (!Group.CurrentWidget[WidgetName])
+        return;
 
     // 現在のウィジェットを非表示にして nullptr に
-    RemoveWidgetFromViewport(Group.CurrentWidget);
+    RemoveWidgetFromViewport(Group.CurrentWidget[WidgetName]);
 }
 
-void UUIManager::ToggleWidgetVisibility(FName CategoryName, bool bVisible)
+bool UUIManager::IsWidgetVisible(EWidgetCategory CategoryName , FName WidgetName) const
 {
-    // 指定カテゴリが存在しない場合は無視
-    if (!WidgetDataMap.Contains(CategoryName)) 
-        return;
+    const FWidgetData* Group = WidgetDataMap.Find(CategoryName);
 
-    FWidgetData& Group = WidgetDataMap[CategoryName];
-    if (!Group.CurrentWidget) 
-        return;
-
-    // 表示状態を切り替える
-    if (bVisible)
-    {
-        if (!Group.CurrentWidget->IsInViewport())
-        {
-            Group.CurrentWidget->AddToViewport();
-        }
-    }
-    else
-    {
-        if (Group.CurrentWidget->IsInViewport())
-        {
-            Group.CurrentWidget->RemoveFromViewport();
-        }
-    }
-}
-
-bool UUIManager::IsWidgetVisible(FName CategoryName) const
-{
     // 指定カテゴリのウィジェットがビューポート上で可視か判定
-    if (const FWidgetData* Group = WidgetDataMap.Find(CategoryName))
-    {
-        return Group->CurrentWidget && Group->CurrentWidget->IsVisible();
-    }
-    return false;
+    if (!Group)
+        return false; 
+    if (!Group->CurrentWidget[WidgetName])
+        return false;
+
+
+    return true;
 }
 
 void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
@@ -145,7 +126,7 @@ void UUIManager::BindColorLensComponent()
     if (!LensComp) return;
 
     // ウィジェットの取得
-    FWidgetData* WidgetGroup = WidgetDataMap.Find(TEXT("ColorFilter"));
+    FWidgetData* WidgetGroup = WidgetDataMap.Find(EWidgetCategory::Lens);
     if (!WidgetGroup) return;
 
     UUserWidget** WidgetPtr = WidgetGroup->WidgetMap.Find(TEXT("ColorLensWidget"));

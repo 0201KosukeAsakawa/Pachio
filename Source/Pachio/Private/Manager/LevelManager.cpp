@@ -45,7 +45,7 @@ void ALevelManager::InitializeComponents()
 	if (UIManager)
 	{
 		UIManager->Init();
-		UIManager->ShowWidget("UI", "Score");
+		UIManager->ShowWidget(EWidgetCategory::Score, "Score");
 	}
 
 	if (!IsValid(ObjectManager))
