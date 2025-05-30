@@ -48,7 +48,7 @@ void UThrowComponent::ThrowObject(FVector direction, float force)
 	SpawnParams.Instigator = 0;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	// 投げるオブジェクトをスポーン
+	//投げるオブジェクトをスポーン
 	AThrowingBase* SpawnedActor = World->SpawnActor<AThrowingBase>(ThrownObjectClass, SpawnLocation, SpawnRotation, SpawnParams);
 	if (!IsValid(SpawnedActor))
 	{
@@ -57,8 +57,8 @@ void UThrowComponent::ThrowObject(FVector direction, float force)
 	}
 
 	//スポーンアクタの向きと加速度を渡す
-	SpawnedActor->SetDirection(FVector(0.0f, 20.0f, 0.0f));
-	SpawnedActor->SetForce(1.0f);
+	SpawnedActor->SetDirection(FVector(0.0f, 90.0f, -50.0f).GetSafeNormal());
+	SpawnedActor->SetForce(30.0f);
 }
 
 //投げるObjectを決定する関数

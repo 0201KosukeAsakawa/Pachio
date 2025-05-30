@@ -12,6 +12,7 @@ AFireball::AFireball()
 {
 	PrimaryActorTick.bCanEverTick = true;
  
+	//UPhysicsCalculatorを生成・アタッチを行う
 	Physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("PhysicsCalculator"));
 	if (!IsValid(Physics))
 	{
@@ -22,15 +23,19 @@ AFireball::AFireball()
 void AFireball::BeginPlay()
 {
 	Super::BeginPlay();		//親クラスのBeginPlayを呼び出す
+
 }
 
 // 毎フレーム呼ばれる
 void AFireball::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 	ThrowObject(Direction, Force);
+
 }
 
+//Function to throw things
 void AFireball::ThrowObject(FVector AimDirection, float Impulse)
 {
 	if (!IsValid(Physics))
@@ -48,4 +53,3 @@ void AFireball::ThrowObject(FVector AimDirection, float Impulse)
 	UE_LOG(LogTemp, Warning, TEXT("Succeeded PhysicsAddGravity"));
 
 }
-
