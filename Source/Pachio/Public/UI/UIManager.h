@@ -73,8 +73,6 @@ private:
     /** 指定したウィジェットをビューポートから削除し nullptr にする */
     void RemoveWidgetFromViewport(UUserWidget*& Widget);
 
-    void BindColorLensComponent();
-
 private:
     /** 複数のウィジェットカテゴリごとのデータ（State, Combat, Inventory など） */
     UPROPERTY(EditAnywhere, Category = "UI")

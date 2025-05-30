@@ -7,7 +7,6 @@ void UUIManager::Init()
 {
     // ウィジェットの初期化（すべてのカテゴリに対して）
     InitAllWidgets();
-    BindColorLensComponent();
     ShowWidget(EWidgetCategory::Lens, "ColorLensWidget");
 }
 
@@ -68,9 +67,6 @@ void UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetName)
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
 
-    //// 現在表示中のウィジェットがあれば削除
-    //RemoveWidgetFromViewport(Group.CurrentWidget);
-
     // 指定名のウィジェットを検索し、ビューポートに表示
     if (UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName))
     {
@@ -115,29 +111,4 @@ void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
         Widget->RemoveFromViewport();
         Widget = nullptr;
     }
-}
-
-void UUIManager::BindColorLensComponent()
-{
-    APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
-    if (!PlayerPawn) return;
-
-    UColorControllerComponent* LensComp = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
-    if (!LensComp) return;
-
-    // ウィジェットの取得
-    FWidgetData* WidgetGroup = WidgetDataMap.Find(EWidgetCategory::Lens);
-    if (!WidgetGroup) return;
-
-    UUserWidget** WidgetPtr = WidgetGroup->WidgetMap.Find(TEXT("ColorLensWidget"));
-    if (!WidgetPtr) return;
-
-    UColorLens* ColorLensWidget = Cast<UColorLens>(*WidgetPtr);
-    if (!ColorLensWidget) return;
-
-    // デリゲートバインド
-    LensComp->OnColorChanged.AddDynamic(ColorLensWidget, &UColorLens::UpdateFilterColor);
-
-    // 初期色の反映も忘れずに
-    ColorLensWidget->UpdateFilterColor(LensComp->GetCurrentColor());
 }

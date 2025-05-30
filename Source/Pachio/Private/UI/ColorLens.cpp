@@ -2,9 +2,27 @@
 
 
 #include "UI/ColorLens.h"
+#include "Manager/ColorManager.h"
 #include "Components/Image.h"
+#include "Manager/LevelManager.h"
 
-void UColorLens::UpdateFilterColor(const FLinearColor& NewColor)
+void UColorLens::NativeConstruct()
+{
+    Super::NativeConstruct();
+
+    // Owner ‚ð’T‚µ‚Ä ColorManager ‚ðŽæ“¾i‚à‚µ‚­‚ÍƒQ[ƒ€‘S‘Ì‚ÌƒVƒ“ƒOƒ‹ƒgƒ“‚©‚çŽæ“¾‚Å‚à‰Âj
+    ALevelManager* Owner = ALevelManager::GetInstance(GetWorld());
+    if (!Owner) return;
+
+    UColorManager* ColorManager = Owner->FindComponentByClass<UColorManager>();
+    if (ColorManager)
+    {
+        ColorManager->RegisterTarget(EColorMode::Background, this);  // —á‚¦‚Î”wŒiF•ÏXƒ‚[ƒh‚É“o˜^
+    }
+}
+
+
+void UColorLens::SetColor(FLinearColor NewColor)
 {
     if (!FilterColorImage)
         return;
@@ -21,5 +39,4 @@ void UColorLens::UpdateFilterColor(const FLinearColor& NewColor)
     );
 
     FilterColorImage->SetColorAndOpacity(CombinedColor);
-
 }
