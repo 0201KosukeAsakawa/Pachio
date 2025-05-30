@@ -50,9 +50,9 @@ bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEn
     owner->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     // 新しいマテリアルを作成して設定
-    UMaterialInterface* newMaterial = ALevelManager::GetInstance(currentLevel)->GetEnemyContainer()->CreateMaterial(currentLevel, materialID);
-    if (!newMaterial)
-        return false;
+    UMaterialInterface* newMaterial = ALevelManager::GetInstance(currentLevel)->GetEnemyContainer()->CreateMaterial(currentLevel, EEnemyCategory::Koopa /*"Koopa"*/ , "Default");
+	if (!newMaterial)
+		return false;
 
     owner->GetMesh()->SetMaterial(0, newMaterial); // メッシュに新しいマテリアルを設定
 
