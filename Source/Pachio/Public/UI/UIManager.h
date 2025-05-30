@@ -14,7 +14,7 @@ struct FWidgetData : public FTableRowBase
 {
     GENERATED_USTRUCT_BODY()
 
-    // ウィジェット名に対応するウィジェットクラス（Blueprint クラス）
+    // ウィジェット名に対応するウィジェットクラス
     UPROPERTY(EditAnywhere, Category = "UI")
     TMap<FName, TSubclassOf<UUserWidget>> WidgetClassMap;
 
@@ -67,6 +67,8 @@ private:
 
     /** 指定したウィジェットをビューポートから削除し nullptr にする */
     void RemoveWidgetFromViewport(UUserWidget*& Widget);
+
+    void BindColorLensComponent();
 
 private:
     /** 複数のウィジェットカテゴリごとのデータ（State, Combat, Inventory など） */
