@@ -1,4 +1,6 @@
 #include "UI/UIManager.h"
+#include "UI/ColorLens.h"
+#include "Components/ColorLensComponent.h"
 #include "Blueprint/UserWidget.h"
 
 void UUIManager::Init()
@@ -132,4 +134,29 @@ void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
         Widget->RemoveFromViewport();
         Widget = nullptr;
     }
+}
+
+void UUIManager::BindColorLensComponent()
+{
+    APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+    if (!PlayerPawn) return;
+
+    UColorLensComponent* LensComp = PlayerPawn->FindComponentByClass<UColorLensComponent>();
+    if (!LensComp) return;
+
+    // ウィジェットの取得
+    FWidgetData* WidgetGroup = WidgetDataMap.Find(TEXT("ColorFilter"));
+    if (!WidgetGroup) return;
+
+    UUserWidget** WidgetPtr = WidgetGroup->WidgetMap.Find(TEXT("ColorLensWidget"));
+    if (!WidgetPtr) return;
+
+    UColorLens* ColorLensWidget = Cast<UColorLens>(*WidgetPtr);
+    if (!ColorLensWidget) return;
+
+    // デリゲートバインド
+    LensComp->OnColorChanged.AddDynamic(ColorLensWidget, &UColorLens::UpdateFilterColor);
+
+    // 初期色の反映も忘れずに
+    ColorLensWidget->UpdateFilterColor(LensComp->GetCurrentColor());
 }
