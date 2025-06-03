@@ -14,7 +14,7 @@
 #include "DataContainer/EnemyDataContainer.h"
 
 // ゴンバの生存状態に入る時の処理
-bool UGoombaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, FString materialID)
+bool UGoombaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, EEnemyCategory materialID)
 {
     // 必要なポインタが無効であれば処理を終了
     if (!owner || !currentLevel || !LogicComponet)
@@ -42,7 +42,7 @@ bool UGoombaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UE
         return false;
 
     // 移動コンポーネントを初期化
-    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this),1000,FVector(0,-1,0));
+    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this),100,FVector(0,-1,0));
     //MoveComp->SetSpeed(1000.0f); // 移動速度を設定
 
     // 物理計算コンポーネント（重力など）を生成

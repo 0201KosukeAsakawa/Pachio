@@ -19,6 +19,7 @@
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/State/PlayerDefaultState.h"
+#include "Player/State/PlayerFireState.h"
 #include "Player/State/StateManager.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 
@@ -52,6 +53,8 @@ void APlayerCharacter::BeginPlay()
 	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
 	MoveComp->Init(this,PlayerLogic);
 
+	// 初期位置を保存
+	PreviousLocation = GetActorLocation();
 
 
 	bIsDashing = false; // 初期状態ではダッシュしていない
@@ -176,18 +179,30 @@ void APlayerCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	// 空中ならば攻撃判定を有効にする
-	if (GetCharacterMovement()->IsFalling())
-	{
-		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
-	// 空中でなければ攻撃判定を無効にする
-	if (!GetCharacterMovement()->IsFalling())
+	// 地上ならば攻撃判定を無効にする
+	if (physics->OnGround())
 	{
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+	// 空中ならば攻撃判定を有効にする
+	else
+	{
+		// UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+
+	if (GetActorLocation().Z < PreviousLocation.Z)
+	{
+		// 前のフレームよりも下に移動したときの処理
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	else
+	{
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	// 現在の位置を保存
+	PreviousLocation.Z = GetActorLocation().Z;
 
 	//プレイヤーが無敵時間ならば処理する
 	if (bIsInvincible)
@@ -325,8 +340,7 @@ void APlayerCharacter::Crouch(const FInputActionValue& Value)
 	PowerDownCollisionPosition();
 	
 	//コリジョンのサイズ変更
-	GetCharacterMovement()->Crouch();
-	GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
+	//GetCharacterMovement()->Crouch();
 }
 
 void APlayerCharacter::StandUp()
@@ -336,16 +350,18 @@ void APlayerCharacter::StandUp()
 
 	PowerUpCollisionPosition();
 	//コリジョンのサイズ変更
-	GetCharacterMovement()->Crouch();
-	GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
+	//GetCharacterMovement()->Crouch();
 }
 
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
 	//ジャンプが可能な状態なら
-	if (physics->OnGround(GetActorLocation()))
-		physics->AddForce(GetActorUpVector(), 10);
+	if (!physics->OnGround())
+		return;
+
+		physics->AddForce(GetActorUpVector(), 12);
+		/*UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);*/
 }
 
 // ジャンプ終了処理
@@ -357,6 +373,23 @@ void APlayerCharacter::JumpStop(const FInputActionValue& Value)
 // ダッシュ開始（移動速度上昇）
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
+	if (!bHasUsedSkill)
+	{
+		// StateManagerから現在のステートを取得
+		UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
+		if (CurrentState)
+		{
+			// UPlayerFireState にキャストできれば
+			UPlayerFireState* FireState = Cast<UPlayerFireState>(CurrentState);
+			if (FireState)
+			{
+				// 引数が未使用なので空の値を渡す
+				FInputActionValue DummyValue;
+				FireState->OnSkill(DummyValue);
+				bHasUsedSkill = true;
+			}
+		}
+	}
 	//ダッシュ状態じゃなければ
 	if (!bIsDashing)
 	{
@@ -375,6 +408,7 @@ void APlayerCharacter::StopAction()
 		//プレイヤーの速度を元に戻し、フラグをオフにする
 		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 		bIsDashing = false;
+		bHasUsedSkill = false;
 	}
 }
 
@@ -388,6 +422,13 @@ void APlayerCharacter::PowerUpCollisionPosition()
 	//上と下の攻撃判定を拡大調整
 	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 110));
 	StompAttackBox->SetRelativeLocation(FVector(0, 0, -110));
+
+	// 足元を維持するために中心を元に戻す（上へずらす）
+	FVector CapsuleOffset = GetCapsuleComponent()->GetRelativeLocation();
+	CapsuleOffset.Z += 55.0f;
+	GetCapsuleComponent()->SetRelativeLocation(CapsuleOffset);
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
 }
 
 //パワーダウン時にコリジョンの移動処理
@@ -400,6 +441,8 @@ void APlayerCharacter::PowerDownCollisionPosition()
 	//上と下の攻撃判定を縮小調整
 	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 55));
 	StompAttackBox->SetRelativeLocation(FVector(0, 0, -55));
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
 }
 
 void APlayerCharacter::ToggleVisibility()

@@ -34,9 +34,6 @@ public:
     bool SetMoveLogic(TScriptInterface<IMoveLogic>Logic);
 
 private:
-    // 現在の移動方向
-    FVector CurrentMovementDirection;
-
     // 速度
     float Speed;
 

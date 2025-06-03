@@ -117,8 +117,13 @@ private:
 
 	// ==== フラグ・座標 ====
 
+	//初期位置を保存
+	FVector PreviousLocation;
+
 	// ダッシュ中フラグ
-	bool bIsDashing;
+	bool bIsDashing = false;
+	//スキルフラグ
+	bool bHasUsedSkill = false;
 
 	//無敵時間中フラグ
 	bool bIsInvincible = false;

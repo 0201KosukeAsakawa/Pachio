@@ -6,6 +6,15 @@
 #include "Containers/Map.h"
 #include "UIManager.generated.h"
 
+
+UENUM(BlueprintType)
+enum class EWidgetCategory : uint8
+{
+    Tutorial UMETA(DisplayName = "Tutorial"),
+    Lens     UMETA(DisplayName = "Lens"),
+    Score    UMETA(DisplayName = "Score")
+};
+
 /**
  * 複数ウィジェットカテゴリ（例: State, Menu, HUD）に対応するデータ構造
  */
@@ -14,7 +23,7 @@ struct FWidgetData : public FTableRowBase
 {
     GENERATED_USTRUCT_BODY()
 
-    // ウィジェット名に対応するウィジェットクラス（Blueprint クラス）
+    // ウィジェット名に対応するウィジェットクラス
     UPROPERTY(EditAnywhere, Category = "UI")
     TMap<FName, TSubclassOf<UUserWidget>> WidgetClassMap;
 
@@ -24,7 +33,7 @@ struct FWidgetData : public FTableRowBase
 
     // 現在表示中のウィジェット
     UPROPERTY(Transient)
-    UUserWidget* CurrentWidget = nullptr;
+    TMap<FName, UUserWidget*> CurrentWidget;
 };
 
 /**
@@ -41,19 +50,15 @@ public:
 public:
     /** 指定したカテゴリと名前のウィジェットを表示する */
     UFUNCTION(BlueprintCallable)
-    void ShowWidget(FName CategoryName, FName WidgetName);
+    void ShowWidget(EWidgetCategory CategoryName, FName WidgetName);
 
     /** 指定カテゴリの現在のウィジェットを非表示にする */
     UFUNCTION(BlueprintCallable)
-    void HideCurrentWidget(FName CategoryName);
-
-    /** 指定カテゴリのウィジェットの表示／非表示を切り替える */
-    UFUNCTION(BlueprintCallable)
-    void ToggleWidgetVisibility(FName CategoryName, bool bVisible);
+    void HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName);
 
     /** 指定カテゴリの現在のウィジェットが表示中かを取得 */
     UFUNCTION(BlueprintCallable)
-    bool IsWidgetVisible(FName CategoryName) const;
+    bool IsWidgetVisible(EWidgetCategory CategoryName, FName WidgetName) const;
 
 private:
     /** 全てのカテゴリに対してウィジェットを初期化 */
@@ -71,5 +76,5 @@ private:
 private:
     /** 複数のウィジェットカテゴリごとのデータ（State, Combat, Inventory など） */
     UPROPERTY(EditAnywhere, Category = "UI")
-    TMap<FName, FWidgetData> WidgetDataMap;
+    TMap<EWidgetCategory, FWidgetData> WidgetDataMap;
 };

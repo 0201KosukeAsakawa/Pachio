@@ -19,7 +19,7 @@ class PACHIO_API UKoopaComponent : public UEnemyStateComponent
 public:
 	// 敵キャラクターがこの状態に入ったときに呼ばれます。
 	// ここでは、状態に応じた初期化（ビジュアルの変更など）を行います。
-	virtual bool OnEnter(AEnemyCharacter* Owner, UWorld*, const FString materialID = "None")override;
+	virtual bool OnEnter(AEnemyCharacter* Owner, UWorld*, const EEnemyCategory materialID)override;
 
 	// 状態ごとの挙動を毎フレーム更新します。
 	// この関数で、移動や攻撃など、状態に基づくロジックを実行します。

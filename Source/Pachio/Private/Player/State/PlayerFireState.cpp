@@ -9,6 +9,13 @@
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
 #include "Player/PlayerCharacter.h"
+#include "Components/ThrowComponent.h"
+
+UPlayerFireState::UPlayerFireState()
+{
+	if (!ThrowComp)
+		ThrowComp = CreateDefaultSubobject<UThrowComponent>(TEXT("ThrowComponent"));
+}
 
 // ステートに入る際に実行される処理
 bool UPlayerFireState::OnEnter(ACharacter* owner, UWorld* world)
@@ -69,7 +76,9 @@ bool UPlayerFireState::OnExit(ACharacter*)
 // スキルボタン入力時の処理（現時点では何もしない）
 bool UPlayerFireState::OnSkill(const FInputActionValue&)
 {
-	return false;
+	ThrowComp->SetThrownObject(DefaultThrownObjectClass);
+	ThrowComp->ThrowObject(FVector(0, 1, 0), 100.0f);
+	return true;
 }
 
 //ダメージを受けたときの処理
