@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interface/ColorFilterInterface.h"
 #include "Blueprint/UserWidget.h"
 #include "ColorLens.generated.h"
 
@@ -12,14 +13,13 @@
 class UImage;
 
 UCLASS()
-class PACHIO_API UColorLens : public UUserWidget
+class PACHIO_API UColorLens : public UUserWidget,public IColorFilterInterface
 {
 	GENERATED_BODY()
-	
 public:
-	UFUNCTION(BlueprintCallable)
-	void UpdateFilterColor(const FLinearColor& NewColor);
-
+	void NativeConstruct();
+private:
+	void SetColor(FLinearColor)override;
 protected:
 	// 例えば画面の色を変えるためのUIパーツ
 	UPROPERTY(meta = (BindWidget))

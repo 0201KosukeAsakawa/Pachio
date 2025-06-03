@@ -1,6 +1,7 @@
 #include "Manager/LevelManager.h"
 #include "Manager/ObjectManager.h"
 #include "Manager/ScoreManager.h"
+#include "Manager/ColorManager.h"
 #include "UI/UIManager.h"
 #include "EngineUtils.h"
 #include "Engine/DataTable.h"
@@ -69,6 +70,11 @@ void ALevelManager::InitializeComponents()
 			SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
 		}
 	}
+
+
+		ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
+		ColorManager->Init();
+	
 
 	// 1秒ごとに CountUp 関数を呼ぶ
 	GetWorld()->GetTimerManager().SetTimer(CountTimerHandle, this, &ALevelManager::CountDown, 1.0f, true);

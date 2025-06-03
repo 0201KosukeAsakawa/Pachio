@@ -12,20 +12,20 @@
 //初期設定
 void UThrowComponent::Init()
 {
-	mOwner = GetOwner();
 	
 }
 
 void UThrowComponent::BeginPlay()
 {
 	Super::BeginPlay(); // 親クラスのBeginPlayを呼び出す
-
-	Init();
 }
 
 //ものを投げる関数
 void UThrowComponent::ThrowObject(FVector direction, float force)
 {
+	if(!mOwner)
+	mOwner = GetOwner();
+
 	//クラスの設定があるかを確認
 	if (!IsValid(ThrownObjectClass))
 	{

@@ -14,6 +14,7 @@ class UItemDataContainer;
 class UScoreManager;
 class UUIManager;
 class UEnemyDataContainer;
+class UColorManager;
 
 /**
  * ステージオブジェクト1つ分の配置情報（データテーブル用構造体）
@@ -82,6 +83,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	inline UEnemyDataContainer* GetEnemyContainer()const { return EnemyContainer; }
 
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	inline UColorManager* GetColorManager()const { return ColorManager; }
+
 private:
 	void InitializeComponents();
 
@@ -130,6 +134,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUIManager> UIManagerClass;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UColorManager> ColorManagerClass;
+
 
 
 	/** ステージオブジェクト配置データテーブル */
@@ -163,11 +170,15 @@ private:
 	UPROPERTY()
 	TObjectPtr<UAttackDataContainer> AttackContainer;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	TObjectPtr<UScoreManager> ScoreManager;
 
-	UPROPERTY(EditAnywhere)
-	TSoftObjectPtr<UUIManager> UIManager;
+	UPROPERTY()
+	TObjectPtr<UUIManager> UIManager;
+
+	UPROPERTY()
+	TObjectPtr<UColorManager> ColorManager;
+
 
 	/** シングルトンアクセス用のインスタンス */
 	static TWeakObjectPtr<ALevelManager> Instance;

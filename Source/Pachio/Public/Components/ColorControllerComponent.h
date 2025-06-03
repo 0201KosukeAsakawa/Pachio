@@ -6,9 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "ColorControllerComponent.generated.h"
 
-// デリゲート宣言（FLinearColorを引数に取る）
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnColorChangedSignature, const FLinearColor&, NewColor);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnColorChanged, FLinearColor, NewColor);
 
 UENUM(BlueprintType)
 enum class EColorChannel : uint8
@@ -26,9 +24,8 @@ class PACHIO_API UColorControllerComponent : public UActorComponent
 public:
     UColorControllerComponent();
 
-    // デリゲート（Blueprintからバインド可能）
-    UPROPERTY(BlueprintAssignable, Category = "Color")
-    FOnColorChangedSignature OnColorChanged;
+    UPROPERTY(BlueprintAssignable)
+    FOnColorChanged OnColorChanged;
 
     UFUNCTION(BlueprintCallable)
     void AdjustColor(EColorChannel Channel, float Delta);
