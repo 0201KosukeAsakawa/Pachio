@@ -1,42 +1,73 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "UObject/Interface.h"
+#include "UObject/Object.h"
+#include "UObject/ObjectMacros.h"
 #include "ColorManager.generated.h"
 
 class IColorFilterInterface;
 
+// 色モード列挙体
 UENUM(BlueprintType)
 enum class EColorMode : uint8
 {
-    Layer,
-    Object,
-    Background
+    Layer      UMETA(DisplayName = "Layer"),
+    Object     UMETA(DisplayName = "Object"),
+    Background UMETA(DisplayName = "Background")
 };
+
+// ブループリントクラスを保持する構造体（エディタ設定用）
+USTRUCT(BlueprintType)
+struct FColorTargetArray
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    TArray<TSubclassOf<UObject>> Targets;
+};
+
+// 実行時インスタンスを保持する構造体
+USTRUCT()
+struct FColorTargetInstanceArray
+{
+    GENERATED_BODY()
+
+    TArray<TScriptInterface<IColorFilterInterface>> Instances;
+};
+
+// UColorManagerクラス本体
 UCLASS(Blueprintable)
-class PACHIO_API UColorManager : public UActorComponent
+class UColorManager : public UObject
 {
     GENERATED_BODY()
 
 public:
-    void Init();
+    // エディタで設定するブループリントクラス群
+    UPROPERTY(EditAnywhere)
+    TMap<EColorMode, FColorTargetArray> ColorTargetsClass;
 
-    UFUNCTION()
-    void ApplyColor(FLinearColor NewColor);  // 引数を「値渡し」に変更
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<UObject> ActiveLayerTargetClass;
 
-    void RegisterTarget(EColorMode Mode, TScriptInterface<IColorFilterInterface> Target);
+    // 実行時に生成されたインスタンス群
+    UPROPERTY()
+    TMap<EColorMode, FColorTargetInstanceArray> ColorTargets;
 
-    void SetMode(EColorMode Mode);
-
-private:
-    TMap<EColorMode, TArray<TScriptInterface<IColorFilterInterface>>> ColorTargets;
-
-    // Optional: 現在のレイヤーターゲット（1つだけ）
+    UPROPERTY()
     TScriptInterface<IColorFilterInterface> ActiveLayerTarget;
 
-    FLinearColor CurrentColor;
+    // 現在のモード
+    UPROPERTY(EditAnywhere)
+    EColorMode Mode;
 
-    EColorMode Mode = EColorMode::Layer;
+public:
+    // 初期化関数（ブループリントクラスからインスタンスを生成）
+    void InitializeTargets();
+
+    // 色を適用する関数
+    void ApplyColor(FLinearColor NewColor);
+
+    // ターゲットを追加登録する関数（必要に応じて）
+    void RegisterTarget(EColorMode Mode, TScriptInterface<IColorFilterInterface> Target);
 };

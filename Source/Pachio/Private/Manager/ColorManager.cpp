@@ -4,20 +4,45 @@
 #include "Manager/ColorManager.h"
 #include "Components/ColorControllerComponent.h"
 #include "Interface/ColorFilterInterface.h"
+#include "UObject/UObjectGlobals.h" 
 
-void UColorManager::Init()
+void UColorManager::InitializeTargets()
 {
+    ColorTargets.Empty();
 
-    // プレイヤーキャラクターを取得
-    if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+    for (auto& Pair : ColorTargetsClass)
     {
-        if (APawn* Pawn = PC->GetPawn())
+        EColorMode ModeKey = Pair.Key;
+        const FColorTargetArray& ClassArray = Pair.Value;
+
+        FColorTargetInstanceArray& InstanceArray = ColorTargets.FindOrAdd(ModeKey);
+        InstanceArray.Instances.Empty();
+
+        for (TSubclassOf<UObject> TargetClass : ClassArray.Targets)
         {
-            if (UColorControllerComponent* Controller = Pawn->FindComponentByClass<UColorControllerComponent>())
+            if (TargetClass)
             {
-                // バインド（ApplyColor の引数は FLinearColor である必要がある）
-                Controller->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
+                UObject* NewObj = NewObject<UObject>(this, TargetClass);
+                if (NewObj && NewObj->GetClass()->ImplementsInterface(UColorFilterInterface::StaticClass()))
+                {
+                    TScriptInterface<IColorFilterInterface> InterfaceObj;
+                    InterfaceObj.SetObject(NewObj);
+                    InterfaceObj.SetInterface(Cast<IColorFilterInterface>(NewObj));
+                    InstanceArray.Instances.Add(InterfaceObj);
+                }
             }
+        }
+    }
+
+    // ActiveLayerTargetの初期化
+    ActiveLayerTarget = nullptr;
+    if (ActiveLayerTargetClass)
+    {
+        UObject* NewObj = NewObject<UObject>(this, ActiveLayerTargetClass);
+        if (NewObj && NewObj->GetClass()->ImplementsInterface(UColorFilterInterface::StaticClass()))
+        {
+            ActiveLayerTarget.SetObject(NewObj);
+            ActiveLayerTarget.SetInterface(Cast<IColorFilterInterface>(NewObj));
         }
     }
 }
@@ -35,31 +60,30 @@ void UColorManager::ApplyColor(FLinearColor NewColor)
 
     case EColorMode::Object:
     case EColorMode::Background:
-        for (TScriptInterface<IColorFilterInterface> Target : ColorTargets.FindRef(Mode))
+        if (FColorTargetInstanceArray* TargetArray = ColorTargets.Find(Mode))
         {
-            if (Target)
+            for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
             {
-                Target->SetColor(NewColor);
+                if (Target)
+                {
+                    Target->SetColor(NewColor);
+                }
             }
         }
         break;
+
+    default:
+        break;
     }
 }
-
 
 void UColorManager::RegisterTarget(EColorMode mode, TScriptInterface<IColorFilterInterface> Target)
 {
     if (!Target) return;
 
-    TArray<TScriptInterface<IColorFilterInterface>>& Targets = ColorTargets.FindOrAdd(mode);
-
-    if (!Targets.Contains(Target))
+    FColorTargetInstanceArray& TargetArray = ColorTargets.FindOrAdd(mode);
+    if (!TargetArray.Instances.Contains(Target))
     {
-        Targets.Add(Target);
+        TargetArray.Instances.Add(Target);
     }
-}
-
-void UColorManager::SetMode(EColorMode nextMode)
-{
-    Mode = nextMode;
 }

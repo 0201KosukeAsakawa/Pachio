@@ -11,21 +11,21 @@ UColorControllerComponent::UColorControllerComponent()
 
 void UColorControllerComponent::AdjustColor(EColorChannel Channel, float Delta)
 {
-    switch (Channel)
+    //if (Channel == EColorChannel::Hue) // 色相を変更
     {
-    case EColorChannel::R:
-        CurrentColor.R = FMath::Clamp(CurrentColor.R + Delta, 0.f, 1.f);
-        break;
-    case EColorChannel::G:
-        CurrentColor.G = FMath::Clamp(CurrentColor.G + Delta, 0.f, 1.f);
-        break;
-    case EColorChannel::B:
-        CurrentColor.B = FMath::Clamp(CurrentColor.B + Delta, 0.f, 1.f);
-        break;
+        // 色相を変更
+        float Hue = CurrentColor.R; // 現在の色相（CurrentColor.Rは色相として使われていると仮定）
+
+        // 色相を変更
+        Hue += Delta; // Deltaで色相を変更
+        if (Hue > 1.f) Hue -= 1.f; // 1を超えたら0に戻す（色相環を一周させる）
+        if (Hue < 0.f) Hue += 1.f; // 0未満にならないように調整
+
+        // 新しい色相を設定（HSV→RGB変換）
+        CurrentColor = FLinearColor::MakeFromHSV8(Hue * 360.0f, CurrentColor.G, CurrentColor.B); // Deltaで調整した色相を反映
+
+        // 色を変更した後、デリゲートを呼び出す
+        OnColorChanged.Broadcast(CurrentColor);
     }
-
-    // デリゲートを呼んで通知
-    OnColorChanged.Broadcast(CurrentColor);
 }
-
 

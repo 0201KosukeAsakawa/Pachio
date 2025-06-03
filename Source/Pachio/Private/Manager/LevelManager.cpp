@@ -73,7 +73,7 @@ void ALevelManager::InitializeComponents()
 
 
 		ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
-		ColorManager->Init();
+		ColorManager->InitializeTargets();
 	
 
 	// 1秒ごとに CountUp 関数を呼ぶ
