@@ -23,6 +23,7 @@ class UBoxComponent;
 class UInputAction;
 class UPhysicsCalculator;
 class UMoveComponent;
+class UColorControllerComponent;
 class IMoveLogic;
 
 struct FInputActionValue;
@@ -78,6 +79,9 @@ private:
 	// ダッシュ（特殊アクション）開始・終了
 	void Action(const FInputActionValue& Value);
 	void StopAction();
+
+	void DecreaseColor();
+	void IncreaseColor();
 
 	// ==== 攻撃コリジョン ====
 
@@ -189,6 +193,15 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IncreaseColorAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* DecreaseColorAction;
+
 	UPROPERTY()
 	UPhysicsCalculator* physics;
+
+	UPROPERTY()
+	UColorControllerComponent* colorController;
 };

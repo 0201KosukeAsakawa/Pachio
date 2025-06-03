@@ -5,6 +5,10 @@
 #include "Components/ColorControllerComponent.h"
 #include "Interface/ColorFilterInterface.h"
 #include "UObject/UObjectGlobals.h" 
+#include "Kismet/GameplayStatics.h"
+#include "Manager/LevelManager.h"
+#include "UI/UIManager.h"
+#include "Blueprint/UserWidget.h"
 
 void UColorManager::InitializeTargets()
 {
@@ -36,15 +40,24 @@ void UColorManager::InitializeTargets()
 
     // ActiveLayerTargetÇÃèâä˙âª
     ActiveLayerTarget = nullptr;
-    if (ActiveLayerTargetClass)
+
+    APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+    if (PlayerPawn)
     {
-        UObject* NewObj = NewObject<UObject>(this, ActiveLayerTargetClass);
-        if (NewObj && NewObj->GetClass()->ImplementsInterface(UColorFilterInterface::StaticClass()))
+        UColorControllerComponent* ColorController = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
+        if (ColorController)
         {
-            ActiveLayerTarget.SetObject(NewObj);
-            ActiveLayerTarget.SetInterface(Cast<IColorFilterInterface>(NewObj));
+            ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
         }
     }
+
+
+    ALevelManager* al = ALevelManager::GetInstance(GetWorld());
+    UUserWidget* widget = al->GetUIManager()->GetWidget(EWidgetCategory::Lens, "ColorLensWidget");
+    if (!widget || !widget->GetClass()->ImplementsInterface(UColorFilterInterface::StaticClass()))
+        return;
+    ActiveLayerTarget.SetObject(widget);
+    ActiveLayerTarget.SetInterface(Cast<IColorFilterInterface>(widget));
 }
 
 void UColorManager::ApplyColor(FLinearColor NewColor)

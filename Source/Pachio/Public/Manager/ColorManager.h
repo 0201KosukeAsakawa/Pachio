@@ -47,9 +47,6 @@ public:
     UPROPERTY(EditAnywhere)
     TMap<EColorMode, FColorTargetArray> ColorTargetsClass;
 
-    UPROPERTY(EditAnywhere)
-    TSubclassOf<UObject> ActiveLayerTargetClass;
-
     // 実行時に生成されたインスタンス群
     UPROPERTY()
     TMap<EColorMode, FColorTargetInstanceArray> ColorTargets;
@@ -66,6 +63,7 @@ public:
     void InitializeTargets();
 
     // 色を適用する関数
+    UFUNCTION()
     void ApplyColor(FLinearColor NewColor);
 
     // ターゲットを追加登録する関数（必要に応じて）

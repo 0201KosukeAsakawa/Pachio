@@ -103,6 +103,21 @@ bool UUIManager::IsWidgetVisible(EWidgetCategory CategoryName , FName WidgetName
     return true;
 }
 
+UUserWidget* UUIManager::GetWidget(EWidgetCategory CategoryName, FName WidgetName) 
+{
+    // 指定カテゴリが存在しない場合は無視
+    if (!WidgetDataMap.Contains(CategoryName))
+        return nullptr;
+
+     FWidgetData& Group = WidgetDataMap[CategoryName];
+     UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName);
+    // 指定名のウィジェットを検索し、ビューポートに表示
+    if (!FoundWidget)
+        return nullptr;
+    
+    return *FoundWidget;
+}
+
 void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
 {
     // ウィジェットが存在していればビューポートから削除し、ポインタもリセット

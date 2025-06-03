@@ -60,6 +60,9 @@ public:
     UFUNCTION(BlueprintCallable)
     bool IsWidgetVisible(EWidgetCategory CategoryName, FName WidgetName) const;
 
+    UFUNCTION(BlueprintCallable)
+    UUserWidget* GetWidget(EWidgetCategory CategoryName, FName WidgetName);
+
 private:
     /** 全てのカテゴリに対してウィジェットを初期化 */
     void InitAllWidgets();

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Components/ColorControllerComponent.h"
@@ -6,26 +6,44 @@
 // Sets default values for this component's properties
 UColorControllerComponent::UColorControllerComponent()
 {
+    PrimaryComponentTick.bCanEverTick = true;
+}
 
+void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+    float decreaseSpeed = 0.1f;
+    AdjustColor(EColorChannel::R, -decreaseSpeed * DeltaTime);
 }
 
 void UColorControllerComponent::AdjustColor(EColorChannel Channel, float Delta)
 {
-    //if (Channel == EColorChannel::Hue) // F‘Š‚ğ•ÏX
-    {
-        // F‘Š‚ğ•ÏX
-        float Hue = CurrentColor.R; // Œ»İ‚ÌF‘ŠiCurrentColor.R‚ÍF‘Š‚Æ‚µ‚Äg‚í‚ê‚Ä‚¢‚é‚Æ‰¼’èj
+    // RGB â†’ HSV ã«å¤‰æ›
+    FLinearColor HSV = CurrentColor.LinearRGBToHSV();    
+    
+    float Hue = HSV.R;  // 0ã€œ360
+    float Saturation = HSV.G;
+    float Value = HSV.B;
 
-        // F‘Š‚ğ•ÏX
-        Hue += Delta; // Delta‚ÅF‘Š‚ğ•ÏX
-        if (Hue > 1.f) Hue -= 1.f; // 1‚ğ’´‚¦‚½‚ç0‚É–ß‚·iF‘ŠŠÂ‚ğˆêü‚³‚¹‚éj
-        if (Hue < 0.f) Hue += 1.f; // 0–¢–‚É‚È‚ç‚È‚¢‚æ‚¤‚É’²®
+    // Hue ã‚’èª¿æ•´
+    Hue += Delta * 360.0f;
 
-        // V‚µ‚¢F‘Š‚ğİ’èiHSV¨RGB•ÏŠ·j
-        CurrentColor = FLinearColor::MakeFromHSV8(Hue * 360.0f, CurrentColor.G, CurrentColor.B); // Delta‚Å’²®‚µ‚½F‘Š‚ğ”½‰f
+    if (Hue > 360.f) 
+        Hue -= 360.f;
+    if (Hue < 0.f) 
+        Hue += 360.f;
 
-        // F‚ğ•ÏX‚µ‚½ŒãAƒfƒŠƒQ[ƒg‚ğŒÄ‚Ño‚·
-        OnColorChanged.Broadcast(CurrentColor);
-    }
+    // HSV â†’ RGB ã«å¤‰æ›
+    FLinearColor NewColor = FLinearColor(Hue, Saturation, Value).HSVToLinearRGB();
+    CurrentColor.R = NewColor.R;
+    CurrentColor.G = NewColor.G;
+    CurrentColor.B = NewColor.B;
+
+    HSV = CurrentColor.LinearRGBToHSV();
+    UE_LOG(LogTemp, Log, TEXT("Begin Color changed:RGB: R=%.3f G=%.3f B=%.3f"), CurrentColor.R, CurrentColor.G, CurrentColor.B);
+    UE_LOG(LogTemp, Log, TEXT("End Color changed:RGB: R=%.3f G=%.3f B=%.3f"), NewColor.R, NewColor.G, NewColor.B);
+
+    // ãƒ‡ãƒªã‚²ãƒ¼ãƒˆã‚’é€šçŸ¥
+    OnColorChanged.Broadcast(CurrentColor);
 }
+
 

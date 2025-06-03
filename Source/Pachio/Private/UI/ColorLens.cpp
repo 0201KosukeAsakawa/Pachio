@@ -14,7 +14,7 @@ void UColorLens::NativeConstruct()
     ALevelManager* Owner = ALevelManager::GetInstance(GetWorld());
     if (!Owner) return;
 
-    UColorManager* ColorManager = Owner->FindComponentByClass<UColorManager>();
+    UColorManager* ColorManager = Owner->GetColorManager();
     if (ColorManager)
     {
         ColorManager->RegisterTarget(EColorMode::Background, this);  // —á‚¦‚Î”wŒiF•ÏXƒ‚[ƒh‚É“o˜^

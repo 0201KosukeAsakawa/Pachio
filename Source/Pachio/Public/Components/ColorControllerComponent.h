@@ -24,6 +24,8 @@ class PACHIO_API UColorControllerComponent : public UActorComponent
 public:
     UColorControllerComponent();
 
+    void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
     UPROPERTY(BlueprintAssignable)
     FOnColorChanged OnColorChanged;
 
@@ -34,5 +36,5 @@ public:
     FLinearColor GetCurrentColor() const { return CurrentColor; }
 
 private:
-    FLinearColor CurrentColor = FLinearColor::White;
+    FLinearColor CurrentColor = FLinearColor::Blue;
 };

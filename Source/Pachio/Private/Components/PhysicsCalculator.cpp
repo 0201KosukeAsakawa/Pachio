@@ -50,7 +50,6 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			bIsPhysicsEnabled = true;
 			Velocity = FVector::ZeroVector; // 着地したので速度リセット
 		}
-		UE_LOG(LogTemp, Warning, TEXT("ForceValue: %f"), ForceScale);
 		PreviousPosition = currentPosition;
 
 		temp = GetOwner()->GetVelocity();
