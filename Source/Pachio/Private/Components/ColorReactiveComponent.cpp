@@ -13,16 +13,23 @@ UColorReactiveComponent::UColorReactiveComponent()
 	// ...
 }
 
+void UColorReactiveComponent::a(const FLinearColor& FilterColor)
+{
+	if (!IsColorMatch(FilterColor))
+		return;
+
+	OnColorMatched();
+}
+
 bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const
 {
-	{
-		return FMath::Abs(Color.R - FilterColor.R) <= Tolerance &&
-			FMath::Abs(Color.G - FilterColor.G) <= Tolerance &&
-			FMath::Abs(Color.B - FilterColor.B) <= Tolerance;
-	}
+	return FMath::Abs(Color.R - FilterColor.R) <= Tolerance &&
+		FMath::Abs(Color.G - FilterColor.G) <= Tolerance &&
+		FMath::Abs(Color.B - FilterColor.B) <= Tolerance;
 }
 
 void UColorReactiveComponent::OnColorMatched()
 {
 }
+
 

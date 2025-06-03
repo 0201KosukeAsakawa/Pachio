@@ -15,7 +15,9 @@ public:
 	// Sets default values for this component's properties
 	UColorReactiveComponent();
 		
-public:
+public :
+	void a(const FLinearColor& FilterColor);
+private:
 	UFUNCTION(BlueprintCallable)
     // フィルター色と一致するか
 	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.05f) const;
@@ -27,4 +29,6 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
+
+	bool bColorMatch = false;
 };
