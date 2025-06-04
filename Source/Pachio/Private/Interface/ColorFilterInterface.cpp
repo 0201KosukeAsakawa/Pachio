@@ -5,6 +5,6 @@
 
 // Add default functionality here for any IColorFilterInterface functions that are not pure virtual.
 
-void IColorFilterInterface::SetColor(FLinearColor)
+void IColorFilterInterface::ColorAction(FLinearColor)
 {
 }

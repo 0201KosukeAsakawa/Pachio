@@ -1,42 +1,47 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "UI/ColorLens.h"
 #include "Manager/ColorManager.h"
 #include "Components/Image.h"
 #include "Manager/LevelManager.h"
 
+// UColorLens の初期化処理
 void UColorLens::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    // Owner ��T���� ColorManager ���擾�i�������̓Q�[���S�̂̃V���O���g������擾�ł��j
+    // レベルマネージャのインスタンスを取得
+    // GetWorld() から現在のワールドコンテキストを取得し、
+    // シングルトン的に管理されている ALevelManager のインスタンスを取得する
     ALevelManager* Owner = ALevelManager::GetInstance(GetWorld());
-    if (!Owner) return;
+    if (!Owner)
+        return; // Ownerが取得できなければ初期化終了
 
+    // Owner から ColorManager を取得
     UColorManager* ColorManager = Owner->GetColorManager();
     if (ColorManager)
     {
-        ColorManager->RegisterTarget(EColorMode::Background, this);  // �Ⴆ�Δw�i�F�ύX���[�h�ɓo�^
+        // ColorManager に対して、背景色変更の対象としてこのクラスを登録
+        // 登録することで色変更イベントを受け取るようになる
+        ColorManager->RegisterTarget(EColorMode::Background, this);
     }
 }
 
-
-void UColorLens::SetColor(FLinearColor NewColor)
+// 新しい色を受け取ってフィルターの色を更新する処理
+void UColorLens::ColorAction(FLinearColor NewColor)
 {
     if (!FilterColorImage)
-        return;
+        return; // Image コンポーネントが設定されていなければ処理しない
 
-    // ���݂̐F���擾
+    // 現在のフィルター画像の色を取得
     FLinearColor CurrentColor = FilterColorImage->ColorAndOpacity;
 
-    // RGB �͐V�����F�ɍX�V���AAlpha �͊����l���ێ�
+    // 新しい色の RGB 成分を使い、Alpha（透明度）は現状のまま維持する
     FLinearColor CombinedColor = FLinearColor(
         NewColor.R,
         NewColor.G,
         NewColor.B,
-        CurrentColor.A // Alpha�������̂܂�
+        CurrentColor.A // 透明度は維持
     );
 
+    // フィルター画像の色と透明度を更新
     FilterColorImage->SetColorAndOpacity(CombinedColor);
 }

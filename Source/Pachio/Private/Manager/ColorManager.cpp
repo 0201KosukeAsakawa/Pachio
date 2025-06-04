@@ -83,21 +83,24 @@ void UColorManager::ApplyColor(FLinearColor NewColor)
     case EColorMode::Object:
     case EColorMode::Background:
     {
-        if (FColorTargetInstanceArray* TargetArray = ColorTargets.Find(Mode))
-        {
-            for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
-            {
-                if (Target)
-                {
-                    Target->SetColor(NewColor);
-                }
-            }
-        }
+    
         break;
     }
     default:
         break;
     }
+    if (FColorTargetInstanceArray* TargetArray = ColorTargets.Find(EColorMode::Object))
+    {
+        for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
+        {
+            if (Target)
+            {
+                //ここでよぶ
+                Target->ColorAction(NewColor);
+            }
+        }
+    }
+    CurrentColor = NewColor;
 }
 
 

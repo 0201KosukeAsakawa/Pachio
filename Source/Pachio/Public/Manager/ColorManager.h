@@ -8,70 +8,78 @@
 
 class IColorFilterInterface;
 
-// �F���[�h�񋓑�
+// 色付けモードの列挙型
 UENUM(BlueprintType)
 enum class EColorMode : uint8
 {
-    Layer      UMETA(DisplayName = "Layer"),
-    Object     UMETA(DisplayName = "Object"),
-    Background UMETA(DisplayName = "Background")
+    Layer      UMETA(DisplayName = "Layer"),      // レイヤー単位で色付け
+    Object     UMETA(DisplayName = "Object"),     // オブジェクト単位で色付け
+    Background UMETA(DisplayName = "Background")  // 背景に対して色付け
 };
 
-// �u���[�v�����g�N���X��ێ�����\���́i�G�f�B�^�ݒ�p�j
+// 色付け対象のクラス群を格納する構造体（編集可能）
 USTRUCT(BlueprintType)
 struct FColorTargetArray
 {
     GENERATED_BODY()
 
+    // 色付け対象のクラス配列
     UPROPERTY(EditAnywhere)
     TArray<TSubclassOf<UObject>> Targets;
 };
 
-// ���s���C���X�^���X��ێ�����\����
+// 実体の色付け対象インスタンス群を格納する構造体
 USTRUCT()
 struct FColorTargetInstanceArray
 {
     GENERATED_BODY()
 
+    // 色付け対象インターフェースを持つインスタンス配列
     TArray<TScriptInterface<IColorFilterInterface>> Instances;
 };
 
-// UColorManager�N���X�{��
+// 色管理を行うマネージャークラス
 UCLASS(Blueprintable)
 class UColorManager : public UObject
 {
     GENERATED_BODY()
 
-private:
-    // �G�f�B�^�Őݒ肷��u���[�v�����g�N���X�Q
-    UPROPERTY(EditAnywhere)
-    TMap<EColorMode, FColorTargetArray> ColorTargetsClass;
-
-    // ���s���ɐ������ꂽ�C���X�^���X�Q
-    UPROPERTY()
-    TMap<EColorMode, FColorTargetInstanceArray> ColorTargets;
-
-    UPROPERTY()
-    TScriptInterface<IColorFilterInterface> ActiveLayerTarget;
-
-    // ���݂̃��[�h
-    UPROPERTY(EditAnywhere)
-    EColorMode Mode;
-
-    UPROPERTY(EditAnywhere)
-    UMaterialInterface* PostProcessMaterial;
-
-    UPROPERTY()
-    UMaterialInstanceDynamic* PostProcessMID;
-
 public:
-    // �������֐��i�u���[�v�����g�N���X����C���X�^���X�𐶐��j
+    // 色付け対象の初期化処理（クラスからインスタンス化など）
     void InitializeTargets();
 
-    // �F��K�p����֐�
+    // 新しい色を適用する関数
     UFUNCTION()
     void ApplyColor(FLinearColor NewColor);
 
-    // �^�[�Q�b�g��ǉ��o�^����֐��i�K�v�ɉ����āj
+    // 色付け対象を登録する関数
     void RegisterTarget(EColorMode Mode, TScriptInterface<IColorFilterInterface> Target);
+
+private:
+    // 色付け対象クラスのマップ（モードごとに保持、エディタで編集可能）
+    UPROPERTY(EditAnywhere)
+    TMap<EColorMode, FColorTargetArray> ColorTargetsClass;
+
+    // 色付け対象インスタンスのマップ（モードごとに保持）
+    UPROPERTY()
+    TMap<EColorMode, FColorTargetInstanceArray> ColorTargets;
+
+    // 現在アクティブなレイヤーの色付け対象インスタンス
+    UPROPERTY()
+    TScriptInterface<IColorFilterInterface> ActiveLayerTarget;
+
+    // 現在の色付けモード（エディタで編集可能）
+    UPROPERTY(EditAnywhere)
+    EColorMode Mode;
+
+    // ポストプロセスマテリアル（エディタで設定可能）
+    UPROPERTY(EditAnywhere)
+    UMaterialInterface* PostProcessMaterial;
+
+    // ポストプロセスマテリアルの動的インスタンス
+    UPROPERTY()
+    UMaterialInstanceDynamic* PostProcessMID;
+
+    // 現在適用中の色
+    FLinearColor CurrentColor;
 };

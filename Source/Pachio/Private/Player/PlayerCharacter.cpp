@@ -247,7 +247,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAction);
 
 		EnhancedInputComponent->BindAction(IncreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::DecreaseColor);
-		EnhancedInputComponent->BindAction(DecreaseColorAction, ETriggerEvent::Completed, this, &APlayerCharacter::IncreaseColor);
+		EnhancedInputComponent->BindAction(DecreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::IncreaseColor);
 	}
 }
 

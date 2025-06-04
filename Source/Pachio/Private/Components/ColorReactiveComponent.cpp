@@ -6,19 +6,31 @@
 // Sets default values for this component's properties
 UColorReactiveComponent::UColorReactiveComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
 }
 
-void UColorReactiveComponent::a(const FLinearColor& FilterColor)
+void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor)
 {
-	if (!IsColorMatch(FilterColor))
-		return;
+	Color = FilterColor;
+}
 
-	OnColorMatched();
+void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
+{
+    // 色のマッチング判定は保持しておきつつ
+
+    bool bMatch = IsColorMatch(FilterColor);
+
+    // 透明度・表示の更新は常に行う（色の近さに応じて）
+    //UpdateAppearanceByColorDistance(FilterColor);
+
+    if (bMatch)
+    {
+        OnColorMatched(FilterColor);
+    }
+    else
+    {
+        OnColorMismatched(FilterColor);
+    }
 }
 
 bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const
@@ -28,7 +40,15 @@ bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, cons
 		FMath::Abs(Color.B - FilterColor.B) <= Tolerance;
 }
 
-void UColorReactiveComponent::OnColorMatched()
+void UColorReactiveComponent::OnColorMatched(const FLinearColor& FilterColor)
+{
+}
+
+void UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
+{
+}
+
+void UColorReactiveComponent::UpdateAppearanceByColorDistance(const FLinearColor& FilterColor)
 {
 }
 
