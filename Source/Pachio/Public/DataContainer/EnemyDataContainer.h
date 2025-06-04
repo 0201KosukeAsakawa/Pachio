@@ -28,7 +28,7 @@ public:
 
     UEnemyStateComponent* CreateState(UObject*, EEnemyCategory) const;
     UMaterialInterface* CreateMaterial(UObject* WorldContext, EEnemyCategory StateName ,const FString = "Default");
-    bool GenerateEnemy(EEnemyCategory stateID, FString dropItemID, FString materialID, FVector location, FVector scale, FRotator rotator);
+    bool GenerateEnemy(EEnemyCategory stateID, FString dropItemID, EEnemyCategory materialID, FVector location, FVector scale, FRotator rotator);
 
 
 private:

@@ -13,7 +13,7 @@
 #include "Logic/Movement/EnemyMoveLogic.h"
 
 // コーパキャラクターが「生存」状態に入る時の処理
-bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, const FString materialID)
+bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, const EEnemyCategory materialID)
 {
     // オーナー、レベル、ロジックコンポーネントが無効な場合は処理を終了
     if (!owner || !currentLevel || !LogicComponet)
@@ -36,7 +36,7 @@ bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEn
         return false;
     Attack->SetAttackData(EAttackType::Enemy, EBreakLevel::Unbreakable);
     // キャラクターの移動コンポーネント初期化
-    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this),10.0f,FVector(0,-1,0));
+    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this),100.0f,FVector(0,-1,0));
     //MoveComp->SetSpeed(10.0f); // 移動速度設定
 
     // 物理計算コンポーネントを初期化（重力などの適用）
@@ -50,9 +50,9 @@ bool UKoopaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEn
     owner->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     // 新しいマテリアルを作成して設定
-    UMaterialInterface* newMaterial = ALevelManager::GetInstance(currentLevel)->GetEnemyContainer()->CreateMaterial(currentLevel, materialID);
-    if (!newMaterial)
-        return false;
+    UMaterialInterface* newMaterial = ALevelManager::GetInstance(currentLevel)->GetEnemyContainer()->CreateMaterial(currentLevel, EEnemyCategory::Koopa /*"Koopa"*/ , "Default");
+	if (!newMaterial)
+		return false;
 
     owner->GetMesh()->SetMaterial(0, newMaterial); // メッシュに新しいマテリアルを設定
 

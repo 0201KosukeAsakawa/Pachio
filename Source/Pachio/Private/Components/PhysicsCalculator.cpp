@@ -43,14 +43,13 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		FVector currentPosition = GetOwner()->GetActorLocation();
 		float distanceZ = currentPosition.Z - PreviousPosition.Z;
 
-		if (distanceZ < 0 && OnGround(currentPosition))
+		if (distanceZ < 0 && OnGround())
 		{
 			ForceDirection.Z = 0;
 			ForceScale = 0;
 			bIsPhysicsEnabled = true;
 			Velocity = FVector::ZeroVector; // 着地したので速度リセット
 		}
-		UE_LOG(LogTemp, Warning, TEXT("ForceValue: %f"), ForceScale);
 		PreviousPosition = currentPosition;
 
 		temp = GetOwner()->GetVelocity();
@@ -88,7 +87,7 @@ void UPhysicsCalculator::ResetForce()
 // 重力をオブジェクトに加える
 void UPhysicsCalculator::AddGravity(const float gravityScale)
 {
-	if (OnGround(GetOwner()->GetActorLocation()))
+	if (OnGround())
 	{
 		Timer = 0;
 		return;
@@ -98,7 +97,7 @@ void UPhysicsCalculator::AddGravity(const float gravityScale)
 	GetOwner()->AddActorLocalOffset(FVector(0, 0, -gravityScale) * Timer, true);
 }
 
-bool UPhysicsCalculator::OnGround(const FVector Start) const
+bool UPhysicsCalculator::OnGround() const
 {
 	AActor* Owner = GetOwner();
 	if (!Owner) return false;

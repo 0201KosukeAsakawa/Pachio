@@ -10,6 +10,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/AttackManagerComponent.h"
 #include "Components/MoveComponent.h"
+#include "Components/ColorControllerComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -19,6 +20,7 @@
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/State/PlayerDefaultState.h"
+#include "Player/State/PlayerFireState.h"
 #include "Player/State/StateManager.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 
@@ -41,6 +43,10 @@ APlayerCharacter::APlayerCharacter()
 	SpringArm->SocketOffset = FVector(0.0f, 100.0f, 50.0f);
 	SpringArm->bUsePawnControlRotation = false; // プレイヤー回転と連動しない
 
+	MoveComp = CreateDefaultSubobject<UMoveComponent>(TEXT("MoveComponent"));
+	AttackManager = CreateDefaultSubobject<UAttackManagerComponent>(TEXT("AttackManager"));
+	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
+	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 }
 
 // ゲーム開始時に呼ばれる関数
@@ -48,19 +54,19 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	MoveComp =  NewObject<UMoveComponent>(this);
+	
 	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
 	MoveComp->Init(this,PlayerLogic);
 
+	// 初期位置を保存
+	PreviousLocation = GetActorLocation();
 
 
 	bIsDashing = false; // 初期状態ではダッシュしていない
 
 		// 攻撃コンポーネントの生成
-	AttackManager = NewObject<UAttackManagerComponent>(this);
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
 
-	physics = NewObject<UPhysicsCalculator>(this);
 	physics->RegisterComponent();            // Tick対象になる
 
 	if (!AttackManager || !StateManagerClass)
@@ -176,18 +182,30 @@ void APlayerCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	// 空中ならば攻撃判定を有効にする
-	if (GetCharacterMovement()->IsFalling())
-	{
-		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
-	// 空中でなければ攻撃判定を無効にする
-	if (!GetCharacterMovement()->IsFalling())
+	// 地上ならば攻撃判定を無効にする
+	if (physics->OnGround())
 	{
 		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+	// 空中ならば攻撃判定を有効にする
+	else
+	{
+		// UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+
+	if (GetActorLocation().Z < PreviousLocation.Z)
+	{
+		// 前のフレームよりも下に移動したときの処理
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	else
+	{
+		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	// 現在の位置を保存
+	PreviousLocation.Z = GetActorLocation().Z;
 
 	//プレイヤーが無敵時間ならば処理する
 	if (bIsInvincible)
@@ -219,6 +237,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		// ダッシュ（スペシャルアクション）
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAction);
+
+		EnhancedInputComponent->BindAction(IncreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::DecreaseColor);
+		EnhancedInputComponent->BindAction(DecreaseColorAction, ETriggerEvent::Completed, this, &APlayerCharacter::IncreaseColor);
 	}
 }
 
@@ -236,7 +257,6 @@ UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("UPPER!"));
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
@@ -251,7 +271,6 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("Stomp!"));
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
@@ -325,8 +344,7 @@ void APlayerCharacter::Crouch(const FInputActionValue& Value)
 	PowerDownCollisionPosition();
 	
 	//コリジョンのサイズ変更
-	GetCharacterMovement()->Crouch();
-	GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
+	//GetCharacterMovement()->Crouch();
 }
 
 void APlayerCharacter::StandUp()
@@ -336,16 +354,18 @@ void APlayerCharacter::StandUp()
 
 	PowerUpCollisionPosition();
 	//コリジョンのサイズ変更
-	GetCharacterMovement()->Crouch();
-	GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
+	//GetCharacterMovement()->Crouch();
 }
 
 // ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
 	//ジャンプが可能な状態なら
-	if (physics->OnGround(GetActorLocation()))
-		physics->AddForce(GetActorUpVector(), 10);
+	if (!physics->OnGround())
+		return;
+
+		physics->AddForce(GetActorUpVector(), 12);
+		/*UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);*/
 }
 
 // ジャンプ終了処理
@@ -357,6 +377,23 @@ void APlayerCharacter::JumpStop(const FInputActionValue& Value)
 // ダッシュ開始（移動速度上昇）
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
+	if (!bHasUsedSkill)
+	{
+		// StateManagerから現在のステートを取得
+		UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
+		if (CurrentState)
+		{
+			// UPlayerFireState にキャストできれば
+			UPlayerFireState* FireState = Cast<UPlayerFireState>(CurrentState);
+			if (FireState)
+			{
+				// 引数が未使用なので空の値を渡す
+				FInputActionValue DummyValue;
+				FireState->OnSkill(DummyValue);
+				bHasUsedSkill = true;
+			}
+		}
+	}
 	//ダッシュ状態じゃなければ
 	if (!bIsDashing)
 	{
@@ -375,7 +412,24 @@ void APlayerCharacter::StopAction()
 		//プレイヤーの速度を元に戻し、フラグをオフにする
 		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 		bIsDashing = false;
+		bHasUsedSkill = false;
 	}
+}
+
+void APlayerCharacter::DecreaseColor()
+{
+	if (!colorController)
+		return;
+
+	colorController->AdjustColor(EColorChannel::R,0.01);
+}
+
+void APlayerCharacter::IncreaseColor()
+{
+	if (!colorController)
+		return;
+
+	colorController->AdjustColor(EColorChannel::R, -0.0001);
 }
 
 //パワーアップ時にコリジョンの移動処理
@@ -388,6 +442,13 @@ void APlayerCharacter::PowerUpCollisionPosition()
 	//上と下の攻撃判定を拡大調整
 	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 110));
 	StompAttackBox->SetRelativeLocation(FVector(0, 0, -110));
+
+	// 足元を維持するために中心を元に戻す（上へずらす）
+	FVector CapsuleOffset = GetCapsuleComponent()->GetRelativeLocation();
+	CapsuleOffset.Z += 55.0f;
+	GetCapsuleComponent()->SetRelativeLocation(CapsuleOffset);
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
 }
 
 //パワーダウン時にコリジョンの移動処理
@@ -400,6 +461,8 @@ void APlayerCharacter::PowerDownCollisionPosition()
 	//上と下の攻撃判定を縮小調整
 	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 55));
 	StompAttackBox->SetRelativeLocation(FVector(0, 0, -55));
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
 }
 
 void APlayerCharacter::ToggleVisibility()
@@ -446,6 +509,7 @@ void APlayerCharacter::UpdateInvincible(float DeltaTime)
 		}
 	}
 }
+
 
 // 状態の変更（タグ指定）
 bool APlayerCharacter::ChangeState(FString Tag)

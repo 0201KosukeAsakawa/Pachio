@@ -31,7 +31,7 @@ UMaterialInterface* UEnemyDataContainer::CreateMaterial(UObject* WorldContext, E
 }
 
 
-bool UEnemyDataContainer::GenerateEnemy(EEnemyCategory stateID, FString dropItemID, FString materialID, FVector location, FVector scale, FRotator rotator)
+bool UEnemyDataContainer::GenerateEnemy(EEnemyCategory stateID, FString dropItemID, EEnemyCategory materialID, FVector location, FVector scale, FRotator rotator)
 {
     if (!EnemyCharacter) return false;
 

@@ -12,7 +12,7 @@
 #include "Manager/LevelManager.h"
 #include "DataContainer/EnemyDataContainer.h"
 
-bool UKoopaShellState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, const FString materialID)
+bool UKoopaShellState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, const EEnemyCategory materialID)
 {
 	if (!owner || !currentLevel || !LogicComponet)
 		return false;
@@ -28,7 +28,7 @@ bool UKoopaShellState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEn
 
 	owner->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // メッシュのコリジョンを無効にする
 
-	UMaterialInterface* newMaterial = ALevelManager::GetInstance(currentLevel)->GetEnemyContainer()->CreateMaterial(currentLevel, /*materialID*/"Koopa" , "Shell");
+	UMaterialInterface* newMaterial = ALevelManager::GetInstance(currentLevel)->GetEnemyContainer()->CreateMaterial(currentLevel, EEnemyCategory::Koopa /*"Koopa"*/ , "Shell");
 	if (!newMaterial)
 		return false;
 

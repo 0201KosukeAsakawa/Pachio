@@ -23,6 +23,7 @@ class UBoxComponent;
 class UInputAction;
 class UPhysicsCalculator;
 class UMoveComponent;
+class UColorControllerComponent;
 class IMoveLogic;
 
 struct FInputActionValue;
@@ -79,6 +80,9 @@ private:
 	void Action(const FInputActionValue& Value);
 	void StopAction();
 
+	void DecreaseColor();
+	void IncreaseColor();
+
 	// ==== 攻撃コリジョン ====
 
 	// 上攻撃ヒット処理
@@ -117,8 +121,13 @@ private:
 
 	// ==== フラグ・座標 ====
 
+	//初期位置を保存
+	FVector PreviousLocation;
+
 	// ダッシュ中フラグ
-	bool bIsDashing;
+	bool bIsDashing = false;
+	//スキルフラグ
+	bool bHasUsedSkill = false;
 
 	//無敵時間中フラグ
 	bool bIsInvincible = false;
@@ -184,6 +193,15 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SpecialAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* IncreaseColorAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* DecreaseColorAction;
+
 	UPROPERTY()
 	UPhysicsCalculator* physics;
+
+	UPROPERTY()
+	UColorControllerComponent* colorController;
 };
