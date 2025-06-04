@@ -38,7 +38,7 @@ void UColorManager::InitializeTargets()
         }
     }
 
-    // ActiveLayerTarget�̏�����
+    // ActiveLayerTarget�̏�����
     ActiveLayerTarget = nullptr;
 
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
@@ -65,14 +65,16 @@ void UColorManager::ApplyColor(FLinearColor NewColor)
     switch (Mode)
     {
     case EColorMode::Layer:
-        if (ActiveLayerTarget)
-        {
-            ActiveLayerTarget->SetColor(NewColor);
-        }
+    {
+        //if (DynamicPostProcessMaterial)  // UMaterialInstanceDynamic* のメンバ変数として保持している想定
+        //{
+        //    DynamicPostProcessMaterial->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
+        //}
         break;
-
+    }
     case EColorMode::Object:
     case EColorMode::Background:
+    {
         if (FColorTargetInstanceArray* TargetArray = ColorTargets.Find(Mode))
         {
             for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
@@ -84,11 +86,12 @@ void UColorManager::ApplyColor(FLinearColor NewColor)
             }
         }
         break;
-
+    }
     default:
         break;
     }
 }
+
 
 void UColorManager::RegisterTarget(EColorMode mode, TScriptInterface<IColorFilterInterface> Target)
 {

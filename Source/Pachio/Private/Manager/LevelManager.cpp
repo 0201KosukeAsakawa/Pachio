@@ -45,7 +45,7 @@ void ALevelManager::InitializeComponents()
 
 	if (UIManager)
 	{
-		UIManager->Init();
+		UIManager->Init(this);
 		UIManager->ShowWidget(EWidgetCategory::Score, "Score");
 	}
 

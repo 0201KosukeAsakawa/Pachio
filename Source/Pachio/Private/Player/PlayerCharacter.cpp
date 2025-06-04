@@ -54,9 +54,9 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+
 	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
-	MoveComp->Init(this,PlayerLogic);
+	MoveComp->Init(this, PlayerLogic);
 
 	// 初期位置を保存
 	PreviousLocation = GetActorLocation();
@@ -64,7 +64,7 @@ void APlayerCharacter::BeginPlay()
 
 	bIsDashing = false; // 初期状態ではダッシュしていない
 
-		// 攻撃コンポーネントの生成
+	// 攻撃コンポーネントの生成
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
 
 	physics->RegisterComponent();            // Tick対象になる
@@ -133,6 +133,14 @@ void APlayerCharacter::BeginPlay()
 	GetCharacterMovement()->GroundFriction = 8.0f; // 地面との摩擦を強化
 	// 重力スケールを強化（より素早い落下）
 	GetCharacterMovement()->GravityScale = 0.0f;
+
+	UStaticMeshComponent* pMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, "StaticMesh");
+	// プレイヤーメッシュにCustom Depthを有効化
+	if (pMesh)
+	{
+		pMesh->SetRenderCustomDepth(true);
+		pMesh->SetCustomDepthStencilValue(10);
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -421,7 +429,7 @@ void APlayerCharacter::DecreaseColor()
 	if (!colorController)
 		return;
 
-	colorController->AdjustColor(EColorChannel::R,0.01);
+	colorController->AdjustColor(EColorChannel::R,0.001);
 }
 
 void APlayerCharacter::IncreaseColor()
@@ -429,7 +437,7 @@ void APlayerCharacter::IncreaseColor()
 	if (!colorController)
 		return;
 
-	colorController->AdjustColor(EColorChannel::R, -0.0001);
+	colorController->AdjustColor(EColorChannel::R, -0.001);
 }
 
 //パワーアップ時にコリジョンの移動処理

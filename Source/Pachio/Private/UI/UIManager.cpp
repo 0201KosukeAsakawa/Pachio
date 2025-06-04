@@ -1,14 +1,17 @@
 #include "UI/UIManager.h"
 #include "UI/ColorLens.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/Character.h"
 #include "Components/ColorControllerComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Blueprint/UserWidget.h"
 
-void UUIManager::Init()
+void UUIManager::Init(const AActor*)
 {
-    // ウィジェットの初期化（すべてのカテゴリに対して）
+    // すべてのカテゴリのウィジェットを初期化
     InitAllWidgets();
-    ShowWidget(EWidgetCategory::Lens, "ColorLensWidget");
 }
+
 
 void UUIManager::InitAllWidgets()
 {
