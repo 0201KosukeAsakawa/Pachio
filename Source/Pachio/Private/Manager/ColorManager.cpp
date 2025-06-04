@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
+#include "Engine/PostProcessVolume.h"
 #include "Blueprint/UserWidget.h"
 
 void UColorManager::InitializeTargets()
@@ -51,13 +52,20 @@ void UColorManager::InitializeTargets()
         }
     }
 
+    // APostProcessVolume を自動取得
+    TArray<AActor*> FoundVolumes;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), APostProcessVolume::StaticClass(), FoundVolumes);
 
-    ALevelManager* al = ALevelManager::GetInstance(GetWorld());
-    UUserWidget* widget = al->GetUIManager()->GetWidget(EWidgetCategory::Lens, "ColorLensWidget");
-    if (!widget || !widget->GetClass()->ImplementsInterface(UColorFilterInterface::StaticClass()))
-        return;
-    ActiveLayerTarget.SetObject(widget);
-    ActiveLayerTarget.SetInterface(Cast<IColorFilterInterface>(widget));
+    if (FoundVolumes.Num() > 0)
+    {
+        APostProcessVolume* PostProcessVolume = Cast<APostProcessVolume>(FoundVolumes[0]);
+
+        if (PostProcessVolume && PostProcessMaterial)
+        {
+            PostProcessMID = UMaterialInstanceDynamic::Create(PostProcessMaterial, this);
+            PostProcessVolume->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, PostProcessMID));
+        }
+    }
 }
 
 void UColorManager::ApplyColor(FLinearColor NewColor)
@@ -66,10 +74,10 @@ void UColorManager::ApplyColor(FLinearColor NewColor)
     {
     case EColorMode::Layer:
     {
-        //if (DynamicPostProcessMaterial)  // UMaterialInstanceDynamic* のメンバ変数として保持している想定
-        //{
-        //    DynamicPostProcessMaterial->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
-        //}
+        if (PostProcessMID)
+        {
+            PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
+        }
         break;
     }
     case EColorMode::Object:
