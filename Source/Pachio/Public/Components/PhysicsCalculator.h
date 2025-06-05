@@ -25,11 +25,14 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// オブジェクトに力を加える
+	UFUNCTION(BlueprintCallable)
 	void AddForce(FVector Direction, float Force, const bool bSweep = true);
 
+	UFUNCTION(BlueprintCallable)
 	void ResetForce();
 
 	// オブジェクトに重力を加える
+	UFUNCTION(BlueprintCallable)
 	void AddGravity(const float gravityScalse = 9.8f);
 
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
