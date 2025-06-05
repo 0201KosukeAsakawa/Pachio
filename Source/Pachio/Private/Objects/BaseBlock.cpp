@@ -1,14 +1,16 @@
 #include "Objects/BaseBlock.h"
+#include "Components/BoxComponent.h"
 #include "Components/BlockState.h"
 #include "FunctionLibrary.h"
-#include "Components/BoxComponent.h"
+#include "Manager/LevelManager.h"
 #include "DataContainer/BlockDataContainer.h"
 
 // Sets default values
 ABaseBlock::ABaseBlock()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // このアクターが毎フレームTickを呼び出すように設定
+    // 必要ない場合はオフにしてパフォーマンスを向上させることができる
+    PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
@@ -16,85 +18,67 @@ void ABaseBlock::BeginPlay()
 {
     Super::BeginPlay();
 
-    Init(StateID, DropItemName);
+    // StateIDとDropItemIDを使って初期化
+    Init(StateID, DropItemID);
 }
 
+// 初期化関数
 void ABaseBlock::Init(FString stateID, FString dorpItemID, FString materialID)
 {
     StateID = stateID;
-    DropItemName = dorpItemID;
+    DropItemID = dorpItemID;
 
-    if(materialID == "None")
-        
 
-    // �R���e�i�̏�����
-    if (!Container)
-    {
-        Container = NewObject<UBlockDataContainer>(this, ContainerClass);
-        if (Container)
-        {
-            CurrentState = Container->CreateState(GetWorld(), StateID);
-        }
-    }
 
-    // �X�e�[�g�̏�����
+    // Containerが有効な場合、現在の状態を設定
+
+
+    CurrentState = ALevelManager::GetInstance(GetWorld())->GetBlockContainer()->CreateState(GetWorld(), StateID);
+
+
+    // 現在の状態が設定されている場合、状態に応じてOnEnter処理を実行
     if (CurrentState)
     {
         if (materialID == "None")
-            CurrentState->OnEnter(this, GetWorld(), Container);
+            CurrentState->OnEnter(this, GetWorld());
         else
-            CurrentState->OnEnter(this, GetWorld(), Container, materialID);
-    }
-
-    // Collision �R���|�[�l���g�̎擾
-    Collision = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Box");
-
-    if (Collision)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Collision Component found!"));
-        Collision->OnComponentBeginOverlap.AddDynamic(this, &ABaseBlock::BeginOverlap);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Collision Component not found!"));
+            CurrentState->OnEnter(this, GetWorld(), materialID);
     }
 }
+
 // Called every frame
 void ABaseBlock::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
-
+    // 現在は空実装（将来的にブロックの状態更新などを行う場所）
 }
 
-bool ABaseBlock::TakeDamage(FAttackData attackData, float damage)
+// ダメージを受ける処理（現時点ではダメージを受けるロジックはコメントアウト）
+bool ABaseBlock::TakeDamage(FAttackData attackData, float damage , const AActor* hitActor)
 {
-	//if (CurrentState)
-	//{
-	//	CurrentState->OnHit(FVector(0, 0, 0), attackData);
-	//}
+    if (attackData.breakLevel == EBreakLevel::Unbreakable)
+        return false;
 
-	return true;
+    // 状態が存在する場合、ダメージ処理を行う（現在はコメントアウト）
+    if (CurrentState)
+    {
+        CurrentState->OnHit(attackData,FVector(0, 0, 0) , hitActor);
+    }
+    return true;
 }
 
+// 状態を変更する処理
 void ABaseBlock::ChangeState(UBlockState* nextState)
 {
+    // 現在の状態が存在する場合、終了処理を行う
     if (CurrentState)
         CurrentState->OnExit(this);
 
+    // 次の状態が指定されている場合、状態を変更
     if (nextState)
         CurrentState = nextState;
 
-    if (Container)
-        CurrentState->OnEnter(this, GetWorld(), Container);
-}
-
-
-void ABaseBlock::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-    if (CurrentState)
-    {
-        CurrentState->OnHit(OtherActor, FVector(0, 0, 0));
-    }
+    // Containerが有効な場合、次の状態に対してOnEnterを呼び出す
+    CurrentState->OnEnter(this, GetWorld());
 }

@@ -5,12 +5,17 @@
 
 // Add default functionality here for any IIDamageable functions that are not pure virtual.
 
-bool IDamageable::TakeDamage(FAttackData, float)
+bool IDamageable::TakeDamage(FAttackData, float ,const AActor* hitActor)
 {
     return false;
 }
 
 bool IDamageable::IsDead() const
+{
+    return false;
+}
+
+bool IDamageable::CanBeStomped() const
 {
     return false;
 }

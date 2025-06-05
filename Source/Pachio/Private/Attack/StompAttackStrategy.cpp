@@ -1,12 +1,13 @@
 #include "Attack/StompAttackStrategy.h"
+#include "GameFramework/Character.h"
 #include "Interface/IDamageable.h"
 
 
-void UStompAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData, float FinalDamage)
+bool UStompAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData attackData, float FinalDamage)
 {
-	//ここで各攻撃の処理をしてください
-	if (IDamageable* id = Cast<IDamageable>(Target))
-	{
-		id->TakeDamage(attackData,FinalDamage);
-	}
+	IDamageable* id = Cast<IDamageable>(Target);
+	if (!id || !id->TakeDamage(attackData, FinalDamage))
+		return false;
+
+	return id->CanBeStomped();
 }

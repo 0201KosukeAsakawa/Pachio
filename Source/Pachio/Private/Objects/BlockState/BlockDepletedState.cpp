@@ -2,16 +2,18 @@
 
 
 #include "Objects/BlockState/BlockDepletedState.h"
+#include "Objects/BaseBlock.h"
 #include "Attack/AttackStrategy.h"
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInterface.h"
+#include "Manager/LevelManager.h"
 #include "FunctionLibrary.h"
-#include "Objects/BaseBlock.h"
+
 #include "DataContainer/BlockDataContainer.h"
 
-bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataContainer* c, FString materialID)
+bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* world, FString materialID)
 {
-    if (!owner || !c)
+    if (!owner)
         return false;
     mOwner = owner;
 
@@ -22,12 +24,11 @@ bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* world, UBlockDataCo
     if (materialID == "None")
         materialID = MaterialID;
 
-    UMaterialInterface* newMaterial = c->CreateMaterial(world, materialID);
+    UMaterialInterface* newMaterial = ALevelManager::GetInstance(pWorld)->GetBlockContainer()->CreateMaterial(world, materialID);
     if (MeshComp && newMaterial)
     {
         MeshComp->SetMaterial(0, newMaterial);
     }
-    Container = c;
     return true;
 }
 
@@ -39,10 +40,8 @@ bool UBlockDepletedState::OnExit(ABaseBlock*)
 {
     return true;
 }
-bool UBlockDepletedState::OnHit(const AActor* hitActor, FVector)
+bool UBlockDepletedState::OnHit(FAttackData , FVector , const AActor*)
 {
-    if (!hitActor || !hitActor->ActorHasTag("Player"))
-        return false;
     mOwner->Destroy();
     return true;
 }

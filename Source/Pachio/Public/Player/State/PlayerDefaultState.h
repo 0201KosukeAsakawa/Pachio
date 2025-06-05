@@ -3,22 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/PlayerStateBase.h"
+#include "Components/PlayerStateComponent.h"
 #include "PlayerDefaultState.generated.h"
 
 /**
  * 
  */
-UCLASS()
-class PACHIO_API UPlayerDefaultState : public UPlayerStateBase
+UCLASS(Blueprintable)
+class PACHIO_API UPlayerDefaultState : public UPlayerStateComponent
 {
 	GENERATED_BODY()
 
 public:
 	bool OnEnter(ACharacter*, UWorld*)override;
-	bool OnUpdate(ACharacter*)override;
+	bool OnUpdate(float)override;
 	bool OnExit(ACharacter*)override;
 	bool OnSkill(const FInputActionValue&)override;
-	void Jump(const FInputActionValue& Value)override;
-	void Movement(const FInputActionValue& Value)override;
+	bool TakeDamage()override;
 };

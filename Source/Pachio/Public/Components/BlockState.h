@@ -9,7 +9,6 @@
 struct FAttackData;
 class ABaseBlock;
 class UMaterialInterface;
-class UBlockDataContainer;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PACHIO_API UBlockState : public UActorComponent
@@ -20,10 +19,10 @@ public:
 	// Sets default values for this component's properties
 	UBlockState();
 
-	virtual bool OnEnter(ABaseBlock*, UWorld*, UBlockDataContainer*,const FString materialID = "None");
+	virtual bool OnEnter(ABaseBlock*, UWorld*,const FString materialID = "None");
 	virtual bool OnUpdate(ABaseBlock*);
 	virtual bool OnExit(ABaseBlock*);
-	virtual bool OnHit(const AActor*,FVector);
+	virtual bool OnHit(FAttackData,const FVector = FVector(0,0,0),const AActor* = nullptr);
 protected:
 	UPROPERTY()
 	ABaseBlock* mOwner;
@@ -32,6 +31,4 @@ protected:
 	UPROPERTY(EditAnywhere)
 	FString MaterialID;
 	int count;
-	UPROPERTY()
-	TObjectPtr<UBlockDataContainer> Container;
 };
