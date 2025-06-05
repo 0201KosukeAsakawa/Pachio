@@ -23,7 +23,7 @@ void UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
     constexpr float MaxTolerance = 0.5f;
 
     // 透明度を計算（距離が小さいほど透明）
-    float Opacity = FMath::Clamp((Distance / MaxTolerance)-1.0f, 0.0f, 1.0f);
+    float Opacity = FMath::Clamp(1.0f-(Distance / MaxTolerance), 0.0f, 1.0f);
 
     // 動的マテリアル取得（作成は初回だけにしてキャッシュ推奨）
     if (!DynamicMaterialInstance)
