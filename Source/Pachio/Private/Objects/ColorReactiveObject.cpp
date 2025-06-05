@@ -11,9 +11,10 @@
 // Sets default values
 AColorReactiveObject::AColorReactiveObject()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	ReactiveComponent = CreateDefaultSubobject<UColorTriggerStopComponent>(TEXT("StopComponent"));
+	if (!ReactiveComponent)
+		ReactiveComponent = CreateDefaultSubobject<UColorTriggerStopComponent>(TEXT("StopComponent"));
 }
 
 void AColorReactiveObject::BeginPlay()

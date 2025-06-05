@@ -11,8 +11,7 @@ UColorControllerComponent::UColorControllerComponent()
 
 void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-    /*float decreaseSpeed = 0.1f;
-    AdjustColor(EColorChannel::R, -decreaseSpeed * DeltaTime);*/
+
 }
 
 void UColorControllerComponent::AdjustColor(EColorChannel Channel, float Delta)

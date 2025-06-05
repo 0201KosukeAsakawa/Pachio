@@ -10,6 +10,11 @@
 #include "UI/UIManager.h"
 #include "Engine/PostProcessVolume.h"
 #include "Blueprint/UserWidget.h"
+#include "FunctionLibrary.h"
+
+
+#include "Components/StaticMeshComponent.h"
+
 
 void UColorManager::InitializeTargets()
 {

@@ -23,7 +23,6 @@ private:
     // �t�B���^�[�F�ƈ�v���邩
 	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.05f) const;
 
-	virtual void UpdateAppearanceByColorDistance(const FLinearColor& FilterColor);
     UFUNCTION(BlueprintCallable)
     virtual void OnColorMatched(const FLinearColor& FilterColor);  
 	virtual void OnColorMismatched(const FLinearColor& FilterColor);

@@ -161,34 +161,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 	//プレイヤーのY座標取得
 	float PlayerY = GetActorLocation().Y;
 
-	if (SpringArm && Camera)
-	{
-		// カメラの最大Y座標を更新（右スクロールのみ）
-		if (PlayerY > MaxCameraY)
-		{
-			MaxCameraY = PlayerY;
-		}
-
-		// カメラのY座標を固定（右スクロール固定）
-		FVector CameraLocation = Camera->GetComponentLocation();
-		
-		CameraLocation = FVector(CameraXZ.X, MaxCameraY, CameraXZ.Z);
-		Camera->SetWorldLocation(CameraLocation);
-
-		// ===== プレイヤーの制限 =====
-		FVector Location = GetActorLocation();
-
-		// カメラの左端を計算（横スクロール用）
-		const float HalfScreenWidth = 1200.0f; // 実際のゲームに応じて調整
-		float CameraLeftEdgeY = MaxCameraY - HalfScreenWidth;
-
-		// 左に行きすぎたら止める
-		if (Location.Y < CameraLeftEdgeY)
-		{
-			Location.Y = CameraLeftEdgeY;
-			SetActorLocation(Location);
-		}
-	}
 
 	// 地上ならば攻撃判定を無効にする
 	if (physics->OnGround())

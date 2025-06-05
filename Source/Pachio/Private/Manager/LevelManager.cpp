@@ -72,9 +72,8 @@ void ALevelManager::InitializeComponents()
 	}
 
 
-		ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
-		ColorManager->InitializeTargets();
-	
+	ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
+	ColorManager->InitializeTargets();
 
 	// 1秒ごとに CountUp 関数を呼ぶ
 	GetWorld()->GetTimerManager().SetTimer(CountTimerHandle, this, &ALevelManager::CountDown, 1.0f, true);

@@ -26,7 +26,7 @@ public:
 	virtual void ColorAction(FLinearColor)override;
 
 private:
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	UColorReactiveComponent* ReactiveComponent;
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
