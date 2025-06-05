@@ -16,7 +16,8 @@ class PACHIO_API UColorTriggerStopComponent : public UColorReactiveComponent
 public:	
 	// Sets default values for this component's properties
 	UColorTriggerStopComponent();
-
 private:
-	void OnColorMatched()override;
+	void OnColorMatched(const FLinearColor& FilterColor)override;
+	void OnColorMismatched(const FLinearColor& FilterColor)override;
+	void UpdateAppearanceByColorDistance(const FLinearColor& FilterColor)override;
 };

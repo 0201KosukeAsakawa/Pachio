@@ -15,16 +15,24 @@ public:
 	// Sets default values for this component's properties
 	UColorReactiveComponent();
 		
-public:
+public :
+	void SetMyColor(const FLinearColor& FilterColor);
+	void CheckColorMatch(const FLinearColor& FilterColor);
+private:
 	UFUNCTION(BlueprintCallable)
-    // ƒtƒBƒ‹ƒ^[F‚Æˆê’v‚·‚é‚©
+    // ï¿½tï¿½Bï¿½ï¿½ï¿½^ï¿½[ï¿½Fï¿½Æˆï¿½vï¿½ï¿½ï¿½é‚©
 	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.05f) const;
 
-    // F‚ªˆê’v‚µ‚½‚Æ‚«‚Ì“®ìi”h¶ƒNƒ‰ƒX‚Å’è‹`j
+	virtual void UpdateAppearanceByColorDistance(const FLinearColor& FilterColor);
     UFUNCTION(BlueprintCallable)
-    virtual void OnColorMatched();  // Œp³æ‚Å override
-
+    virtual void OnColorMatched(const FLinearColor& FilterColor);  
+	virtual void OnColorMismatched(const FLinearColor& FilterColor);
 protected:
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* DynamicMaterialInstance = nullptr;
+
+	bool bColorMatch = false;
 };

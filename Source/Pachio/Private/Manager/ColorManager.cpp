@@ -5,6 +5,11 @@
 #include "Components/ColorControllerComponent.h"
 #include "Interface/ColorFilterInterface.h"
 #include "UObject/UObjectGlobals.h" 
+#include "Kismet/GameplayStatics.h"
+#include "Manager/LevelManager.h"
+#include "UI/UIManager.h"
+#include "Engine/PostProcessVolume.h"
+#include "Blueprint/UserWidget.h"
 
 void UColorManager::InitializeTargets()
 {
@@ -34,15 +39,31 @@ void UColorManager::InitializeTargets()
         }
     }
 
-    // ActiveLayerTarget�̏�����
+    // ActiveLayerTarget�̏�����
     ActiveLayerTarget = nullptr;
-    if (ActiveLayerTargetClass)
+
+    APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+    if (PlayerPawn)
     {
-        UObject* NewObj = NewObject<UObject>(this, ActiveLayerTargetClass);
-        if (NewObj && NewObj->GetClass()->ImplementsInterface(UColorFilterInterface::StaticClass()))
+        UColorControllerComponent* ColorController = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
+        if (ColorController)
         {
-            ActiveLayerTarget.SetObject(NewObj);
-            ActiveLayerTarget.SetInterface(Cast<IColorFilterInterface>(NewObj));
+            ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
+        }
+    }
+
+    // APostProcessVolume を自動取得
+    TArray<AActor*> FoundVolumes;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), APostProcessVolume::StaticClass(), FoundVolumes);
+
+    if (FoundVolumes.Num() > 0)
+    {
+        APostProcessVolume* PostProcessVolume = Cast<APostProcessVolume>(FoundVolumes[0]);
+
+        if (PostProcessVolume && PostProcessMaterial)
+        {
+            PostProcessMID = UMaterialInstanceDynamic::Create(PostProcessMaterial, this);
+            PostProcessVolume->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, PostProcessMID));
         }
     }
 }
@@ -52,30 +73,36 @@ void UColorManager::ApplyColor(FLinearColor NewColor)
     switch (Mode)
     {
     case EColorMode::Layer:
-        if (ActiveLayerTarget)
+    {
+        if (PostProcessMID)
         {
-            ActiveLayerTarget->SetColor(NewColor);
+            PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
         }
         break;
-
+    }
     case EColorMode::Object:
     case EColorMode::Background:
-        if (FColorTargetInstanceArray* TargetArray = ColorTargets.Find(Mode))
-        {
-            for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
-            {
-                if (Target)
-                {
-                    Target->SetColor(NewColor);
-                }
-            }
-        }
+    {
+    
         break;
-
+    }
     default:
         break;
     }
+    if (FColorTargetInstanceArray* TargetArray = ColorTargets.Find(EColorMode::Object))
+    {
+        for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
+        {
+            if (Target)
+            {
+                //ここでよぶ
+                Target->ColorAction(NewColor);
+            }
+        }
+    }
+    CurrentColor = NewColor;
 }
+
 
 void UColorManager::RegisterTarget(EColorMode mode, TScriptInterface<IColorFilterInterface> Target)
 {

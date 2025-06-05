@@ -86,6 +86,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	inline UColorManager* GetColorManager()const { return ColorManager; }
 
+	inline UUIManager* GetUIManager()const { return UIManager; }
+
 private:
 	void InitializeComponents();
 

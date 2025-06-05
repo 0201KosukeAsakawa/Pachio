@@ -10,6 +10,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/AttackManagerComponent.h"
 #include "Components/MoveComponent.h"
+#include "Components/ColorControllerComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -42,6 +43,10 @@ APlayerCharacter::APlayerCharacter()
 	SpringArm->SocketOffset = FVector(0.0f, 100.0f, 50.0f);
 	SpringArm->bUsePawnControlRotation = false; // プレイヤー回転と連動しない
 
+	MoveComp = CreateDefaultSubobject<UMoveComponent>(TEXT("MoveComponent"));
+	AttackManager = CreateDefaultSubobject<UAttackManagerComponent>(TEXT("AttackManager"));
+	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
+	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 }
 
 // ゲーム開始時に呼ばれる関数
@@ -49,9 +54,9 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	MoveComp =  NewObject<UMoveComponent>(this);
+
 	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
-	MoveComp->Init(this,PlayerLogic);
+	MoveComp->Init(this, PlayerLogic);
 
 	// 初期位置を保存
 	PreviousLocation = GetActorLocation();
@@ -59,11 +64,9 @@ void APlayerCharacter::BeginPlay()
 
 	bIsDashing = false; // 初期状態ではダッシュしていない
 
-		// 攻撃コンポーネントの生成
-	AttackManager = NewObject<UAttackManagerComponent>(this);
+	// 攻撃コンポーネントの生成
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
 
-	physics = NewObject<UPhysicsCalculator>(this);
 	physics->RegisterComponent();            // Tick対象になる
 
 	if (!AttackManager || !StateManagerClass)
@@ -130,6 +133,14 @@ void APlayerCharacter::BeginPlay()
 	GetCharacterMovement()->GroundFriction = 8.0f; // 地面との摩擦を強化
 	// 重力スケールを強化（より素早い落下）
 	GetCharacterMovement()->GravityScale = 0.0f;
+
+	UStaticMeshComponent* pMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, "StaticMesh");
+	// プレイヤーメッシュにCustom Depthを有効化
+	if (pMesh)
+	{
+		pMesh->SetRenderCustomDepth(true);
+		pMesh->SetCustomDepthStencilValue(10);
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -234,6 +245,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		// ダッシュ（スペシャルアクション）
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAction);
+
+		EnhancedInputComponent->BindAction(IncreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::DecreaseColor);
+		EnhancedInputComponent->BindAction(DecreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::IncreaseColor);
 	}
 }
 
@@ -251,7 +265,6 @@ UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("UPPER!"));
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
@@ -266,7 +279,6 @@ void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor
 void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("Stomp!"));
 	if (!AttackManager || !OtherActor || OtherActor == this)
 		return;
 
@@ -412,6 +424,22 @@ void APlayerCharacter::StopAction()
 	}
 }
 
+void APlayerCharacter::DecreaseColor()
+{
+	if (!colorController)
+		return;
+
+	colorController->AdjustColor(EColorChannel::R,0.001);
+}
+
+void APlayerCharacter::IncreaseColor()
+{
+	if (!colorController)
+		return;
+
+	colorController->AdjustColor(EColorChannel::R, -0.001);
+}
+
 //パワーアップ時にコリジョンの移動処理
 void APlayerCharacter::PowerUpCollisionPosition()
 {
@@ -489,6 +517,7 @@ void APlayerCharacter::UpdateInvincible(float DeltaTime)
 		}
 	}
 }
+
 
 // 状態の変更（タグ指定）
 bool APlayerCharacter::ChangeState(FString Tag)
