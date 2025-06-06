@@ -14,7 +14,7 @@ AColorReactiveObject::AColorReactiveObject()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	//if (!ReactiveComponent)
+	if (!ReactiveComponent)
 	ReactiveComponent = CreateDefaultSubobject<UColorTriggerStopComponent>(TEXT("StopComponent"));
 	check(ReactiveComponent != nullptr);
 }
@@ -24,7 +24,7 @@ void AColorReactiveObject::BeginPlay()
 	Super::BeginPlay();
 
 	// ColorManager に登録
-	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorMode::Object, this);
+	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(ColorTargetType, this);
 	ReactiveComponent->SetMyColor(Color);
 
 	// StaticMeshComponent を取得

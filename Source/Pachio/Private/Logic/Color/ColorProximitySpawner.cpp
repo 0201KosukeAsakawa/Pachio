@@ -12,7 +12,7 @@ UColorProximitySpawner::UColorProximitySpawner()
 
 void UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
-	    AActor* Owner = GetOwner();
+	AActor* Owner = GetOwner();
     if (!Owner) return;
 
     UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner, TEXT("StaticMesh"));

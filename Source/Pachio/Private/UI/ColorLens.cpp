@@ -21,7 +21,7 @@ void UColorLens::NativeConstruct()
     {
         // ColorManager に対して、背景色変更の対象としてこのクラスを登録
         // 登録することで色変更イベントを受け取るようになる
-        ColorManager->RegisterTarget(EColorMode::Background, this);
+        ColorManager->RegisterTarget(EColorTargetType::Background, this);
     }
 }
 

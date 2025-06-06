@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interface/ColorFilterInterface.h"
+#include "DataContainer/ColorTargetType.h"
 #include "ColorReactiveObject.generated.h"
 
 class UColorReactiveComponent;
@@ -30,4 +31,6 @@ private:
 	UColorReactiveComponent* ReactiveComponent;
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
+	UPROPERTY(EditAnywhere,Category = "Color")
+	EColorTargetType ColorTargetType;
 };
