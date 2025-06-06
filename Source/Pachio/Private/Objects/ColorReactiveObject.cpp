@@ -7,14 +7,16 @@
 #include "FunctionLibrary.h"
 #include "Manager/ColorManager.h"
 #include "Logic/Color/ColorTriggerStopComponent.h"
+#include "Logic/Color/ColorProximitySpawner.h"
 
 // Sets default values
 AColorReactiveObject::AColorReactiveObject()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	if (!ReactiveComponent)
-		ReactiveComponent = CreateDefaultSubobject<UColorTriggerStopComponent>(TEXT("StopComponent"));
+	//if (!ReactiveComponent)
+	ReactiveComponent = CreateDefaultSubobject<UColorTriggerStopComponent>(TEXT("StopComponent"));
+	check(ReactiveComponent != nullptr);
 }
 
 void AColorReactiveObject::BeginPlay()

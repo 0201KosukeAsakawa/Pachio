@@ -20,9 +20,6 @@ void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
 
     bool bMatch = IsColorMatch(FilterColor);
 
-    // 透明度・表示の更新は常に行う（色の近さに応じて）
-    //UpdateAppearanceByColorDistance(FilterColor);
-
     if (bMatch)
     {
         UE_LOG(LogTemp, Log, TEXT("[%s]TRUE"), *GetOwner()->GetName());
