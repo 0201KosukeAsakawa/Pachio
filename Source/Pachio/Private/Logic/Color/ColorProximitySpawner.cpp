@@ -29,18 +29,31 @@ void UColorProximitySpawner::ChangeColor(const FLinearColor& FilterColor)
     UBoxComponent* Box = UFunctionLibrary::FindComponentByName<UBoxComponent>(Owner, TEXT("Collision"));
     if (!Mesh || !Box) return;
 
-    // 色の距離計算（RGBのベクトル距離）
-    float Distance = FVector::Dist(FVector(Color.R, Color.G, Color.B), FVector(FilterColor.R, FilterColor.G, FilterColor.B));
-    constexpr float MaxTolerance = 0.5f;
+    // 色をHSV空間に変換
+    FLinearColor ColorHSV = Color.LinearRGBToHSV();
+    FLinearColor FilterColorHSV = FilterColor.LinearRGBToHSV();
 
-    // 透明度の最低値（完全透明にならないように）
-    constexpr float MinOpacity = 0.0f;
+    // 色相距離を計算
+    float HueDifference = FMath::Abs(ColorHSV.R - FilterColorHSV.R);
+    // Hueは0?1の範囲なので、0.5fを超える場合は360度のサイクルを考慮して反転する
+    if (HueDifference > 0.5f)
+    {
+        HueDifference = 1.0f - HueDifference;
+    }
 
-    // 距離を0~1に正規化
+    // 彩度(S)と明度(V)の差を計算
+    float SaturationDifference = FMath::Abs(ColorHSV.G - FilterColorHSV.G);
+    float ValueDifference = FMath::Abs(ColorHSV.B - FilterColorHSV.B);
+
+    // 距離の重み付け（色相、彩度、明度に基づいて距離を算出）
+    float Distance = HueDifference * 0.5f + SaturationDifference * 0.3f + ValueDifference * 0.2f;
+
+    // 最大許容差を使って距離を0?1に正規化
+    constexpr float MaxTolerance = 0.5f;  // 最大許容距離
     float NormalizedDist = FMath::Clamp(Distance / MaxTolerance, 0.0f, 1.0f);
 
     // 色が近いほど不透明、遠いほど透明にする
-    float TargetOpacity = FMath::Lerp(1.0f, MinOpacity, NormalizedDist);
+    float TargetOpacity = FMath::Lerp(1.0f, 0.0f, NormalizedDist);
 
     // CurrentOpacityはローカル変数で管理
     static float CurrentOpacity = 1.0f;  // 初期値は完全不透明
@@ -102,4 +115,5 @@ void UColorProximitySpawner::ChangeColor(const FLinearColor& FilterColor)
         Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     }
 }
+
 

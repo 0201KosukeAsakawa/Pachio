@@ -44,7 +44,7 @@ public:
 
     // 新しい色を適用する関数
     UFUNCTION()
-    void ApplyColor(FLinearColor NewColor);
+    void ApplyColor(FLinearColor NewColor , EColorTargetType Mode);
 
     // 色付け対象を登録する関数
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorFilterInterface> Target);
@@ -65,10 +65,6 @@ private:
     // 現在アクティブなレイヤーの色付け対象インスタンス
     UPROPERTY()
     TScriptInterface<IColorFilterInterface> ActiveLayerTarget;
-
-    // 現在の色付けモード（エディタで編集可能）
-    UPROPERTY(EditAnywhere)
-    EColorTargetType Mode;
 
     // ポストプロセスマテリアル（エディタで設定可能）
     UPROPERTY(EditAnywhere)
