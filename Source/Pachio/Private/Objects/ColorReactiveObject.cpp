@@ -14,18 +14,26 @@ AColorReactiveObject::AColorReactiveObject()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	if (!ReactiveComponent)
-	ReactiveComponent = CreateDefaultSubobject<UColorTriggerStopComponent>(TEXT("StopComponent"));
-	check(ReactiveComponent != nullptr);
 }
 
 void AColorReactiveObject::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (ReactiveComponentClass)
+	{
+		ColorReactiveComponent = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
+		if (ColorReactiveComponent)
+		{
+			ColorReactiveComponent->RegisterComponent(); // コンポーネントとして機能させるため必須
+			ColorReactiveComponent->Activate(true);
+		}
+	}
+
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(ColorTargetType, this);
-	ReactiveComponent->SetMyColor(Color);
+
+	ColorReactiveComponent->SetMyColor(Color);
 
 	// StaticMeshComponent を取得
 	UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
@@ -42,15 +50,16 @@ void AColorReactiveObject::BeginPlay()
 	{
 		DynMaterial->SetVectorParameterValue(FName("BaseColor"), Color);
 	}
+	ColorReactiveComponent->Init(mesh);
 }
 
 
 void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 {
-	if (!ReactiveComponent)
+	if (!ColorReactiveComponent)
 		return;
 
-	ReactiveComponent->CheckColorMatch(NewColor);
+	ColorReactiveComponent->CheckColorMatch(NewColor);
 }
 
 

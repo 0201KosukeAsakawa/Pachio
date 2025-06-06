@@ -27,8 +27,13 @@ public:
 	virtual void ColorAction(FLinearColor)override;
 
 private:
-	UPROPERTY(EditAnywhere)
-	UColorReactiveComponent* ReactiveComponent;
+	// 生成するコンポーネントのクラスをBPから指定できるように
+	UPROPERTY(EditAnywhere, Category = "Reactive")
+	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;
+
+	// 実際に生成されるコンポーネントのポインタ
+	UPROPERTY()
+	UColorReactiveComponent* ColorReactiveComponent;
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
 	UPROPERTY(EditAnywhere,Category = "Color")
