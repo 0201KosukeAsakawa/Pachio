@@ -9,6 +9,16 @@ UColorReactiveComponent::UColorReactiveComponent()
 
 }
 
+void UColorReactiveComponent::Init(UMeshComponent* mesh)
+{
+    // マテリアルの色を変更
+    UMaterialInstanceDynamic* DynMaterial = mesh->CreateAndSetMaterialInstanceDynamic(0);
+    if (DynMaterial)
+    {
+        DynMaterial->SetVectorParameterValue(FName("BaseColor"), Color);
+    }
+}
+
 void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor)
 {
 	Color = FilterColor;

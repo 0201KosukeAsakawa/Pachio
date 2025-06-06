@@ -2,30 +2,29 @@
 
 
 #include "Manager/ColorManager.h"
-#include "Components/ColorControllerComponent.h"
-#include "Interface/ColorFilterInterface.h"
-#include "UObject/UObjectGlobals.h" 
-#include "Kismet/GameplayStatics.h"
 #include "Manager/LevelManager.h"
+#include "Components/ColorControllerComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Interface/ColorFilterInterface.h"
+#include "UObject/UObjectGlobals.h"
 #include "UI/UIManager.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/PostProcessVolume.h"
 #include "Blueprint/UserWidget.h"
 #include "FunctionLibrary.h"
-
-
-#include "Components/StaticMeshComponent.h"
+#include "DataContainer/ColorTargetType.h"
 
 
 void UColorManager::InitializeTargets()
 {
-    ColorTargets.Empty();
+    ColorResponseTargets.Empty();
 
     for (auto& Pair : ColorTargetsClass)
     {
-        EColorMode ModeKey = Pair.Key;
+        EColorTargetType ModeKey = Pair.Key;
         const FColorTargetArray& ClassArray = Pair.Value;
 
-        FColorTargetInstanceArray& InstanceArray = ColorTargets.FindOrAdd(ModeKey);
+        FColorTargetInstanceArray& InstanceArray = ColorResponseTargets.FindOrAdd(ModeKey);
         InstanceArray.Instances.Empty();
 
         for (TSubclassOf<UObject> TargetClass : ClassArray.Targets)
@@ -77,7 +76,7 @@ void UColorManager::ApplyColor(FLinearColor NewColor)
 {
     switch (Mode)
     {
-    case EColorMode::Layer:
+    case EColorTargetType::Layer:
     {
         if (PostProcessMID)
         {
@@ -85,16 +84,28 @@ void UColorManager::ApplyColor(FLinearColor NewColor)
         }
         break;
     }
-    case EColorMode::Object:
-    case EColorMode::Background:
-    {
-    
+    case EColorTargetType::Object:
+    case EColorTargetType::Background:
+        //カラーに反応するオブジェクトに現在のカラーを通知
+        if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(Mode))
+        {
+            for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
+            {
+                if (Target)
+                {
+                    //ここでよぶ
+                    Target->ColorAction(NewColor);
+                }
+            }
+        }
+        //ここで種類に応じてカラー変更
         break;
-    }
+    
     default:
         break;
     }
-    if (FColorTargetInstanceArray* TargetArray = ColorTargets.Find(EColorMode::Object))
+    //カラーに反応するオブジェクトに現在のカラーを通知
+    if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(EColorTargetType::Responders))
     {
         for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
         {
@@ -105,15 +116,14 @@ void UColorManager::ApplyColor(FLinearColor NewColor)
             }
         }
     }
-    CurrentColor = NewColor;
 }
 
 
-void UColorManager::RegisterTarget(EColorMode mode, TScriptInterface<IColorFilterInterface> Target)
+void UColorManager::RegisterTarget(EColorTargetType mode, TScriptInterface<IColorFilterInterface> Target)
 {
     if (!Target) return;
 
-    FColorTargetInstanceArray& TargetArray = ColorTargets.FindOrAdd(mode);
+    FColorTargetInstanceArray& TargetArray = ColorResponseTargets.FindOrAdd(mode);
     if (!TargetArray.Instances.Contains(Target))
     {
         TargetArray.Instances.Add(Target);

@@ -18,4 +18,6 @@ public:
 private:
 	 void OnColorMatched(const FLinearColor& FilterColor)override;
 	 void OnColorMismatched(const FLinearColor& FilterColor)override;
+	 void ChangeColor(const FLinearColor& FilterColor);
+
 };
