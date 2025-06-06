@@ -10,6 +10,7 @@ void UUIManager::Init(const AActor*)
 {
     // すべてのカテゴリのウィジェットを初期化
     InitAllWidgets();
+    ShowWidget(EWidgetCategory::Lens, "Lens");
 }
 
 

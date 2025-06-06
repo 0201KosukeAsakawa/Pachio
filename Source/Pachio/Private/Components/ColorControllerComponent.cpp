@@ -58,6 +58,16 @@ void UColorControllerComponent::AdjustColor(EColorChannel Channel, float Delta)
 
 void UColorControllerComponent::ChangeMode(int Direction)
 {
+    // Directionが1以上なら1、それ未満なら-1に補正
+    if (Direction >= 1)
+    {
+        Direction = 1;
+    }
+    else
+    {
+        Direction = -1;
+    }
+
     // Direction が正のときは次、負のときは前
     if (Direction > 0)
     {
