@@ -72,7 +72,7 @@ void UColorManager::InitializeTargets()
     }
 }
 
-void UColorManager::ApplyColor(FLinearColor NewColor)
+void UColorManager::ApplyColor(FLinearColor NewColor , EColorTargetType Mode)
 {
     switch (Mode)
     {
