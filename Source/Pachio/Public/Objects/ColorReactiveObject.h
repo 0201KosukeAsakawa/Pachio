@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interface/ColorFilterInterface.h"
+#include "DataContainer/ColorTargetType.h"
 #include "ColorReactiveObject.generated.h"
 
 class UColorReactiveComponent;
@@ -26,8 +27,15 @@ public:
 	virtual void ColorAction(FLinearColor)override;
 
 private:
+	// 生成するコンポーネントのクラスをBPから指定できるように
+	UPROPERTY(EditAnywhere, Category = "Reactive")
+	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;
+
+	// 実際に生成されるコンポーネントのポインタ
 	UPROPERTY()
-	UColorReactiveComponent* ReactiveComponent;
+	UColorReactiveComponent* ColorReactiveComponent;
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
+	UPROPERTY(EditAnywhere,Category = "Color")
+	EColorTargetType ColorTargetType;
 };

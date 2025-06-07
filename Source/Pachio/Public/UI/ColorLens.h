@@ -21,7 +21,7 @@ public:
 private:
 	void ColorAction(FLinearColor)override;
 protected:
-	// �Ⴆ�Ή�ʂ̐F��ς��邽�߂�UI�p�[�c
+	//
 	UPROPERTY(meta = (BindWidget))
 	UImage* FilterColorImage;
 };

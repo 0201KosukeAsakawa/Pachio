@@ -37,6 +37,9 @@ void ALevelManager::InitializeComponents()
 	if (!IsValid(BlockContainer))
 		BlockContainer = NewObject<UBlockDataContainer>(this, BlockContainerClass);
 
+	ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
+	ColorManager->InitializeTargets();
+
 	ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
 	AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
 	ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
@@ -72,9 +75,7 @@ void ALevelManager::InitializeComponents()
 	}
 
 
-		ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
-		ColorManager->InitializeTargets();
-	
+
 
 	// 1秒ごとに CountUp 関数を呼ぶ
 	GetWorld()->GetTimerManager().SetTimer(CountTimerHandle, this, &ALevelManager::CountDown, 1.0f, true);

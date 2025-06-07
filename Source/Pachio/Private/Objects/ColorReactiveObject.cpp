@@ -7,22 +7,33 @@
 #include "FunctionLibrary.h"
 #include "Manager/ColorManager.h"
 #include "Logic/Color/ColorTriggerStopComponent.h"
+#include "Logic/Color/ColorProximitySpawner.h"
 
 // Sets default values
 AColorReactiveObject::AColorReactiveObject()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	ReactiveComponent = CreateDefaultSubobject<UColorTriggerStopComponent>(TEXT("StopComponent"));
 }
 
 void AColorReactiveObject::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (ReactiveComponentClass)
+	{
+		ColorReactiveComponent = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
+		if (ColorReactiveComponent)
+		{
+			ColorReactiveComponent->RegisterComponent(); // コンポーネントとして機能させるため必須
+			ColorReactiveComponent->Activate(true);
+		}
+	}
+
 	// ColorManager に登録
-	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorMode::Object, this);
-	ReactiveComponent->SetMyColor(Color);
+	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(ColorTargetType, this);
+
+	ColorReactiveComponent->SetMyColor(Color);
 
 	// StaticMeshComponent を取得
 	UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
@@ -39,15 +50,16 @@ void AColorReactiveObject::BeginPlay()
 	{
 		DynMaterial->SetVectorParameterValue(FName("BaseColor"), Color);
 	}
+	ColorReactiveComponent->Init(mesh);
 }
 
 
 void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 {
-	if (!ReactiveComponent)
+	if (!ColorReactiveComponent)
 		return;
 
-	ReactiveComponent->CheckColorMatch(NewColor);
+	ColorReactiveComponent->CheckColorMatch(NewColor);
 }
 
 
