@@ -147,7 +147,6 @@ private:
 	FVector PlayerOldLocation;
 
 	UMoveComponent* MoveComp;
-	//TScriptInterface<IMoveLogic> PlayerLogic;
 
 	// ==== メッシュ・コリジョン ====
 
@@ -163,10 +162,6 @@ private:
 	UPROPERTY()
 	UBoxComponent* StompAttackBox;
 
-	/*調整用の当たり判定
-	UPROPERTY()
-	UBoxComponent* PlayerBoxCollision;*/
-
 	// ==== カメラ ====
 
 	// カメラの回転／位置制御用スプリングアーム
@@ -176,41 +171,6 @@ private:
 	// プレイヤー視点用カメラ
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> Camera;
-
-	//// ==== 入力マッピング ====
-
-	//// 使用する入力マッピングコンテキスト（Enhanced Input）
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputMappingContext* DefaultMappingContext;
-
-	//// 各種アクション設定
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* JumpAction;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* MoveAction;
-
-	//// 各種アクション設定
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* CrouchAction;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* LookAction;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* SpecialAction;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* IncreaseColorAction;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* DecreaseColorAction;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* ShiftArrayRightColorAction;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* ShiftArrayLeftColorAction;
 
 	UPROPERTY()
 	UPhysicsCalculator* physics;

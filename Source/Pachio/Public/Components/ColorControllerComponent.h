@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,53 +5,55 @@
 #include "DataContainer/ColorTargetType.h"
 #include "ColorControllerComponent.generated.h"
 
+// Blueprint からバインド可能な色変更通知デリゲート（対象タイプも含む）
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnColorChanged, FLinearColor, NewColor, EColorTargetType, TargetType);
 
-
-// C++�R�[�h����p�i�����Ōy�ʁj
+// C++コード専用のネイティブな色変更通知デリゲート（Blueprint不可）
 DECLARE_DELEGATE_OneParam(FOnColorChangedNative, FLinearColor);
 
-UENUM(BlueprintType)
-enum class EColorChannel : uint8
-{
-	R UMETA(DisplayName = "Red"),
-	G UMETA(DisplayName = "Green"),
-	B UMETA(DisplayName = "Blue")
-};
-
+// アクターにアタッチして色の制御を行うコンポーネント
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UColorControllerComponent : public UActorComponent
 {
     GENERATED_BODY()
 
 public:
+    // コンストラクタ
     UColorControllerComponent();
 
+    // 毎フレーム呼ばれる更新処理（必要なら使用）
     void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-    UFUNCTION(BlueprintCallable)
-    void AdjustColor(EColorChannel Channel, float Delta);
 
+    // 指定された色チャンネル（R/G/B）の値を加算・減算して色を調整
     UFUNCTION(BlueprintCallable)
-    FLinearColor GetCurrentColor() const { return CurrentColor; }
+    void AdjustColor(float Delta);
 
-    // ���[�h��ύX����֐�
+    // 現在の色を取得
+    UFUNCTION(BlueprintCallable)
+    FLinearColor GetCurrentColor() const { return ColorMap[CurrentColorMode]; }
+
+    // モードを切り替える（+1 / -1 などの方向指定）
     void ChangeMode(int Direction);
+
 public:
+    // Blueprint から購読可能な色変更イベント（色と対象タイプを通知）
     UPROPERTY(BlueprintAssignable)
     FOnColorChanged OnColorChanged;
 
-    // �V���O���L���X�g�p
+    // C++ 専用のデリゲート（より軽量な通知用途）
     FOnColorChangedNative OnColorChangedNative;
 
 private:
+    // 次のカラーモードを取得（右回り）
     EColorTargetType GetNextMode(EColorTargetType CurrentMode);
-    // �O�̃��[�h���擾
+
+    // 前のカラーモードを取得（左回り）
     EColorTargetType GetPreviousMode(EColorTargetType CurrentMode);
 
 private:
-    // ���݂̐F�t�����[�h�i�G�f�B�^�ŕҏW�\�j
-    UPROPERTY(EditAnywhere)
-    EColorTargetType Mode;
 
-    FLinearColor CurrentColor = FLinearColor::White;
+    TMap<EColorTargetType, FLinearColor>ColorMap;
+    // 現在のカラーモード（どの対象に色を適用するか）
+    UPROPERTY(EditAnywhere)
+    EColorTargetType CurrentColorMode;
 };

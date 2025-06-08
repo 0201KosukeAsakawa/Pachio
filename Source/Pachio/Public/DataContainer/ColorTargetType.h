@@ -2,12 +2,12 @@
 #include "CoreMinimal.h"
 
 
-// F•t‚¯ƒ‚[ƒh‚Ì—ñ‹“Œ^
+// è‰²ãƒ¢ãƒ¼ãƒ‰ã®å¯¾è±¡ã‚’ç¤ºã™åˆ—æŒ™å‹
 UENUM(BlueprintType)
 enum class EColorTargetType : uint8
 {
-    Layer      UMETA(DisplayName = "Layer"),      // ƒŒƒCƒ„[’PˆÊ‚ÅF•t‚¯
-    Object     UMETA(DisplayName = "Object"),     // ƒIƒuƒWƒFƒNƒg’PˆÊ‚ÅF•t‚¯
-    Background UMETA(DisplayName = "Background"),  // ”wŒi‚É‘Î‚µ‚ÄF•t‚¯
-    Responders    UMETA(DisplayName = "Responders") // ”½‰Ò‘S”Êi’Ê’m‘ÎÛj
+    Layer      UMETA(DisplayName = "Layer"),       // ãƒ¬ã‚¤ãƒ¤ãƒ¼å˜ä½ã§ã®è‰²å¤‰æ›´
+    Object     UMETA(DisplayName = "Object"),      // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆå˜ä½ã§ã®è‰²å¤‰æ›´
+    Background UMETA(DisplayName = "Background"),  // èƒŒæ™¯è‰²ã®å¤‰æ›´
+    Responders UMETA(DisplayName = "Responders")   // è¤‡æ•°ã®åå¿œå¯¾è±¡ï¼ˆé€šçŸ¥ãªã©ï¼‰ã®è‰²å¤‰æ›´
 };

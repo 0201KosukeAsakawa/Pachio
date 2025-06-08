@@ -383,7 +383,7 @@ void APlayerCharacter::DecreaseColor()
 	if (!colorController)
 		return;
 
-	colorController->AdjustColor(EColorChannel::R,0.001);
+	colorController->AdjustColor(0.001);
 }
 
 void APlayerCharacter::IncreaseColor()
@@ -391,7 +391,7 @@ void APlayerCharacter::IncreaseColor()
 	if (!colorController)
 		return;
 
-	colorController->AdjustColor(EColorChannel::R, -0.001);
+	colorController->AdjustColor(-0.001);
 }
 
 void APlayerCharacter::ShiftArrayRightColorMode()
