@@ -83,6 +83,9 @@ private:
 	void DecreaseColor();
 	void IncreaseColor();
 
+	void ShiftArrayRightColorMode();
+	void ShiftArrayLeftColorMode();
+
 	// ==== 攻撃コリジョン ====
 
 	// 上攻撃ヒット処理
@@ -198,6 +201,12 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* DecreaseColorAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ShiftArrayRightColorAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ShiftArrayLeftColorAction;
 
 	UPROPERTY()
 	UPhysicsCalculator* physics;

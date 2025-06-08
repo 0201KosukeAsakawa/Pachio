@@ -220,6 +220,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		EnhancedInputComponent->BindAction(IncreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::DecreaseColor);
 		EnhancedInputComponent->BindAction(DecreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::IncreaseColor);
+
+		EnhancedInputComponent->BindAction(ShiftArrayRightColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ShiftArrayRightColorMode);
+		EnhancedInputComponent->BindAction(ShiftArrayLeftColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ShiftArrayLeftColorMode);
 	}
 }
 
@@ -410,6 +413,22 @@ void APlayerCharacter::IncreaseColor()
 		return;
 
 	colorController->AdjustColor(EColorChannel::R, -0.001);
+}
+
+void APlayerCharacter::ShiftArrayRightColorMode()
+{
+	if (!colorController)
+		return;
+
+	colorController->ChangeMode(1);
+}
+
+void APlayerCharacter::ShiftArrayLeftColorMode()
+{
+	if (!colorController)
+		return;
+
+	colorController->ChangeMode(-1);
 }
 
 //パワーアップ時にコリジョンの移動処理

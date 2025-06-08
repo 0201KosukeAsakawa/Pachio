@@ -27,11 +27,11 @@ public:
 	virtual void ColorAction(FLinearColor)override;
 
 private:
-	// ¶¬‚·‚éƒRƒ“ƒ|[ƒlƒ“ƒg‚ÌƒNƒ‰ƒX‚ğBP‚©‚çw’è‚Å‚«‚é‚æ‚¤‚É
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ÌƒNï¿½ï¿½ï¿½Xï¿½ï¿½BPï¿½ï¿½ï¿½ï¿½wï¿½ï¿½Å‚ï¿½ï¿½ï¿½æ‚¤ï¿½ï¿½
 	UPROPERTY(EditAnywhere, Category = "Reactive")
 	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;
 
-	// ÀÛ‚É¶¬‚³‚ê‚éƒRƒ“ƒ|[ƒlƒ“ƒg‚Ìƒ|ƒCƒ“ƒ^
+	// ï¿½ï¿½ï¿½Û‚Éï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ìƒ|ï¿½Cï¿½ï¿½ï¿½^
 	UPROPERTY()
 	UColorReactiveComponent* ColorReactiveComponent;
 	UPROPERTY(EditAnywhere)
