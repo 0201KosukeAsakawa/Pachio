@@ -12,19 +12,23 @@
 // 前方宣言
 // ===========================
 class IStateBase;
+class IMoveLogic;
 class UPlayerDefaultState;
 class UInputMappingContext;
+class UInputAction;
 class UStateManager;
 class UAttackComponent;
 class UAttackManagerComponent;
 class USpringArmComponent;
 class UCameraComponent;
+class UColorControllerComponent;
 class UBoxComponent;
-class UInputAction;
+
 class UPhysicsCalculator;
 class UMoveComponent;
-class UColorControllerComponent;
-class IMoveLogic;
+
+class UPlayerInputComponent;
+
 
 struct FInputActionValue;
 /**
@@ -63,7 +67,7 @@ public:
 
 	void ToggleVisibility();  // メッシュの表示/非表示を切り替える
 	void UpdateInvincible(float DeltaTime);  // 無敵時間の管理
-private:
+public:
 	// ==== 入力アクション ====
 	// 移動入力
 	void Movement(const FInputActionValue& Value);
@@ -85,7 +89,7 @@ private:
 
 	void ShiftArrayRightColorMode();
 	void ShiftArrayLeftColorMode();
-
+private:
 	// ==== 攻撃コリジョン ====
 
 	// 上攻撃ヒット処理
@@ -173,40 +177,40 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> Camera;
 
-	// ==== 入力マッピング ====
+	//// ==== 入力マッピング ====
 
-	// 使用する入力マッピングコンテキスト（Enhanced Input）
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
+	//// 使用する入力マッピングコンテキスト（Enhanced Input）
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputMappingContext* DefaultMappingContext;
 
-	// 各種アクション設定
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
+	//// 各種アクション設定
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputAction* JumpAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputAction* MoveAction;
 
-	// 各種アクション設定
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* CrouchAction;
+	//// 各種アクション設定
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputAction* CrouchAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* LookAction;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputAction* LookAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* SpecialAction;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputAction* SpecialAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* IncreaseColorAction;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputAction* IncreaseColorAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* DecreaseColorAction;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputAction* DecreaseColorAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* ShiftArrayRightColorAction;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputAction* ShiftArrayRightColorAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* ShiftArrayLeftColorAction;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//UInputAction* ShiftArrayLeftColorAction;
 
 	UPROPERTY()
 	UPhysicsCalculator* physics;

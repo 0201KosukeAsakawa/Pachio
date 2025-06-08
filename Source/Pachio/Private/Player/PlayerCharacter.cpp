@@ -11,6 +11,7 @@
 #include "Components/AttackManagerComponent.h"
 #include "Components/MoveComponent.h"
 #include "Components/ColorControllerComponent.h"
+#include "Components/PlayerInputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -120,15 +121,12 @@ void APlayerCharacter::BeginPlay()
 		CameraLocation = FVector(CameraXZ.X, MaxCameraY, CameraXZ.Z);
 		Camera->SetWorldLocation(CameraLocation);
 	}
-
-	// 入力マッピングコンテキストの追加
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	UPlayerInputComponent* PlayerInputData = GetComponentByClass<UPlayerInputComponent>();
+	if (PlayerInputData)
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
+		PlayerInputData->Init(Controller);
 	}
+
 	GetCharacterMovement()->BrakingFrictionFactor = 2.0f; // 止まる速さを上げる
 	GetCharacterMovement()->GroundFriction = 8.0f; // 地面との摩擦を強化
 	// 重力スケールを強化（より素早い落下）
@@ -200,29 +198,10 @@ void APlayerCharacter::Tick(float DeltaTime)
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-
-		// ジャンプ開始／終了
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &APlayerCharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &APlayerCharacter::JumpStop);
-
-		// 移動
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Movement);
-
-		//しゃがみ
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Crouch);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &APlayerCharacter::StandUp);
-
-		// ダッシュ（スペシャルアクション）
-		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
-		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAction);
-
-		EnhancedInputComponent->BindAction(IncreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::DecreaseColor);
-		EnhancedInputComponent->BindAction(DecreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::IncreaseColor);
-
-		EnhancedInputComponent->BindAction(ShiftArrayRightColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ShiftArrayRightColorMode);
-		EnhancedInputComponent->BindAction(ShiftArrayLeftColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ShiftArrayLeftColorMode);
+	UPlayerInputComponent* PlayerInputData = GetComponentByClass<UPlayerInputComponent>();
+	if (PlayerInputData)
+	{
+		PlayerInputData->BindInput(PlayerInputComponent);
 	}
 }
 
