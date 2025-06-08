@@ -1,24 +1,16 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Manager/ColorManager.h"
-#include "Manager/LevelManager.h"
-#include "Components/ColorControllerComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Interface/ColorFilterInterface.h"
-#include "UObject/UObjectGlobals.h"
-#include "UI/UIManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/PostProcessComponent.h"
 #include "Engine/PostProcessVolume.h"
-#include "Blueprint/UserWidget.h"
-#include "FunctionLibrary.h"
-#include "DataContainer/ColorTargetType.h"
-
+#include "Interface/ColorFilterInterface.h"
+#include "Components/ColorControllerComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 void UColorManager::InitializeTargets()
 {
     ColorResponseTargets.Empty();
 
+    // クラスベースのターゲットをインスタンス化して登録
     for (auto& Pair : ColorTargetsClass)
     {
         EColorTargetType ModeKey = Pair.Key;
@@ -43,89 +35,82 @@ void UColorManager::InitializeTargets()
         }
     }
 
-    // ActiveLayerTarget�̏�����
+    // アクティブなレイヤーターゲットを初期化
     ActiveLayerTarget = nullptr;
 
+    // プレイヤーのコントローラーコンポーネントに色変更イベントをバインド
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
     if (PlayerPawn)
     {
         UColorControllerComponent* ColorController = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
-        if (ColorController)
+        if (ColorController && !ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
         {
             ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
         }
     }
 
-    // APostProcessVolume を自動取得
+    // ポストプロセスボリュームとマテリアルの初期化
     TArray<AActor*> FoundVolumes;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), APostProcessVolume::StaticClass(), FoundVolumes);
 
-    if (FoundVolumes.Num() > 0)
-    {
-        APostProcessVolume* PostProcessVolume = Cast<APostProcessVolume>(FoundVolumes[0]);
+    if (FoundVolumes.Num() < 0)
+        return;
 
-        if (PostProcessVolume && PostProcessMaterial)
-        {
-            PostProcessMID = UMaterialInstanceDynamic::Create(PostProcessMaterial, this);
-            PostProcessVolume->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, PostProcessMID));
-        }
+    APostProcessVolume* PostProcessVolume = Cast<APostProcessVolume>(FoundVolumes[0]);
+
+    if (PostProcessVolume && PostProcessMaterial)
+    {
+        PostProcessMID = UMaterialInstanceDynamic::Create(PostProcessMaterial, this);
+        PostProcessVolume->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, PostProcessMID));
     }
+
 }
 
-void UColorManager::ApplyColor(FLinearColor NewColor , EColorTargetType Mode)
+void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
 {
     switch (Mode)
     {
     case EColorTargetType::Layer:
-    {
         if (PostProcessMID)
         {
             PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
         }
+        // レスポンダー（常に反応するターゲット）へ通知
+        NotifyTargets(EColorTargetType::Responders, NewColor);
         break;
-    }
+
     case EColorTargetType::Object:
     case EColorTargetType::Background:
-        //カラーに反応するオブジェクトに現在のカラーを通知
-        if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(Mode))
-        {
-            for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
-            {
-                if (Target)
-                {
-                    //ここでよぶ
-                    Target->ColorAction(NewColor);
-                }
-            }
-        }
-        //ここで種類に応じてカラー変更
+        // 該当モードのターゲットへ通知
+        NotifyTargets(Mode, NewColor);
         break;
-    
+
     default:
         break;
     }
-    //カラーに反応するオブジェクトに現在のカラーを通知
-    if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(EColorTargetType::Responders))
+}
+
+void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorFilterInterface> Target)
+{
+    if (!Target) return;
+
+    FColorTargetInstanceArray& TargetArray = ColorResponseTargets.FindOrAdd(Mode);
+    if (!TargetArray.Instances.Contains(Target))
+    {
+        TargetArray.Instances.Add(Target);
+    }
+}
+
+void UColorManager::NotifyTargets(EColorTargetType Mode, const FLinearColor& Color)
+{
+    if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(Mode))
     {
         for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
         {
             if (Target)
             {
-                //ここでよぶ
-                Target->ColorAction(NewColor);
+                Target->ColorAction(Color);
             }
         }
-    }
-}
-
-
-void UColorManager::RegisterTarget(EColorTargetType mode, TScriptInterface<IColorFilterInterface> Target)
-{
-    if (!Target) return;
-
-    FColorTargetInstanceArray& TargetArray = ColorResponseTargets.FindOrAdd(mode);
-    if (!TargetArray.Instances.Contains(Target))
-    {
-        TargetArray.Instances.Add(Target);
     }
 }

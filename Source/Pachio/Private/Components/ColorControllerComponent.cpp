@@ -97,33 +97,46 @@ void UColorControllerComponent::ChangeMode(int Direction)
 
 EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType CurrentMode)
 {
-    // EColorTargetTypeの範囲を取得
+    // Responders を除外したリストを取得
+    TArray<EColorTargetType> FilteredModes;
     const TArray<EColorTargetType> AllModes = UFunctionLibrary::GetAllEnumValues<EColorTargetType>();
 
-    // 現在のモードが最後の要素なら最初に戻る
-    int32 CurrentIndex = AllModes.IndexOfByKey(CurrentMode);
-    if (CurrentIndex == INDEX_NONE)
+    for (EColorTargetType Mode : AllModes)
     {
-        return EColorTargetType::Layer; // デフォルトのモードに戻す
+        if (Mode != EColorTargetType::Responders)
+        {
+            FilteredModes.Add(Mode);
+        }
     }
 
-    // 次のモードに進む。最後の要素の場合、最初に戻る。
-    return AllModes[(CurrentIndex + 1) % AllModes.Num()];
+    int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
+    if (CurrentIndex == INDEX_NONE)
+    {
+        return EColorTargetType::Layer; // デフォルトに戻す
+    }
+
+    return FilteredModes[(CurrentIndex + 1) % FilteredModes.Num()];
 }
 
 EColorTargetType UColorControllerComponent::GetPreviousMode(EColorTargetType CurrentMode)
 {
-    // EColorTargetTypeの範囲を取得
+    // Responders を除外したリストを取得
+    TArray<EColorTargetType> FilteredModes;
     const TArray<EColorTargetType> AllModes = UFunctionLibrary::GetAllEnumValues<EColorTargetType>();
 
-    // 現在のモードが最初の要素なら最後に戻る
-    int32 CurrentIndex = AllModes.IndexOfByKey(CurrentMode);
-    if (CurrentIndex == INDEX_NONE)
+    for (EColorTargetType Mode : AllModes)
     {
-        return EColorTargetType::Layer; // デフォルトのモードに戻す
+        if (Mode != EColorTargetType::Responders)
+        {
+            FilteredModes.Add(Mode);
+        }
     }
 
-    // 前のモードに戻る。最初の要素の場合、最後に戻る。
-    return AllModes[(CurrentIndex - 1 + AllModes.Num()) % AllModes.Num()];
-}
+    int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
+    if (CurrentIndex == INDEX_NONE)
+    {
+        return EColorTargetType::Layer; // デフォルトに戻す
+    }
 
+    return FilteredModes[(CurrentIndex - 1 + FilteredModes.Num()) % FilteredModes.Num()];
+}

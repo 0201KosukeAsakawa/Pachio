@@ -15,11 +15,10 @@ void UColorLens::NativeConstruct()
     if (!Owner)
         return; // Ownerが取得できなければ初期化終了
 
+    // ColorManager に対して、背景色変更の対象としてこのクラスを登録
+    // 登録することで色変更イベントを受け取るようになる
+    Owner->GetColorManager()->RegisterTarget(EColorTargetType::Layer, this);
 
-        // ColorManager に対して、背景色変更の対象としてこのクラスを登録
-        // 登録することで色変更イベントを受け取るようになる
-        Owner->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
-    
 }
 
 // 新しい色を受け取ってフィルターの色を更新する処理

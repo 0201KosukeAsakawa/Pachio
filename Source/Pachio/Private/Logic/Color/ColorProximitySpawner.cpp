@@ -8,10 +8,21 @@
 
 UColorProximitySpawner::UColorProximitySpawner()
 {
+    OffMesh();
 }
 
 void UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
+    OnMesh();
+}
+
+void UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
+{
+    OffMesh();
+}
+
+void UColorProximitySpawner::OnMesh()
+{   
     UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
     UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
     if (!box || !mesh)
@@ -23,7 +34,7 @@ void UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
     mesh->SetCastShadow(true);
 }
 
-void UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
+void UColorProximitySpawner::OffMesh()
 {
     UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
     UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
@@ -34,10 +45,5 @@ void UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
     mesh->SetVisibility(false);
     mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     mesh->SetCastShadow(false);
-}
-
-void UColorProximitySpawner::ChangeColor(const FLinearColor& FilterColor)
-{
-
 }
 

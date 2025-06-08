@@ -22,7 +22,7 @@ public :
 private:
 	UFUNCTION(BlueprintCallable)
     // �t�B���^�[�F�ƈ�v���邩
-	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.05f) const;
+	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.08f) const;
 
     UFUNCTION(BlueprintCallable)
     virtual void OnColorMatched(const FLinearColor& FilterColor);  

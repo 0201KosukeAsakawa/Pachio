@@ -49,6 +49,8 @@ public:
     // 色付け対象を登録する関数
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorFilterInterface> Target);
 
+    void NotifyTargets(EColorTargetType Mode, const FLinearColor& Color);
+
 private:
     // 色付け対象クラスのマップ（モードごとに保持、エディタで編集可能）
     UPROPERTY(EditAnywhere)

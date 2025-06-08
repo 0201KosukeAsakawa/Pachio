@@ -3,6 +3,8 @@
 
 #include "Logic/Color/ColorTriggerStopComponent.h"
 #include "FunctionLibrary.h"
+#include "Components/BoxComponent.h"
+
 
 
 // Sets default values for this component's properties
