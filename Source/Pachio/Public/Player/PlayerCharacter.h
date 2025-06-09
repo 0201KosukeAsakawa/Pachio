@@ -3,7 +3,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Interface/AttackController.h"
 #include "Interface/IDamageable.h"
 #include "Interface/StateControllable.h"
 #include "PlayerCharacter.generated.h"
@@ -18,11 +17,13 @@ class UInputMappingContext;
 class UInputAction;
 class UStateManager;
 class UAttackComponent;
-class UAttackManagerComponent;
+class UAttackController;
 class USpringArmComponent;
 class UCameraComponent;
 class UColorControllerComponent;
 class UBoxComponent;
+class UCameraHandlerComponent;
+class UInvincibilityComponent;
 
 class UPhysicsCalculator;
 class UMoveComponent;
@@ -37,7 +38,7 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController, public IStateControllable, public IDamageable
+class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable, public IDamageable
 {
 	GENERATED_BODY()
 
@@ -56,25 +57,12 @@ public:
 	// プレイヤー入力のバインディング処理
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// 攻撃戦略の登録
-	virtual bool AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy) override;
-
 	UPlayerStateComponent* GetPlayerState() const override;
 
-	//プレイヤー変身時の当たり判定の変更
-	void PowerUpCollisionPosition();
-	void PowerDownCollisionPosition();
-
-	void ToggleVisibility();  // メッシュの表示/非表示を切り替える
-	void UpdateInvincible(float DeltaTime);  // 無敵時間の管理
 public:
 	// ==== 入力アクション ====
 	// 移動入力
 	void Movement(const FInputActionValue& Value);
-
-	//しゃがみ移行、立ち上がり
-	void Crouch(const FInputActionValue& Value);
-	void StandUp();
 
 	// ジャンプ開始・終了
 	void Jump(const FInputActionValue& Value);
@@ -92,27 +80,18 @@ public:
 private:
 	// ==== 攻撃コリジョン ====
 
-	// 上攻撃ヒット処理
-	UFUNCTION()
-	void OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	// 踏みつけ攻撃ヒット処理
-	UFUNCTION()
-	void OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
 	// ステートの変更（タグ指定）
 	bool ChangeState(FString Tag)override;
+	void ApplyEffectFromColor(const FLinearColor& Color);
 	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr)override;
 
 private:
 	// ==== 状態・戦闘 ====
+	UPROPERTY()
+	UCameraHandlerComponent* CameraComponent;
 
-		/** カメラのY座標最大値（右スクロール限界用） */
-	float MaxCameraY;
-
-	FVector CameraXZ;
+	UPROPERTY()
+	UInvincibilityComponent* InvincibilityComponent;
 
 	//ステート管理のクラス
 	UPROPERTY(EditAnywhere, Category = "State")
@@ -124,7 +103,7 @@ private:
 
 	// 攻撃管理コンポーネント（各攻撃の取得・実行）
 	UPROPERTY()
-	UAttackManagerComponent* AttackManager;
+	UAttackController* AttackController;
 
 	// ==== フラグ・座標 ====
 
@@ -136,41 +115,12 @@ private:
 	//スキルフラグ
 	bool bHasUsedSkill = false;
 
-	//無敵時間中フラグ
-	bool bIsInvincible = false;
-	bool bIsVisible = true; //無敵時間時の点滅フラグ
-	float InvincibleTime = 0.0f; //無敵時間の計測タイマー
-	float MaxInvincibleTime = 2.0f; // 無敵時間を2秒と仮定
-	FTimerHandle BlinkTimerHandle;
-
 	// 前フレームとカメラ位置補正用
 	FVector PlayerOldLocation;
 
 	UMoveComponent* MoveComp;
 
 	// ==== メッシュ・コリジョン ====
-
-	// キャラクター用のカプセルメッシュ（カスタム追加の場合）
-	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> Capsule;
-
-	// 上攻撃用の当たり判定
-	UPROPERTY()
-	UBoxComponent* UpperAttackBox;
-
-	// 踏みつけ攻撃用の当たり判定
-	UPROPERTY()
-	UBoxComponent* StompAttackBox;
-
-	// ==== カメラ ====
-
-	// カメラの回転／位置制御用スプリングアーム
-	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USpringArmComponent> SpringArm;
-
-	// プレイヤー視点用カメラ
-	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCameraComponent> Camera;
 
 	UPROPERTY()
 	UPhysicsCalculator* physics;

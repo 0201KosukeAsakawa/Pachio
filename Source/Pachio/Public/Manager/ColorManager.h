@@ -4,6 +4,7 @@
 #include "UObject/Interface.h"
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "DataContainer/ColorTargetType.h"
 #include "ColorManager.generated.h"
 
@@ -40,7 +41,7 @@ class UColorManager : public UObject
 
 public:
     // 色付け対象の初期化処理（クラスからインスタンス化など）
-    void InitializeTargets();
+    void Init();
 
     // 新しい色を適用する関数
     UFUNCTION()
@@ -49,6 +50,13 @@ public:
     // 色付け対象を登録する関数
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorFilterInterface> Target);
 
+   FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
+
+private:
+    void InitializeTargets();
+    void BindController();
+    void InitializePostEffect();
+    float GetHueDistance(float HueA, float HueB);
     void NotifyTargets(EColorTargetType Mode, const FLinearColor& Color);
 
 private:
@@ -64,9 +72,7 @@ private:
     UPROPERTY()
     TMap<EColorTargetType, FColorTargetInstanceArray> ColorResponseTargets;
 
-    // 現在アクティブなレイヤーの色付け対象インスタンス
-    UPROPERTY()
-    TScriptInterface<IColorFilterInterface> ActiveLayerTarget;
+    TMap<EBuffEffect, FLinearColor> EffectColorMap;
 
     // ポストプロセスマテリアル（エディタで設定可能）
     UPROPERTY(EditAnywhere)

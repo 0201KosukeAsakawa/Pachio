@@ -42,10 +42,6 @@ void UPlayerInputComponent::BindInput(UInputComponent* PlayerInputComponent )
 		// 移動
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::Movement);
 
-		// しゃがみ
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::Crouch);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, PlayerCharacter, &APlayerCharacter::StandUp);
-
 		// アクション
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::Action);
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, PlayerCharacter, &APlayerCharacter::StopAction);

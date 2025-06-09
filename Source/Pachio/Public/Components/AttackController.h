@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "AttackManagerComponent.generated.h"
+#include "AttackController.generated.h"
 
 class UAttackComponent;
 
@@ -14,13 +14,13 @@ class UAttackComponent;
  * 攻撃の種類が増えても柔軟に対応可能なように設計されている。
  */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class PACHIO_API UAttackManagerComponent : public UActorComponent
+class PACHIO_API UAttackController : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
 	// コンストラクタ：このコンポーネントのデフォルト設定を初期化
-	UAttackManagerComponent();
+	UAttackController();
 
 	void Init(UWorld*);
 
