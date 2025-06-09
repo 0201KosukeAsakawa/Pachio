@@ -31,8 +31,6 @@ float UAttackComponent::GetAttackPower() const
     return AttackData.BaseDamage;
 }
 
-// Init内のRegisterComponentは削除してOK
-
 bool UAttackComponent::Init(UWorld* world, FName NewStrategy)
 {
     if (!world)
@@ -42,32 +40,28 @@ bool UAttackComponent::Init(UWorld* world, FName NewStrategy)
         ->GetAttackDataContainer()
         ->CreateStrategy(world, NewStrategy);
 
-    if (!CurrentStrategy)
-        return false;
-
-    if (!AttackBox)
+    if (!CurrentStrategy || !AttackBox)
         return false;
 
     AActor* Owner = GetOwner();
     if (!Owner)
         return false;
 
-    USceneComponent* OwnerRoot = Owner->GetRootComponent();
-    if (!OwnerRoot)
+    USceneComponent* Root = Owner->GetRootComponent();
+    if (!Root)
         return false;
 
-    // アタッチ先設定（重要）
-    AttackBox->SetupAttachment(OwnerRoot);
+    // ここでアタッチ
+    AttackBox->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
 
-    // 大きさは必ず指定する（例）
-    AttackBox->SetBoxExtent(FVector(50.f, 50.f, 50.f));
-
-    // 衝突の有効化（必要に応じて調整）
+    // サイズ・衝突・可視化
+    AttackBox->SetBoxExtent(FVector(150.f));
     AttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-
-    // デバッグのため見えるようにしておく
     AttackBox->SetHiddenInGame(false);
+    AttackBox->SetVisibility(true); // 念のため
+    AttackBox->RegisterComponent(); // ★NewObject経由なら必要！
 
+    // オーバーラップ設定
     AttackBox->OnComponentBeginOverlap.AddDynamic(this, &UAttackComponent::OnAttack);
 
     UE_LOG(LogTemp, Log, TEXT("AttackComponent Init success on owner: %s"), *Owner->GetName());
