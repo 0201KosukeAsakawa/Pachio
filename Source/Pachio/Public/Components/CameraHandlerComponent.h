@@ -13,27 +13,18 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PACHIO_API UCameraHandlerComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
 public:
 	// Sets default values for this component's properties
 	UCameraHandlerComponent();
-
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
 public:
 	void Init(TObjectPtr<USceneComponent>);
-
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-
-
 private:
 	void UpdateCameraPosition(float DeltaTime);
-
-
 	// 判定結果のゲッター
 	bool IsMovingLeft() const { return bIsMovingLeft; }
 	bool IsMovingRight() const { return bIsMovingRight; }

@@ -8,7 +8,7 @@
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UColorFilterInterface : public UInterface
+class UColorReactiveInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +16,7 @@ class UColorFilterInterface : public UInterface
 /**
  * 
  */
-class PACHIO_API IColorFilterInterface
+class PACHIO_API IColorReactiveInterface
 {
 	GENERATED_BODY()
 

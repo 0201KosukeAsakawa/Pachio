@@ -8,7 +8,7 @@
 #include "DataContainer/ColorTargetType.h"
 #include "ColorManager.generated.h"
 
-class IColorFilterInterface;
+class IColorReactiveInterface;
 
 
 
@@ -30,7 +30,7 @@ struct FColorTargetInstanceArray
     GENERATED_BODY()
 
     // 色付け対象インターフェースを持つインスタンス配列
-    TArray<TScriptInterface<IColorFilterInterface>> Instances;
+    TArray<TScriptInterface<IColorReactiveInterface>> Instances;
 };
 
 // 色管理を行うマネージャークラス
@@ -45,20 +45,19 @@ public:
 
     // 新しい色を適用する関数
     UFUNCTION()
-    void ApplyColor(FLinearColor NewColor , EColorTargetType Mode);
+    void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
 
     // 色付け対象を登録する関数
-    void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorFilterInterface> Target);
+    void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);
 
-   FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
+    FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
 
 private:
     void InitializeTargets();
     void BindController();
     void InitializePostEffect();
-    float GetHueDistance(float HueA, float HueB);
     void NotifyTargets(EColorTargetType Mode, const FLinearColor& Color);
-
+    float GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B);
 private:
     // 色付け対象クラスのマップ（モードごとに保持、エディタで編集可能）
     UPROPERTY(EditAnywhere)

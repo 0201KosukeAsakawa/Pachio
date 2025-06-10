@@ -11,7 +11,7 @@
 class UColorReactiveComponent;
 
 UCLASS()
-class PACHIO_API AColorReactiveObject : public AActor,public IColorFilterInterface
+class PACHIO_API AColorReactiveObject : public AActor,public IColorReactiveInterface
 {
 	GENERATED_BODY()
 	

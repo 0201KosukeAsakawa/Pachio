@@ -35,12 +35,10 @@ void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
 
     if (bMatch)
     {
-        UE_LOG(LogTemp, Log, TEXT("[%s]TRUE"), *GetOwner()->GetName());
         OnColorMatched(FilterColor);
     }
     else
     {
-        UE_LOG(LogTemp, Log, TEXT("[%s] FLASE"), *GetOwner()->GetName());
         OnColorMismatched(FilterColor);
     }
 }
