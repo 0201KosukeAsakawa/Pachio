@@ -25,7 +25,7 @@ protected:
 
 public:
 	virtual void ColorAction(FLinearColor)override;
-
+	inline void ChangeRock(bool b) { bColorRock = b; }
 private:
 	// ��������R���|�[�l���g�̃N���X��BP����w��ł���悤��
 	UPROPERTY(EditAnywhere, Category = "Reactive")
@@ -38,4 +38,7 @@ private:
 	FLinearColor Color;
 	UPROPERTY(EditAnywhere,Category = "Color")
 	EColorTargetType ColorTargetType;
+
+	UPROPERTY(EditAnywhere)
+	bool bColorRock = false;
 };

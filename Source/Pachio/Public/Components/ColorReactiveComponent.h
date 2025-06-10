@@ -19,7 +19,7 @@ public :
 	virtual void Init(UMeshComponent* mesh);
 	void SetMyColor(const FLinearColor& FilterColor);
 	void CheckColorMatch(const FLinearColor& FilterColor);
-	inline void ChangeRock(bool b) { bColorRock = b; }
+
 private:
 	UFUNCTION(BlueprintCallable)
 	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.08f) const;
@@ -35,7 +35,4 @@ protected:
 	UMaterialInstanceDynamic* DynamicMaterialInstance = nullptr;
 
 	bool bColorMatch = false;
-
-	UPROPERTY(EditAnywhere)
-	bool bColorRock = false;
 };

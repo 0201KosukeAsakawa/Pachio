@@ -26,18 +26,18 @@ public:
 private:
 	void UpdateCameraPosition(float DeltaTime);
 	// 判定結果のゲッター
-	bool IsMovingLeft() const { return bIsMovingLeft; }
-	bool IsMovingRight() const { return bIsMovingRight; }
+	//bool IsMovingLeft() const { return bIsMovingLeft; }
+	//bool IsMovingRight() const { return bIsMovingRight; }
 
-	void SetMovingLeft(bool bLeft) { bIsMovingLeft = bLeft; }
-	void SetMovingRight(bool bRight) { bIsMovingRight = bRight; }
+	//void SetMovingLeft(bool bLeft) { bIsMovingLeft = bLeft; }
+	//void SetMovingRight(bool bRight) { bIsMovingRight = bRight; }
 private:
 
 	// ヘッダーに追加（必要に応じて）
 	FVector InitialSpringArmOffset;
 	float PreviousCameraY = 0.0f;
-	bool bIsMovingLeft = false;
-	bool bIsMovingRight = false;
+	//bool bIsMovingLeft = false;
+	//bool bIsMovingRight = false;
 	// ==== カメラ ====
 
 	// カメラの回転／位置制御用スプリングアーム

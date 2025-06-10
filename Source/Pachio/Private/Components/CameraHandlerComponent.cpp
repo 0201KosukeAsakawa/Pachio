@@ -47,20 +47,22 @@ void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
 
     const float Threshold = 1.0f; // 動きとみなす閾値
 
-    if (DeltaY > Threshold)
+    // 右方向の動きを DeltaY < -Threshold とみなす（反転）
+    if (DeltaY < -Threshold)
     {
-        SetMovingRight(true);
-        SetMovingLeft(false);
+        //SetMovingRight(true);
+        //SetMovingLeft(false);
     }
-    else if (DeltaY < -Threshold)
+    // 左方向の動きを DeltaY > Threshold とみなす（反転）
+    else if (DeltaY > Threshold)
     {
-        SetMovingRight(false);
-        SetMovingLeft(true);
+        //SetMovingRight(false);
+        //SetMovingLeft(true);
     }
     else
     {
-        SetMovingRight(false);
-        SetMovingLeft(false);
+        //SetMovingRight(false);
+        //SetMovingLeft(false);
     }
 
     PreviousCameraY = CurrentY;

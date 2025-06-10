@@ -312,14 +312,14 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 	{
 	case EBuffEffect::JumpBoost:
 	{
-		JumpBuff = 5.0f + 1.0f * Match.StrengthRatio;
+		JumpBuff = 1.0f + 1.0f * Match.StrengthRatio;
 		UE_LOG(LogTemp, Log, TEXT("[ColorEffect] JumpBoost applied: %.2f"), Match.StrengthRatio);
 		break;
 	}
 
 	case EBuffEffect::SpeedBoost:
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 600.0f + 400.0f * Match.StrengthRatio;
+		GetCharacterMovement()->MaxWalkSpeed = 1000.0f + 400.0f * Match.StrengthRatio;
 
 		UE_LOG(LogTemp, Log, TEXT("[ColorEffect] SpeedBoost applied: %.2f"), Match.StrengthRatio);
 		break;

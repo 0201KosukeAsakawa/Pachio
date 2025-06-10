@@ -28,9 +28,6 @@ void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
 {
     // 色のマッチング判定は保持しておきつつ
 
-    if (bColorRock)
-        return;
-
     bool bMatch = IsColorMatch(FilterColor);
 
     if (bMatch)
