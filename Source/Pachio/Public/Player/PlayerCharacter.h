@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "Interface/IDamageable.h"
 #include "Interface/StateControllable.h"
+#include "Interface/ColorFilterInterface.h"
 #include "PlayerCharacter.generated.h"
 
 // ===========================
@@ -38,7 +39,7 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable, public IDamageable
+class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable, public IDamageable,public IColorReactiveInterface
 {
 	GENERATED_BODY()
 
@@ -96,6 +97,7 @@ private:
 	// ===============
 	// ==== 初期化関数 ====
 	// ===============
+	void ColorAction(FLinearColor)override;
 
 	// 移動ロジックの初期化
 	void InitMovementLogic();
@@ -125,7 +127,10 @@ private:
 	// ダメージ処理（ダメージ値と攻撃データを受け取る）
 	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr) override;
 
+	void ResetBuff();
 private:
+	float JumpBuff = 1;
+	float DefaultMaxSpeed = 1;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================
@@ -161,14 +166,4 @@ private:
 	// カラーゲージ管理コンポーネント（色状態とその変化を制御）
 	UPROPERTY()
 	UColorControllerComponent* colorController;
-
-	// =====================
-	// ==== プレイヤー状態 ====
-	// =====================
-
-	// ダッシュ状態のフラグ
-	bool bIsDashing = false;
-
-	// スキルを使用したかどうかのフラグ（1回制限処理用）
-	bool bHasUsedSkill = false;
 };

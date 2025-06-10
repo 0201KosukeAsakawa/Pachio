@@ -28,19 +28,14 @@ void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
 {
     // 色のマッチング判定は保持しておきつつ
 
-    if (bColorRock)
-        return;
-
     bool bMatch = IsColorMatch(FilterColor);
 
     if (bMatch)
     {
-        UE_LOG(LogTemp, Log, TEXT("[%s]TRUE"), *GetOwner()->GetName());
         OnColorMatched(FilterColor);
     }
     else
     {
-        UE_LOG(LogTemp, Log, TEXT("[%s] FLASE"), *GetOwner()->GetName());
         OnColorMismatched(FilterColor);
     }
 }

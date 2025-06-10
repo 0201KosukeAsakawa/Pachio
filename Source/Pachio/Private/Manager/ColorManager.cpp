@@ -53,7 +53,7 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
 }
 
 // 色変化に反応するターゲットを登録
-void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorFilterInterface> Target)
+void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
 {
     if (!Target) return;
 
@@ -82,11 +82,11 @@ void UColorManager::InitializeTargets()
             if (TargetClass)
             {
                 UObject* NewObj = NewObject<UObject>(this, TargetClass);
-                if (NewObj && NewObj->GetClass()->ImplementsInterface(UColorFilterInterface::StaticClass()))
+                if (NewObj && NewObj->GetClass()->ImplementsInterface(UColorReactiveInterface::StaticClass()))
                 {
-                    TScriptInterface<IColorFilterInterface> InterfaceObj;
+                    TScriptInterface<IColorReactiveInterface> InterfaceObj;
                     InterfaceObj.SetObject(NewObj);
-                    InterfaceObj.SetInterface(Cast<IColorFilterInterface>(NewObj));
+                    InterfaceObj.SetInterface(Cast<IColorReactiveInterface>(NewObj));
                     InstanceArray.Instances.Add(InterfaceObj);
                 }
             }
@@ -133,7 +133,7 @@ void UColorManager::NotifyTargets(EColorTargetType Mode, const FLinearColor& Col
 {
     if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(Mode))
     {
-        for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
+        for (const TScriptInterface<IColorReactiveInterface>& Target : TargetArray->Instances)
         {
             if (Target)
             {
@@ -143,36 +143,50 @@ void UColorManager::NotifyTargets(EColorTargetType Mode, const FLinearColor& Col
         }
     }
 }
-
-// HSV色空間上の色相（Hue）距離を計算（円環状のため180°が最大距離）
-float UColorManager::GetHueDistance(float HueA, float HueB)
+float UColorManager::GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B)
 {
-    float Diff = FMath::Abs(HueA - HueB);
-    return FMath::Min(Diff, 360.0f - Diff);  // 例: 5°と355°は10°差
+    return FMath::Sqrt(
+        FMath::Square(A.R - B.R) +
+        FMath::Square(A.G - B.G) +
+        FMath::Square(A.B - B.B)
+    );
 }
 
-// 入力色から最も近いバフ効果を色相で判定し、強度を算出
 FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& InputColor)
 {
-    float InputHue = InputColor.LinearRGBToHSV().R * 360.0f;
+    FEffectMatchResult result;
 
-    FEffectMatchResult Result;
-    Result.Distance = 9999.0f;
+    float MinDistance = TNumericLimits<float>::Max();
+    float MaxPossibleDistance = FMath::Sqrt(3.0f); // RGB距離の最大値（(1,1,1)と(0,0,0)の距離）
 
-    for (const auto& Pair : EffectColorMap)
+    EBuffEffect ClosestEffect = EBuffEffect::None;
+
+    for (const auto& Elem : EffectColorMap)
     {
-        float TargetHue = Pair.Value.LinearRGBToHSV().R * 360.0f;
-        float HueDist = GetHueDistance(InputHue, TargetHue);
+        float Distance = GetColorDistanceRGB(InputColor, Elem.Value);
 
-        if (HueDist < Result.Distance)
+        UE_LOG(LogTemp, Log, TEXT("Comparing with %d: RGB Distance = %.4f"),
+            static_cast<int32>(Elem.Key), Distance);
+
+        if (Distance < MinDistance)
         {
-            Result.ClosestEffect = Pair.Key;
-            Result.Distance = HueDist;
+            MinDistance = Distance;
+            ClosestEffect = Elem.Key;
         }
     }
 
-    // 最大180°に対しての距離で強さを算出（近いほど強い）
-    Result.StrengthRatio = FMath::Clamp(1.0f - (Result.Distance / 180.0f), 0.0f, 1.0f);
+    // 距離が最大値に近いほど弱く、0に近いほど強い（逆スケール）
+    float StrengthRatio = 1.0f - (MinDistance / MaxPossibleDistance);
+    StrengthRatio = FMath::Clamp(StrengthRatio, 0.0f, 1.0f); // 念のため
 
-    return Result;
+    // ログ出力
+    UE_LOG(LogTemp, Log, TEXT("ClosestEffect: %d (RGB Distance = %.4f, StrengthRatio = %.2f)"),
+        static_cast<int32>(ClosestEffect), MinDistance, StrengthRatio);
+
+    // 結果設定
+    result.ClosestEffect = ClosestEffect;
+    result.Distance = MinDistance;
+    result.StrengthRatio = StrengthRatio;
+
+    return result;
 }

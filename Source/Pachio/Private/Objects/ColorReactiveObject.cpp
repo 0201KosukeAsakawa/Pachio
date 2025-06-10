@@ -56,9 +56,8 @@ void AColorReactiveObject::BeginPlay()
 
 void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 {
-	if (!ColorReactiveComponent)
+	if (!ColorReactiveComponent || bColorRock)
 		return;
-
 	ColorReactiveComponent->CheckColorMatch(NewColor);
 }
 

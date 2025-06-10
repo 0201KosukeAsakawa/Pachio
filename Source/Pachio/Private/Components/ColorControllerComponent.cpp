@@ -62,8 +62,6 @@ void UColorControllerComponent::AdjustColor(float Delta)
     ColorMap[CurrentColorMode].G = NewColor.G;
     ColorMap[CurrentColorMode].B = NewColor.B;
 
-    UE_LOG(LogTemp, Log, TEXT("End Color changed:RGB: R=%.3f G=%.3f B=%.3f"), NewColor.R, NewColor.G, NewColor.B);
-
     // デリゲートを通知
     OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
 }

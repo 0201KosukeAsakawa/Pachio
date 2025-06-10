@@ -24,8 +24,10 @@
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
+#include "Manager/ColorManager.h"
 
 
 // コンストラクタ
@@ -33,7 +35,6 @@ APlayerCharacter::APlayerCharacter()
 {
 	// 毎フレームTickを実行可能に設定
 	PrimaryActorTick.bCanEverTick = true;
-
 	// 各種コンポーネントを生成・初期化
 	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
 	MoveComp = CreateDefaultSubobject<UMoveComponent>(TEXT("MoveComponent"));
@@ -50,21 +51,19 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
 	// 移動ロジック初期化
 	InitMovementLogic();
-
 	// ステート管理・攻撃管理初期化
 	InitStateAndAttack();
-
 	// 物理パラメータ設定
 	InitPhysicsSettings();
-
 	// 入力設定初期化
 	InitInput();
-
 	// 視覚関連設定（アウトラインなど）
 	InitVisualSettings();
+	// ColorManager に登録
+	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
+	DefaultMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
 }
 
 // 毎フレーム呼ばれる更新処理
@@ -119,6 +118,12 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage, const AActor*)
 	return StateManager->GetCurrentState()->TakeDamage();
 }
 
+void APlayerCharacter::ResetBuff()
+{
+	 JumpBuff = 1;
+	 GetCharacterMovement()->MaxWalkSpeed = DefaultMaxSpeed;
+}
+
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
@@ -127,7 +132,6 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 	// 移動方向をMoveCompのロジックから取得
 	FVector direction = MoveComp->Movement(0, this, Value);
-
 	// 速度は現在のステートが持つ移動速度を使用
 	AddMovementInput(direction, StateManager->GetCurrentState()->GetMoveSpeed());
 
@@ -167,7 +171,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 		return;
 
 	// 上方向へジャンプ力を加える（値は12.0f固定）
-	physics->AddForce(GetActorUpVector(), 12);
+	physics->AddForce(GetActorUpVector(), 12 * JumpBuff);
 }
 
 // ジャンプ停止処理（ジャンプボタン離したときの停止処理）
@@ -179,40 +183,13 @@ void APlayerCharacter::JumpStop(const FInputActionValue& Value)
 // ダッシュ・スキル開始処理
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
-	// スキル未使用時のみスキルを発動
-	if (!bHasUsedSkill)
-	{
-		UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
-		if (CurrentState)
-		{
-			// 現在ステートがFireStateならスキル処理を呼び出す
-			UPlayerFireState* FireState = Cast<UPlayerFireState>(CurrentState);
-			if (FireState)
-			{
-				FInputActionValue DummyValue;
-				FireState->OnSkill(DummyValue);
-				bHasUsedSkill = true;
-			}
-		}
-	}
 
-	// ダッシュ状態でなければ速度アップ＆フラグオン
-	if (!bIsDashing)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = 1200.0f; // ダッシュ速度に設定
-		bIsDashing = true;
-	}
 }
 
 // ダッシュ終了処理（速度を元に戻す）
 void APlayerCharacter::StopAction()
 {
-	if (bIsDashing)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = 600.0f; // 通常速度に戻す
-		bIsDashing = false;
-		bHasUsedSkill = false; // スキル使用フラグリセット
-	}
+
 }
 
 // 色ゲージを減少させる処理
@@ -267,8 +244,6 @@ void APlayerCharacter::InitMovementLogic()
 // ステート管理・攻撃管理の初期化
 void APlayerCharacter::InitStateAndAttack()
 {
-	bIsDashing = false;
-
 	// StateManager を指定のクラスで生成
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
 
@@ -321,25 +296,46 @@ void APlayerCharacter::InitVisualSettings()
 	}
 }
 
+void APlayerCharacter::ColorAction(FLinearColor Color)
+{
+	ApplyEffectFromColor(Color);
+}
+
 void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 {
-	//FEffectMatchResult Match = ALevel GetClosestEffectByHue(Color);
+	// 色から最も近いバフ効果と強度を取得
+	FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
+		->GetColorManager()
+		->GetClosestEffectByHue(Color);
+	ResetBuff();
+	switch (Match.ClosestEffect)
+	{
+	case EBuffEffect::JumpBoost:
+	{
+		JumpBuff = 1.0f + 1.0f * Match.StrengthRatio;
+		UE_LOG(LogTemp, Log, TEXT("[ColorEffect] JumpBoost applied: %.2f"), Match.StrengthRatio);
+		break;
+	}
 
-	//switch (Match.ClosestEffect)
-	//{
-	//case EFilterEffectType::JumpBoost:
-	//	GetCharacterMovement()->JumpZVelocity = 600.0f + 600.0f * Match.StrengthRatio;
-	//	break;
+	case EBuffEffect::SpeedBoost:
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 1000.0f + 400.0f * Match.StrengthRatio;
 
-	//case EFilterEffectType::SpeedBoost:
-	//	GetCharacterMovement()->MaxWalkSpeed = 600.0f + 400.0f * Match.StrengthRatio;
-	//	break;
+		UE_LOG(LogTemp, Log, TEXT("[ColorEffect] SpeedBoost applied: %.2f"), Match.StrengthRatio);
+		break;
+	}
 
-	//case EFilterEffectType::Shield:
-	//	ShieldStrength = BaseShield + (MaxShield - BaseShield) * Match.StrengthRatio;
-	//	break;
+	case EBuffEffect::Shield:
+	{
+		// Shield効果が未実装
+		UE_LOG(LogTemp, Warning, TEXT("[ColorEffect] Shield effect detected but not implemented."));
+		break;
+	}
 
-	//default:
-	//	break;
-	//}
+	default:
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ColorEffect] No matching effect. Effect type unknown or invalid."));
+		break;
+	}
+	}
 }
