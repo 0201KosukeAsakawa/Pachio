@@ -4,68 +4,81 @@
 #include "UObject/Interface.h"
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
+#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetType.h"
 #include "ColorManager.generated.h"
 
 class IColorFilterInterface;
 
-// Fƒ‚[ƒh—ñ‹“‘Ì
-UENUM(BlueprintType)
-enum class EColorMode : uint8
-{
-    Layer      UMETA(DisplayName = "Layer"),
-    Object     UMETA(DisplayName = "Object"),
-    Background UMETA(DisplayName = "Background")
-};
 
-// ƒuƒ‹[ƒvƒŠƒ“ƒgƒNƒ‰ƒX‚ğ•Û‚·‚é\‘¢‘ÌiƒGƒfƒBƒ^İ’è—pj
+
+// è‰²ä»˜ã‘å¯¾è±¡ã®ã‚¯ãƒ©ã‚¹ç¾¤ã‚’æ ¼ç´ã™ã‚‹æ§‹é€ ä½“ï¼ˆç·¨é›†å¯èƒ½ï¼‰
 USTRUCT(BlueprintType)
 struct FColorTargetArray
 {
     GENERATED_BODY()
 
+    // è‰²ä»˜ã‘å¯¾è±¡ã®ã‚¯ãƒ©ã‚¹é…åˆ—
     UPROPERTY(EditAnywhere)
     TArray<TSubclassOf<UObject>> Targets;
 };
 
-// ÀsƒCƒ“ƒXƒ^ƒ“ƒX‚ğ•Û‚·‚é\‘¢‘Ì
+// å®Ÿä½“ã®è‰²ä»˜ã‘å¯¾è±¡ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ç¾¤ã‚’æ ¼ç´ã™ã‚‹æ§‹é€ ä½“
 USTRUCT()
 struct FColorTargetInstanceArray
 {
     GENERATED_BODY()
 
+    // è‰²ä»˜ã‘å¯¾è±¡ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã‚’æŒã¤ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹é…åˆ—
     TArray<TScriptInterface<IColorFilterInterface>> Instances;
 };
 
-// UColorManagerƒNƒ‰ƒX–{‘Ì
+// è‰²ç®¡ç†ã‚’è¡Œã†ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼ã‚¯ãƒ©ã‚¹
 UCLASS(Blueprintable)
 class UColorManager : public UObject
 {
     GENERATED_BODY()
 
 public:
-    // ƒGƒfƒBƒ^‚Åİ’è‚·‚éƒuƒ‹[ƒvƒŠƒ“ƒgƒNƒ‰ƒXŒQ
-    UPROPERTY(EditAnywhere)
-    TMap<EColorMode, FColorTargetArray> ColorTargetsClass;
+    // è‰²ä»˜ã‘å¯¾è±¡ã®åˆæœŸåŒ–å‡¦ç†ï¼ˆã‚¯ãƒ©ã‚¹ã‹ã‚‰ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹åŒ–ãªã©ï¼‰
+    void Init();
 
-    // Às‚É¶¬‚³‚ê‚½ƒCƒ“ƒXƒ^ƒ“ƒXŒQ
-    UPROPERTY()
-    TMap<EColorMode, FColorTargetInstanceArray> ColorTargets;
-
-    UPROPERTY()
-    TScriptInterface<IColorFilterInterface> ActiveLayerTarget;
-
-    // Œ»İ‚Ìƒ‚[ƒh
-    UPROPERTY(EditAnywhere)
-    EColorMode Mode;
-
-public:
-    // ‰Šú‰»ŠÖ”iƒuƒ‹[ƒvƒŠƒ“ƒgƒNƒ‰ƒX‚©‚çƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬j
-    void InitializeTargets();
-
-    // F‚ğ“K—p‚·‚éŠÖ”
+    // æ–°ã—ã„è‰²ã‚’é©ç”¨ã™ã‚‹é–¢æ•°
     UFUNCTION()
-    void ApplyColor(FLinearColor NewColor);
+    void ApplyColor(FLinearColor NewColor , EColorTargetType Mode);
 
-    // ƒ^[ƒQƒbƒg‚ğ’Ç‰Á“o˜^‚·‚éŠÖ”i•K—v‚É‰‚¶‚Äj
-    void RegisterTarget(EColorMode Mode, TScriptInterface<IColorFilterInterface> Target);
+    // è‰²ä»˜ã‘å¯¾è±¡ã‚’ç™»éŒ²ã™ã‚‹é–¢æ•°
+    void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorFilterInterface> Target);
+
+   FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
+
+private:
+    void InitializeTargets();
+    void BindController();
+    void InitializePostEffect();
+    float GetHueDistance(float HueA, float HueB);
+    void NotifyTargets(EColorTargetType Mode, const FLinearColor& Color);
+
+private:
+    // è‰²ä»˜ã‘å¯¾è±¡ã‚¯ãƒ©ã‚¹ã®ãƒãƒƒãƒ—ï¼ˆãƒ¢ãƒ¼ãƒ‰ã”ã¨ã«ä¿æŒã€ã‚¨ãƒ‡ã‚£ã‚¿ã§ç·¨é›†å¯èƒ½ï¼‰
+    UPROPERTY(EditAnywhere)
+    TMap<EColorTargetType, FColorTargetArray> ColorTargetsClass;
+
+    // è‰²ä»˜ã‘å¯¾è±¡ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ãƒãƒƒãƒ—ï¼ˆãƒ¢ãƒ¼ãƒ‰ã”ã¨ã«ä¿æŒï¼‰
+    UPROPERTY()
+    TMap<EColorTargetType, FColorTargetInstanceArray> ColorableObjectsMap;
+
+    //è‰²ã«åå¿œã™ã‚‹ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã«ç¾åœ¨ã®è‰²ã‚’é€šçŸ¥
+    UPROPERTY()
+    TMap<EColorTargetType, FColorTargetInstanceArray> ColorResponseTargets;
+
+    TMap<EBuffEffect, FLinearColor> EffectColorMap;
+
+    // ãƒã‚¹ãƒˆãƒ—ãƒ­ã‚»ã‚¹ãƒãƒ†ãƒªã‚¢ãƒ«ï¼ˆã‚¨ãƒ‡ã‚£ã‚¿ã§è¨­å®šå¯èƒ½ï¼‰
+    UPROPERTY(EditAnywhere)
+    UMaterialInterface* PostProcessMaterial;
+
+    // ãƒã‚¹ãƒˆãƒ—ãƒ­ã‚»ã‚¹ãƒãƒ†ãƒªã‚¢ãƒ«ã®å‹•çš„ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹
+    UPROPERTY()
+    UMaterialInstanceDynamic* PostProcessMID;
 };

@@ -15,16 +15,27 @@ public:
 	// Sets default values for this component's properties
 	UColorReactiveComponent();
 		
-public:
+public :
+	virtual void Init(UMeshComponent* mesh);
+	void SetMyColor(const FLinearColor& FilterColor);
+	void CheckColorMatch(const FLinearColor& FilterColor);
+	inline void ChangeRock(bool b) { bColorRock = b; }
+private:
 	UFUNCTION(BlueprintCallable)
-    // フィルター色と一致するか
-	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.05f) const;
+	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.08f) const;
 
-    // 色が一致したときの動作（派生クラスで定義）
     UFUNCTION(BlueprintCallable)
-    virtual void OnColorMatched();  // 継承先で override
-
+    virtual void OnColorMatched(const FLinearColor& FilterColor);  
+	virtual void OnColorMismatched(const FLinearColor& FilterColor);
 protected:
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* DynamicMaterialInstance = nullptr;
+
+	bool bColorMatch = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bColorRock = false;
 };

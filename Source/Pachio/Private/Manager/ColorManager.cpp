@@ -1,25 +1,80 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Manager/ColorManager.h"
-#include "Components/ColorControllerComponent.h"
-#include "Interface/ColorFilterInterface.h"
-#include "UObject/UObjectGlobals.h" 
 #include "Kismet/GameplayStatics.h"
-#include "Manager/LevelManager.h"
-#include "UI/UIManager.h"
-#include "Blueprint/UserWidget.h"
+#include "Components/PostProcessComponent.h"
+#include "Engine/PostProcessVolume.h"
+#include "Interface/ColorFilterInterface.h"
+#include "Components/ColorControllerComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
+// 色とバフ効果の対応を管理するクラス
+void UColorManager::Init()
+{
+    // 対象オブジェクト（色を受けるもの）を初期化
+    InitializeTargets();
+
+    // プレイヤーのコントローラーから色変更イベントを受け取る
+    BindController();
+
+    // ポストプロセスボリュームとマテリアル初期化（視覚効果用）
+    InitializePostEffect();
+
+    // バフ効果とその基準色のマッピングを定義
+    EffectColorMap = {
+        { EBuffEffect::JumpBoost,  FLinearColor::Green },
+        { EBuffEffect::SpeedBoost, FLinearColor::Blue},
+        { EBuffEffect::Shield,     FLinearColor::Red }
+    };
+}
+
+// 色を反映し、ターゲットに通知する
+void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
+{
+    switch (Mode)
+    {
+    case EColorTargetType::Layer:
+        if (PostProcessMID)
+        {
+            // ポストプロセスマテリアルに色を適用
+            PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
+        }
+        // 常時反応するターゲット（例：UIなど）に通知
+        NotifyTargets(EColorTargetType::Responders, NewColor);
+        break;
+
+    case EColorTargetType::Object:
+    case EColorTargetType::Background:
+        // 指定されたモードのターゲットに通知
+        NotifyTargets(Mode, NewColor);
+        break;
+
+    default:
+        break;
+    }
+}
+
+// 色変化に反応するターゲットを登録
+void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorFilterInterface> Target)
+{
+    if (!Target) return;
+
+    FColorTargetInstanceArray& TargetArray = ColorResponseTargets.FindOrAdd(Mode);
+    if (!TargetArray.Instances.Contains(Target))
+    {
+        TargetArray.Instances.Add(Target);
+    }
+}
+
+// 登録されたターゲットクラスをインスタンス化して準備
 void UColorManager::InitializeTargets()
 {
-    ColorTargets.Empty();
+    ColorResponseTargets.Empty();
 
     for (auto& Pair : ColorTargetsClass)
     {
-        EColorMode ModeKey = Pair.Key;
+        EColorTargetType ModeKey = Pair.Key;
         const FColorTargetArray& ClassArray = Pair.Value;
 
-        FColorTargetInstanceArray& InstanceArray = ColorTargets.FindOrAdd(ModeKey);
+        FColorTargetInstanceArray& InstanceArray = ColorResponseTargets.FindOrAdd(ModeKey);
         InstanceArray.Instances.Empty();
 
         for (TSubclassOf<UObject> TargetClass : ClassArray.Targets)
@@ -37,66 +92,87 @@ void UColorManager::InitializeTargets()
             }
         }
     }
+}
 
-    // ActiveLayerTarget�̏�����
-    ActiveLayerTarget = nullptr;
-
+// プレイヤーの色コントローラーとイベント接続
+void UColorManager::BindController()
+{
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
     if (PlayerPawn)
     {
         UColorControllerComponent* ColorController = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
-        if (ColorController)
+        if (ColorController && !ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
         {
+            // 色変更イベントにバインド
             ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
         }
     }
-
-
-    ALevelManager* al = ALevelManager::GetInstance(GetWorld());
-    UUserWidget* widget = al->GetUIManager()->GetWidget(EWidgetCategory::Lens, "ColorLensWidget");
-    if (!widget || !widget->GetClass()->ImplementsInterface(UColorFilterInterface::StaticClass()))
-        return;
-    ActiveLayerTarget.SetObject(widget);
-    ActiveLayerTarget.SetInterface(Cast<IColorFilterInterface>(widget));
 }
 
-void UColorManager::ApplyColor(FLinearColor NewColor)
+// ポストプロセス用マテリアルの初期化（ビジュアルフィルター表示などに使用）
+void UColorManager::InitializePostEffect()
 {
-    switch (Mode)
-    {
-    case EColorMode::Layer:
-        if (ActiveLayerTarget)
-        {
-            ActiveLayerTarget->SetColor(NewColor);
-        }
-        break;
+    TArray<AActor*> FoundVolumes;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), APostProcessVolume::StaticClass(), FoundVolumes);
 
-    case EColorMode::Object:
-    case EColorMode::Background:
-        if (FColorTargetInstanceArray* TargetArray = ColorTargets.Find(Mode))
+    if (FoundVolumes.Num() < 0)
+        return;
+
+    APostProcessVolume* PostProcessVolume = Cast<APostProcessVolume>(FoundVolumes[0]);
+
+    if (PostProcessVolume && PostProcessMaterial)
+    {
+        // マテリアルインスタンスを作成しポストプロセスに適用
+        PostProcessMID = UMaterialInstanceDynamic::Create(PostProcessMaterial, this);
+        PostProcessVolume->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, PostProcessMID));
+    }
+}
+
+// 指定モードの全ターゲットに色を通知
+void UColorManager::NotifyTargets(EColorTargetType Mode, const FLinearColor& Color)
+{
+    if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(Mode))
+    {
+        for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
         {
-            for (const TScriptInterface<IColorFilterInterface>& Target : TargetArray->Instances)
+            if (Target)
             {
-                if (Target)
-                {
-                    Target->SetColor(NewColor);
-                }
+                // ターゲットの反応関数を呼び出す
+                Target->ColorAction(Color);
             }
         }
-        break;
-
-    default:
-        break;
     }
 }
 
-void UColorManager::RegisterTarget(EColorMode mode, TScriptInterface<IColorFilterInterface> Target)
+// HSV色空間上の色相（Hue）距離を計算（円環状のため180°が最大距離）
+float UColorManager::GetHueDistance(float HueA, float HueB)
 {
-    if (!Target) return;
+    float Diff = FMath::Abs(HueA - HueB);
+    return FMath::Min(Diff, 360.0f - Diff);  // 例: 5°と355°は10°差
+}
 
-    FColorTargetInstanceArray& TargetArray = ColorTargets.FindOrAdd(mode);
-    if (!TargetArray.Instances.Contains(Target))
+// 入力色から最も近いバフ効果を色相で判定し、強度を算出
+FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& InputColor)
+{
+    float InputHue = InputColor.LinearRGBToHSV().R * 360.0f;
+
+    FEffectMatchResult Result;
+    Result.Distance = 9999.0f;
+
+    for (const auto& Pair : EffectColorMap)
     {
-        TargetArray.Instances.Add(Target);
+        float TargetHue = Pair.Value.LinearRGBToHSV().R * 360.0f;
+        float HueDist = GetHueDistance(InputHue, TargetHue);
+
+        if (HueDist < Result.Distance)
+        {
+            Result.ClosestEffect = Pair.Key;
+            Result.Distance = HueDist;
+        }
     }
+
+    // 最大180°に対しての距離で強さを算出（近いほど強い）
+    Result.StrengthRatio = FMath::Clamp(1.0f - (Result.Distance / 180.0f), 0.0f, 1.0f);
+
+    return Result;
 }

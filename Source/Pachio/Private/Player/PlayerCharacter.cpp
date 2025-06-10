@@ -3,516 +3,343 @@
 // インクルード
 
 #include "Player/PlayerCharacter.h"
+#include "Player/State/PlayerDefaultState.h"
+#include "Player/State/PlayerFireState.h"
+#include "Player/State/StateManager.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/AttackManagerComponent.h"
+#include "Components/AttackController.h"
 #include "Components/MoveComponent.h"
 #include "Components/ColorControllerComponent.h"
-#include "Camera/CameraComponent.h"
+#include "Components/PlayerInputComponent.h"
+#include "Components/CameraHandlerComponent.h"
+#include "Components/InvincibilityComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "FunctionLibrary.h"
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Player/State/PlayerDefaultState.h"
-#include "Player/State/PlayerFireState.h"
-#include "Player/State/StateManager.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
+#include "Manager/LevelManager.h"
 
 
 // コンストラクタ
 APlayerCharacter::APlayerCharacter()
 {
-	PrimaryActorTick.bCanEverTick = true; // Tickを有効化
+	// 毎フレームTickを実行可能に設定
+	PrimaryActorTick.bCanEverTick = true;
 
-	// SpringArmの作成とルートへのアタッチ
-	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	SpringArm->SetupAttachment(RootComponent);
-
-	// Cameraの作成とSpringArmへのアタッチ
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(SpringArm);
-
-	// SpringArmの初期設定
-	SpringArm->TargetArmLength = 500.0f;
-	SpringArm->SocketOffset = FVector(0.0f, 100.0f, 50.0f);
-	SpringArm->bUsePawnControlRotation = false; // プレイヤー回転と連動しない
-
+	// 各種コンポーネントを生成・初期化
+	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
 	MoveComp = CreateDefaultSubobject<UMoveComponent>(TEXT("MoveComponent"));
-	AttackManager = CreateDefaultSubobject<UAttackManagerComponent>(TEXT("AttackManager"));
+	AttackController = CreateDefaultSubobject<UAttackController>(TEXT("AttackController"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
+	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
+
+	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
+	CameraComponent->Init(RootComponent);
 }
 
-// ゲーム開始時に呼ばれる関数
+// ゲーム開始時の初期化処理
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
-	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
-	MoveComp->Init(this,PlayerLogic);
+	// 移動ロジック初期化
+	InitMovementLogic();
 
-	// 初期位置を保存
-	PreviousLocation = GetActorLocation();
+	// ステート管理・攻撃管理初期化
+	InitStateAndAttack();
 
+	// 物理パラメータ設定
+	InitPhysicsSettings();
 
-	bIsDashing = false; // 初期状態ではダッシュしていない
+	// 入力設定初期化
+	InitInput();
 
-		// 攻撃コンポーネントの生成
-	StateManager = NewObject<UStateManager>(this, StateManagerClass);
-
-	physics->RegisterComponent();            // Tick対象になる
-
-	if (!AttackManager || !StateManagerClass)
-		return;
-
-	AttackManager->Init(GetWorld());
-	AttackManager->ResetMap();
-	AttackManager->RegisterAttackComponent("Stomp");
-	AttackManager->RegisterAttackComponent("Upper");
-	StateManager->RegisterComponent(); // Register as component
-	StateManager->Init(this, GetWorld());
-
-
-	// 攻撃判定用のボックスコンポーネントを探す
-	UpperAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Upper");
-	StompAttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Stomp");
-
-	// ボックスが見つからなければ処理中断
-	if (!UpperAttackBox || !StompAttackBox)
-		return;
-
-	// 当たり判定のイベント登録
-	UpperAttackBox->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnUpperAttack);
-	StompAttackBox->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnStompAttack);
-
-	// 初期状態では当たり判定を無効にする
-	UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	// SpringArm の回転継承設定
-	if (SpringArm)
-	{
-		SpringArm->bInheritYaw = true;    // Yaw（左右）は継承する
-		SpringArm->bInheritPitch = false; // Pitch（上下）は継承しない
-		SpringArm->bInheritRoll = false;  // Roll（傾き）は継承しない
-	}
-
-	//プレイヤーの座標を保存
-	PlayerOldLocation = GetActorLocation();
-
-	// カメラのY座標最大値を初期化（初期カメラ位置）
-	if (Camera)
-	{
-		//カメラの初期位置を少し右にずれるようにして設定
-		MaxCameraY = Camera->GetComponentLocation().Y + 1000;
-		CameraXZ = Camera->GetComponentLocation();
-
-		// カメラのY座標を固定（右スクロール固定）
-		FVector CameraLocation = Camera->GetComponentLocation();
-
-		CameraLocation = FVector(CameraXZ.X, MaxCameraY, CameraXZ.Z);
-		Camera->SetWorldLocation(CameraLocation);
-	}
-
-	// 入力マッピングコンテキストの追加
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
-	GetCharacterMovement()->BrakingFrictionFactor = 2.0f; // 止まる速さを上げる
-	GetCharacterMovement()->GroundFriction = 8.0f; // 地面との摩擦を強化
-	// 重力スケールを強化（より素早い落下）
-	GetCharacterMovement()->GravityScale = 0.0f;
+	// 視覚関連設定（アウトラインなど）
+	InitVisualSettings();
 }
 
+// 毎フレーム呼ばれる更新処理
 void APlayerCharacter::Tick(float DeltaTime)
 {
-	FVector temp = GetVelocity();
-
 	Super::Tick(DeltaTime);
 
-	temp = GetVelocity();
-
-	//攻撃の判定が消えていたら即時リターン
-	if (!UpperAttackBox || !StateManager)
+	// ステートマネージャーが存在しない場合は処理中断
+	if (!StateManager)
 		return;
 
-	//ステートマネージャーの経過処理呼び出し
+	// ステートマネージャーの時間経過更新処理を実行
 	StateManager->Update(DeltaTime);
 
-	//プレイヤーのY座標取得
-	float PlayerY = GetActorLocation().Y;
-
-	if (SpringArm && Camera)
-	{
-		// カメラの最大Y座標を更新（右スクロールのみ）
-		if (PlayerY > MaxCameraY)
-		{
-			MaxCameraY = PlayerY;
-		}
-
-		// カメラのY座標を固定（右スクロール固定）
-		FVector CameraLocation = Camera->GetComponentLocation();
-		
-		CameraLocation = FVector(CameraXZ.X, MaxCameraY, CameraXZ.Z);
-		Camera->SetWorldLocation(CameraLocation);
-
-		// ===== プレイヤーの制限 =====
-		FVector Location = GetActorLocation();
-
-		// カメラの左端を計算（横スクロール用）
-		const float HalfScreenWidth = 1200.0f; // 実際のゲームに応じて調整
-		float CameraLeftEdgeY = MaxCameraY - HalfScreenWidth;
-
-		// 左に行きすぎたら止める
-		if (Location.Y < CameraLeftEdgeY)
-		{
-			Location.Y = CameraLeftEdgeY;
-			SetActorLocation(Location);
-		}
-	}
-
-	// 地上ならば攻撃判定を無効にする
-	if (physics->OnGround())
-	{
-		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-	// 空中ならば攻撃判定を有効にする
-	else
-	{
-		// UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		StompAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
-
-	if (GetActorLocation().Z < PreviousLocation.Z)
-	{
-		// 前のフレームよりも下に移動したときの処理
-		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-	else
-	{
-		UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
-	// 現在の位置を保存
-	PreviousLocation.Z = GetActorLocation().Z;
-
-	//プレイヤーが無敵時間ならば処理する
-	if (bIsInvincible)
-	{
-		UpdateInvincible(DeltaTime);
-	}
+	// 重力を加える（値は任意、固定で10.0fを加算）
 	physics->AddGravity(10.0f);
-	PlayerOldLocation = GetActorLocation();
 }
 
-// 入力のバインド
+// プレイヤー入力バインド処理
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-
-		// ジャンプ開始／終了
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &APlayerCharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &APlayerCharacter::JumpStop);
-
-		// 移動
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Movement);
-
-		//しゃがみ
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Crouch);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &APlayerCharacter::StandUp);
-
-		// ダッシュ（スペシャルアクション）
-		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Action);
-		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopAction);
-
-		EnhancedInputComponent->BindAction(IncreaseColorAction, ETriggerEvent::Triggered, this, &APlayerCharacter::DecreaseColor);
-		EnhancedInputComponent->BindAction(DecreaseColorAction, ETriggerEvent::Completed, this, &APlayerCharacter::IncreaseColor);
+	// UPlayerInputComponent から独自の入力バインディング処理を呼び出す
+	UPlayerInputComponent* PlayerInputData = GetComponentByClass<UPlayerInputComponent>();
+	if (PlayerInputData)
+	{
+		PlayerInputData->BindInput(PlayerInputComponent);
 	}
 }
 
-bool APlayerCharacter::AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy)
-{
-	return true;
-}
-
+// 現在のプレイヤーステートを取得
 UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 {
 	return StateManager->GetCurrentState();
 }
 
-// 上攻撃時のヒット処理
-void APlayerCharacter::OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+// ダメージ処理
+bool APlayerCharacter::TakeDamage(FAttackData Data, float damage, const AActor*)
 {
-	if (!AttackManager || !OtherActor || OtherActor == this)
-		return;
-
-	if (!AttackManager->GetAttack("Upper")->PerformAttack(OtherActor))
-		return;
-
-
-	physics->ResetForce();
-}
-
-// 踏みつけ攻撃時のヒット処理
-void APlayerCharacter::OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (!AttackManager || !OtherActor || OtherActor == this)
-		return;
-
-	if (AttackManager->GetAttack("Stomp")->PerformAttack(OtherActor))
-	{
-		physics->AddForce(GetActorUpVector(), 3);
-	}
-}
-
-bool APlayerCharacter::TakeDamage(FAttackData Data, float damage , const AActor*)
-{
-	if (bIsInvincible)
-		return false; // 無敵状態の場合、ダメージを無視
+	// 無敵状態ならダメージを無効化
+	if (InvincibilityComponent->IsInvincible())
+		return false;
 
 	if (!StateManager)
 		return false;
 
-	// 無敵時間開始
-	bIsInvincible = true;
-	InvincibleTime = MaxInvincibleTime;
+	// ダメージを受けたら無敵時間開始
+	InvincibilityComponent->StartInvincible();
 
+	// 現在のステートにダメージ処理を委譲
 	return StateManager->GetCurrentState()->TakeDamage();
 }
 
-// 移動処理（StateManager 経由）
+// 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
 	if (!MoveComp)
 		return;
 
-	FVector direction = (MoveComp->Movement(0, this, Value));
-	//キャラクターを移動させる
+	// 移動方向をMoveCompのロジックから取得
+	FVector direction = MoveComp->Movement(0, this, Value);
+
+	// 速度は現在のステートが持つ移動速度を使用
 	AddMovementInput(direction, StateManager->GetCurrentState()->GetMoveSpeed());
 
-	// 入力がある場合のみ、キャラクターの向きを滑らかに回転させる
+	// 移動方向がある場合はキャラクターの向きを滑らかに回転させる
 	if (!direction.IsNearlyZero())
 	{
-		// 向くべき方向を計算
+		// 目標の回転角度を計算（キャラクター位置→移動方向のベクトル）
 		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(
 			GetActorLocation(),
 			GetActorLocation() + direction
 		);
 
-		// Pitch（上下）、Roll（傾き）は固定
+		// PitchとRollを0に固定（上下の傾きを防止）
 		TargetRot.Pitch = 0.0f;
 		TargetRot.Roll = 0.0f;
 
-		// 現在の回転と目標の回転の間をスムーズに補間
+		// 現在の回転から目標回転へ一定速度で補間（スムーズな回転）
 		FRotator SmoothRot = FMath::RInterpTo(
 			GetActorRotation(),
 			TargetRot,
 			GetWorld()->GetDeltaSeconds(),
-			10.0f // 補間スピード
+			10.0f
 		);
 
-		// キャラクターの回転を設定
+		// キャラクターの回転を更新
 		SetActorRotation(SmoothRot);
 	}
 
 	return;
 }
 
-void APlayerCharacter::Crouch(const FInputActionValue& Value)
-{
-	if (!UpperAttackBox || !StompAttackBox)
-		return;
-
-	if (Cast<UPlayerDefaultState>(StateManager->GetCurrentState()))
-		return;
-
-	PowerDownCollisionPosition();
-	
-	//コリジョンのサイズ変更
-	//GetCharacterMovement()->Crouch();
-}
-
-void APlayerCharacter::StandUp()
-{
-	if (Cast<UPlayerDefaultState>(StateManager->GetCurrentState()))
-		return;
-
-	PowerUpCollisionPosition();
-	//コリジョンのサイズ変更
-	//GetCharacterMovement()->Crouch();
-}
-
-// ジャンプ処理（ジャンプ中に上攻撃の判定を有効化）
+// ジャンプ処理（地面に接地している場合のみ力を加える）
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	//ジャンプが可能な状態なら
+	// 地面に接地していなければジャンプ不可
 	if (!physics->OnGround())
 		return;
 
-		physics->AddForce(GetActorUpVector(), 12);
-		/*UpperAttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);*/
+	// 上方向へジャンプ力を加える（値は12.0f固定）
+	physics->AddForce(GetActorUpVector(), 12);
 }
 
-// ジャンプ終了処理
+// ジャンプ停止処理（ジャンプボタン離したときの停止処理）
 void APlayerCharacter::JumpStop(const FInputActionValue& Value)
 {
 	ACharacter::StopJumping();
 }
 
-// ダッシュ開始（移動速度上昇）
+// ダッシュ・スキル開始処理
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
+	// スキル未使用時のみスキルを発動
 	if (!bHasUsedSkill)
 	{
-		// StateManagerから現在のステートを取得
 		UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
 		if (CurrentState)
 		{
-			// UPlayerFireState にキャストできれば
+			// 現在ステートがFireStateならスキル処理を呼び出す
 			UPlayerFireState* FireState = Cast<UPlayerFireState>(CurrentState);
 			if (FireState)
 			{
-				// 引数が未使用なので空の値を渡す
 				FInputActionValue DummyValue;
 				FireState->OnSkill(DummyValue);
 				bHasUsedSkill = true;
 			}
 		}
 	}
-	//ダッシュ状態じゃなければ
+
+	// ダッシュ状態でなければ速度アップ＆フラグオン
 	if (!bIsDashing)
 	{
-		//プレイヤーの速度を上昇させ、フラグをオンにする
-		GetCharacterMovement()->MaxWalkSpeed = 1200.0f;
+		GetCharacterMovement()->MaxWalkSpeed = 1200.0f; // ダッシュ速度に設定
 		bIsDashing = true;
 	}
 }
 
-// ダッシュ終了（移動速度戻す）
+// ダッシュ終了処理（速度を元に戻す）
 void APlayerCharacter::StopAction()
 {
-	//ダッシュ状態なら
 	if (bIsDashing)
 	{
-		//プレイヤーの速度を元に戻し、フラグをオフにする
-		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f; // 通常速度に戻す
 		bIsDashing = false;
-		bHasUsedSkill = false;
+		bHasUsedSkill = false; // スキル使用フラグリセット
 	}
 }
 
+// 色ゲージを減少させる処理
 void APlayerCharacter::DecreaseColor()
 {
 	if (!colorController)
 		return;
 
-	colorController->AdjustColor(EColorChannel::R,0.01);
+	colorController->AdjustColor(0.001);
 }
 
+// 色ゲージを増加させる処理
 void APlayerCharacter::IncreaseColor()
 {
 	if (!colorController)
 		return;
 
-	colorController->AdjustColor(EColorChannel::R, -0.0001);
+	colorController->AdjustColor(-0.001);
 }
 
-//パワーアップ時にコリジョンの移動処理
-void APlayerCharacter::PowerUpCollisionPosition()
+// カラーモードを右にシフト（次の色モードへ変更）
+void APlayerCharacter::ShiftArrayRightColorMode()
 {
-	//即時リターン
-	if (!UpperAttackBox || !StompAttackBox)
+	if (!colorController)
 		return;
 
-	//上と下の攻撃判定を拡大調整
-	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 110));
-	StompAttackBox->SetRelativeLocation(FVector(0, 0, -110));
-
-	// 足元を維持するために中心を元に戻す（上へずらす）
-	FVector CapsuleOffset = GetCapsuleComponent()->GetRelativeLocation();
-	CapsuleOffset.Z += 55.0f;
-	GetCapsuleComponent()->SetRelativeLocation(CapsuleOffset);
-
-	GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
+	colorController->ChangeMode(1);
 }
 
-//パワーダウン時にコリジョンの移動処理
-void APlayerCharacter::PowerDownCollisionPosition()
+// カラーモードを左にシフト（前の色モードへ変更）
+void APlayerCharacter::ShiftArrayLeftColorMode()
 {
-	//即時リターン
-	if (!UpperAttackBox || !StompAttackBox)
+	if (!colorController)
 		return;
 
-	//上と下の攻撃判定を縮小調整
-	UpperAttackBox->SetRelativeLocation(FVector(0, 0, 55));
-	StompAttackBox->SetRelativeLocation(FVector(0, 0, -55));
-
-	GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
+	colorController->ChangeMode(-1);
 }
 
-void APlayerCharacter::ToggleVisibility()
-{
-	UStaticMeshComponent* pMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, "StaticMesh");
-	if (pMesh == nullptr)
-		return;
-
-	if (bIsVisible)
-	{
-		pMesh->SetVisibility(false);
-	}
-	else
-	{
-		pMesh->SetVisibility(true);
-	}
-
-	// 状態を反転
-	bIsVisible = !bIsVisible;
-}
-
-void APlayerCharacter::UpdateInvincible(float DeltaTime)
-{
-	UStaticMeshComponent* pMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, "StaticMesh");
-	if (pMesh == nullptr)
-		return;
-
-	// 無敵時間を減少させる
-	InvincibleTime -= DeltaTime;
-
-	if (InvincibleTime <= 0.0f)
-	{
-		bIsInvincible = false; // 無敵時間終了
-		GetWorld()->GetTimerManager().ClearTimer(BlinkTimerHandle);  // タイマーの停止
-		pMesh->SetVisibility(true);  // 最後にメッシュを表示状態に戻す
-	}
-	else
-	{
-		// 点滅の処理
-		if (!GetWorld()->GetTimerManager().IsTimerActive(BlinkTimerHandle))
-		{
-			// タイマーを設定して、定期的に点滅させる
-			GetWorld()->GetTimerManager().SetTimer(BlinkTimerHandle, this, &APlayerCharacter::ToggleVisibility, 0.1f, true);
-		}
-	}
-}
-
-
-// 状態の変更（タグ指定）
+// 状態の変更（ステートタグを指定して遷移）
 bool APlayerCharacter::ChangeState(FString Tag)
 {
 	return StateManager->ChangeState(Tag);
+}
+
+// 移動ロジックの初期化（MoveCompにプレイヤー用移動ロジックをセット）
+void APlayerCharacter::InitMovementLogic()
+{
+	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
+	MoveComp->Init(this, PlayerLogic);
+}
+
+// ステート管理・攻撃管理の初期化
+void APlayerCharacter::InitStateAndAttack()
+{
+	bIsDashing = false;
+
+	// StateManager を指定のクラスで生成
+	StateManager = NewObject<UStateManager>(this, StateManagerClass);
+
+	if (!AttackController || !StateManagerClass)
+		return;
+
+	// 攻撃コントローラの初期化と攻撃登録
+	AttackController->Init(GetWorld());
+	AttackController->ResetMap();
+	AttackController->RegisterAttackComponent("Stomp");
+	AttackController->RegisterAttackComponent("Upper");
+
+	// ステートマネージャーのコンポーネント登録・初期化
+	StateManager->RegisterComponent();
+	StateManager->Init(this, GetWorld());
+}
+
+// 物理パラメータの初期化（摩擦・重力設定など）
+void APlayerCharacter::InitPhysicsSettings()
+{
+	physics->RegisterComponent();
+
+	auto* Move = GetCharacterMovement();
+
+	// 摩擦や重力のパラメータ調整
+	Move->BrakingFrictionFactor = 2.0f;
+	Move->GroundFriction = 8.0f;
+	Move->GravityScale = 0.0f; // 重力は自前のphysicsで制御しているため無効化
+}
+
+// 入力関連の初期化（コンポーネントのコントローラ参照を設定）
+void APlayerCharacter::InitInput()
+{
+	UPlayerInputComponent* PlayerInputData = GetComponentByClass<UPlayerInputComponent>();
+	if (PlayerInputData)
+	{
+		PlayerInputData->Init(Controller);
+	}
+}
+
+// 視覚的設定（メッシュのアウトライン表示など）
+void APlayerCharacter::InitVisualSettings()
+{
+	UStaticMeshComponent* pMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, "StaticMesh");
+	if (pMesh)
+	{
+		// カスタム深度レンダーを有効にしてアウトラインを表示
+		pMesh->SetRenderCustomDepth(true);
+		pMesh->SetCustomDepthStencilValue(10);
+	}
+}
+
+void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
+{
+	//FEffectMatchResult Match = ALevel GetClosestEffectByHue(Color);
+
+	//switch (Match.ClosestEffect)
+	//{
+	//case EFilterEffectType::JumpBoost:
+	//	GetCharacterMovement()->JumpZVelocity = 600.0f + 600.0f * Match.StrengthRatio;
+	//	break;
+
+	//case EFilterEffectType::SpeedBoost:
+	//	GetCharacterMovement()->MaxWalkSpeed = 600.0f + 400.0f * Match.StrengthRatio;
+	//	break;
+
+	//case EFilterEffectType::Shield:
+	//	ShieldStrength = BaseShield + (MaxShield - BaseShield) * Match.StrengthRatio;
+	//	break;
+
+	//default:
+	//	break;
+	//}
 }

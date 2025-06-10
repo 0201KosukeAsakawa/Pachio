@@ -2,7 +2,10 @@
 
 
 #include "Logic/Color/ColorTriggerStopComponent.h"
-#include "GameFramework/Actor.h"
+#include "FunctionLibrary.h"
+#include "Components/BoxComponent.h"
+
+
 
 // Sets default values for this component's properties
 UColorTriggerStopComponent::UColorTriggerStopComponent()
@@ -10,33 +13,30 @@ UColorTriggerStopComponent::UColorTriggerStopComponent()
 
 }
 
-void UColorTriggerStopComponent::OnColorMatched()
+void UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
-    AActor* Owner = Cast<AActor>(GetOwner());
-    if (!Owner)
+    UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
+    UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
+    if (!box || !mesh)
         return;
 
-    // --- 当たり判定（Collision）を無効化 ---
-    TArray<UActorComponent*> CollisionComponents = GetOwner()->GetComponentsByClass(UPrimitiveComponent::StaticClass());
-    for (UActorComponent* Comp : CollisionComponents)
-    {
-        UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Comp);
-        if (PrimComp)
-        {
-            // 衝突無効化
-            PrimComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        }
-    }
+    box->SetHiddenInGame(true);
+    mesh->SetVisibility(false);
+    mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    mesh->SetCastShadow(false);
 
-    // --- 見た目（メッシュ等）を非表示に ---
-    TArray<UActorComponent*> MeshComponents = Owner->GetComponentsByClass(UMeshComponent::StaticClass());
-    for (UActorComponent* Comp : MeshComponents)
-    {
-        UMeshComponent* MeshComp = Cast<UMeshComponent>(Comp);
-        if (MeshComp)
-        {
-            MeshComp->SetVisibility(false, true);  // 子も含めて非表示
-            MeshComp->SetHiddenInGame(true);
-        }
-    }
 }
+
+void UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterColor)
+{
+    UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
+    UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
+    if (!box || !mesh)
+        return;
+
+    box->SetHiddenInGame(false);
+    mesh->SetVisibility(true);
+    mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    mesh->SetCastShadow(true);
+}
+

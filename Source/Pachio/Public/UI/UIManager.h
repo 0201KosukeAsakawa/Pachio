@@ -6,6 +6,7 @@
 #include "Containers/Map.h"
 #include "UIManager.generated.h"
 
+class UWidgetComponent;
 
 UENUM(BlueprintType)
 enum class EWidgetCategory : uint8
@@ -45,7 +46,7 @@ class PACHIO_API UUIManager : public UObject
     GENERATED_BODY()
 
 public:
-    virtual void Init();
+    virtual void Init(const AActor*);
 
 public:
     /** 指定したカテゴリと名前のウィジェットを表示する */
@@ -80,4 +81,6 @@ private:
     /** 複数のウィジェットカテゴリごとのデータ（State, Combat, Inventory など） */
     UPROPERTY(EditAnywhere, Category = "UI")
     TMap<EWidgetCategory, FWidgetData> WidgetDataMap;
+
+    UWidgetComponent* lensComponent;
 };

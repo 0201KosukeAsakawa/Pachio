@@ -6,23 +6,64 @@
 // Sets default values for this component's properties
 UColorReactiveComponent::UColorReactiveComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+}
+
+void UColorReactiveComponent::Init(UMeshComponent* mesh)
+{
+    // マテリアルの色を変更
+    UMaterialInstanceDynamic* DynMaterial = mesh->CreateAndSetMaterialInstanceDynamic(0);
+    if (DynMaterial)
+    {
+        DynMaterial->SetVectorParameterValue(FName("BaseColor"), Color);
+    }
+}
+
+void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor)
+{
+	Color = FilterColor;
+}
+
+void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
+{
+    // 色のマッチング判定は保持しておきつつ
+
+    if (bColorRock)
+        return;
+
+    bool bMatch = IsColorMatch(FilterColor);
+
+    if (bMatch)
+    {
+        UE_LOG(LogTemp, Log, TEXT("[%s]TRUE"), *GetOwner()->GetName());
+        OnColorMatched(FilterColor);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Log, TEXT("[%s] FLASE"), *GetOwner()->GetName());
+        OnColorMismatched(FilterColor);
+    }
 }
 
 bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const
 {
-	{
-		return FMath::Abs(Color.R - FilterColor.R) <= Tolerance &&
-			FMath::Abs(Color.G - FilterColor.G) <= Tolerance &&
-			FMath::Abs(Color.B - FilterColor.B) <= Tolerance;
-	}
+    float dR = Color.R - FilterColor.R;
+    float dG = Color.G - FilterColor.G;
+    float dB = Color.B - FilterColor.B;
+
+    // 人間の目に近い重み付き色差（輝度ベース）
+    float ColorDifference = 0.299f * dR * dR + 0.587f * dG * dG + 0.114f * dB * dB;
+
+    return ColorDifference <= Tolerance * Tolerance;
 }
 
-void UColorReactiveComponent::OnColorMatched()
+
+void UColorReactiveComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
 }
+
+void UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
+{
+}
+
 

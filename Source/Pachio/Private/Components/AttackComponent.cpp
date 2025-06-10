@@ -1,18 +1,27 @@
 #include "Components/AttackComponent.h"
+#include "Components/BoxComponent.h"
 #include "Attack/AttackStrategy.h"
 #include "Manager/LevelManager.h"
 #include "DataContainer/AttackDataContainer.h"
+#include "FunctionLibrary.h"
 
 UAttackComponent::UAttackComponent()
 {
     // このコンポーネントはTickを使わない（毎フレームの更新は不要）
     PrimaryComponentTick.bCanEverTick = false;
+
+    // 攻撃判定用のボックスコンポーネントを探す
+    AttackBox = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCollision"));
 }
 
 void UAttackComponent::BeginPlay()
 {
     Super::BeginPlay();
 
+}
+
+void UAttackComponent::OnAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
 }
 
 
@@ -22,20 +31,45 @@ float UAttackComponent::GetAttackPower() const
     return AttackData.BaseDamage;
 }
 
-bool UAttackComponent::Init(UWorld* world , FName NewStrategy)
+bool UAttackComponent::Init(UWorld* world, FName NewStrategy)
 {
     if (!world)
         return false;
 
-    UAttackStrategy* ua = ALevelManager::GetInstance(GetWorld())->GetAttackDataContainer()->CreateStrategy(world, NewStrategy);
+    CurrentStrategy = ALevelManager::GetInstance(GetWorld())
+        ->GetAttackDataContainer()
+        ->CreateStrategy(world, NewStrategy);
 
-    if (!ua)
+    if (!CurrentStrategy || !AttackBox)
         return false;
 
-    CurrentStrategy = ua;
+    AActor* Owner = GetOwner();
+    if (!Owner)
+        return false;
+
+    USceneComponent* Root = Owner->GetRootComponent();
+    if (!Root)
+        return false;
+
+    // ここでアタッチ
+    AttackBox->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
+
+    // サイズ・衝突・可視化
+    AttackBox->SetBoxExtent(FVector(150.f));
+    AttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    AttackBox->SetHiddenInGame(false);
+    AttackBox->SetVisibility(true); // 念のため
+    AttackBox->RegisterComponent(); // ★NewObject経由なら必要！
+
+    // オーバーラップ設定
+    AttackBox->OnComponentBeginOverlap.AddDynamic(this, &UAttackComponent::OnAttack);
+
+    UE_LOG(LogTemp, Log, TEXT("AttackComponent Init success on owner: %s"), *Owner->GetName());
 
     return true;
 }
+
+
 
 void UAttackComponent::SetAttackData(EAttackType type, EBreakLevel level,const float damage,const bool projectile,const bool destroy,const UParticleSystem* effect)
 {

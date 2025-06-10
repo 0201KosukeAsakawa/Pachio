@@ -19,9 +19,9 @@ class PACHIO_API UColorLens : public UUserWidget,public IColorFilterInterface
 public:
 	void NativeConstruct();
 private:
-	void SetColor(FLinearColor)override;
+	void ColorAction(FLinearColor)override;
 protected:
-	// 例えば画面の色を変えるためのUIパーツ
+	//
 	UPROPERTY(meta = (BindWidget))
 	UImage* FilterColorImage;
 };
