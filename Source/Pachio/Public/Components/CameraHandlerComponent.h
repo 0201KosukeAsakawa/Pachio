@@ -26,6 +26,7 @@ private:
 
 	// ヘッダーに追加（必要に応じて）
 	FVector InitialSpringArmOffset;
+	FVector LocalLocation;
 	float PreviousCameraY = 0.0f;
 	// ==== カメラ ====
 

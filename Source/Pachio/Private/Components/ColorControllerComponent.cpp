@@ -2,6 +2,7 @@
 
 
 #include "Components/ColorControllerComponent.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "FunctionLibrary.h"
 
 // Sets default values for this component's properties
