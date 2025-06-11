@@ -10,13 +10,21 @@
 
 // 色とバフ効果の対応を管理するクラス
 void UColorManager::Init()
-{
+{    
+    // ColorTargetRegistryClass が設定されている場合にインスタンス化
+    if (ColorTargetRegistryClass)
+    {
+        // クラスを基にインスタンスを生成
+        ColorTargetRegistry = NewObject<UColorTargetRegistry>(this, ColorTargetRegistryClass);
+
+    }
+
+    EffectColorMatcher = NewObject<UEffectColorMatcher>();
     // プレイヤーのコントローラーから色変更イベントを受け取る
     BindController();
     // ポストプロセスボリュームとマテリアル初期化（視覚効果用）
     InitializePostEffect();
-    ColorTargetRegistry = NewObject<UColorTargetRegistry>();
-    EffectColorMatcher = NewObject<UEffectColorMatcher>();
+
 }
 
 // 色を反映し、ターゲットに通知する
@@ -25,28 +33,7 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
     if (!ColorTargetRegistry)
         return;
 
-
-    switch (Mode)
-    {
-    case EColorTargetType::Layer:
-        if (PostProcessMID)
-        {
-            // ポストプロセスマテリアルに色を適用
-            PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
-        }
-        // 常時反応するターゲット（例：UIなど）に通知
-        ColorTargetRegistry-> NotifyTargets(EColorTargetType::Responders, NewColor);
-        break;
-
-    case EColorTargetType::Object:
-    case EColorTargetType::Background:
-        // 指定されたモードのターゲットに通知
-        ColorTargetRegistry-> NotifyTargets(Mode, NewColor);
-        break;
-
-    default:
-        break;
-    }
+    ColorTargetRegistry->ApplyColor(NewColor, Mode);
 }
 
 // 色変化に反応するターゲットを登録
@@ -84,18 +71,7 @@ void UColorManager::BindController()
 // ポストプロセス用マテリアルの初期化（ビジュアルフィルター表示などに使用）
 void UColorManager::InitializePostEffect()
 {
-    TArray<AActor*> FoundVolumes;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), APostProcessVolume::StaticClass(), FoundVolumes);
-
-    if (FoundVolumes.Num() < 0)
+    if (!ColorTargetRegistry)
         return;
-
-    APostProcessVolume* PostProcessVolume = Cast<APostProcessVolume>(FoundVolumes[0]);
-
-    if (PostProcessVolume && PostProcessMaterial)
-    {
-        // マテリアルインスタンスを作成しポストプロセスに適用
-        PostProcessMID = UMaterialInstanceDynamic::Create(PostProcessMaterial, this);
-        PostProcessVolume->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, PostProcessMID));
-    }
+    ColorTargetRegistry->InitializePostEffect();
 }
