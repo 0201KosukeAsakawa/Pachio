@@ -24,7 +24,7 @@ void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor)
 	Color = FilterColor;
 }
 
-void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
+bool UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
 {
     // 色のマッチング判定は保持しておきつつ
 
@@ -38,6 +38,8 @@ void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
     {
         OnColorMismatched(FilterColor);
     }
+
+    return bMatch;
 }
 
 bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const

@@ -1,62 +1,55 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "InputAction.h"
 #include "GameFramework/Character.h"
 
-// ˆÚ“®ˆ—iStateManager Œo—Rj
 FVector UPlayerMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)
 {
+    if (!GetWorld())
+        return FVector(0,0,0);
 
-	// “ü—Í’liX = ¶‰E, Y = ‘OŒãj
-	FVector2D MoveInput = Value.Get<FVector2D>();
+    FVector2D MoveInput = Value.Get<FVector2D>();
 
-	ACharacter* Character = Cast<ACharacter>(Owner);
-	if (!Character)
-		return FVector(0,0,0);
+    // ãƒ‡ãƒƒãƒ‰ã‚¾ãƒ¼ãƒ³å‡¦ç†ï¼ˆå°ã•ã„å…¥åŠ›ã¯ç„¡è¦–ï¼‰
+    const float DeadZone = 0.2f;
+    if (MoveInput.Size() < DeadZone)
+        return FVector(0, 0, 0);
 
-	// ƒJƒƒ‰‚Ì‰ñ“]‚©‚ç‘O•ûE‰E•ûŒüƒxƒNƒgƒ‹‚ğæ“¾
-	FRotator CamRot = Character->GetControlRotation();
-	FVector CamForward = CamRot.Vector(); // ‘O•ûƒxƒNƒgƒ‹
-	FVector CamRight = FRotationMatrix(CamRot).GetUnitAxis(EAxis::Y); // ‰E•ûŒüƒxƒNƒgƒ‹
+    ACharacter* character = Cast<ACharacter>(Owner);
+    if (!character)
+        return FVector(0, 0, 0);
 
-	// ========== ÀÛ‚ÌˆÚ“®ˆ— ==========
-	// “ü—Í’l‚ÉŠî‚Ã‚­ˆÚ“®•ûŒü‚ğŒvZ‚µA³‹K‰»
-	return (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();
+    // ã‚«ãƒ¡ãƒ©å›è»¢ã«åŸºã¥ãç§»å‹•æ–¹å‘ã®å–å¾—
+    FRotator CamRot = character->GetControlRotation();
+    FVector CamForward = FRotationMatrix(CamRot).GetUnitAxis(EAxis::X);
+    FVector CamRight = FRotationMatrix(CamRot).GetUnitAxis(EAxis::Y);
 
-	/* ƒLƒƒƒ‰ƒNƒ^[‚ğˆÚ“®‚³‚¹‚é
-	Character->AddMovementInput(MoveDir, StateManager->GetCurrentState()->GetMoveSpeed());
+    // ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ãŒä¸Šä¸‹é€†ã®å ´åˆã€å·¦å³ãƒ™ã‚¯ãƒˆãƒ«ã‚’åè»¢
+    if (FVector::DotProduct(Owner->GetActorUpVector(), FVector::UpVector) < 0.f)
+    {
+        CamRight *= -1.f;
+    }
 
-	// “ü—Í‚ª‚ ‚éê‡‚Ì‚İAƒLƒƒƒ‰ƒNƒ^[‚ÌŒü‚«‚ğŠŠ‚ç‚©‚É‰ñ“]‚³‚¹‚é
-	if (!MoveDir.IsNearlyZero())
-	{
-		// Œü‚­‚×‚«•ûŒü‚ğŒvZ
-		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(
-			GetActorLocation(),
-			GetActorLocation() + MoveDir
-		);
+    // ã‚«ãƒ¡ãƒ©åŸºæº–ã§ã®ç§»å‹•ãƒ™ã‚¯ãƒˆãƒ«ï¼ˆãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ï¼‰
+    FVector WorldMoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();
 
-		// Pitchiã‰ºjARolliŒX‚«j‚ÍŒÅ’è
-		TargetRot.Pitch = 0.0f;
-		TargetRot.Roll = 0.0f;
+    // ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®ãƒ­ãƒ¼ã‚«ãƒ«åº§æ¨™ã«å¤‰æ›
+    FVector LocalMoveDir = Owner->GetActorTransform().InverseTransformVectorNoScale(WorldMoveDir);
 
-		// Œ»İ‚Ì‰ñ“]‚Æ–Ú•W‚Ì‰ñ“]‚ÌŠÔ‚ğƒXƒ€[ƒY‚É•âŠÔ
-		FRotator SmoothRot = FMath::RInterpTo(
-			GetActorRotation(),
-			TargetRot,
-			GetWorld()->GetDeltaSeconds(),
-			10.0f // •âŠÔƒXƒs[ƒh
-		);
+    // ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®é€²è¡Œæ–¹å‘ï¼ˆãƒ­ãƒ¼ã‚«ãƒ«è»¸ï¼‰ã«å¤‰æ›ã—ã¦æœ€çµ‚çš„ãªç§»å‹•ãƒ™ã‚¯ãƒˆãƒ«ã‚’ç®—å‡º
+    FVector MoveDir =
+        Owner->GetActorRightVector() * LocalMoveDir.Y +
+        Owner->GetActorForwardVector() * LocalMoveDir.X;
 
-		// ƒLƒƒƒ‰ƒNƒ^[‚Ì‰ñ“]‚ğİ’è
-		SetActorRotation(SmoothRot);
-	}
+    // å…¥åŠ›ãƒ™ã‚¯ãƒˆãƒ«ã‚’ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã«é©ç”¨
+    return MoveDir;
 
-	return;*/
 }
 
-void UPlayerMoveLogic::Init(float speed,const FVector)
+
+
+
+// ç§»å‹•é€Ÿåº¦ãªã©ã®åˆæœŸåŒ–é–¢æ•°ï¼ˆæœªå®Ÿè£…ï¼‰
+void UPlayerMoveLogic::Init(float speed, const FVector)
 {
-	return;
+    return;
 }
