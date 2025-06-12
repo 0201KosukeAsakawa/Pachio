@@ -19,15 +19,16 @@ void AColorMuchTrigger::BeginPlay()
 	{
 		if (UColorManager* ColorManager = LevelManager->GetColorManager())
 		{
-			ColorManager->RegisterTarget(EColorTargetType::Responders, this);
+			ColorManager->RegisterTarget(ColorTargetType, this);
 		}
 	}
 }
 
 void AColorMuchTrigger::Init()
 {
-	InitializeColorLogic();
-	RegisterToColorManager();
+	AColorReactiveObject::Init();
+	/*InitializeColorLogic();
+	RegisterToColorManager();*/
 }
 
 void AColorMuchTrigger::ColorAction(FLinearColor InColor)
@@ -36,6 +37,15 @@ void AColorMuchTrigger::ColorAction(FLinearColor InColor)
 	if (!ColorReactiveComponent)
 		return;
 	bColorMuch = ColorReactiveComponent->CheckColorMatch(InColor);
+	if (!bColorMuch)
+		return;
+	ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
+	if (levelManager == nullptr)
+		return;
+	if (levelManager->GetColorManager() == nullptr)
+		return;
+
+	levelManager->GetColorManager()->ColorEvent(EventID);
 }
 
 void AColorMuchTrigger::ApplyColorToMaterial(FLinearColor InColor)
