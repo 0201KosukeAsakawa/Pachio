@@ -36,21 +36,19 @@ void ALevelManager::InitializeComponents()
 
 	if (!IsValid(BlockContainer))
 		BlockContainer = NewObject<UBlockDataContainer>(this, BlockContainerClass);
-
+	UIManager = NewObject<UUIManager>(this, UIManagerClass);
 	ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
 	ColorManager->Init();
-
-	ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
-	AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
-	ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
-	UIManager = NewObject<UUIManager>(this, UIManagerClass);
-	EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
-
 	if (UIManager)
 	{
 		UIManager->Init(this);
 		UIManager->ShowWidget(EWidgetCategory::Score, "Score");
 	}
+	ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
+	AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
+	ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
+	
+	EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
 
 	if (!IsValid(ObjectManager))
 	{
@@ -73,10 +71,6 @@ void ALevelManager::InitializeComponents()
 			SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
 		}
 	}
-
-
-
-
 	// 1秒ごとに CountUp 関数を呼ぶ
 	GetWorld()->GetTimerManager().SetTimer(CountTimerHandle, this, &ALevelManager::CountDown, 1.0f, true);
 

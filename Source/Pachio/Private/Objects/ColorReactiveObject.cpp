@@ -4,8 +4,9 @@
 #include "Objects/ColorReactiveObject.h"
 #include "Components/ColorReactiveComponent.h"
 #include "Manager/LevelManager.h"
-#include "FunctionLibrary.h"
 #include "Manager/ColorManager.h"
+#include "FunctionLibrary.h"
+
 
 AColorReactiveObject::AColorReactiveObject()
 {
@@ -15,6 +16,11 @@ AColorReactiveObject::AColorReactiveObject()
 void AColorReactiveObject::BeginPlay()
 {
 	Super::BeginPlay();
+	Init();
+}
+
+void AColorReactiveObject::Init()
+{
 	InitializeColorLogic();
 	RegisterToColorManager();
 	SetupMaterial();
@@ -22,52 +28,61 @@ void AColorReactiveObject::BeginPlay()
 
 void AColorReactiveObject::InitializeColorLogic()
 {
-	if (ReactiveComponentClass)
-	{
-		ColorReactiveComponent = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
-		if (ColorReactiveComponent)
-		{
-			ColorReactiveComponent->RegisterComponent();
-			ColorReactiveComponent->Activate(true);
-			ColorReactiveComponent->SetMyColor(Color);
+	if (ReactiveComponentClass == nullptr)
+		return;
 
-			UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
-			ColorReactiveComponent->Init(Mesh);
-		}
-	}
+	ColorReactiveComponent = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
+	if (ColorReactiveComponent == nullptr)
+		return;
+
+	ColorReactiveComponent->RegisterComponent();
+	ColorReactiveComponent->Activate(true);
+	ColorReactiveComponent->SetMyColor(Color);
+
+	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
+	if (Mesh == nullptr)
+		return;
+	ColorReactiveComponent->Init(Mesh);
+
+
 }
 
 void AColorReactiveObject::RegisterToColorManager()
 {
-	if (ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld()))
-	{
-		if (UColorManager* ColorManager = LevelManager->GetColorManager())
-		{
-			ColorManager->RegisterTarget(ColorTargetType, this);
-		}
-	}
+	ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
+	if (LevelManager == nullptr)
+		return;
+	UColorManager* ColorManager = LevelManager->GetColorManager();
+	if (ColorManager == nullptr)
+		return;
+
+	ColorManager->RegisterTarget(ColorTargetType, this);
+
 }
 
 void AColorReactiveObject::SetupMaterial()
 {
 	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
-	if (!Mesh) return;
+	if (Mesh == nullptr)
+		return;
 
 	Mesh->SetRenderCustomDepth(true);
 	Mesh->SetCustomDepthStencilValue(10);
 
 	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
-	if (DynMaterial)
-	{
-		DynMaterial->SetVectorParameterValue(FName("BaseColor"), Color);
-	}
+	if (DynMaterial == nullptr)
+		return;
+
+	DynMaterial->SetVectorParameterValue(FName("BaseColor"), Color);
+
 }
 
 
 
 void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 {
-	if (!ColorReactiveComponent || bColorLock) return;
+	if (bColorLock ||ColorReactiveComponent == nullptr )
+		return;
 
 	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor);
 }

@@ -4,7 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ColorReactionConfigInterface.h"
-#include "DataContainer/ColorTargetType.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveObject.generated.h"
 
 class UColorReactiveComponent;
@@ -28,11 +28,12 @@ public:
 	virtual void ColorAction(FLinearColor InColor) override;
 	inline bool IsColorMuch() const override { return bColorMuch; }
 	inline void ChangeLock(bool b) override { bColorLock = b; }
-
-private:
-	void InitializeColorLogic();
-	void RegisterToColorManager();
-	void SetupMaterial();
+	inline FName GetColorEventID()const {return EventID;}
+protected:
+	virtual void Init();
+	virtual void InitializeColorLogic();
+	virtual void RegisterToColorManager();
+	virtual void SetupMaterial();
 
 protected:
 	// コンポーネント設定
@@ -58,4 +59,7 @@ protected:
 	// 色が一致したかどうかのフラグ
 	UPROPERTY(VisibleAnywhere, Category = "Color")
 	bool bColorMuch;
+
+	UPROPERTY(EditAnywhere)
+	FName EventID;
 };
