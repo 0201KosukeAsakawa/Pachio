@@ -4,7 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ColorReactionConfigInterface.h"
-#include "DataContainer/ColorTargetType.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveObject.generated.h"
 
 class UColorReactiveComponent;
@@ -29,9 +29,11 @@ public:
 	inline bool IsColorMuch() const override { return bColorMuch; }
 	inline void ChangeLock(bool b) override { bColorLock = b; }
 
-private:
+protected:
+	virtual void Init();
 	void InitializeColorLogic();
 	void RegisterToColorManager();
+private:
 	void SetupMaterial();
 
 protected:

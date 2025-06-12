@@ -24,6 +24,12 @@ void AColorMuchTrigger::BeginPlay()
 	}
 }
 
+void AColorMuchTrigger::Init()
+{
+	InitializeColorLogic();
+	RegisterToColorManager();
+}
+
 void AColorMuchTrigger::ColorAction(FLinearColor InColor)
 {
 	ApplyColorToMaterial(InColor);

@@ -22,7 +22,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	virtual void Init()override;
 private:
 	virtual void ColorAction(FLinearColor InColor) override;
 

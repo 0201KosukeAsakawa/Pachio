@@ -15,6 +15,11 @@ AColorReactiveObject::AColorReactiveObject()
 void AColorReactiveObject::BeginPlay()
 {
 	Super::BeginPlay();
+	Init();
+}
+
+void AColorReactiveObject::Init()
+{
 	InitializeColorLogic();
 	RegisterToColorManager();
 	SetupMaterial();
