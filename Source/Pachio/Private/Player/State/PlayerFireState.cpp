@@ -17,7 +17,7 @@ UPlayerFireState::UPlayerFireState()
 		ThrowComp = CreateDefaultSubobject<UThrowComponent>(TEXT("ThrowComponent"));
 }
 
-// ƒXƒe[ƒg‚É“ü‚éÛ‚ÉÀs‚³‚ê‚éˆ—
+// ï¿½Xï¿½eï¿½[ï¿½gï¿½É“ï¿½ï¿½ï¿½Û‚Éï¿½ï¿½sï¿½ï¿½ï¿½ï¿½éˆï¿½ï¿½
 bool UPlayerFireState::OnEnter(ACharacter* owner, UWorld* world)
 {
 	if (owner == nullptr || world == nullptr)
@@ -25,26 +25,26 @@ bool UPlayerFireState::OnEnter(ACharacter* owner, UWorld* world)
 		return false;
 	}
 
-	// “à•”‚ÉŠ—LÒ‚Æƒ[ƒ‹ƒh‚ğ•Û‘¶
+	// ï¿½ï¿½ï¿½ï¿½Éï¿½ï¿½Lï¿½Ò‚Æƒï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½ï¿½Û‘ï¿½
 	mOwner = owner;
 	pWorld = world;
 
-	// ƒ}ƒeƒŠƒAƒ‹‚Ìİ’èiƒfƒtƒHƒ‹ƒgƒXƒe[ƒg—pj
+	// ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½Ìİ’ï¿½iï¿½fï¿½tï¿½Hï¿½ï¿½ï¿½gï¿½Xï¿½eï¿½[ï¿½gï¿½pï¿½j
 	//if (NewMaterial)
 	{
-		// ƒLƒƒƒ‰ƒNƒ^[‚ª‚Â StaticMeshComponent ‚ğæ“¾
+		// ï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½^ï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ StaticMeshComponent ï¿½ï¿½æ“¾
 		UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
-		UMaterialInterface* N = NewMaterial.LoadSynchronous(); // ”ñ“¯Šúƒ[ƒh‚É‘Î‰
+		UMaterialInterface* N = NewMaterial.LoadSynchronous(); // ï¿½ñ“¯Šï¿½ï¿½ï¿½ï¿½[ï¿½hï¿½É‘Î‰ï¿½
 		if (N != nullptr && StaticMeshComp)
 		{
-			StaticMeshComp->SetMaterial(0, N); // ƒ}ƒeƒŠƒAƒ‹‚ğƒXƒƒbƒg0‚É“K—p
+			StaticMeshComp->SetMaterial(0, N); // ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½bï¿½g0ï¿½É“Kï¿½p
 
-			//ƒ}ƒeƒŠƒAƒ‹‚ÌƒTƒCƒY‚ğŠg‘å
+			//ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ÌƒTï¿½Cï¿½Yï¿½ï¿½gï¿½ï¿½
 			StaticMeshComp->SetRelativeScale3D(FVector(1.0, 1.0, 2.0));
 		}
 	}
 
-	//ƒRƒŠƒWƒ‡ƒ“ƒTƒCƒY•ÏX
+	//ï¿½Rï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½Tï¿½Cï¿½Yï¿½ÏX
 	mOwner->GetCharacterMovement()->Crouch();
 	mOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(110.0);
 
@@ -52,28 +52,27 @@ bool UPlayerFireState::OnEnter(ACharacter* owner, UWorld* world)
 	if (!aPlayer)
 		return false;
 
-	//ƒRƒŠƒWƒ‡ƒ“ˆÊ’u’²®
-	aPlayer->PowerUpCollisionPosition();
 
-	// ˆÚ“®‘¬“x‚Ì‰Šú’lİ’èiƒXƒe[ƒg“à‚Åg—pj
+
+	// ï¿½Ú“ï¿½ï¿½ï¿½ï¿½xï¿½Ìï¿½ï¿½ï¿½ï¿½lï¿½İ’ï¿½iï¿½Xï¿½eï¿½[ï¿½gï¿½ï¿½Ågï¿½pï¿½j
 	mMoveSpeed = 100.0f;
 
-	return true; // ƒXƒe[ƒg‚ÌØ‚è‘Ö‚¦¬Œ÷
+	return true; // ï¿½Xï¿½eï¿½[ï¿½gï¿½ÌØ‚ï¿½Ö‚ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 
-// ƒXƒe[ƒg‚Ì–ˆƒtƒŒ[ƒ€XVˆ—iŒ»“_‚Å‚Í‰½‚à‚µ‚È‚¢j
+// ï¿½Xï¿½eï¿½[ï¿½gï¿½Ì–ï¿½ï¿½tï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½Xï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½Å‚Í‰ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½j
 bool UPlayerFireState::OnUpdate(float)
 {
 	return false;
 }
 
-// ƒXƒe[ƒg‚ğ—£’E‚·‚é‚Æ‚«‚Ìˆ—iŒ»“_‚Å‚Í‰½‚à‚µ‚È‚¢j
+// ï¿½Xï¿½eï¿½[ï¿½gï¿½ğ—£’Eï¿½ï¿½ï¿½ï¿½Æ‚ï¿½ï¿½Ìï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½Å‚Í‰ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½j
 bool UPlayerFireState::OnExit(ACharacter*)
 {
 	return false;
 }
 
-// ƒXƒLƒ‹ƒ{ƒ^ƒ““ü—Í‚Ìˆ—iŒ»“_‚Å‚Í‰½‚à‚µ‚È‚¢j
+// ï¿½Xï¿½Lï¿½ï¿½ï¿½{ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½Íï¿½ï¿½Ìï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½Å‚Í‰ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½j
 bool UPlayerFireState::OnSkill(const FInputActionValue&)
 {
 	ThrowComp->SetThrownObject(DefaultThrownObjectClass);
@@ -81,7 +80,7 @@ bool UPlayerFireState::OnSkill(const FInputActionValue&)
 	return true;
 }
 
-//ƒ_ƒ[ƒW‚ğó‚¯‚½‚Æ‚«‚Ìˆ—
+//ï¿½_ï¿½ï¿½ï¿½[ï¿½Wï¿½ï¿½ó‚¯‚ï¿½ï¿½Æ‚ï¿½ï¿½Ìï¿½ï¿½ï¿½
 bool UPlayerFireState::TakeDamage()
 {
 	if (!mOwner)

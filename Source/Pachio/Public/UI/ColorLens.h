@@ -13,7 +13,7 @@
 class UImage;
 
 UCLASS()
-class PACHIO_API UColorLens : public UUserWidget,public IColorFilterInterface
+class PACHIO_API UColorLens : public UUserWidget,public IColorReactiveInterface
 {
 	GENERATED_BODY()
 public:

@@ -38,7 +38,7 @@ void ALevelManager::InitializeComponents()
 		BlockContainer = NewObject<UBlockDataContainer>(this, BlockContainerClass);
 
 	ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
-	ColorManager->InitializeTargets();
+	ColorManager->Init();
 
 	ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
 	AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);

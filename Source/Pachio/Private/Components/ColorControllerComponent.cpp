@@ -2,12 +2,25 @@
 
 
 #include "Components/ColorControllerComponent.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "FunctionLibrary.h"
 
 // Sets default values for this component's properties
 UColorControllerComponent::UColorControllerComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
+
+    // カラーマップを EColorTargetType ごとに白で初期化
+    ColorMap.Empty(); // 念のため初期化（既存がある場合）
+
+    const TArray<EColorTargetType> AllModes = UFunctionLibrary::GetAllEnumValues<EColorTargetType>();
+    for (EColorTargetType Mode : AllModes)
+    {
+        if (Mode == EColorTargetType::Responders)
+            continue;
+
+        ColorMap.Add(Mode, FLinearColor::White);
+    }
 }
 
 void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -15,10 +28,10 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 
 }
 
-void UColorControllerComponent::AdjustColor(EColorChannel Channel, float Delta)
+void UColorControllerComponent::AdjustColor(float Delta)
 {
     // RGB → HSV に変換
-    FLinearColor HSV = CurrentColor.LinearRGBToHSV();
+    FLinearColor HSV = ColorMap[CurrentColorMode].LinearRGBToHSV();
 
     float Hue = HSV.R;  // 0〜360
     float Saturation = HSV.G;
@@ -46,14 +59,12 @@ void UColorControllerComponent::AdjustColor(EColorChannel Channel, float Delta)
     FLinearColor NewColor = FLinearColor(Hue, Saturation, Value).HSVToLinearRGB();
 
     // 現在の色を更新（アルファも保持）
-    CurrentColor.R = NewColor.R;
-    CurrentColor.G = NewColor.G;
-    CurrentColor.B = NewColor.B;
-
-    UE_LOG(LogTemp, Log, TEXT("End Color changed:RGB: R=%.3f G=%.3f B=%.3f"), NewColor.R, NewColor.G, NewColor.B);
+    ColorMap[CurrentColorMode].R = NewColor.R;
+    ColorMap[CurrentColorMode].G = NewColor.G;
+    ColorMap[CurrentColorMode].B = NewColor.B;
 
     // デリゲートを通知
-    OnColorChanged.Broadcast(CurrentColor ,Mode);
+    OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
 }
 
 void UColorControllerComponent::ChangeMode(int Direction)
@@ -71,47 +82,60 @@ void UColorControllerComponent::ChangeMode(int Direction)
     // Direction が正のときは次、負のときは前
     if (Direction > 0)
     {
-        Mode = GetNextMode(Mode);
+        CurrentColorMode = GetNextMode(CurrentColorMode);
     }
     else if (Direction < 0)
     {
-        Mode = GetPreviousMode(Mode);
+        CurrentColorMode = GetPreviousMode(CurrentColorMode);
     }
 
     // モードを表示（デバッグ用）
-    UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(Mode));
+    UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
 
 }
 
 EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType CurrentMode)
 {
-    // EColorTargetTypeの範囲を取得
+    // Responders を除外したリストを取得
+    TArray<EColorTargetType> FilteredModes;
     const TArray<EColorTargetType> AllModes = UFunctionLibrary::GetAllEnumValues<EColorTargetType>();
 
-    // 現在のモードが最後の要素なら最初に戻る
-    int32 CurrentIndex = AllModes.IndexOfByKey(CurrentMode);
-    if (CurrentIndex == INDEX_NONE)
+    for (EColorTargetType Mode : AllModes)
     {
-        return EColorTargetType::Layer; // デフォルトのモードに戻す
+        if (Mode != EColorTargetType::Responders)
+        {
+            FilteredModes.Add(Mode);
+        }
     }
 
-    // 次のモードに進む。最後の要素の場合、最初に戻る。
-    return AllModes[(CurrentIndex + 1) % AllModes.Num()];
+    int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
+    if (CurrentIndex == INDEX_NONE)
+    {
+        return EColorTargetType::Layer; // デフォルトに戻す
+    }
+
+    return FilteredModes[(CurrentIndex + 1) % FilteredModes.Num()];
 }
 
 EColorTargetType UColorControllerComponent::GetPreviousMode(EColorTargetType CurrentMode)
 {
-    // EColorTargetTypeの範囲を取得
+    // Responders を除外したリストを取得
+    TArray<EColorTargetType> FilteredModes;
     const TArray<EColorTargetType> AllModes = UFunctionLibrary::GetAllEnumValues<EColorTargetType>();
 
-    // 現在のモードが最初の要素なら最後に戻る
-    int32 CurrentIndex = AllModes.IndexOfByKey(CurrentMode);
-    if (CurrentIndex == INDEX_NONE)
+    for (EColorTargetType Mode : AllModes)
     {
-        return EColorTargetType::Layer; // デフォルトのモードに戻す
+        if (Mode != EColorTargetType::Responders)
+        {
+            FilteredModes.Add(Mode);
+        }
     }
 
-    // 前のモードに戻る。最初の要素の場合、最後に戻る。
-    return AllModes[(CurrentIndex - 1 + AllModes.Num()) % AllModes.Num()];
-}
+    int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
+    if (CurrentIndex == INDEX_NONE)
+    {
+        return EColorTargetType::Layer; // デフォルトに戻す
+    }
 
+    return FilteredModes[(CurrentIndex - 1 + FilteredModes.Num()) % FilteredModes.Num()];
+}

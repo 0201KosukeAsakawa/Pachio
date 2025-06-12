@@ -5,6 +5,7 @@
 #include "Attack/AttackStrategy.h"
 #include "AttackComponent.generated.h"
 
+class UBoxComponent;
 
 UCLASS(Blueprintable)
 class PACHIO_API UAttackComponent : public UActorComponent
@@ -29,6 +30,12 @@ public:
 protected:
     virtual void BeginPlay() override;
 
+private:
+    // 上攻撃ヒット処理
+    UFUNCTION()
+    void OnAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+        int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 public:
     /** 現在使用中の攻撃戦略インスタンス */
     UPROPERTY(VisibleInstanceOnly, Category = "Attack")
@@ -39,4 +46,9 @@ protected:
     FAttackData AttackData;
     UPROPERTY()
     UAttackStrategy* CurrentState;
+
+private:
+    // 上攻撃用の当たり判定
+    UPROPERTY()
+    UBoxComponent* AttackBox;
 };

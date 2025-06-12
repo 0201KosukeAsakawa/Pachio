@@ -1,41 +1,63 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interface/ColorFilterInterface.h"
-#include "DataContainer/ColorTargetType.h"
+#include "Interface/ColorReactionConfigInterface.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveObject.generated.h"
 
 class UColorReactiveComponent;
 
+/**
+ * è‰²ã«åå¿œã™ã‚‹ã‚¢ã‚¯ã‚¿ãƒ¼ï¼ˆæŒ‡å®šè‰²ã§ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’èµ·ã“ã™ï¼‰
+ */
 UCLASS()
-class PACHIO_API AColorReactiveObject : public AActor,public IColorFilterInterface
+class PACHIO_API AColorReactiveObject : public AActor, public IColorReactiveInterface, public IColorReactionConfigInterface
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+
+public:
 	AColorReactiveObject();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	virtual void ColorAction(FLinearColor)override;
+	// ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹å®Ÿè£…
+	virtual void ColorAction(FLinearColor InColor) override;
+	inline bool IsColorMuch() const override { return bColorMuch; }
+	inline void ChangeLock(bool b) override { bColorLock = b; }
 
+protected:
+	virtual void Init();
+	void InitializeColorLogic();
+	void RegisterToColorManager();
 private:
-	// ¶¬‚·‚éƒRƒ“ƒ|[ƒlƒ“ƒg‚ÌƒNƒ‰ƒX‚ğBP‚©‚çw’è‚Å‚«‚é‚æ‚¤‚É
-	UPROPERTY(EditAnywhere, Category = "Reactive")
-	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;
+	void SetupMaterial();
 
-	// ÀÛ‚É¶¬‚³‚ê‚éƒRƒ“ƒ|[ƒlƒ“ƒg‚Ìƒ|ƒCƒ“ƒ^
+protected:
+	// ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆè¨­å®š
+	UPROPERTY(EditAnywhere, Category = "Reactive")
+	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;	
+	
+	// ã‚«ãƒ©ãƒ¼ãƒªã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®å®Ÿä½“
 	UPROPERTY()
 	UColorReactiveComponent* ColorReactiveComponent;
+
+	// ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆå›ºæœ‰ã®è‰²
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
-	UPROPERTY(EditAnywhere,Category = "Color")
+
+	// è‰²ã®å¯¾è±¡ç¨®åˆ¥
+	UPROPERTY(EditAnywhere, Category = "Color")
 	EColorTargetType ColorTargetType;
+
+	// è‰²ãƒ­ãƒƒã‚¯ï¼ˆå¤‰æ›´ä¸å¯ï¼‰
+	UPROPERTY(EditAnywhere)
+	bool bColorLock = false;
+
+	// è‰²ãŒä¸€è‡´ã—ãŸã‹ã©ã†ã‹ã®ãƒ•ãƒ©ã‚°
+	UPROPERTY(VisibleAnywhere, Category = "Color")
+	bool bColorMuch;
 };

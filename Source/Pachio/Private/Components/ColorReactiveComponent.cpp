@@ -24,7 +24,7 @@ void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor)
 	Color = FilterColor;
 }
 
-void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
+bool UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
 {
     // 色のマッチング判定は保持しておきつつ
 
@@ -32,14 +32,14 @@ void UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
 
     if (bMatch)
     {
-        UE_LOG(LogTemp, Log, TEXT("[%s]TRUE"), *GetOwner()->GetName());
         OnColorMatched(FilterColor);
     }
     else
     {
-        UE_LOG(LogTemp, Log, TEXT("[%s] FLASE"), *GetOwner()->GetName());
         OnColorMismatched(FilterColor);
     }
+
+    return bMatch;
 }
 
 bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const
