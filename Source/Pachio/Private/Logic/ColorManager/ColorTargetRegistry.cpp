@@ -32,14 +32,26 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
 
 void UColorTargetRegistry::ColorEvent(FName EventID)
 {
-    for (auto& TargetInstance : ColorResponseTargets[EColorTargetType::Event].Instances)
+    if (!ColorResponseTargets.Contains(EColorTargetType::Event))
+    {
+        // EColorTargetType::Eventのキーが存在しなければ処理終了
+        return;
+    }
+
+    auto& Instances = ColorResponseTargets[EColorTargetType::Event].Instances;
+
+    if (Instances.Num() == 0)
+        return;
+
+    for (auto& TargetInstance : Instances)
     {
         if (TargetInstance->GetColorEventID() != EventID)
-            return;
+            continue;
 
         TargetInstance->ColorAction();
     }
 }
+
 
 
 void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)

@@ -13,8 +13,7 @@ AMovingObject::AMovingObject()
 
 void AMovingObject::Init()
 {
-	InitializeColorLogic();
-	RegisterToColorManager();
+    AColorReactiveObject::Init();
 }
 
 void AMovingObject::Tick(float DeltaTime)

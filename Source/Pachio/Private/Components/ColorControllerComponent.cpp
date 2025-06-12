@@ -4,6 +4,7 @@
 #include "Components/ColorControllerComponent.h"
 #include "DataContainer/EffectMatchResult.h"
 #include "FunctionLibrary.h"
+#include "UI/ColorLens.h"
 
 // Sets default values for this component's properties
 UColorControllerComponent::UColorControllerComponent()
@@ -88,10 +89,9 @@ void UColorControllerComponent::ChangeMode(int Direction)
     {
         CurrentColorMode = GetPreviousMode(CurrentColorMode);
     }
-
     // モードを表示（デバッグ用）
     UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
-
+    AnimationDelegate.Execute(Direction);
 }
 
 EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType CurrentMode)
@@ -102,10 +102,14 @@ EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType Current
 
     for (EColorTargetType Mode : AllModes)
     {
-        if (Mode != EColorTargetType::Responders)
-        {
-            FilteredModes.Add(Mode);
-        }
+        if (Mode == EColorTargetType::Responders)
+            continue;
+
+        if (Mode == EColorTargetType::Event)
+            continue;
+
+        FilteredModes.Add(Mode);
+
     }
 
     int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);

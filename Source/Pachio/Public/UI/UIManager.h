@@ -7,6 +7,7 @@
 #include "UIManager.generated.h"
 
 class UWidgetComponent;
+class UColorLens;
 
 UENUM(BlueprintType)
 enum class EWidgetCategory : uint8
@@ -64,6 +65,8 @@ public:
     UFUNCTION(BlueprintCallable)
     UUserWidget* GetWidget(EWidgetCategory CategoryName, FName WidgetName);
 
+    UFUNCTION()
+    UColorLens* GetColorLens() { return ColorLens; }
 private:
     /** 全てのカテゴリに対してウィジェットを初期化 */
     void InitAllWidgets();
@@ -82,5 +85,6 @@ private:
     UPROPERTY(EditAnywhere, Category = "UI")
     TMap<EWidgetCategory, FWidgetData> WidgetDataMap;
 
-    UWidgetComponent* lensComponent;
+    UPROPERTY(EditAnywhere)
+    UColorLens* ColorLens;
 };

@@ -1,10 +1,13 @@
 #include "Manager/ColorManager.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Manager/LevelManager.h"
+#include "UI/UIManager.h"
+#include "UI/ColorLens.h"
 #include "Kismet/GameplayStatics.h"
-#include "Components/PostProcessComponent.h"
 #include "Engine/PostProcessVolume.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Components/ColorControllerComponent.h"
-#include "Materials/MaterialInstanceDynamic.h"
+#include "Components/PostProcessComponent.h"
 #include "Logic/ColorManager/EffectColorMatcher.h"
 #include "Logic/ColorManager/ColorTargetRegistry.h"
 
@@ -65,15 +68,27 @@ FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& Inpu
 void UColorManager::BindController()
 {
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-    if (PlayerPawn)
+    if (PlayerPawn == nullptr)
+        return;
+
+    UColorControllerComponent* ColorController = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
+    if (ColorController == nullptr)
+        return;
+
+    if (!ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
     {
-        UColorControllerComponent* ColorController = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
-        if (ColorController && !ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
-        {
-            // 色変更イベントにバインド
-            ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
-        }
+        // 色変更イベントにバインド
+        ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
     }
+
+    ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
+    if (levelManager == nullptr)
+        return;
+    if (levelManager->GetUIManager() == nullptr)
+        return;
+    if (levelManager->GetUIManager()->GetColorLens() == nullptr)
+        return;
+    ColorController->AnimationDelegate.BindUObject(levelManager->GetUIManager()->GetColorLens(), &UColorLens::Animation);
 }
 
 // ポストプロセス用マテリアルの初期化（ビジュアルフィルター表示などに使用）

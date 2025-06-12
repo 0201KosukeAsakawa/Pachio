@@ -31,10 +31,9 @@ public:
 	inline FName GetColorEventID()const {return EventID;}
 protected:
 	virtual void Init();
-	void InitializeColorLogic();
-	void RegisterToColorManager();
-private:
-	void SetupMaterial();
+	virtual void InitializeColorLogic();
+	virtual void RegisterToColorManager();
+	virtual void SetupMaterial();
 
 protected:
 	// コンポーネント設定
