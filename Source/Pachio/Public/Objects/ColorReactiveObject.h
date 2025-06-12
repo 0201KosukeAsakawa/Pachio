@@ -1,33 +1,61 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interface/ColorFilterInterface.h"
+#include "Interface/ColorReactionConfigInterface.h"
+#include "DataContainer/ColorTargetType.h"
 #include "ColorReactiveObject.generated.h"
 
 class UColorReactiveComponent;
 
+/**
+ * 色に反応するアクター（指定色でアクションを起こす）
+ */
 UCLASS()
-class PACHIO_API AColorReactiveObject : public AActor,public IColorFilterInterface
+class PACHIO_API AColorReactiveObject : public AActor, public IColorReactiveInterface, public IColorReactionConfigInterface
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+
+public:
 	AColorReactiveObject();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	virtual void ColorAction(FLinearColor)override;
+	// インターフェース実装
+	virtual void ColorAction(FLinearColor InColor) override;
+	inline bool IsColorMuch() const override { return bColorMuch; }
+	inline void ChangeLock(bool b) override { bColorLock = b; }
 
 private:
+	void InitializeColorLogic();
+	void RegisterToColorManager();
+	void SetupMaterial();
+
+protected:
+	// コンポーネント設定
+	UPROPERTY(EditAnywhere, Category = "Reactive")
+	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;	
+	
+	// カラーリアクティブコンポーネントの実体
 	UPROPERTY()
-	UColorReactiveComponent* ReactiveComponent;
+	UColorReactiveComponent* ColorReactiveComponent;
+
+	// オブジェクト固有の色
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
+
+	// 色の対象種別
+	UPROPERTY(EditAnywhere, Category = "Color")
+	EColorTargetType ColorTargetType;
+
+	// 色ロック（変更不可）
+	UPROPERTY(EditAnywhere)
+	bool bColorLock = false;
+
+	// 色が一致したかどうかのフラグ
+	UPROPERTY(VisibleAnywhere, Category = "Color")
+	bool bColorMuch;
 };

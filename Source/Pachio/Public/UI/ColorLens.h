@@ -13,7 +13,7 @@
 class UImage;
 
 UCLASS()
-class PACHIO_API UColorLens : public UUserWidget,public IColorFilterInterface
+class PACHIO_API UColorLens : public UUserWidget,public IColorReactiveInterface
 {
 	GENERATED_BODY()
 public:
@@ -21,7 +21,7 @@ public:
 private:
 	void ColorAction(FLinearColor)override;
 protected:
-	// �Ⴆ�Ή�ʂ̐F��ς��邽�߂�UI�p�[�c
+	//
 	UPROPERTY(meta = (BindWidget))
 	UImage* FilterColorImage;
 };

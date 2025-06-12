@@ -1,15 +1,15 @@
-#include "Components/AttackManagerComponent.h"
+#include "Components/AttackController.h"
 #include "Components/AttackComponent.h"
 #include "DataContainer/AttackDataContainer.h"
 #include "Manager/LevelManager.h"
 
 // コンストラクタ：このコンポーネントのデフォルト設定を初期化
-UAttackManagerComponent::UAttackManagerComponent()
+UAttackController::UAttackController()
 {
 
 }
 
-void UAttackManagerComponent::Init(UWorld* world)
+void UAttackController::Init(UWorld* world)
 {
 	if (!world)
 		return;
@@ -20,7 +20,7 @@ void UAttackManagerComponent::Init(UWorld* world)
 // 攻撃コンポーネントを登録する関数
 // 指定された攻撃IDと攻撃コンポーネントをマップに登録
 // すでに同じIDで登録されている場合や、無効なコンポーネントが指定された場合は失敗
-bool UAttackManagerComponent::RegisterAttackComponent(FName AttackID)
+bool UAttackController::RegisterAttackComponent(FName AttackID)
 {
 	if (!pWorld)
 		return false;
@@ -49,7 +49,7 @@ bool UAttackManagerComponent::RegisterAttackComponent(FName AttackID)
 	return true;
 }
 
-bool UAttackManagerComponent::ResetMap()
+bool UAttackController::ResetMap()
 {
 	AttackMap.Empty();
 	return true;
@@ -57,7 +57,7 @@ bool UAttackManagerComponent::ResetMap()
 
 // 指定された攻撃IDに対応する攻撃コンポーネントを取得
 // 攻撃IDに対応するコンポーネントが登録されていない場合はnullptrを返す
- UAttackComponent* UAttackManagerComponent::GetAttack(FName AttackID)
+ UAttackComponent* UAttackController::GetAttack(FName AttackID)
 {
 	// 攻撃IDがマップに存在すればその攻撃コンポーネントクラスを返す
 	if (UAttackComponent** Found = AttackMap.Find(AttackID))

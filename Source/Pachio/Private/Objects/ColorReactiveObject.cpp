@@ -6,35 +6,57 @@
 #include "Manager/LevelManager.h"
 #include "FunctionLibrary.h"
 #include "Manager/ColorManager.h"
-#include "Logic/Color/ColorTriggerStopComponent.h"
 
-// Sets default values
 AColorReactiveObject::AColorReactiveObject()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-	ReactiveComponent = CreateDefaultSubobject<UColorTriggerStopComponent>(TEXT("StopComponent"));
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 void AColorReactiveObject::BeginPlay()
 {
 	Super::BeginPlay();
+	InitializeColorLogic();
+	RegisterToColorManager();
+	SetupMaterial();
+}
 
-	// ColorManager に登録
-	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorMode::Object, this);
-	ReactiveComponent->SetMyColor(Color);
+void AColorReactiveObject::InitializeColorLogic()
+{
+	if (ReactiveComponentClass)
+	{
+		ColorReactiveComponent = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
+		if (ColorReactiveComponent)
+		{
+			ColorReactiveComponent->RegisterComponent();
+			ColorReactiveComponent->Activate(true);
+			ColorReactiveComponent->SetMyColor(Color);
 
-	// StaticMeshComponent を取得
-	UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
-	if (!mesh)
-		return;
+			UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
+			ColorReactiveComponent->Init(Mesh);
+		}
+	}
+}
 
-	// Custom Depth を有効化
-	mesh->SetRenderCustomDepth(true);
-	mesh->SetCustomDepthStencilValue(10);
+void AColorReactiveObject::RegisterToColorManager()
+{
+	if (ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld()))
+	{
+		if (UColorManager* ColorManager = LevelManager->GetColorManager())
+		{
+			ColorManager->RegisterTarget(ColorTargetType, this);
+		}
+	}
+}
 
-	// マテリアルの色を変更
-	UMaterialInstanceDynamic* DynMaterial = mesh->CreateAndSetMaterialInstanceDynamic(0);
+void AColorReactiveObject::SetupMaterial()
+{
+	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
+	if (!Mesh) return;
+
+	Mesh->SetRenderCustomDepth(true);
+	Mesh->SetCustomDepthStencilValue(10);
+
+	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
 	if (DynMaterial)
 	{
 		DynMaterial->SetVectorParameterValue(FName("BaseColor"), Color);
@@ -42,13 +64,10 @@ void AColorReactiveObject::BeginPlay()
 }
 
 
+
 void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 {
-	if (!ReactiveComponent)
-		return;
+	if (!ColorReactiveComponent || bColorLock) return;
 
-	ReactiveComponent->CheckColorMatch(NewColor);
+	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor);
 }
-
-
-

@@ -17,6 +17,8 @@ public:
 	//名前で関数を見つけて返す
 	template <typename T>
 	static T* FindComponentByName(AActor*, FName);
+    template <typename EnumType>
+    static TArray<EnumType> GetAllEnumValues();
 };
 
 template <typename T>
@@ -47,3 +49,29 @@ static T* UFunctionLibrary::FindComponentByName(AActor* TargetActor, FName Compo
     //見つからなかった
     return nullptr;
 }
+
+
+template<typename EnumType>
+TArray<EnumType> UFunctionLibrary::GetAllEnumValues()
+{
+    TArray<EnumType> EnumValues;
+
+    // EnumTypeに対応するUEnumを取得
+    UEnum* EnumPtr = StaticEnum<EnumType>();
+    if (!EnumPtr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Enum not found!"));
+        return EnumValues;
+    }
+
+    // Enumの値を列挙
+    for (int32 i = 0; i < EnumPtr->NumEnums() - 1; ++i) // 最後のエントリ（Noneなど）を除外
+    {
+        // Enumの値を取得
+        EnumType EnumValue = static_cast<EnumType>(EnumPtr->GetValueByIndex(i));
+        EnumValues.Add(EnumValue);
+    }
+
+    return EnumValues;
+}
+

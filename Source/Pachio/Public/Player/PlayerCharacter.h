@@ -3,28 +3,34 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Interface/AttackController.h"
 #include "Interface/IDamageable.h"
 #include "Interface/StateControllable.h"
+#include "Interface/ColorFilterInterface.h"
 #include "PlayerCharacter.generated.h"
 
 // ===========================
 // 前方宣言
 // ===========================
 class IStateBase;
+class IMoveLogic;
 class UPlayerDefaultState;
 class UInputMappingContext;
+class UInputAction;
 class UStateManager;
 class UAttackComponent;
-class UAttackManagerComponent;
+class UAttackController;
 class USpringArmComponent;
 class UCameraComponent;
+class UColorControllerComponent;
 class UBoxComponent;
-class UInputAction;
+class UCameraHandlerComponent;
+class UInvincibilityComponent;
+
 class UPhysicsCalculator;
 class UMoveComponent;
-class UColorControllerComponent;
-class IMoveLogic;
+
+class UPlayerInputComponent;
+
 
 struct FInputActionValue;
 /**
@@ -33,175 +39,131 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IAttackController, public IStateControllable, public IDamageable
+class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable, public IDamageable,public IColorReactiveInterface
 {
 	GENERATED_BODY()
 
 public:
-	// デフォルトコンストラクタ
+	// コンストラクタ（コンポーネントの生成など）
 	APlayerCharacter();
 
 protected:
-	// ゲーム開始時に一度だけ呼ばれる
+	// ゲーム開始時に一度だけ呼ばれる初期化処理
 	virtual void BeginPlay() override;
 
 public:
-	// 毎フレーム更新
+	// 毎フレーム実行される更新処理
 	virtual void Tick(float DeltaTime) override;
 
-	// プレイヤー入力のバインディング処理
+	// 入力バインディングの初期化処理（プレイヤー操作の割り当て）
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// 攻撃戦略の登録
-	virtual bool AssignAttackStrategy(FName AttackID, UAttackStrategy* NewStrategy) override;
-
+	// 現在のプレイヤーステート（状態）を取得
 	UPlayerStateComponent* GetPlayerState() const override;
 
-	//プレイヤー変身時の当たり判定の変更
-	void PowerUpCollisionPosition();
-	void PowerDownCollisionPosition();
-
-	void ToggleVisibility();  // メッシュの表示/非表示を切り替える
-	void UpdateInvincible(float DeltaTime);  // 無敵時間の管理
-private:
+public:
+	// ======================
 	// ==== 入力アクション ====
-	// 移動入力
+	// ======================
+
+	// 移動入力処理
 	void Movement(const FInputActionValue& Value);
 
-	//しゃがみ移行、立ち上がり
-	void Crouch(const FInputActionValue& Value);
-	void StandUp();
-
-	// ジャンプ開始・終了
+	// ジャンプ開始処理
 	void Jump(const FInputActionValue& Value);
+
+	// ジャンプ終了処理
 	void JumpStop(const FInputActionValue& Value);
 
-	// ダッシュ（特殊アクション）開始・終了
+	// 特殊アクション（スキル発動 or ダッシュ）開始処理
 	void Action(const FInputActionValue& Value);
+
+	// 特殊アクション終了処理（スキルリセット & ダッシュ終了）
 	void StopAction();
 
+	// 色ゲージの減少処理
 	void DecreaseColor();
+
+	// 色ゲージの増加処理
 	void IncreaseColor();
 
-	// ==== 攻撃コリジョン ====
+	// カラーモードを1つ右にシフト
+	void ShiftArrayRightColorMode();
 
-	// 上攻撃ヒット処理
-	UFUNCTION()
-	void OnUpperAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	// 踏みつけ攻撃ヒット処理
-	UFUNCTION()
-	void OnStompAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	// ステートの変更（タグ指定）
-	bool ChangeState(FString Tag)override;
-	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr)override;
+	// カラーモードを1つ左にシフト
+	void ShiftArrayLeftColorMode();
 
 private:
-	// ==== 状態・戦闘 ====
+	// ===============
+	// ==== 初期化関数 ====
+	// ===============
+	void ColorAction(FLinearColor)override;
 
-		/** カメラのY座標最大値（右スクロール限界用） */
-	float MaxCameraY;
+	// 移動ロジックの初期化
+	void InitMovementLogic();
 
-	FVector CameraXZ;
+	// 状態(State)と攻撃コントローラの初期化
+	void InitStateAndAttack();
 
-	//ステート管理のクラス
+	// 物理設定の初期化（摩擦や重力など）
+	void InitPhysicsSettings();
+
+	// 入力コンポーネントの初期化
+	void InitInput();
+
+	// 視覚的な設定（メッシュのアウトライン表示など）
+	void InitVisualSettings();
+
+	// ===============
+	// ==== 状態・ステート処理 ====
+	// ===============
+
+	// 状態変更（ステートタグによる遷移）
+	bool ChangeState(FString Tag) override;
+
+	// 現在の色に応じた効果適用
+	void ApplyEffectFromColor(const FLinearColor& Color);
+
+	// ダメージ処理（ダメージ値と攻撃データを受け取る）
+	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr) override;
+
+	void ResetBuff();
+private:
+	float JumpBuff = 1;
+	float DefaultMaxSpeed = 1;
+	// =====================
+	// ==== コンポーネント ====
+	// =====================
+
+	// カメラ制御コンポーネント
+	UPROPERTY()
+	UCameraHandlerComponent* CameraComponent;
+
+	// 無敵状態制御コンポーネント
+	UPROPERTY()
+	UInvincibilityComponent* InvincibilityComponent;
+
+	// プレイヤーのステートクラス（Blueprintから設定）
 	UPROPERTY(EditAnywhere, Category = "State")
 	TSubclassOf<UStateManager> StateManagerClass;
 
-	// 状態管理コンポーネント
+	// ステート管理コンポーネント（状態遷移・更新処理）
 	UPROPERTY()
 	UStateManager* StateManager;
 
-	// 攻撃管理コンポーネント（各攻撃の取得・実行）
+	// 攻撃管理コンポーネント（攻撃の登録・管理・実行）
 	UPROPERTY()
-	UAttackManagerComponent* AttackManager;
+	UAttackController* AttackController;
 
-	// ==== フラグ・座標 ====
-
-	//初期位置を保存
-	FVector PreviousLocation;
-
-	// ダッシュ中フラグ
-	bool bIsDashing = false;
-	//スキルフラグ
-	bool bHasUsedSkill = false;
-
-	//無敵時間中フラグ
-	bool bIsInvincible = false;
-	bool bIsVisible = true; //無敵時間時の点滅フラグ
-	float InvincibleTime = 0.0f; //無敵時間の計測タイマー
-	float MaxInvincibleTime = 2.0f; // 無敵時間を2秒と仮定
-	FTimerHandle BlinkTimerHandle;
-
-	// 前フレームとカメラ位置補正用
-	FVector PlayerOldLocation;
-
+	// プレイヤー移動処理を司るコンポーネント
+	UPROPERTY()
 	UMoveComponent* MoveComp;
-	//TScriptInterface<IMoveLogic> PlayerLogic;
 
-	// ==== メッシュ・コリジョン ====
-
-	// キャラクター用のカプセルメッシュ（カスタム追加の場合）
-	UPROPERTY(VisibleAnywhere, Category = Character, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> Capsule;
-
-	// 上攻撃用の当たり判定
-	UPROPERTY()
-	UBoxComponent* UpperAttackBox;
-
-	// 踏みつけ攻撃用の当たり判定
-	UPROPERTY()
-	UBoxComponent* StompAttackBox;
-
-	/*調整用の当たり判定
-	UPROPERTY()
-	UBoxComponent* PlayerBoxCollision;*/
-
-	// ==== カメラ ====
-
-	// カメラの回転／位置制御用スプリングアーム
-	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USpringArmComponent> SpringArm;
-
-	// プレイヤー視点用カメラ
-	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCameraComponent> Camera;
-
-	// ==== 入力マッピング ====
-
-	// 使用する入力マッピングコンテキスト（Enhanced Input）
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
-
-	// 各種アクション設定
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
-
-	// 各種アクション設定
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* CrouchAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* LookAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* SpecialAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* IncreaseColorAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* DecreaseColorAction;
-
+	// 物理計算用コンポーネント（地面判定、重力加算など）
 	UPROPERTY()
 	UPhysicsCalculator* physics;
 
+	// カラーゲージ管理コンポーネント（色状態とその変化を制御）
 	UPROPERTY()
 	UColorControllerComponent* colorController;
 };

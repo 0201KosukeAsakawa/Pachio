@@ -5,6 +5,7 @@
 #include "Interface/IDamageable.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/PhysicsCalculator.h"
 
 bool UUpperAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData attackData, float FinalDamage)
 {
@@ -18,5 +19,9 @@ bool UUpperAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAtta
 	if (!Character)
 		return false;
 
+	UPhysicsCalculator* physics = Attacker->GetComponentByClass<UPhysicsCalculator>();
+	if (!physics)
+		return false;
+	physics->ResetForce();
 	return true;
 }

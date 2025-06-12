@@ -46,8 +46,6 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 	if (!aPlayer)
 		return false;
 
-	//コリジョン位置調整
-	aPlayer->PowerDownCollisionPosition();
 
 	// 移動速度の初期値設定（ステート内で使用）
 	mMoveSpeed = 100.0f;
