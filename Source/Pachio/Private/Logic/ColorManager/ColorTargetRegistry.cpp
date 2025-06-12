@@ -30,6 +30,17 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
     }
 }
 
+void UColorTargetRegistry::ColorEvent(FName EventID)
+{
+    for (auto& TargetInstance : ColorResponseTargets[EColorTargetType::Event].Instances)
+    {
+        if (TargetInstance->GetColorEventID() != EventID)
+            return;
+
+        TargetInstance->ColorAction();
+    }
+}
+
 
 void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
 {

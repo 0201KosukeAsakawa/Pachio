@@ -22,7 +22,7 @@ class PACHIO_API IColorReactionConfigInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-
-	virtual bool IsColorMuch()const;
 	virtual void ChangeLock(bool b);
+	virtual bool IsColorMuch()const;
+	virtual FName GetColorEventID()const;
 };

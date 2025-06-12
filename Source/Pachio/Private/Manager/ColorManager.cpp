@@ -36,6 +36,14 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
     ColorTargetRegistry->ApplyColor(NewColor, Mode);
 }
 
+void UColorManager::ColorEvent(FName EventID)
+{
+    if (!ColorTargetRegistry)
+        return;
+
+    ColorTargetRegistry->ColorEvent(EventID);
+}
+
 // 色変化に反応するターゲットを登録
 void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
 {

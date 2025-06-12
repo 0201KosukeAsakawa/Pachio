@@ -8,3 +8,8 @@
 void IColorReactiveInterface::ColorAction(FLinearColor)
 {
 }
+
+FName IColorReactiveInterface::GetColorEventID() const
+{
+    return FName();
+}

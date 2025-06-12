@@ -16,7 +16,7 @@ UColorControllerComponent::UColorControllerComponent()
     const TArray<EColorTargetType> AllModes = UFunctionLibrary::GetAllEnumValues<EColorTargetType>();
     for (EColorTargetType Mode : AllModes)
     {
-        if (Mode == EColorTargetType::Responders)
+        if (Mode == EColorTargetType::Responders || Mode == EColorTargetType::Event)
             continue;
 
         ColorMap.Add(Mode, FLinearColor::White);
@@ -125,10 +125,14 @@ EColorTargetType UColorControllerComponent::GetPreviousMode(EColorTargetType Cur
 
     for (EColorTargetType Mode : AllModes)
     {
-        if (Mode != EColorTargetType::Responders)
-        {
-            FilteredModes.Add(Mode);
-        }
+        if (Mode == EColorTargetType::Responders)
+            continue;
+
+        if (Mode == EColorTargetType::Event)
+            continue;
+
+        FilteredModes.Add(Mode);
+
     }
 
     int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
