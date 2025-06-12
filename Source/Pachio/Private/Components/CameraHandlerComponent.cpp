@@ -7,36 +7,67 @@ UCameraHandlerComponent::UCameraHandlerComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
 
-    // SpringArm と Camera コンポーネントを作成
-    SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+    // Cameraコンポーネントを作成（SpringArmは使用しない）
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 
-    // SpringArmのカメラ衝突テストを有効化
-    SpringArm->bDoCollisionTest = true;  // 衝突判定ON
-    SpringArm->ProbeChannel = ECC_Camera; // 衝突検出に使うチャンネル（プロジェクトに合わせて調整）
-    SpringArm->TargetArmLength = 300.f;  // カメラとプレイヤーの距離（任意調整）
+    // グリッドサイズを広げる（画面1枚分のサイズ）
+    GridSize = FVector2D(2000.f, 2000.f);  // お好みで調整
+    InterpSpeed = 3.0f;  // 補間スピード（好みに合わせて）
 }
 
 void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 {
-    // SpringArmをRootComponentにアタッチ
-    SpringArm->SetupAttachment(GetOwner()->GetRootComponent());
+    // CameraをRootComponentにアタッチ
+    Camera->SetupAttachment(RootComponent);
 
-    // CameraをSpringArmにアタッチ
-    Camera->SetupAttachment(SpringArm);
+    // プレイヤーの初期グリッドを算出
+    FVector PlayerLocation = GetOwner()->GetActorLocation();
+    CurrentGrid = FIntPoint(
+        FMath::FloorToInt(PlayerLocation.X / GridSize.X),
+        FMath::FloorToInt(PlayerLocation.Y / GridSize.Y)
+    );
 
-    CameraLocation = Camera->GetComponentLocation();
+    // 初期カメラ位置（画面中心 + 高さ引き）
+    TargetCameraLocation = FVector(
+        CurrentGrid.X * GridSize.X + GridSize.X / 2,
+        CurrentGrid.Y * GridSize.Y + GridSize.Y / 2,
+        800.0f  // 高さ：カメラを引いて見下ろす
+    );
+    Camera->SetWorldLocation(TargetCameraLocation);
 }
-
-
 
 void UCameraHandlerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-    
+    UpdateCameraPosition(DeltaTime);
 }
 
 void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
 {
+    if (!Camera || !GetOwner()) return;
 
+    FVector PlayerLocation = GetOwner()->GetActorLocation();
+
+    // 現在のグリッド（X-Y平面）を算出
+    FIntPoint NewGrid(
+        FMath::FloorToInt(PlayerLocation.X / GridSize.X),
+        FMath::FloorToInt(PlayerLocation.Y / GridSize.Y)
+    );
+
+    // グリッドが変化したら、目標位置を再設定
+    if (NewGrid != CurrentGrid)
+    {
+        CurrentGrid = NewGrid;
+
+        TargetCameraLocation = FVector(
+            CurrentGrid.X * GridSize.X + GridSize.X / 2,
+            CurrentGrid.Y * GridSize.Y + GridSize.Y / 2,
+            800.0f  // Zは固定（高さ）
+        );
+    }
+
+    // カメラを滑らかに補間移動
+    FVector CurrentLocation = Camera->GetComponentLocation();
+    FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetCameraLocation, DeltaTime, InterpSpeed);
+    Camera->SetWorldLocation(NewLocation);
 }
