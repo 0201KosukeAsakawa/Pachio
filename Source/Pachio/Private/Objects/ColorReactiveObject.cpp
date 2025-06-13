@@ -86,3 +86,15 @@ void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 
 	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor);
 }
+
+
+void AColorReactiveObject::ApplyColorToMaterial(FLinearColor InColor)
+{
+	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
+	if (!Mesh) return;
+
+	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
+	if (!DynMaterial) return;
+
+	DynMaterial->SetVectorParameterValue(FName("BaseColor"), InColor);
+}

@@ -46,7 +46,8 @@ void UCameraHandlerComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
 {
-    if (!Camera || !GetOwner()) return;
+    if (!Camera || !GetOwner()) 
+        return;
 
     FVector PlayerLocation = GetOwner()->GetActorLocation();
 

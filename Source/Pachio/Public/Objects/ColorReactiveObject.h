@@ -34,7 +34,7 @@ protected:
 	virtual void InitializeColorLogic();
 	virtual void RegisterToColorManager();
 	virtual void SetupMaterial();
-
+	virtual void ApplyColorToMaterial(FLinearColor InColor);
 protected:
 	// コンポーネント設定
 	UPROPERTY(EditAnywhere, Category = "Reactive")
