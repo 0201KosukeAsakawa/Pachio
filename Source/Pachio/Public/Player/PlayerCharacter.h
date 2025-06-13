@@ -129,6 +129,9 @@ private:
 
 	void ResetBuff();
 private:
+	UPROPERTY(EditAnywhere)
+	float JumpForce = 12;
+
 	float JumpBuff = 1;
 	float DefaultMaxSpeed = 1;
 	// =====================
