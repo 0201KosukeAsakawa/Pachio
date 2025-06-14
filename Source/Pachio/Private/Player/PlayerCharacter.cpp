@@ -24,7 +24,6 @@
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DataContainer/EffectMatchResult.h"
-#include "DataContainer/EffectMatchResult.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
@@ -172,7 +171,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 		return;
 
 	// 上方向へジャンプ力を加える（値は12.0f固定）
-	physics->AddForce(GetActorUpVector(), 12 * JumpBuff);
+	physics->AddForce(GetActorUpVector(), JumpForce);
 }
 
 // ジャンプ停止処理（ジャンプボタン離したときの停止処理）

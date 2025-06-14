@@ -27,8 +27,6 @@ void AColorMuchTrigger::BeginPlay()
 void AColorMuchTrigger::Init()
 {
 	AColorReactiveObject::Init();
-	//InitializeColorLogic();
-	//RegisterToColorManager();
 }
 
 void AColorMuchTrigger::ColorAction(FLinearColor InColor)
@@ -46,17 +44,6 @@ void AColorMuchTrigger::ColorAction(FLinearColor InColor)
 		return;
 
  	levelManager->GetColorManager()->ColorEvent(EventID);
-}
-
-void AColorMuchTrigger::ApplyColorToMaterial(FLinearColor InColor)
-{
-	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
-	if (!Mesh) return;
-
-	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
-	if (!DynMaterial) return;
-
-	DynMaterial->SetVectorParameterValue(FName("BaseColor"), InColor);
 }
 
 void AColorMuchTrigger::SetupMaterial()
