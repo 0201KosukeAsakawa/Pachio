@@ -34,6 +34,9 @@ void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 
     // プレイヤーの方向に向ける（左を向く = -X）
     Camera->SetWorldRotation(FRotator(0.f, -90.f, 0.f));
+
+    Camera->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
 }
 
 
