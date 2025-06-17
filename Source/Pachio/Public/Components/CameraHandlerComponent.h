@@ -16,29 +16,27 @@ class PACHIO_API UCameraHandlerComponent : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UCameraHandlerComponent();
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
 public:
 	void Init(TObjectPtr<USceneComponent>);
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 private:
 	void UpdateCameraPosition(float DeltaTime);
-	// 判定結果のゲッター
-	//bool IsMovingLeft() const { return bIsMovingLeft; }
-	//bool IsMovingRight() const { return bIsMovingRight; }
-
-	//void SetMovingLeft(bool bLeft) { bIsMovingLeft = bLeft; }
-	//void SetMovingRight(bool bRight) { bIsMovingRight = bRight; }
 private:
+	// グリッドサイズ（1部屋のサイズ）
+	FVector2D GridSize = FVector2D(-10000.f, -1000.f);
 
-	// ヘッダーに追加（必要に応じて）
-	FVector InitialSpringArmOffset;
-	float PreviousCameraY = 0.0f;
-	//bool bIsMovingLeft = false;
-	//bool bIsMovingRight = false;
+	// 現在のグリッド座標（整数）
+	FIntPoint CurrentGrid = FIntPoint::ZeroValue;
+
+	// カメラ目標位置
+	FVector TargetCameraLocation;
+
+	// 補間速度（カメラ移動の滑らかさ）
+	float InterpSpeed = 5.f;
+
 	// ==== カメラ ====
+	FVector CameraLocation;
 
 	// カメラの回転／位置制御用スプリングアーム
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))

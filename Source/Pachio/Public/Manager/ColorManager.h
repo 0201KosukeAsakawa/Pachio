@@ -9,29 +9,9 @@
 #include "ColorManager.generated.h"
 
 class IColorReactiveInterface;
+class UEffectColorMatcher;
+class UColorTargetRegistry;
 
-
-
-// 色付け対象のクラス群を格納する構造体（編集可能）
-USTRUCT(BlueprintType)
-struct FColorTargetArray
-{
-    GENERATED_BODY()
-
-    // 色付け対象のクラス配列
-    UPROPERTY(EditAnywhere)
-    TArray<TSubclassOf<UObject>> Targets;
-};
-
-// 実体の色付け対象インスタンス群を格納する構造体
-USTRUCT()
-struct FColorTargetInstanceArray
-{
-    GENERATED_BODY()
-
-    // 色付け対象インターフェースを持つインスタンス配列
-    TArray<TScriptInterface<IColorReactiveInterface>> Instances;
-};
 
 // 色管理を行うマネージャークラス
 UCLASS(Blueprintable)
@@ -47,21 +27,27 @@ public:
     UFUNCTION()
     void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
 
+    UFUNCTION()
+    void ColorEvent(FName EventID);
+
     // 色付け対象を登録する関数
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);
 
     FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
 
 private:
-    void InitializeTargets();
+
     void BindController();
     void InitializePostEffect();
-    void NotifyTargets(EColorTargetType Mode, const FLinearColor& Color);
-    float GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B);
+
 private:
-    // 色付け対象クラスのマップ（モードごとに保持、エディタで編集可能）
+    UPROPERTY()
+    UEffectColorMatcher* EffectColorMatcher;
+    UPROPERTY()
+    UColorTargetRegistry* ColorTargetRegistry;
+
     UPROPERTY(EditAnywhere)
-    TMap<EColorTargetType, FColorTargetArray> ColorTargetsClass;
+    TSubclassOf<UColorTargetRegistry> ColorTargetRegistryClass;
 
     // 色付け対象インスタンスのマップ（モードごとに保持）
     UPROPERTY()
@@ -70,14 +56,4 @@ private:
     //色に反応するオブジェクトに現在の色を通知
     UPROPERTY()
     TMap<EColorTargetType, FColorTargetInstanceArray> ColorResponseTargets;
-
-    TMap<EBuffEffect, FLinearColor> EffectColorMap;
-
-    // ポストプロセスマテリアル（エディタで設定可能）
-    UPROPERTY(EditAnywhere)
-    UMaterialInterface* PostProcessMaterial;
-
-    // ポストプロセスマテリアルの動的インスタンス
-    UPROPERTY()
-    UMaterialInstanceDynamic* PostProcessMID;
 };

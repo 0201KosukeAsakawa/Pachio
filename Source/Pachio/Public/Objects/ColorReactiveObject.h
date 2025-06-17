@@ -1,44 +1,65 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interface/ColorFilterInterface.h"
-#include "DataContainer/ColorTargetType.h"
+#include "Interface/ColorReactionConfigInterface.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveObject.generated.h"
 
 class UColorReactiveComponent;
 
+/**
+ * 色に反応するアクター（指定色でアクションを起こす）
+ */
 UCLASS()
-class PACHIO_API AColorReactiveObject : public AActor,public IColorReactiveInterface
+class PACHIO_API AColorReactiveObject : public AActor, public IColorReactiveInterface, public IColorReactionConfigInterface
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+
+public:
 	AColorReactiveObject();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	virtual void ColorAction(FLinearColor)override;
-	inline void ChangeRock(bool b) { bColorRock = b; }
-private:
-	// ��������R���|�[�l���g�̃N���X��BP����w��ł���悤��
+	// インターフェース実装
+	virtual void ColorAction(FLinearColor InColor) override;
+	inline bool IsColorMuch() const override { return bColorMuch; }
+	inline void ChangeLock(bool b) override { bColorLock = b; }
+	inline FName GetColorEventID()const {return EventID;}
+protected:
+	virtual void Init();
+	virtual void InitializeColorLogic();
+	virtual void RegisterToColorManager();
+	virtual void SetupMaterial();
+	virtual void ApplyColorToMaterial(FLinearColor InColor);
+protected:
+	// コンポーネント設定
 	UPROPERTY(EditAnywhere, Category = "Reactive")
-	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;
-
-	// ���ۂɐ��������R���|�[�l���g�̃|�C���^
+	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;	
+	
+	// カラーリアクティブコンポーネントの実体
 	UPROPERTY()
 	UColorReactiveComponent* ColorReactiveComponent;
+
+	// オブジェクト固有の色
 	UPROPERTY(EditAnywhere)
 	FLinearColor Color;
-	UPROPERTY(EditAnywhere,Category = "Color")
+
+	// 色の対象種別
+	UPROPERTY(EditAnywhere, Category = "Color")
 	EColorTargetType ColorTargetType;
 
+	// 色ロック（変更不可）
 	UPROPERTY(EditAnywhere)
-	bool bColorRock = false;
+	bool bColorLock = false;
+
+	// 色が一致したかどうかのフラグ
+	UPROPERTY(VisibleAnywhere, Category = "Color")
+	bool bColorMuch;
+
+	UPROPERTY(EditAnywhere)
+	FName EventID;
 };

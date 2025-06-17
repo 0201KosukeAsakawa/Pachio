@@ -18,7 +18,7 @@ public:
 public :
 	virtual void Init(UMeshComponent* mesh);
 	void SetMyColor(const FLinearColor& FilterColor);
-	void CheckColorMatch(const FLinearColor& FilterColor);
+	bool CheckColorMatch(const FLinearColor& FilterColor);
 
 private:
 	UFUNCTION(BlueprintCallable)
@@ -33,6 +33,4 @@ protected:
 
 	UPROPERTY()
 	UMaterialInstanceDynamic* DynamicMaterialInstance = nullptr;
-
-	bool bColorMatch = false;
 };

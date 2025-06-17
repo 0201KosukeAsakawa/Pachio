@@ -24,7 +24,6 @@
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DataContainer/EffectMatchResult.h"
-#include "DataContainer/EffectMatchResult.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
@@ -42,9 +41,9 @@ APlayerCharacter::APlayerCharacter()
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
-
 	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
 	CameraComponent->Init(RootComponent);
+
 }
 
 // ゲーム開始時の初期化処理
@@ -64,6 +63,7 @@ void APlayerCharacter::BeginPlay()
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	DefaultMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
 }
 
 // 毎フレーム呼ばれる更新処理
@@ -171,7 +171,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 		return;
 
 	// 上方向へジャンプ力を加える（値は12.0f固定）
-	physics->AddForce(GetActorUpVector(), 12 * JumpBuff);
+	physics->AddForce(GetActorUpVector(), JumpForce);
 }
 
 // ジャンプ停止処理（ジャンプボタン離したときの停止処理）

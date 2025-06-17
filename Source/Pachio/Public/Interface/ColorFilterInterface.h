@@ -22,5 +22,6 @@ class PACHIO_API IColorReactiveInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void ColorAction(FLinearColor);
+	virtual void ColorAction(const FLinearColor = FLinearColor::White);
+	virtual FName GetColorEventID()const;
 };

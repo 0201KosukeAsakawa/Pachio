@@ -2,7 +2,9 @@
 
 
 #include "Components/ColorControllerComponent.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "FunctionLibrary.h"
+#include "UI/ColorLens.h"
 
 // Sets default values for this component's properties
 UColorControllerComponent::UColorControllerComponent()
@@ -15,7 +17,7 @@ UColorControllerComponent::UColorControllerComponent()
     const TArray<EColorTargetType> AllModes = UFunctionLibrary::GetAllEnumValues<EColorTargetType>();
     for (EColorTargetType Mode : AllModes)
     {
-        if (Mode == EColorTargetType::Responders)
+        if (Mode == EColorTargetType::Responders || Mode == EColorTargetType::Event)
             continue;
 
         ColorMap.Add(Mode, FLinearColor::White);
@@ -87,10 +89,9 @@ void UColorControllerComponent::ChangeMode(int Direction)
     {
         CurrentColorMode = GetPreviousMode(CurrentColorMode);
     }
-
     // モードを表示（デバッグ用）
     UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
-
+    AnimationDelegate.Execute(Direction);
 }
 
 EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType CurrentMode)
@@ -101,10 +102,14 @@ EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType Current
 
     for (EColorTargetType Mode : AllModes)
     {
-        if (Mode != EColorTargetType::Responders)
-        {
-            FilteredModes.Add(Mode);
-        }
+        if (Mode == EColorTargetType::Responders)
+            continue;
+
+        if (Mode == EColorTargetType::Event)
+            continue;
+
+        FilteredModes.Add(Mode);
+
     }
 
     int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
@@ -124,10 +129,14 @@ EColorTargetType UColorControllerComponent::GetPreviousMode(EColorTargetType Cur
 
     for (EColorTargetType Mode : AllModes)
     {
-        if (Mode != EColorTargetType::Responders)
-        {
-            FilteredModes.Add(Mode);
-        }
+        if (Mode == EColorTargetType::Responders)
+            continue;
+
+        if (Mode == EColorTargetType::Event)
+            continue;
+
+        FilteredModes.Add(Mode);
+
     }
 
     int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);

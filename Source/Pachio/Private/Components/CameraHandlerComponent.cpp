@@ -1,69 +1,76 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Components/CameraHandlerComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-
-// UCameraHandlerComponent.cpp
 
 UCameraHandlerComponent::UCameraHandlerComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
 
-    SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-}
 
-void UCameraHandlerComponent::BeginPlay()
-{
+    GridSize = FVector2D(7000.f, 3000.f);  // Y-Z平面のグリッドサイズ
+    InterpSpeed = 3.0f;
 }
 
 void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 {
-    SpringArm->SetupAttachment(RootComponent);
-    Camera->SetupAttachment(SpringArm);
+    Camera->SetupAttachment(RootComponent);
 
-    if (Camera)
-    {
-        PreviousCameraY = Camera->GetComponentLocation().Y;
-    }
+    FVector PlayerLocation = GetOwner()->GetActorLocation();
+
+    // Y: 横方向 / Z: 縦方向
+    CurrentGrid = FIntPoint(
+        FMath::FloorToInt(PlayerLocation.Y / GridSize.X),
+        FMath::FloorToInt(PlayerLocation.Z / GridSize.Y)
+    );
+
+    TargetCameraLocation = FVector(
+        -2000.0f,  // ← X方向に配置（プレイヤーの右側）
+        CurrentGrid.X * GridSize.X + GridSize.X / 2,
+        CurrentGrid.Y * GridSize.Y + GridSize.Y / 2
+    );
+
+    Camera->SetWorldLocation(TargetCameraLocation);
+
+    // プレイヤーの方向に向ける（左を向く = -X）
+    Camera->SetWorldRotation(FRotator(0.f, -90.f, 0.f));
+
+    Camera->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
 }
+
+
 
 void UCameraHandlerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
     UpdateCameraPosition(DeltaTime);
 }
 
 void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
 {
-    if (!Camera)
+    if (!Camera || !GetOwner()) 
         return;
 
-    float CurrentY = Camera->GetComponentLocation().Y;
-    float DeltaY = CurrentY - PreviousCameraY;
+    FVector PlayerLocation = GetOwner()->GetActorLocation();
 
-    const float Threshold = 1.0f; // 動きとみなす閾値
+    FIntPoint NewGrid(
+        FMath::FloorToInt(PlayerLocation.Y / GridSize.X),
+        FMath::FloorToInt(PlayerLocation.Z / GridSize.Y)
+    );
 
-    // 右方向の動きを DeltaY < -Threshold とみなす（反転）
-    if (DeltaY < -Threshold)
+    if (NewGrid != CurrentGrid)
     {
-        //SetMovingRight(true);
-        //SetMovingLeft(false);
-    }
-    // 左方向の動きを DeltaY > Threshold とみなす（反転）
-    else if (DeltaY > Threshold)
-    {
-        //SetMovingRight(false);
-        //SetMovingLeft(true);
-    }
-    else
-    {
-        //SetMovingRight(false);
-        //SetMovingLeft(false);
+        CurrentGrid = NewGrid;
+
+        TargetCameraLocation = FVector(
+            -2000.0f,  // ← プレイヤーの右側に固定配置（X方向）
+            CurrentGrid.X * GridSize.X + GridSize.X / 2,
+            CurrentGrid.Y * GridSize.Y + GridSize.Y / 2
+        );
     }
 
-    PreviousCameraY = CurrentY;
+    FVector CurrentLocation = Camera->GetComponentLocation();
+    FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetCameraLocation, DeltaTime, InterpSpeed);
+    Camera->SetWorldLocation(NewLocation);
 }

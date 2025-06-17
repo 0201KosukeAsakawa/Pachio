@@ -27,38 +27,38 @@ void UPhysicsCalculator::BeginPlay()
 
 // 毎フレーム呼ばれる
 
-// TickComponentの中などで毎フレーム更新
+// 毎フレームの更新
 void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// 物理計算が無効化されている場合（力の適用準備）
 	if (!bIsPhysicsEnabled)
 	{
-		// 力の減衰
-		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f);
+		// 力の減衰（力が強すぎると減衰をかける）
+		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f); // DeltaTimeによって減衰させる
 
-		FVector temp = GetOwner()->GetVelocity();
+		// 力の方向とスケールで移動を反映
 		GetOwner()->AddActorLocalOffset(ForceDirection * ForceScale, bIsSweep);
 
+		// 現在の位置を取得
 		FVector currentPosition = GetOwner()->GetActorLocation();
 		float distanceZ = currentPosition.Z - PreviousPosition.Z;
 
+		// 着地判定（地面に着いたら力をリセット）
 		if (distanceZ < 0 && OnGround())
 		{
-			ForceDirection.Z = 0;
-			ForceScale = 0;
-			bIsPhysicsEnabled = true;
-			Velocity = FVector::ZeroVector; // 着地したので速度リセット
+			ForceDirection.Z = 0; // Z軸方向の力をリセット
+			ForceScale = 0; // 力のスケールをゼロに
+			bIsPhysicsEnabled = true; // 物理計算を有効に
+			Velocity = FVector::ZeroVector; // 速度リセット
 		}
 		PreviousPosition = currentPosition;
-
-		temp = GetOwner()->GetVelocity();
-
 
 		return;
 	}
 
-	// 重力を速度に加算
+	// 重力を速度に加算（Z軸）
 	Velocity.Z -= GravityScale * DeltaTime;
 
 	// 速度を位置に反映
@@ -66,13 +66,18 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	PreviousPosition = GetOwner()->GetActorLocation();
 }
-// 指定した方向に力を加える
-void UPhysicsCalculator::AddForce(FVector Direction, float Force,const bool bSweep)
+
+// 力を加算する
+void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
 {
-	ForceDirection = Direction; // 力の方向を設定
-	ForceScale = Force; // 力のスケール（強さ）を設定
-	Timer = 0; // タイマーをリセット
-	bIsSweep = bSweep; // スイープ衝突判定を設定
+	// 既存の力に新しい力を加算
+	ForceDirection = Direction; // 方向ベクトルを加算
+	ForceScale = Force; // 力の強さを加算
+
+	// スイープ衝突判定の設定
+	bIsSweep = bSweep;
+
+	// 物理計算を無効化して、新たな力を適用
 	bIsPhysicsEnabled = false;
 }
 
