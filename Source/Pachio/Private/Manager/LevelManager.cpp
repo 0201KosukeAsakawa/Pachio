@@ -34,20 +34,29 @@ void ALevelManager::InitializeComponents()
 	if (bInitialize)
 		return;
 
-	if (!IsValid(BlockContainer))
+
+	if (BlockContainerClass)
 		BlockContainer = NewObject<UBlockDataContainer>(this, BlockContainerClass);
-	UIManager = NewObject<UUIManager>(this, UIManagerClass);
-	ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
-	ColorManager->Init();
+	if (UIManagerClass)
+		UIManager = NewObject<UUIManager>(this, UIManagerClass);
+	if (ColorManagerClass)
+	{
+		ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
+		ColorManager->Init();
+	}
+
 	if (UIManager)
 	{
 		UIManager->Init(this);
 		UIManager->ShowWidget(EWidgetCategory::Score, "Score");
 	}
-	ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
-	AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
-	ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
-	
+	if (ItemContainerClass)
+		ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
+	if (AttackContainerClass)
+		AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
+	if (ScoreManager)
+		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
+
 	EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
 
 	if (!IsValid(ObjectManager))
@@ -64,7 +73,8 @@ void ALevelManager::InitializeComponents()
 
 	if (!IsValid(SoundManager))
 	{
-		SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
+		if (SoundManagerClass)
+			SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
 		if (SoundManager)
 		{
 			SoundManager->Init();

@@ -37,7 +37,7 @@ void AColorReactiveBeltConveyor::Tick(float)
         if (target)
         {
             // target はポインタなので、デリファレンスして使います
-            target->AddForce(CurrentDirection, 1.f, true);
+            target->AddForce(CurrentDirection, power, true);
         }
     }
 }
