@@ -73,57 +73,62 @@ void RGBtoHSV(const FLinearColor& InColor, float& OutH, float& OutS, float& OutV
 
 void ARotationGroup::ColorAction(const FLinearColor InColor)
 {
-    // 1. 現在の色を取得（メンバ変数 color と仮定）
-    FLinearColor CurrentColor = Color;
-
-    // 2. RGBからHSVに変換
+    // 現在色 → HSV変換
     float HueCurrent, SatCurrent, ValCurrent;
     float HueTarget, SatTarget, ValTarget;
-
-    RGBtoHSV(CurrentColor, HueCurrent, SatCurrent, ValCurrent);
+    RGBtoHSV(Color, HueCurrent, SatCurrent, ValCurrent);
     RGBtoHSV(InColor, HueTarget, SatTarget, ValTarget);
 
-    // 3. 色相差の計算（-180?180度）
     float DeltaHue = HueTarget - HueCurrent;
     if (DeltaHue > 180.f)
         DeltaHue -= 360.f;
     else if (DeltaHue < -180.f)
         DeltaHue += 360.f;
 
-    UE_LOG(LogTemp, Log, TEXT("Hue difference: %f degrees"), DeltaHue);
+    // スムーズにするなら DeltaHue *= 0.2f; などで調整可
 
-    // 4. 回転を加算（ここではYaw軸回転）
+    // 回転適用（Z軸・Yaw回転）
     FRotator CurrentRotation = GetActorRotation();
-    FRotator NewRotation = CurrentRotation + FRotator(0.f, DeltaHue, 0.f);
+    FVector v = FVector(RotationAxis.X * DeltaHue, RotationAxis.Y * DeltaHue, RotationAxis.Z * DeltaHue);
+    FRotator DeltaRotation = FRotator(v.X, v.Y, v.Z);
+    FRotator NewRotation = CurrentRotation + DeltaRotation;
+
     SetActorRotation(NewRotation);
 
-    // 5. 関連するオブジェクトの位置も更新
-    UpdateBsRelativeToA(NewRotation);
+    // B群に差分回転だけ適用
+    UpdateBsRelativeToA(DeltaRotation);  // ここで「差分」だけ渡す！
 
-    // 6. 現在の色を更新（オプション）
+    // 色の状態更新
     Color = InColor;
 }
 
 
-void ARotationGroup::UpdateBsRelativeToA(const FRotator& NewRotation)
+void ARotationGroup::UpdateBsRelativeToA(const FRotator& DeltaRotation)
 {
     if (TargetArray.Num() == 0)
     {
         return;
     }
 
-    FVector Center = GetActorLocation();  // これが回転の中心
-    FQuat NewQuat = NewRotation.Quaternion();
+    FVector Center = GetActorLocation();
+    FQuat DeltaQuat = DeltaRotation.Quaternion();
 
     for (AActor* BActor : TargetArray)
     {
         if (!BActor)
             continue;
 
-        FVector RelativePos = BActor->GetActorLocation() - Center;
-        FVector RotatedPos = NewQuat.RotateVector(RelativePos);
-        FVector NewBLocation = Center + RotatedPos;
+        // 位置を回転
+        FVector Relative = BActor->GetActorLocation() - Center;
+        FVector Rotated = DeltaQuat.RotateVector(Relative);
+        BActor->SetActorLocation(Center + Rotated);
 
-        BActor->SetActorLocation(NewBLocation);
+        // 回転も加える（角度変更）
+        if (bShouldRotate)
+        {
+            FQuat CurrentQuat = BActor->GetActorQuat();
+            FQuat NewQuat = DeltaQuat * CurrentQuat;
+            BActor->SetActorRotation(NewQuat);
+        }
     }
 }

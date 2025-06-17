@@ -31,4 +31,10 @@ private:
 private:
 	UPROPERTY(EditAnywhere)
 	TArray<AActor*> TargetArray;
+
+	UPROPERTY(EditAnywhere)
+	FVector RotationAxis;
+
+	UPROPERTY(EditAnywhere)
+	bool bShouldRotate = false;
 };
