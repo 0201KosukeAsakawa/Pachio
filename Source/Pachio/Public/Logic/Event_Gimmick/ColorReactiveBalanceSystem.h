@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Objects/ColorReactiveObject.h"
 #include "ColorReactiveBalanceSystem.generated.h"
 
 class AColorReactiveBalancePlate;
 
 UCLASS()
-class PACHIO_API AColorReactiveBalanceSystem : public AActor
+class PACHIO_API AColorReactiveBalanceSystem : public AColorReactiveObject
 {
 	GENERATED_BODY()
 	
@@ -17,24 +17,17 @@ public:
     AColorReactiveBalanceSystem();
 
 protected:
-    virtual void BeginPlay() override;
-
+    virtual void Init()override;
 public:
-    virtual void Tick(float DeltaTime) override;
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     AColorReactiveBalancePlate* mLeftPlate;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     AColorReactiveBalancePlate* mRightPlate;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FLinearColor TargetColor;
-
     UFUNCTION(BlueprintCallable)
-    void ApplyColorReaction(const FLinearColor& InColor);
+    virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
 
 private:
     float GetColorDistance(const FLinearColor& A, const FLinearColor& B) const;
-    FLinearColor GetComplementaryColor(const FLinearColor& InColor) const;
 };

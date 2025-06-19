@@ -69,12 +69,6 @@ void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
     }
 }
 
-FLinearColor AColorReactiveBeltConveyor::GetComplementaryColor(const FLinearColor& InColor)
-{
-    // RGB‚»‚ê‚¼‚ê‚ð”½“]
-    return FLinearColor(1.0f - InColor.R, 1.0f - InColor.G, 1.0f - InColor.B, InColor.A);
-}
-
 void AColorReactiveBeltConveyor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)

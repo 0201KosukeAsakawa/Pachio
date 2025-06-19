@@ -2,6 +2,7 @@
 
 
 #include "Logic/Event_Gimmick/ColorReactiveBalanceSystem.h"
+#include "Components/ColorReactiveComponent.h"
 #include "Objects/Color/ColorReactiveBalancePlate.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -10,50 +11,62 @@ AColorReactiveBalanceSystem::AColorReactiveBalanceSystem()
     PrimaryActorTick.bCanEverTick = true;
 }
 
-void AColorReactiveBalanceSystem::BeginPlay()
+void AColorReactiveBalanceSystem::Init()
 {
-    Super::BeginPlay();
+    AColorReactiveObject::Init();
 }
 
-void AColorReactiveBalanceSystem::Tick(float DeltaTime)
+void AColorReactiveBalanceSystem::ColorAction(const FLinearColor InColor)
 {
-    Super::Tick(DeltaTime);
-    // 毎フレーム動かす必要があれば ApplyColorReaction をここで呼ぶ
-}
-
-void AColorReactiveBalanceSystem::ApplyColorReaction(const FLinearColor& InColor)
-{
-    if (!mLeftPlate || !mRightPlate)
+    if (!mLeftPlate || !mRightPlate || !ColorReactiveComponent)
         return;
 
-    float distToTarget = GetColorDistance(InColor, TargetColor);
-    float distToComplement = GetColorDistance(InColor, GetComplementaryColor(TargetColor));
+    // 自分の設定色 (Color) と InColor の距離を取得
+    float distToTarget = GetColorDistance(InColor, Color);
 
-    float maxDist = FMath::Sqrt(3.0f); // RGB間の最大距離
-    float targetScore = 1.0f - (distToTarget / maxDist);
-    float complementScore = 1.0f - (distToComplement / maxDist);
+    // 反転色を取得して距離も測る
+    FLinearColor ComplementaryColor = GetComplementaryColor(InColor);
+    float distToComplement = GetColorDistance(ComplementaryColor, Color);
 
-    float totalScore = targetScore + complementScore;
-    if (totalScore == 0.0f)
+    // 最大距離 = sqrt(3) (RGBの距離の最大値)
+    const float maxDist = FMath::Sqrt(3.0f);
+
+    // 距離を正規化（0?1）
+    float normDistTarget = FMath::Clamp(distToTarget / maxDist, 0.0f, 1.0f);
+    float normDistComplement = FMath::Clamp(distToComplement / maxDist, 0.0f, 1.0f);
+
+    // 距離が近いほど大きく上げるイメージで比率を作る
+    // 0（遠い）→1（近い）に変換
+    float targetRatio = 1.0f - normDistTarget;
+    float complementRatio = 1.0f - normDistComplement;
+
+    // ここでどちらが強いか比較して皿の上げ下げ量を決める
+    if (targetRatio >= complementRatio)
     {
-        mLeftPlate->ResetLocation();
-        mRightPlate->ResetLocation();
-        return;
+        // 色が近い方がInColor（右皿を上げるイメージ）
+        FVector rightPos = mRightPlate->GetMaxPosition();
+        rightPos.Z *= targetRatio;
+        mRightPlate->SetLocation(rightPos);
+
+        FVector leftPos = mLeftPlate->GetMinPosition();
+        leftPos.Z *= (1.0f - targetRatio);
+        mLeftPlate->SetLocation(leftPos);
     }
+    else
+    {
+        // 色が近い方が反転色（左皿を上げるイメージ）
+        FVector leftPos = mLeftPlate->GetMaxPosition();
+        leftPos.Z *= complementRatio;
+        mLeftPlate->SetLocation(leftPos);
 
-    float rightRatio = targetScore / totalScore;
-    float leftRatio = complementScore / totalScore;
-
-    mRightPlate->SetLocation(mRightPlate->GetMinPosition() * rightRatio);
-    mLeftPlate->SetLocation(mLeftPlate->GetMinPosition() * leftRatio);
+        FVector rightPos = mRightPlate->GetMinPosition();
+        rightPos.Z *= (1.0f - complementRatio);
+        mRightPlate->SetLocation(rightPos);
+    }
 }
+
 
 float AColorReactiveBalanceSystem::GetColorDistance(const FLinearColor& A, const FLinearColor& B) const
 {
     return FVector(A.R - B.R, A.G - B.G, A.B - B.B).Length();
-}
-
-FLinearColor AColorReactiveBalanceSystem::GetComplementaryColor(const FLinearColor& InColor) const
-{
-    return FLinearColor(1.0f - InColor.R, 1.0f - InColor.G, 1.0f - InColor.B, InColor.A);
 }

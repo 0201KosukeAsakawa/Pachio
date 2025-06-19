@@ -98,3 +98,9 @@ void AColorReactiveObject::ApplyColorToMaterial(FLinearColor InColor)
 
 	DynMaterial->SetVectorParameterValue(FName("BaseColor"), InColor);
 }
+
+FLinearColor AColorReactiveObject::GetComplementaryColor(const FLinearColor& InColor)
+{
+	// RGB‚»‚ê‚¼‚ê‚ð”½“]
+	return FLinearColor(1.0f - InColor.R, 1.0f - InColor.G, 1.0f - InColor.B, InColor.A);
+}
