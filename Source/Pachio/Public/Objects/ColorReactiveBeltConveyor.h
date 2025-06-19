@@ -21,7 +21,6 @@ public:
 	virtual void Tick(float)override;
 private:
 	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
-	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
