@@ -80,7 +80,7 @@ void AColorReactiveBeltConveyor::OnOverlapBegin(UPrimitiveComponent* OverlappedC
     bool bFromSweep, const FHitResult& SweepResult)
 {
     // まずOtherActorがnullptrかどうかをチェック
-    if (OtherActor == nullptr)
+     if (OtherActor == nullptr)
         return;
 
     // 物理計算コンポーネント（UPhysicsCalculator）がアタッチされているか確認
