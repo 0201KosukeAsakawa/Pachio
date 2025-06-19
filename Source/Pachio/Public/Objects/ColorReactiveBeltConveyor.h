@@ -34,6 +34,8 @@ private:
 	UBoxComponent* BoxComponent;
 	UPROPERTY(EditAnywhere)
 	FVector direction;
+	UPROPERTY(EditAnywhere)
+	float power = 0;
 	FVector CurrentDirection;
 
 	UPROPERTY()
