@@ -111,12 +111,16 @@ void ARotationGroup::UpdateBsRelativeToA(const FRotator& DeltaRotation)
     }
 
     FVector Center = GetActorLocation();
-    FQuat DeltaQuat = DeltaRotation.Quaternion();
 
-    for (AActor* BActor : TargetArray)
+    for (const FTargetData& TargetData : TargetArray)
     {
+        AActor* BActor = TargetData.targetActor;
         if (!BActor)
             continue;
+
+        // 速度を反映した回転クォータニオン
+        FRotator ScaledRotation = DeltaRotation * TargetData.rotateSpeed;
+        FQuat DeltaQuat = ScaledRotation.Quaternion();
 
         // 位置を回転
         FVector Relative = BActor->GetActorLocation() - Center;
@@ -132,3 +136,4 @@ void ARotationGroup::UpdateBsRelativeToA(const FRotator& DeltaRotation)
         }
     }
 }
+
