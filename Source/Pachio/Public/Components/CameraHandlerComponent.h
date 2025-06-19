@@ -24,7 +24,10 @@ private:
 	void UpdateCameraPosition(float DeltaTime);
 private:
 	// グリッドサイズ（1部屋のサイズ）
-	FVector2D GridSize = FVector2D(-10000.f, -1000.f);
+	UPROPERTY(EditAnywhere)
+	FVector2D GridSize = FVector2D(7000.f, 3000.f);
+	UPROPERTY(EditAnywhere)
+	float Zbaffa = 2000.f;
 
 	// 現在のグリッド座標（整数）
 	FIntPoint CurrentGrid = FIntPoint::ZeroValue;
