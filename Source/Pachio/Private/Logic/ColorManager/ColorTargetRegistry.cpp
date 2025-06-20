@@ -10,11 +10,11 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
     switch (Mode)
     {
     case EColorTargetType::Layer:
-        //if (PostProcessMID)
-        //{
-        //    // ポストプロセスマテリアルに色を適用
-        //    PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
-        //}
+        if (PostProcessMID)
+        {
+            // ポストプロセスマテリアルに色を適用
+            PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
+        }
         // 指定されたモードのターゲットに通知
         NotifyTargets(Mode, NewColor);
         // 常時反応するターゲット（例：UIなど）に通知
