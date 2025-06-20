@@ -49,7 +49,6 @@ void ALevelManager::InitializeComponents()
 	if (UIManager)
 	{
 		UIManager->Init(this);
-		UIManager->ShowWidget(EWidgetCategory::Score, "Score");
 	}
 	if (ItemContainerClass)
 		ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
@@ -93,10 +92,9 @@ void ALevelManager::InitializeComponents()
 	// 例えばStage1をクリアにしてスコアも入れる
 	FSaveData thisStageData;
 	thisStageData.bCleared = true;
+	if(ScoreManager)
 	thisStageData.Score = ScoreManager->GetGameScore();
 	thisStageData.Time = InGameTimer;
-
-	//SaveData.Stages.Add(StageName, Stage1Data);
 
 	// 2. セーブ呼び出し（静的関数なのでクラス名から直接）
 	USaveManager::SaveStageData(StageName, thisStageData);

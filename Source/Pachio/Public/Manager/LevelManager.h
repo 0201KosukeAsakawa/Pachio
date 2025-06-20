@@ -93,6 +93,7 @@ public:
 	inline UUIManager* GetUIManager()const { return UIManager; }
 
 private:
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void InitializeComponents();
 
 	/** ステージ上のオブジェクトを生成（StageData をもとに） */

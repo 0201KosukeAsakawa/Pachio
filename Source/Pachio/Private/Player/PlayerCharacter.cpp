@@ -127,7 +127,7 @@ void APlayerCharacter::ResetBuff()
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	if (!MoveComp)
+	if (!MoveComp || !physics->OnGround())
 		return;
 
 	// 移動方向をMoveCompのロジックから取得
@@ -164,14 +164,25 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 }
 
 // ジャンプ処理（地面に接地している場合のみ力を加える）
+// 移動方向はMovement関数で取得済みのFVector directionをジャンプでも使いたいので
+// Movement関数のdirectionをJump関数に渡すか、Jump関数内で再取得する必要あり
+
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	// 地面に接地していなければジャンプ不可
 	if (!physics->OnGround())
 		return;
 
-	// 上方向へジャンプ力を加える（値は12.0f固定）
-	physics->AddForce(GetActorUpVector(), JumpForce);
+	// 移動方向を取得（例：MoveCompから取得）
+	FVector MoveDirection = MoveComp->Movement(0, this, Value); // ValueがJump関数に渡されているならOK
+
+	// 上方向と移動方向の合成ベクトルを作る
+	FVector JumpDirection = GetActorUpVector() + MoveDirection.GetSafeNormal();
+
+	// Normalizeして方向だけにするか、そのままスケール調整するかは調整可能
+	JumpDirection.Normalize();
+
+	// JumpForceを掛けるベクトルに変更してAddForce
+	physics->AddForce(JumpDirection, JumpForce);
 }
 
 // ジャンプ停止処理（ジャンプボタン離したときの停止処理）
