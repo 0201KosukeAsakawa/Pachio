@@ -139,7 +139,7 @@ private:
 	// =====================
 
 	// カメラ制御コンポーネント
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	UCameraHandlerComponent* CameraComponent;
 
 	// 無敵状態制御コンポーネント

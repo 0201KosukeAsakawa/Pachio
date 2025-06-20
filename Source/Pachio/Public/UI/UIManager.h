@@ -12,6 +12,7 @@ class UColorLens;
 UENUM(BlueprintType)
 enum class EWidgetCategory : uint8
 {
+    Menu UMETA(DisplayName = "Menu"),
     Tutorial UMETA(DisplayName = "Tutorial"),
     Lens     UMETA(DisplayName = "Lens"),
     Score    UMETA(DisplayName = "Score")

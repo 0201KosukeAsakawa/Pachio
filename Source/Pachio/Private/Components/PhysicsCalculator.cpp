@@ -73,7 +73,7 @@ void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSw
 	// 既存の力に新しい力を加算
 	ForceDirection = Direction; // 方向ベクトルを加算
 	ForceScale = Force; // 力の強さを加算
-
+	Timer = 0;
 	// スイープ衝突判定の設定
 	bIsSweep = bSweep;
 

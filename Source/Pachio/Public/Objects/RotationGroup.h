@@ -8,6 +8,18 @@
 
 class AActor;
 
+USTRUCT(BlueprintType)
+struct FTargetData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere,Category = "TargetData")
+	AActor* targetActor;
+	UPROPERTY(EditAnywhere, Category = "TargetData")
+	float rotateSpeed;
+};
+
 UCLASS()
 class PACHIO_API ARotationGroup : public AColorReactiveObject
 {
@@ -30,7 +42,7 @@ private:
 
 private:
 	UPROPERTY(EditAnywhere)
-	TArray<AActor*> TargetArray;
+	TArray<FTargetData> TargetArray;
 
 	UPROPERTY(EditAnywhere)
 	FVector RotationAxis;

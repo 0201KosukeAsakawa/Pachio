@@ -2,6 +2,7 @@
 #include "Manager/ObjectManager.h"
 #include "Manager/ScoreManager.h"
 #include "Manager/ColorManager.h"
+#include "Manager/SaveManager.h"
 #include "UI/UIManager.h"
 #include "EngineUtils.h"
 #include "Engine/DataTable.h"
@@ -48,21 +49,20 @@ void ALevelManager::InitializeComponents()
 	if (UIManager)
 	{
 		UIManager->Init(this);
-		UIManager->ShowWidget(EWidgetCategory::Score, "Score");
 	}
 	if (ItemContainerClass)
 		ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
 	if (AttackContainerClass)
 		AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
-	if (ScoreManager)
+	if (ScoreManagerClass)
 		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
+	if(EnemyContainerClass)
+		EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
 
-	EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
-
-	if (!IsValid(ObjectManager))
+	if (ObjectManagerClass)
 	{
 		ObjectManager = NewObject<UObjectManager>(this, ObjectManagerClass);
-		if (ObjectManager && ObjectManagerClass)
+		if (ObjectManager)
 		{
 			if (auto* DefaultObj = Cast<UObjectManager>(ObjectManagerClass->GetDefaultObject()))
 			{
@@ -71,8 +71,7 @@ void ALevelManager::InitializeComponents()
 		}
 	}
 
-	if (!IsValid(SoundManager))
-	{
+
 		if (SoundManagerClass)
 			SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
 		if (SoundManager)
@@ -80,12 +79,25 @@ void ALevelManager::InitializeComponents()
 			SoundManager->Init();
 			SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
 		}
-	}
+	
 	// 1秒ごとに CountUp 関数を呼ぶ
 	GetWorld()->GetTimerManager().SetTimer(CountTimerHandle, this, &ALevelManager::CountDown, 1.0f, true);
 
 	GenerateStage();
 	GenerateBlock();
+
+	// 1. セーブデータ用意
+	// FStageSaveData SaveData;
+
+	// 例えばStage1をクリアにしてスコアも入れる
+	FSaveData thisStageData;
+	thisStageData.bCleared = true;
+	if(ScoreManager)
+	thisStageData.Score = ScoreManager->GetGameScore();
+	thisStageData.Time = InGameTimer;
+
+	// 2. セーブ呼び出し（静的関数なのでクラス名から直接）
+	USaveManager::SaveStageData(StageName, thisStageData);
 
 	bInitialize = true;
 }
