@@ -38,21 +38,13 @@ void UColorControllerComponent::AdjustColor(float Delta)
     float Saturation = HSV.G;
     float Value = HSV.B;
 
-    // 彩度か明度がほぼ0なら少し上げて色相の変化が見えるようにする
-    if (Saturation < KINDA_SMALL_NUMBER)
-    {
-        Saturation = 1.f;
-    }
-    if (Value < KINDA_SMALL_NUMBER)
-    {
-        Value = 1.f;
-    }
+    // パステルカラー用に彩度と明度を制限
+    Saturation = FMath::Clamp(Saturation, 0.2f, 0.6f);
+    Value = FMath::Clamp(Value, 0.8f, 1.0f);
 
     // Hue を調整
     Hue += Delta * 360.0f;
-
-    if (Hue > 360.f)
-        Hue -= 360.f;
+    Hue = FMath::Fmod(Hue, 360.0f);
     if (Hue < 0.f)
         Hue += 360.f;
 
@@ -67,6 +59,7 @@ void UColorControllerComponent::AdjustColor(float Delta)
     // デリゲートを通知
     OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
 }
+
 
 void UColorControllerComponent::ChangeMode(int Direction)
 {
