@@ -6,15 +6,19 @@
 
 // 前方宣言（依存クラスの参照を軽量化）
 class USoundManager;
+class USaveManager;
+class UScoreManager;
+class UObjectManager;
+class UColorManager;
+class UUIManager;
+
 class UDataTable;
+
 class UBlockDataContainer;
 class UAttackDataContainer;
-class UObjectManager;
 class UItemDataContainer;
-class UScoreManager;
-class UUIManager;
 class UEnemyDataContainer;
-class UColorManager;
+
 
 /**
  * ステージオブジェクト1つ分の配置情報（データテーブル用構造体）
@@ -101,6 +105,9 @@ private:
 
 private:
 	 bool bInitialize;
+
+	 UPROPERTY(EditAnywhere)
+	 FString StageName;
 
 	UPROPERTY(EditAnywhere)
 	float InGameTimer = 500.0f;
