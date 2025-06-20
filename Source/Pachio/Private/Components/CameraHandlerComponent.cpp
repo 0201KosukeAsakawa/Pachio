@@ -8,7 +8,6 @@ UCameraHandlerComponent::UCameraHandlerComponent()
 
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 
-    GridSize = FVector2D(7000.f, 3000.f);  // Y-Z平面のグリッドサイズ
     InterpSpeed = 3.0f;
 }
 
@@ -25,7 +24,7 @@ void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
     );
 
     TargetCameraLocation = FVector(
-        -2000.0f,  // ← X方向に配置（プレイヤーの右側）
+        -Zbaffa,  // ← X方向に配置（プレイヤーの右側）
         CurrentGrid.X * GridSize.X + GridSize.X / 2,
         CurrentGrid.Y * GridSize.Y + GridSize.Y / 2
     );
@@ -64,7 +63,7 @@ void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
         CurrentGrid = NewGrid;
 
         TargetCameraLocation = FVector(
-            -2000.0f,  // ← プレイヤーの右側に固定配置（X方向）
+            -Zbaffa,  // ← プレイヤーの右側に固定配置（X方向）
             CurrentGrid.X * GridSize.X + GridSize.X / 2,
             CurrentGrid.Y * GridSize.Y + GridSize.Y / 2
         );
