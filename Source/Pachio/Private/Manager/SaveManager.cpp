@@ -26,6 +26,20 @@ FStageSaveData CreateDefaultStageData()
     return DefaultData;
 }
 
+void USaveManager::SaveStageData(const FString& StageKey, FSaveData NewData)
+{
+    FStageSaveData CurrentData = LoadFromJson();
+
+    if (CurrentData.Stages.Num() == 0)
+    {
+        CurrentData = CreateDefaultStageData();
+    }
+
+    CurrentData.Stages.FindOrAdd(StageKey) = NewData;
+
+    SaveToJson(CurrentData);
+}
+
 void USaveManager::SaveToJson(const FStageSaveData& InData)
 {
     FString SavePath = FPaths::ProjectSavedDir() + "StageSave.json";

@@ -17,6 +17,9 @@ class PACHIO_API USaveManager : public UObject
 
 public:
     UFUNCTION(BlueprintCallable, Category = "Save")
+    static
+    void SaveStageData(const FString& StageKey, FSaveData NewData);
+    UFUNCTION(BlueprintCallable, Category = "Save")
     static void SaveToJson(const FStageSaveData& Data);
 
     UFUNCTION(BlueprintCallable, Category = "Save")
