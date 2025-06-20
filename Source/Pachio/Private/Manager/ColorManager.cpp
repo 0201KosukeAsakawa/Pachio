@@ -50,7 +50,7 @@ void UColorManager::ColorEvent(FName EventID)
 // 色変化に反応するターゲットを登録
 void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
 {
-    if (!ColorTargetRegistry)
+    if (!this || !ColorTargetRegistry)
         return;
 
     ColorTargetRegistry->RegisterTarget(Mode, Target);
