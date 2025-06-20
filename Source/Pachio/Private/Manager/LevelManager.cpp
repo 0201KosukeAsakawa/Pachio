@@ -88,18 +88,18 @@ void ALevelManager::InitializeComponents()
 	GenerateBlock();
 
 	// 1. セーブデータ用意
-	FStageSaveData SaveData;
+	// FStageSaveData SaveData;
 
 	// 例えばStage1をクリアにしてスコアも入れる
-	FSaveData Stage1Data;
-	Stage1Data.bCleared = true;
-	Stage1Data.Score = ScoreManager->GetGameScore();
-	Stage1Data.Time = InGameTimer;
+	FSaveData thisStageData;
+	thisStageData.bCleared = true;
+	thisStageData.Score = ScoreManager->GetGameScore();
+	thisStageData.Time = InGameTimer;
 
-	SaveData.Stages.Add(StageName, Stage1Data);
+	//SaveData.Stages.Add(StageName, Stage1Data);
 
 	// 2. セーブ呼び出し（静的関数なのでクラス名から直接）
-	USaveManager::SaveToJson(SaveData);
+	USaveManager::SaveStageData(StageName, thisStageData);
 
 	bInitialize = true;
 }
