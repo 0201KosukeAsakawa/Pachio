@@ -3,6 +3,7 @@
 #include "Manager/ScoreManager.h"
 #include "Manager/ColorManager.h"
 #include "Manager/SaveManager.h"
+#include "Kismet/GameplayStatics.h" // レベル遷移に使用するため追加
 #include "UI/UIManager.h"
 #include "EngineUtils.h"
 #include "Engine/DataTable.h"
@@ -55,8 +56,13 @@ void ALevelManager::InitializeComponents()
 	if (AttackContainerClass)
 		AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
 	if (ScoreManagerClass)
+
 		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
-	if(EnemyContainerClass)
+
+	if (ScoreManager)
+		ScoreManager->Init();
+
+	if (EnemyContainerClass)
 		EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
 
 	if (ObjectManagerClass)
@@ -72,16 +78,13 @@ void ALevelManager::InitializeComponents()
 	}
 
 
-		if (SoundManagerClass)
-			SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
-		if (SoundManager)
-		{
-			SoundManager->Init();
-			SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
-		}
-	
-	// 1秒ごとに CountUp 関数を呼ぶ
-	GetWorld()->GetTimerManager().SetTimer(CountTimerHandle, this, &ALevelManager::CountDown, 1.0f, true);
+	if (SoundManagerClass)
+		SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
+	if (SoundManager)
+	{
+		SoundManager->Init();
+		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
+	}
 
 	GenerateStage();
 	GenerateBlock();
@@ -92,9 +95,9 @@ void ALevelManager::InitializeComponents()
 	// 例えばStage1をクリアにしてスコアも入れる
 	FSaveData thisStageData;
 	thisStageData.bCleared = true;
-	if(ScoreManager)
-	thisStageData.Score = ScoreManager->GetGameScore();
-	thisStageData.Time = InGameTimer;
+	if (ScoreManager)
+		thisStageData.Score = ScoreManager->GetGameScore();
+	thisStageData.Time = ScoreManager->GetTime();
 
 	// 2. セーブ呼び出し（静的関数なのでクラス名から直接）
 	USaveManager::SaveStageData(StageName, thisStageData);
@@ -191,7 +194,25 @@ void ALevelManager::GenerateBlock()
 	}
 }
 
-void ALevelManager::CountDown()
+void ALevelManager::HandlePlayerGoalReached()
 {
-	InGameTimer--;
+	if (!ScoreManager || !UIManager) return;
+
+	float ClearTime = ScoreManager->GetTime();
+	EClearScore Rank = ScoreManager->EvaluateClearRank(GetWorld());
+
+	UUserWidget* ResultWidget = UIManager->ShowResultWidget(ClearTime, Rank);
+
+	PauseGameAndShowUI(ResultWidget);
+}
+
+void ALevelManager::PauseGameAndShowUI(UUserWidget* FocusWidget)
+{
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (PC)
+	{
+		PC->bShowMouseCursor = true;
+		PC->SetInputMode(FInputModeUIOnly());  // UI操作に限定
+	}
 }

@@ -63,6 +63,8 @@ void APlayerCharacter::BeginPlay()
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	DefaultMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	// 最後に現在の座標を保存（次フレームのために）
+	PreviousLocation = GetActorLocation();
 
 }
 
@@ -80,6 +82,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	// 重力を加える（値は任意、固定で10.0fを加算）
 	physics->AddGravity(10.0f);
+
+	// 最後に現在の座標を保存（次フレームのために）
+	PreviousLocation = GetActorLocation();
 }
 
 // プレイヤー入力バインド処理
@@ -127,7 +132,7 @@ void APlayerCharacter::ResetBuff()
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	if (!MoveComp || !physics->OnGround())
+	if (!MoveComp)
 		return;
 
 	// 移動方向をMoveCompのロジックから取得
@@ -169,27 +174,22 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	if (!physics->OnGround())
+	if (!physics || !physics->OnGround())
 		return;
 
-	// 移動方向を取得（例：MoveCompから取得）
-	FVector MoveDirection = MoveComp->Movement(0, this, Value); // ValueがJump関数に渡されているならOK
+	//// 前回フレームとの位置差から移動方向を取得（正規化）
+	//FVector MoveDirection = (GetActorLocation() - PreviousLocation).GetSafeNormal();
 
-	// 上方向と移動方向の合成ベクトルを作る
-	FVector JumpDirection = GetActorUpVector() + MoveDirection.GetSafeNormal();
+	//// 上方向 + 移動方向 → ジャンプベクトル
+	//FVector JumpDirection = GetActorUpVector() + MoveDirection;
 
-	// Normalizeして方向だけにするか、そのままスケール調整するかは調整可能
-	JumpDirection.Normalize();
+	//// 合成ベクトルを正規化（方向のみ）
+	//JumpDirection.Normalize();
 
-	// JumpForceを掛けるベクトルに変更してAddForce
-	physics->AddForce(JumpDirection, JumpForce);
+	// ジャンプ力を掛けて力を加える
+	physics->AddForce(GetActorUpVector(), JumpForce);
 }
 
-// ジャンプ停止処理（ジャンプボタン離したときの停止処理）
-void APlayerCharacter::JumpStop(const FInputActionValue& Value)
-{
-	ACharacter::StopJumping();
-}
 
 // ダッシュ・スキル開始処理
 void APlayerCharacter::Action(const FInputActionValue& Value)

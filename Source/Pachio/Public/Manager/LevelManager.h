@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "DataContainer/UIStruct.h"
 #include "LevelManager.generated.h"
 
 // 前方宣言（依存クラスの参照を軽量化）
@@ -58,16 +59,14 @@ protected:
 
 public:
 	virtual void Tick(float DeltaTime) override;	
-	
+
+	void HandlePlayerGoalReached();
 	/** サウンドの再生を指示する */
 	void PlaySound(FName Category, FName CueName);
 
 	/** グローバルから取得できるレベルマネージャー（シングルトン） */
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	static ALevelManager* GetInstance(UObject* WorldContext);
-
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	inline int GetTime()const { return InGameTimer; }
 
 	/** ブロックデータ管理コンテナを取得 */
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
@@ -102,18 +101,14 @@ private:
 	/** ブロックを生成（BlockData をもとに） */
 	void GenerateBlock();
 
-	void CountDown();
+
+	void PauseGameAndShowUI(UUserWidget* FocusWidget);
 
 private:
 	 bool bInitialize;
 
 	 UPROPERTY(EditAnywhere)
 	 FString StageName;
-
-	UPROPERTY(EditAnywhere)
-	float InGameTimer = 500.0f;
-
-	FTimerHandle CountTimerHandle;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UEnemyDataContainer> EnemyContainerClass;

@@ -23,6 +23,6 @@ class PACHIO_API IMoveLogic
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual FVector Movement(float DeltaTime,AActor* Owner, const FInputActionValue& Value = FInputActionValue());
+	virtual FVector Movement(float DeltaTime,AActor* Owner,const FInputActionValue& Value = FInputActionValue());
 	virtual void Init(const float speed = 1,const FVector = FVector(0,0,0));
 };

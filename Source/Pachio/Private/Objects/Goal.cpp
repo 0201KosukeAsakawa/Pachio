@@ -2,6 +2,8 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h" // レベル遷移に使用するため追加
+#include "Manager/LevelManager.h"
+#include "UI/UIManager.h"
 
 // デフォルトコンストラクタ：初期値の設定
 AGoal::AGoal()
@@ -48,10 +50,12 @@ void AGoal::OnGoalOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 	UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	// オーバーラップしたアクターが "Player" タグを持っていればゴールと判定
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
-		isGoal = true; // ゴール状態をオンに
-		UE_LOG(LogTemp, Warning, TEXT("ゴール判定通過！"));
+		ALevelManager* LM = ALevelManager::GetInstance(GetWorld());
+		if (LM)
+		{
+			LM->HandlePlayerGoalReached();
+		}
 	}
 }

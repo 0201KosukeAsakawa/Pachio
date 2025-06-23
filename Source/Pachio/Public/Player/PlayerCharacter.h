@@ -72,9 +72,6 @@ public:
 	// ジャンプ開始処理
 	void Jump(const FInputActionValue& Value);
 
-	// ジャンプ終了処理
-	void JumpStop(const FInputActionValue& Value);
-
 	// 特殊アクション（スキル発動 or ダッシュ）開始処理
 	void Action(const FInputActionValue& Value);
 
@@ -134,6 +131,9 @@ private:
 
 	float JumpBuff = 1;
 	float DefaultMaxSpeed = 1;
+
+	// 直前の座標を保持するための変数
+	FVector PreviousLocation;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================

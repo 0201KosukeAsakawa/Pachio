@@ -12,7 +12,7 @@ FStageSaveData CreateDefaultStageData()
 {
     FStageSaveData DefaultData;
 
-    // ƒXƒe[ƒW1?5‚ğ–¢ƒNƒŠƒAó‘Ô‚Å“o˜^
+    // ï¿½Xï¿½eï¿½[ï¿½W1?5ï¿½ğ–¢ƒNï¿½ï¿½ï¿½Aï¿½ï¿½Ô‚Å“oï¿½^
     for (int32 i = 1; i <= 5; ++i)
     {
         FString StageKey = FString::Printf(TEXT("Stage%d"), i);
