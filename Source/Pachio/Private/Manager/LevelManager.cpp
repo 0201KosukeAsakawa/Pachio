@@ -3,7 +3,7 @@
 #include "Manager/ScoreManager.h"
 #include "Manager/ColorManager.h"
 #include "Manager/SaveManager.h"
-#include "Kismet/GameplayStatics.h" // レベル遷移に使用するため追加
+#include "Kismet/GameplayStatics.h" 
 #include "UI/UIManager.h"
 #include "EngineUtils.h"
 #include "Engine/DataTable.h"
@@ -210,9 +210,18 @@ void ALevelManager::PauseGameAndShowUI(UUserWidget* FocusWidget)
 {
 	UGameplayStatics::SetGamePaused(GetWorld(), true);
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (PC)
+	if (!PC)
+		return;
+
+	PC->bShowMouseCursor = true;
+	FInputModeUIOnly InputMode;
+
+	if (FocusWidget)
 	{
-		PC->bShowMouseCursor = true;
-		PC->SetInputMode(FInputModeUIOnly());  // UI操作に限定
+		InputMode.SetWidgetToFocus(FocusWidget->TakeWidget());
 	}
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+	PC->SetInputMode(InputMode);
+
 }

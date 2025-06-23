@@ -23,6 +23,7 @@
 #include "FunctionLibrary.h"
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h" 
 #include "DataContainer/EffectMatchResult.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
@@ -63,8 +64,12 @@ void APlayerCharacter::BeginPlay()
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	DefaultMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
-	// 最後に現在の座標を保存（次フレームのために）
-	PreviousLocation = GetActorLocation();
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (PC)
+	{
+		PC->bShowMouseCursor = false;
+		PC->SetInputMode(FInputModeGameOnly());
+	}
 
 }
 
@@ -76,15 +81,13 @@ void APlayerCharacter::Tick(float DeltaTime)
 	// ステートマネージャーが存在しない場合は処理中断
 	if (!StateManager)
 		return;
-
+	Circle();
 	// ステートマネージャーの時間経過更新処理を実行
 	StateManager->Update(DeltaTime);
 
 	// 重力を加える（値は任意、固定で10.0fを加算）
 	physics->AddGravity(10.0f);
 
-	// 最後に現在の座標を保存（次フレームのために）
-	PreviousLocation = GetActorLocation();
 }
 
 // プレイヤー入力バインド処理
@@ -127,6 +130,43 @@ void APlayerCharacter::ResetBuff()
 {
 	 JumpBuff = 1;
 	 GetCharacterMovement()->MaxWalkSpeed = DefaultMaxSpeed;
+}
+
+void APlayerCharacter::Circle()
+{
+	float DeltaX, DeltaY;
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC) return;
+
+	PC->GetInputMouseDelta(DeltaX, DeltaY);
+	FVector2D CurrentDir(DeltaX, DeltaY);
+
+	if (CurrentDir.SizeSquared() > 4.0f)
+	{
+		CurrentDir.Normalize();
+
+		if (bHasPrevMouse)
+		{
+			float CrossZ = PrevMouseDir.X * CurrentDir.Y - PrevMouseDir.Y * CurrentDir.X;
+
+			if (CrossZ > 0)
+			{
+				DecreaseColor();  // 左回し → -1
+			}
+			else if (CrossZ < 0)
+			{
+				IncreaseColor(); // 右回し → +1
+			}
+		}
+		// カラーモードを1つ右にシフト
+		void ;
+
+		// カラーモードを1つ左にシフト
+		void ShiftArrayLeftColorMode();
+
+		PrevMouseDir = CurrentDir;
+		bHasPrevMouse = true;
+	}
 }
 
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）

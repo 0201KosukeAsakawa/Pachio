@@ -125,15 +125,16 @@ private:
 	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr) override;
 
 	void ResetBuff();
+
+	void Circle();
+	FVector2D PrevMouseDir;
+	bool bHasPrevMouse = false;
 private:
 	UPROPERTY(EditAnywhere)
 	float JumpForce = 12;
 
 	float JumpBuff = 1;
 	float DefaultMaxSpeed = 1;
-
-	// 直前の座標を保持するための変数
-	FVector PreviousLocation;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================
