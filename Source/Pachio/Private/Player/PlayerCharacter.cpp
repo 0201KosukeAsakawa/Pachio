@@ -151,11 +151,11 @@ void APlayerCharacter::Circle()
 
 			if (CrossZ > 0)
 			{
-				ChangeColor(-0.1f);  // 左回し → -1
+				ChangeColor(-0.01f);  // 左回し → -1
 			}
 			else if (CrossZ < 0)
 			{
-				ChangeColor(0.1f); // 右回し → +1
+				ChangeColor(0.01f); // 右回し → +1
 			}
 		}
 		// カラーモードを1つ右にシフト
