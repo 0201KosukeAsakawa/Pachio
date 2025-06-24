@@ -151,11 +151,11 @@ void APlayerCharacter::Circle()
 
 			if (CrossZ > 0)
 			{
-				DecreaseColor();  // 左回し → -1
+				ChangeColor(-0.1f);  // 左回し → -1
 			}
 			else if (CrossZ < 0)
 			{
-				IncreaseColor(); // 右回し → +1
+				ChangeColor(0.1f); // 右回し → +1
 			}
 		}
 		// カラーモードを1つ右にシフト
@@ -217,15 +217,6 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 	if (!physics || !physics->OnGround())
 		return;
 
-	//// 前回フレームとの位置差から移動方向を取得（正規化）
-	//FVector MoveDirection = (GetActorLocation() - PreviousLocation).GetSafeNormal();
-
-	//// 上方向 + 移動方向 → ジャンプベクトル
-	//FVector JumpDirection = GetActorUpVector() + MoveDirection;
-
-	//// 合成ベクトルを正規化（方向のみ）
-	//JumpDirection.Normalize();
-
 	// ジャンプ力を掛けて力を加える
 	physics->AddForce(GetActorUpVector(), JumpForce);
 }
@@ -246,19 +237,21 @@ void APlayerCharacter::StopAction()
 // 色ゲージを減少させる処理
 void APlayerCharacter::DecreaseColor()
 {
-	if (!colorController)
-		return;
-
-	colorController->AdjustColor(0.001);
+	ChangeColor(0.001);
 }
 
 // 色ゲージを増加させる処理
 void APlayerCharacter::IncreaseColor()
 {
+	ChangeColor(-0.001);
+}
+
+void APlayerCharacter::ChangeColor(float value)
+{
 	if (!colorController)
 		return;
 
-	colorController->AdjustColor(-0.001);
+	colorController->AdjustColor(value);
 }
 
 // カラーモードを右にシフト（次の色モードへ変更）
