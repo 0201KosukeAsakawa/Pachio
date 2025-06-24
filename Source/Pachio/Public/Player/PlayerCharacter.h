@@ -84,6 +84,8 @@ public:
 	// 色ゲージの増加処理
 	void IncreaseColor();
 
+	void ChangeColor(float);
+
 	// カラーモードを1つ右にシフト
 	void ShiftArrayRightColorMode();
 

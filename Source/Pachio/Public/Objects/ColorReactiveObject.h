@@ -9,6 +9,12 @@
 
 class UColorReactiveComponent;
 
+struct FHSLColor
+{
+	float H; // 0.0〜1.0
+	float S; // 0.0〜1.0
+	float L; // 0.0〜1.0
+};
 /**
  * 色に反応するアクター（指定色でアクションを起こす）
  */
