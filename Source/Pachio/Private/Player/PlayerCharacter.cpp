@@ -23,6 +23,7 @@
 #include "FunctionLibrary.h"
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h" 
 #include "DataContainer/EffectMatchResult.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
@@ -63,6 +64,12 @@ void APlayerCharacter::BeginPlay()
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	DefaultMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (PC)
+	{
+		PC->bShowMouseCursor = false;
+		PC->SetInputMode(FInputModeGameOnly());
+	}
 
 }
 
@@ -74,12 +81,13 @@ void APlayerCharacter::Tick(float DeltaTime)
 	// ステートマネージャーが存在しない場合は処理中断
 	if (!StateManager)
 		return;
-
+	Circle();
 	// ステートマネージャーの時間経過更新処理を実行
 	StateManager->Update(DeltaTime);
 
 	// 重力を加える（値は任意、固定で10.0fを加算）
 	physics->AddGravity(10.0f);
+
 }
 
 // プレイヤー入力バインド処理
@@ -124,6 +132,43 @@ void APlayerCharacter::ResetBuff()
 	 GetCharacterMovement()->MaxWalkSpeed = DefaultMaxSpeed;
 }
 
+void APlayerCharacter::Circle()
+{
+	float DeltaX, DeltaY;
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC) return;
+
+	PC->GetInputMouseDelta(DeltaX, DeltaY);
+	FVector2D CurrentDir(DeltaX, DeltaY);
+
+	if (CurrentDir.SizeSquared() > 4.0f)
+	{
+		CurrentDir.Normalize();
+
+		if (bHasPrevMouse)
+		{
+			float CrossZ = PrevMouseDir.X * CurrentDir.Y - PrevMouseDir.Y * CurrentDir.X;
+
+			if (CrossZ > 0)
+			{
+				ChangeColor(-0.1f);  // 左回し → -1
+			}
+			else if (CrossZ < 0)
+			{
+				ChangeColor(0.1f); // 右回し → +1
+			}
+		}
+		// カラーモードを1つ右にシフト
+		void ;
+
+		// カラーモードを1つ左にシフト
+		void ShiftArrayLeftColorMode();
+
+		PrevMouseDir = CurrentDir;
+		bHasPrevMouse = true;
+	}
+}
+
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
@@ -164,21 +209,18 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 }
 
 // ジャンプ処理（地面に接地している場合のみ力を加える）
+// 移動方向はMovement関数で取得済みのFVector directionをジャンプでも使いたいので
+// Movement関数のdirectionをJump関数に渡すか、Jump関数内で再取得する必要あり
+
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	// 地面に接地していなければジャンプ不可
-	if (!physics->OnGround())
+	if (!physics || !physics->OnGround())
 		return;
 
-	// 上方向へジャンプ力を加える（値は12.0f固定）
+	// ジャンプ力を掛けて力を加える
 	physics->AddForce(GetActorUpVector(), JumpForce);
 }
 
-// ジャンプ停止処理（ジャンプボタン離したときの停止処理）
-void APlayerCharacter::JumpStop(const FInputActionValue& Value)
-{
-	ACharacter::StopJumping();
-}
 
 // ダッシュ・スキル開始処理
 void APlayerCharacter::Action(const FInputActionValue& Value)
@@ -195,19 +237,21 @@ void APlayerCharacter::StopAction()
 // 色ゲージを減少させる処理
 void APlayerCharacter::DecreaseColor()
 {
-	if (!colorController)
-		return;
-
-	colorController->AdjustColor(0.001);
+	ChangeColor(0.001);
 }
 
 // 色ゲージを増加させる処理
 void APlayerCharacter::IncreaseColor()
 {
+	ChangeColor(-0.001);
+}
+
+void APlayerCharacter::ChangeColor(float value)
+{
 	if (!colorController)
 		return;
 
-	colorController->AdjustColor(-0.001);
+	colorController->AdjustColor(value);
 }
 
 // カラーモードを右にシフト（次の色モードへ変更）

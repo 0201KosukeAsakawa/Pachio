@@ -3,52 +3,61 @@
 
 #include "Logic/Movement/EnemyMoveLogic.h"
 
+// コンストラクタ：特に初期化処理はなし
 UEnemyMoveLogic::UEnemyMoveLogic()
 {
-
 }
 
-
-FVector UEnemyMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)
+// 敵キャラクターの移動処理（毎フレーム呼ばれる）
+// DeltaTime: 経過時間, Owner: 操作対象アクター, direction: 移動方向ベクトル（外部指定）
+FVector UEnemyMoveLogic::Movement(float DeltaTime, AActor* Owner,const FInputActionValue& Value)
 {
     if (!Owner)
-        return FVector(0,0,0);
+        return FVector::ZeroVector;
 
-    // �Փ˔���
-    if (IsCollidingWithWall(CurrentMovementDirection,Owner))
+    FVector moveDir = CurrentMovementDirection;
+
+    // 壁に接触している場合は方向反転
+    if (IsCollidingWithWall(moveDir, Owner))
     {
-        // Y�������ɔ��]������
-        CurrentMovementDirection.Y = -CurrentMovementDirection.Y;
+        moveDir.Y *= -1.0f;
 
-        // ���]��̕����Ɋ�Â��āA�ړ����邽�߂�Actor�̉�]��ݒ�
-        FRotator NewRotation = CurrentMovementDirection.ToOrientationRotator();
-        Owner->SetActorRotation(NewRotation); // �V������]��ݒ�
+        // 進行方向に向くようにアクターの回転を更新
+        FRotator NewRotation = moveDir.ToOrientationRotator();
+        Owner->SetActorRotation(NewRotation);
     }
 
-    // �ړ�����
-    return Owner->GetActorLocation() + (CurrentMovementDirection * Speed * DeltaTime);
+    // 移動先の位置を返す
+    return Owner->GetActorLocation() + (moveDir * Speed * DeltaTime);
 }
 
-bool UEnemyMoveLogic::IsCollidingWithWall(FVector Direction,const AActor* Owner)
+
+// 壁との接触をチェックする関数
+// 指定された方向に壁があるかをレイキャストで判定する
+bool UEnemyMoveLogic::IsCollidingWithWall(FVector Direction, const AActor* Owner)
 {
     if (!Owner)
-        return true;
+        return true;  // 所有者が無効なら接触しているとみなす
 
-    FVector Start = Owner->GetActorLocation();
-    FVector End = Start + (Direction * Speed * 0.0001f);  // ���������O�i���ďՓ˂��`�F�b�N
+    FVector Start = Owner->GetActorLocation();  // レイの始点：現在位置
+    FVector End = Start + (Direction * Speed * 0.0001f);  // レイの終点：ほんの少し先
 
     FHitResult HitResult;
     FCollisionQueryParams CollisionParams;
-    CollisionParams.AddIgnoredActor(Owner);  // ���g�𖳎����ďՓ˔�����s��
+    CollisionParams.AddIgnoredActor(Owner);  // 自分自身との衝突は無視
 
-    // ���C�L���X�g�ŏՓ˔�����s��
+    // 可視チャネル（ECC_Visibility）を使ってレイキャスト
     bool bHit = Owner->GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
+
+    // プレイヤーキャラなど "ACharacter" に衝突した場合は無視（たとえば踏みつけ可能）
     if (Cast<ACharacter>(HitResult.GetActor()))
         return false;
-    return bHit;
+
+    return bHit;  // それ以外の何かに当たっていれば「壁に接触」とみなす
 }
 
-void UEnemyMoveLogic::Init(float speed,const FVector d)
+// 初期化処理（移動速度と初期方向を設定）
+void UEnemyMoveLogic::Init(float speed, const FVector d)
 {
     Speed = speed;
     CurrentMovementDirection = d;

@@ -4,39 +4,12 @@
 #include "GameFramework/HUD.h"
 #include "Blueprint/UserWidget.h"
 #include "Containers/Map.h"
+#include "DataContainer/UIStruct.h"
+#include "DataContainer/ClearScoreType.h"
 #include "UIManager.generated.h"
 
 class UWidgetComponent;
 class UColorLens;
-
-UENUM(BlueprintType)
-enum class EWidgetCategory : uint8
-{
-    Tutorial UMETA(DisplayName = "Tutorial"),
-    Lens     UMETA(DisplayName = "Lens"),
-    Score    UMETA(DisplayName = "Score")
-};
-
-/**
- * 複数ウィジェットカテゴリ（例: State, Menu, HUD）に対応するデータ構造
- */
-USTRUCT(BlueprintType)
-struct FWidgetData : public FTableRowBase
-{
-    GENERATED_USTRUCT_BODY()
-
-    // ウィジェット名に対応するウィジェットクラス
-    UPROPERTY(EditAnywhere, Category = "UI")
-    TMap<FName, TSubclassOf<UUserWidget>> WidgetClassMap;
-
-    // 実行時に生成されたウィジェットのインスタンスを保持
-    UPROPERTY(Transient)
-    TMap<FName, UUserWidget*> WidgetMap;
-
-    // 現在表示中のウィジェット
-    UPROPERTY(Transient)
-    TMap<FName, UUserWidget*> CurrentWidget;
-};
 
 /**
  * ゲーム全体で UI を一元管理する HUD 派生クラス
@@ -52,7 +25,7 @@ public:
 public:
     /** 指定したカテゴリと名前のウィジェットを表示する */
     UFUNCTION(BlueprintCallable)
-    void ShowWidget(EWidgetCategory CategoryName, FName WidgetName);
+    UUserWidget* ShowWidget(EWidgetCategory CategoryName, FName WidgetName);
 
     /** 指定カテゴリの現在のウィジェットを非表示にする */
     UFUNCTION(BlueprintCallable)
@@ -66,7 +39,9 @@ public:
     UUserWidget* GetWidget(EWidgetCategory CategoryName, FName WidgetName);
 
     UFUNCTION()
-    UColorLens* GetColorLens() { return ColorLens; }
+    UColorLens* GetColorLens() { return ColorLens; }    
+    
+    UUserWidget* ShowResultWidget(float Time, EClearScore Rank);
 private:
     /** 全てのカテゴリに対してウィジェットを初期化 */
     void InitAllWidgets();

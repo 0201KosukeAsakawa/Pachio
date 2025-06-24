@@ -2,6 +2,8 @@
 #include "Manager/ObjectManager.h"
 #include "Manager/ScoreManager.h"
 #include "Manager/ColorManager.h"
+#include "Manager/SaveManager.h"
+#include "Kismet/GameplayStatics.h" 
 #include "UI/UIManager.h"
 #include "EngineUtils.h"
 #include "Engine/DataTable.h"
@@ -48,21 +50,25 @@ void ALevelManager::InitializeComponents()
 	if (UIManager)
 	{
 		UIManager->Init(this);
-		UIManager->ShowWidget(EWidgetCategory::Score, "Score");
 	}
 	if (ItemContainerClass)
 		ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
 	if (AttackContainerClass)
 		AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
-	if (ScoreManager)
+	if (ScoreManagerClass)
+
 		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
 
-	EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
+	if (ScoreManager)
+		ScoreManager->Init();
 
-	if (!IsValid(ObjectManager))
+	if (EnemyContainerClass)
+		EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
+
+	if (ObjectManagerClass)
 	{
 		ObjectManager = NewObject<UObjectManager>(this, ObjectManagerClass);
-		if (ObjectManager && ObjectManagerClass)
+		if (ObjectManager)
 		{
 			if (auto* DefaultObj = Cast<UObjectManager>(ObjectManagerClass->GetDefaultObject()))
 			{
@@ -71,21 +77,30 @@ void ALevelManager::InitializeComponents()
 		}
 	}
 
-	if (!IsValid(SoundManager))
+
+	if (SoundManagerClass)
+		SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
+	if (SoundManager)
 	{
-		if (SoundManagerClass)
-			SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
-		if (SoundManager)
-		{
-			SoundManager->Init();
-			SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
-		}
+		SoundManager->Init();
+		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
 	}
-	// 1秒ごとに CountUp 関数を呼ぶ
-	GetWorld()->GetTimerManager().SetTimer(CountTimerHandle, this, &ALevelManager::CountDown, 1.0f, true);
 
 	GenerateStage();
 	GenerateBlock();
+
+	// 1. セーブデータ用意
+	// FStageSaveData SaveData;
+
+	// 例えばStage1をクリアにしてスコアも入れる
+	FSaveData thisStageData;
+	thisStageData.bCleared = true;
+	if (ScoreManager)
+		thisStageData.Score = ScoreManager->GetGameScore();
+	thisStageData.Time = ScoreManager->GetTime();
+
+	// 2. セーブ呼び出し（静的関数なのでクラス名から直接）
+	USaveManager::SaveStageData(StageName, thisStageData);
 
 	bInitialize = true;
 }
@@ -179,7 +194,34 @@ void ALevelManager::GenerateBlock()
 	}
 }
 
-void ALevelManager::CountDown()
+void ALevelManager::HandlePlayerGoalReached()
 {
-	InGameTimer--;
+	if (!ScoreManager || !UIManager) return;
+
+	float ClearTime = ScoreManager->GetTime();
+	EClearScore Rank = ScoreManager->EvaluateClearRank(GetWorld());
+
+	UUserWidget* ResultWidget = UIManager->ShowResultWidget(ClearTime, Rank);
+
+	PauseGameAndShowUI(ResultWidget);
+}
+
+void ALevelManager::PauseGameAndShowUI(UUserWidget* FocusWidget)
+{
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC)
+		return;
+
+	PC->bShowMouseCursor = true;
+	FInputModeUIOnly InputMode;
+
+	if (FocusWidget)
+	{
+		InputMode.SetWidgetToFocus(FocusWidget->TakeWidget());
+	}
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+	PC->SetInputMode(InputMode);
+
 }

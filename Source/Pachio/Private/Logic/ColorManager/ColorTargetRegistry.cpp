@@ -15,6 +15,8 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
             // ポストプロセスマテリアルに色を適用
             PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
         }
+        // 指定されたモードのターゲットに通知
+        NotifyTargets(Mode, NewColor);
         // 常時反応するターゲット（例：UIなど）に通知
         NotifyTargets(EColorTargetType::Responders, NewColor);
         break;

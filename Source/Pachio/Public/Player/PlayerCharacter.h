@@ -72,9 +72,6 @@ public:
 	// ジャンプ開始処理
 	void Jump(const FInputActionValue& Value);
 
-	// ジャンプ終了処理
-	void JumpStop(const FInputActionValue& Value);
-
 	// 特殊アクション（スキル発動 or ダッシュ）開始処理
 	void Action(const FInputActionValue& Value);
 
@@ -86,6 +83,8 @@ public:
 
 	// 色ゲージの増加処理
 	void IncreaseColor();
+
+	void ChangeColor(float);
 
 	// カラーモードを1つ右にシフト
 	void ShiftArrayRightColorMode();
@@ -128,6 +127,10 @@ private:
 	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr) override;
 
 	void ResetBuff();
+
+	void Circle();
+	FVector2D PrevMouseDir;
+	bool bHasPrevMouse = false;
 private:
 	UPROPERTY(EditAnywhere)
 	float JumpForce = 12;
@@ -139,7 +142,7 @@ private:
 	// =====================
 
 	// カメラ制御コンポーネント
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	UCameraHandlerComponent* CameraComponent;
 
 	// 無敵状態制御コンポーネント

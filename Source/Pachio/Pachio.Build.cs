@@ -13,5 +13,13 @@ public class Pachio : ModuleRules
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG" });
 
         PublicDependencyModuleNames.AddRange(new string[] { "CableComponent" });
-    }
+
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Json",            
+            "JsonUtilities"    
+        });
+	}
+
+
 }

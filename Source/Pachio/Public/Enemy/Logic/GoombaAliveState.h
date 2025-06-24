@@ -29,4 +29,7 @@ private:
 
 	UPROPERTY()
 	UAttackComponent* Attack;
+
+	UPROPERTY(EditAnywhere)
+	FVector MoveDirection = FVector(-1,0,0);
 };
