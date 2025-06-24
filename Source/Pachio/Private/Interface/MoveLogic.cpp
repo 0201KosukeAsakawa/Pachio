@@ -5,7 +5,7 @@
 
 // Add default functionality here for any IMoveLogic functions that are not pure virtual.
 
-FVector IMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)
+FVector IMoveLogic::Movement(float DeltaTime, AActor* Owner,const FInputActionValue& Value)
 {
 	return FVector(0, 0, 0);
 }

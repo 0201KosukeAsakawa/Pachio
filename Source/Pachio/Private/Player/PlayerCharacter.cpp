@@ -23,6 +23,7 @@
 #include "FunctionLibrary.h"
 #include "InputAction.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h" 
 #include "DataContainer/EffectMatchResult.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
@@ -63,6 +64,12 @@ void APlayerCharacter::BeginPlay()
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	DefaultMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (PC)
+	{
+		PC->bShowMouseCursor = false;
+		PC->SetInputMode(FInputModeGameOnly());
+	}
 
 }
 
@@ -74,12 +81,13 @@ void APlayerCharacter::Tick(float DeltaTime)
 	// ステートマネージャーが存在しない場合は処理中断
 	if (!StateManager)
 		return;
-
+	Circle();
 	// ステートマネージャーの時間経過更新処理を実行
 	StateManager->Update(DeltaTime);
 
 	// 重力を加える（値は任意、固定で10.0fを加算）
 	physics->AddGravity(10.0f);
+
 }
 
 // プレイヤー入力バインド処理
@@ -124,10 +132,47 @@ void APlayerCharacter::ResetBuff()
 	 GetCharacterMovement()->MaxWalkSpeed = DefaultMaxSpeed;
 }
 
+void APlayerCharacter::Circle()
+{
+	float DeltaX, DeltaY;
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC) return;
+
+	PC->GetInputMouseDelta(DeltaX, DeltaY);
+	FVector2D CurrentDir(DeltaX, DeltaY);
+
+	if (CurrentDir.SizeSquared() > 4.0f)
+	{
+		CurrentDir.Normalize();
+
+		if (bHasPrevMouse)
+		{
+			float CrossZ = PrevMouseDir.X * CurrentDir.Y - PrevMouseDir.Y * CurrentDir.X;
+
+			if (CrossZ > 0)
+			{
+				DecreaseColor();  // 左回し → -1
+			}
+			else if (CrossZ < 0)
+			{
+				IncreaseColor(); // 右回し → +1
+			}
+		}
+		// カラーモードを1つ右にシフト
+		void ;
+
+		// カラーモードを1つ左にシフト
+		void ShiftArrayLeftColorMode();
+
+		PrevMouseDir = CurrentDir;
+		bHasPrevMouse = true;
+	}
+}
+
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	if (!MoveComp || !physics->OnGround())
+	if (!MoveComp)
 		return;
 
 	// 移動方向をMoveCompのロジックから取得
@@ -169,27 +214,22 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	if (!physics->OnGround())
+	if (!physics || !physics->OnGround())
 		return;
 
-	// 移動方向を取得（例：MoveCompから取得）
-	FVector MoveDirection = MoveComp->Movement(0, this, Value); // ValueがJump関数に渡されているならOK
+	//// 前回フレームとの位置差から移動方向を取得（正規化）
+	//FVector MoveDirection = (GetActorLocation() - PreviousLocation).GetSafeNormal();
 
-	// 上方向と移動方向の合成ベクトルを作る
-	FVector JumpDirection = GetActorUpVector() + MoveDirection.GetSafeNormal();
+	//// 上方向 + 移動方向 → ジャンプベクトル
+	//FVector JumpDirection = GetActorUpVector() + MoveDirection;
 
-	// Normalizeして方向だけにするか、そのままスケール調整するかは調整可能
-	JumpDirection.Normalize();
+	//// 合成ベクトルを正規化（方向のみ）
+	//JumpDirection.Normalize();
 
-	// JumpForceを掛けるベクトルに変更してAddForce
-	physics->AddForce(JumpDirection, JumpForce);
+	// ジャンプ力を掛けて力を加える
+	physics->AddForce(GetActorUpVector(), JumpForce);
 }
 
-// ジャンプ停止処理（ジャンプボタン離したときの停止処理）
-void APlayerCharacter::JumpStop(const FInputActionValue& Value)
-{
-	ACharacter::StopJumping();
-}
 
 // ダッシュ・スキル開始処理
 void APlayerCharacter::Action(const FInputActionValue& Value)
