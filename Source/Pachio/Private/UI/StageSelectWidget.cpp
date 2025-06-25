@@ -57,27 +57,27 @@ void UStageSelectWidget::UpdateCards()
 
     for (int32 i = 0; i < StageList.Num(); ++i)
     {
-        // ウィジェット名を生成し配列に保存
         FName WidgetName = FName(*FString::Printf(TEXT("StageCard_%d"), i));
         StageWidgetNames.Add(WidgetName);
 
-        // UIManagerからウィジェット取得（まだなければ nullptr）
         UUserWidget* WidgetBase = UM->ShowWidget(EWidgetCategory::Menu, WidgetName);
-
-        UStageCardWidget* CardWidget = nullptr;
-
-        if (WidgetBase)
-        {
-            // 既に生成済みならキャストして使う
-            CardWidget = Cast<UStageCardWidget>(WidgetBase);
-        }
+        UStageCardWidget* CardWidget = Cast<UStageCardWidget>(WidgetBase);
 
         if (CardWidget)
         {
+            // ✅ 親から取り外してから再追加（これが重要！）
+            if (CardWidget->IsInViewport())
+            {
+                CardWidget->RemoveFromParent();
+            }
+
             CardWidget->SetStageInfo(StageList[i], i == CurrentIndex);
-            CardBox->AddChildToHorizontalBox(CardWidget);
+            CardBox->AddChildToHorizontalBox(CardWidget);  
         }
     }
+
+
+    UE_LOG(LogTemp, Warning, TEXT("UpdateCards called. CurrentIndex = %d"), CurrentIndex);
 }
 
 
