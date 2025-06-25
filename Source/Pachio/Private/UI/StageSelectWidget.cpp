@@ -13,19 +13,17 @@ void UStageSelectWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    //FStageInfo in = { TEXT("Stage01"), TEXT("STAGE 1"), 1, EStageRank::A, nullptr, true };
-
-     //仮ステージを作成（あとでDataTableやSaveGameと連携してOK）
-    StageList = {
-        {TEXT("Stage01"), TEXT("STAGE 1"), 1, EStageRank::A, nullptr, true},
-        {TEXT("Stage02"), TEXT("STAGE 2"), 2, EStageRank::None, nullptr, true},
-        {TEXT("Stage03"), TEXT("STAGE 3"), 3, EStageRank::S, nullptr, true}
-    };
+    // //仮ステージを作成（あとでDataTableやSaveGameと連携してOK）
+    //StageList = {
+    //    {TEXT("Stage01"), TEXT("STAGE 1"), 1, EStageRank::A, nullptr, true},
+    //    {TEXT("Stage02"), TEXT("STAGE 2"), 2, EStageRank::None, nullptr, true},
+    //    {TEXT("Stage03"), TEXT("STAGE 3"), 3, EStageRank::S, nullptr, true}
+    //};
 
     if (PlayButton)
         PlayButton->OnClicked.AddDynamic(this, &UStageSelectWidget::OnPlayPressed);
 
-    UpdateCards();
+   UpdateCards();
 
     // 入力バインド（例：左右キー）
     if (APlayerController* PC = GetOwningPlayer())
@@ -46,7 +44,6 @@ void UStageSelectWidget::UpdateCards()
     if (!CardBox || !StageCardClass) return;
 
     CardBox->ClearChildren();
-
     StageWidgetNames.Empty();
 
     ALevelManager* AL = ALevelManager::GetInstance(GetWorld());
@@ -55,7 +52,9 @@ void UStageSelectWidget::UpdateCards()
     UUIManager* UM = AL->GetUIManager();
     if (!UM) return;
 
-    for (int32 i = 0; i < StageList.Num(); ++i)
+    int32 i = CurrentIndex;  // 今回は1枚だけ
+
+    if (i >= 0 && i < StageList.Num())
     {
         FName WidgetName = FName(*FString::Printf(TEXT("StageCard_%d"), i));
         StageWidgetNames.Add(WidgetName);
@@ -65,19 +64,15 @@ void UStageSelectWidget::UpdateCards()
 
         if (CardWidget)
         {
-            // ✅ 親から取り外してから再追加（これが重要！）
             if (CardWidget->IsInViewport())
             {
                 CardWidget->RemoveFromParent();
             }
 
-            CardWidget->SetStageInfo(StageList[i], i == CurrentIndex);
-            CardBox->AddChildToHorizontalBox(CardWidget);  
+            CardWidget->SetStageInfo(StageList[i], true);
+            CardBox->AddChildToHorizontalBox(CardWidget);
         }
     }
-
-
-    UE_LOG(LogTemp, Warning, TEXT("UpdateCards called. CurrentIndex = %d"), CurrentIndex);
 }
 
 
