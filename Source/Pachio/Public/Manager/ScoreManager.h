@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "DataContainer/ClearScoreType.h"
+#include "DataContainer/StageInfo.h"
 #include "ScoreManager.generated.h"
 
 
@@ -21,7 +21,7 @@ public:
 	void AddCoin(int);
 	void AddScore(int);
 	void Init();
-	EClearScore EvaluateClearRank(UWorld* World);
+	EStageRank EvaluateClearRank(UWorld* World);
 	UFUNCTION(BlueprintCallable, Category = "UIManager")
 	inline int GetTime()const { return InGameTimer; }
 	//スコアの取得

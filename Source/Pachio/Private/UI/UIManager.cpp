@@ -139,7 +139,7 @@ void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
     }
 }
 
-UUserWidget* UUIManager::ShowResultWidget(float Time, EClearScore Rank)
+UUserWidget* UUIManager::ShowResultWidget(float Time, EStageRank Rank)
 {
     UUserWidget* BaseWidget = ShowWidget(EWidgetCategory::Menu, "Result");
 

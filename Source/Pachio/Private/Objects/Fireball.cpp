@@ -1,6 +1,6 @@
 //------------------------------------------
-// ƒtƒ@ƒCƒ‹–¼FFireball.cpp
-// ˆ—“à—eF“Š‚°‚é‹…”h¶ƒNƒ‰ƒX
+// ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½FFireball.cpp
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½eï¿½Fï¿½ï¿½ï¿½ï¿½ï¿½é‹…ï¿½hï¿½ï¿½ï¿½Nï¿½ï¿½ï¿½X
 //------------------------------------------
 // Fill out your copyright notice in the Description page of Project Settings.
 
@@ -12,7 +12,7 @@ AFireball::AFireball()
 {
 	PrimaryActorTick.bCanEverTick = true;
  
-	//UPhysicsCalculator‚ğ¶¬EƒAƒ^ƒbƒ`‚ğs‚¤
+	//UPhysicsCalculatorï¿½ğ¶ï¿½ï¿½Eï¿½Aï¿½^ï¿½bï¿½`ï¿½ï¿½sï¿½ï¿½
 	Physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("PhysicsCalculator"));
 	if (!IsValid(Physics))
 	{
@@ -22,11 +22,11 @@ AFireball::AFireball()
 
 void AFireball::BeginPlay()
 {
-	Super::BeginPlay();		//eƒNƒ‰ƒX‚ÌBeginPlay‚ğŒÄ‚Ño‚·
+	Super::BeginPlay();		//ï¿½eï¿½Nï¿½ï¿½ï¿½Xï¿½ï¿½BeginPlayï¿½ï¿½Ä‚Ñoï¿½ï¿½
 
 }
 
-// –ˆƒtƒŒ[ƒ€ŒÄ‚Î‚ê‚é
+// ï¿½ï¿½ï¿½tï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½Ä‚Î‚ï¿½ï¿½
 void AFireball::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -44,12 +44,10 @@ void AFireball::ThrowObject(FVector AimDirection, float Impulse)
 		return;
 	}
 
-	//‰Á‚¦‚é—Í‚ğ‰Á‚¦‚é
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	Physics->AddForce(Direction, Force, true);
 	UE_LOG(LogTemp, Warning, TEXT("Succeeded PhysicsAddForce"));
 	
-	//d—Í‚ğ‰Á‚¦‚é
-	Physics->AddGravity();
 	UE_LOG(LogTemp, Warning, TEXT("Succeeded PhysicsAddGravity"));
 
 }

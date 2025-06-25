@@ -5,7 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Containers/Map.h"
 #include "DataContainer/UIStruct.h"
-#include "DataContainer/ClearScoreType.h"
+#include "DataContainer/StageInfo.h"
 #include "UIManager.generated.h"
 
 class UWidgetComponent;
@@ -41,7 +41,7 @@ public:
     UFUNCTION()
     UColorLens* GetColorLens() { return ColorLens; }    
     
-    UUserWidget* ShowResultWidget(float Time, EClearScore Rank);
+    UUserWidget* ShowResultWidget(float Time, EStageRank Rank);
 private:
     /** 全てのカテゴリに対してウィジェットを初期化 */
     void InitAllWidgets();

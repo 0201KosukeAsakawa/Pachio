@@ -24,28 +24,27 @@ public:
 	// 毎フレーム呼ばれる
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION(BlueprintCallable)
+	void ResetForce();
 	// オブジェクトに力を加える
 	UFUNCTION(BlueprintCallable)
 	void AddForce(FVector Direction, float Force, const bool bSweep = true);
 
-	UFUNCTION(BlueprintCallable)
-	void ResetForce();
-
-	// オブジェクトに重力を加える
-	UFUNCTION(BlueprintCallable)
-	void AddGravity(const float gravityScalse = 9.8f);
-
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
 	bool OnGround() const;
+
+	void SetGravityScale(float scale, const bool applyGravity = true);
 
 	FVector GetBlockedAdjustedVector(const FVector& MoveVector);
 
 	// 物理計算が有効かどうかを返す
 	bool IsPhysicsEnabled() const { return bIsPhysicsEnabled; }
-
+private:
+	// オブジェクトに重力を加える
+	void AddGravity();
 private:
 	// 重力のスケールを設定（重力の強さ）
-	float GravityScale;
+	float GravityScale = 9.8f;
 
 	// 力の強さ（スケール）
 	float ForceScale;
@@ -54,14 +53,17 @@ private:
 	FVector ForceDirection;
 
 	// 前回のオブジェクトの位置（移動を比較するため）
-	FVector PreviousPosition;
+	FVector PreviousPosition;	
+	
+	//
+	FVector Velocity = FVector::ZeroVector;
 
 	// 物理シミュレーションのタイマー（力の適用や時間ベースのロジックに使用）
 	float Timer;
 
 	// 重力を加えるかどうかのフラグ
 	UPROPERTY(EditAnywhere)
-	bool bShouldApplyGravity;
+	bool bShouldApplyGravity = true;
 
 	// スイープ衝突判定を使うかどうかのフラグ
 	UPROPERTY(EditAnywhere)
@@ -71,6 +73,5 @@ private:
 	UPROPERTY(EditAnywhere)
 	bool bIsPhysicsEnabled;		
 
-	// ヘッダーに追加
-	FVector Velocity = FVector::ZeroVector;
+
 };

@@ -6,135 +6,133 @@
 #include "Enemy/State/EnemyStateComponent.h"
 #include "Enemy/Logic/KoopaShellState.h"
 #include "Components/AttackComponent.h"
-#include "Components/MoveComponent.h"            // Ž©ì‚ÌˆÚ“®ˆ——pƒRƒ“ƒ|[ƒlƒ“ƒg
-#include "Components/PhysicsCalculator.h"        // d—Í‚È‚Ç‚Ì•¨—‰‰ŽZƒRƒ“ƒ|[ƒlƒ“ƒg
+#include "Components/MoveComponent.h"            // ï¿½ï¿½ï¿½ï¿½ÌˆÚ“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½g
+#include "Components/PhysicsCalculator.h"        // ï¿½dï¿½Í‚È‚Ç‚Ì•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½g
 #include "Manager/LevelManager.h"
 #include "DataContainer/EnemyDataContainer.h"
 #include "Logic/Movement/EnemyMoveLogic.h"
 
-// ƒR[ƒpƒLƒƒƒ‰ƒNƒ^[‚ªuR‚ç‚ê‚½vó‘Ô‚É“ü‚éŽž‚Ìˆ—
+// ï¿½Rï¿½[ï¿½pï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½^ï¿½[ï¿½ï¿½ï¿½uï¿½Rï¿½ï¿½ê‚½ï¿½vï¿½ï¿½Ô‚É“ï¿½ï¿½éŽžï¿½Ìï¿½ï¿½ï¿½
 bool UKoopaKickedStateState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEnemyStateComponent* LogicComponet, const EEnemyCategory materialID)
 {
-    // ƒI[ƒi[Aƒ[ƒ‹ƒhAƒƒWƒbƒNƒRƒ“ƒ|[ƒlƒ“ƒg‚ª–³Œø‚Èê‡‚Íˆ—‚ðI—¹
+    // ï¿½Iï¿½[ï¿½iï¿½[ï¿½Aï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Aï¿½ï¿½ï¿½Wï¿½bï¿½Nï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Èê‡ï¿½Íï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½ï¿½
     if (!owner || !world || !LogicComponet)
         return false;
 
     mOwner = owner;
     logicComponent = LogicComponet;
 
-    // ƒWƒƒƒ“ƒv‰Â”\‚ÉÝ’è
+    // ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½vï¿½Â”\ï¿½ÉÝ’ï¿½
     mOwner->SetCanJamp(true);
 
-    // ˆÚ“®ƒRƒ“ƒ|[ƒlƒ“ƒg‚Ì‰Šú‰»
+    // ï¿½Ú“ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½
     MoveComp = NewObject<UMoveComponent>(mOwner);
-    // UŒ‚ƒRƒ“ƒ|[ƒlƒ“ƒg‚Ì‰Šú‰»
+    // ï¿½Uï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½
     Attack = NewObject<UAttackComponent>(mOwner);
-    mOwner->SetHp(1.0f); // HP ‚ð1‚ÉÝ’è
+    mOwner->SetHp(1.0f); // HP ï¿½ï¿½1ï¿½ÉÝ’ï¿½
 
-    // Actor ƒIƒuƒWƒFƒNƒg‚ðƒLƒƒƒXƒg‚µA•K—v‚ÈƒRƒ“ƒ|[ƒlƒ“ƒg‚Ì‰Šú‰»
+    // Actor ï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½ï¿½Lï¿½ï¿½ï¿½Xï¿½gï¿½ï¿½ï¿½Aï¿½Kï¿½vï¿½ÈƒRï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½
     AActor* actor = Cast<AActor>(mOwner);
     if (!actor || !MoveComp || !Attack || !Attack->Init(world, "DamageOnly"))
         return false;
 
-    // UŒ‚ƒf[ƒ^‚ÌÝ’èi“GƒLƒƒƒ‰ƒNƒ^[‚É‘Î‚·‚éUŒ‚A‰ó‚ê‚È‚¢UŒ‚j
+    // ï¿½Uï¿½ï¿½ï¿½fï¿½[ï¿½^ï¿½ÌÝ’ï¿½iï¿½Gï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½^ï¿½[ï¿½É‘Î‚ï¿½ï¿½ï¿½Uï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½È‚ï¿½ï¿½Uï¿½ï¿½ï¿½j
     Attack->SetAttackData(EAttackType::Indiscriminate, EBreakLevel::Breakable);
 
-    // ƒLƒƒƒ‰ƒNƒ^[‚ÌˆÚ“®ƒRƒ“ƒ|[ƒlƒ“ƒg‚Ì‰Šú‰»
+    // ï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½^ï¿½[ï¿½ÌˆÚ“ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½
     MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this), 500.0f,FVector(0,0,0));
 
-    // •¨—ŒvŽZƒRƒ“ƒ|[ƒlƒ“ƒg‚Ì‰Šú‰»id—Í‚Ì“K—p‚È‚Çj
+    // ï¿½ï¿½ï¿½ï¿½ï¿½vï¿½Zï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½dï¿½Í‚Ì“Kï¿½pï¿½È‚Çj
     PhysicsCal = NewObject<UPhysicsCalculator>(actor);
 
-    // ƒƒbƒVƒ…‚ª–³‚¯‚ê‚Îˆ—‚ðI—¹
+    // ï¿½ï¿½ï¿½bï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½ï¿½
     if (!owner->GetMesh())
         return false;
 
-    // ƒƒbƒVƒ…‚ÌƒRƒŠƒWƒ‡ƒ“‚ð–³Œø‚É‚µ‚ÄAUŒ‚‚ðŽó‚¯‚é‚Ü‚ÅÕ“Ë‚µ‚È‚¢‚æ‚¤‚ÉÝ’è
+    // ï¿½ï¿½ï¿½bï¿½Vï¿½ï¿½ï¿½ÌƒRï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ð–³Œï¿½ï¿½É‚ï¿½ï¿½ÄAï¿½Uï¿½ï¿½ï¿½ï¿½ó‚¯‚ï¿½Ü‚ÅÕ“Ë‚ï¿½ï¿½È‚ï¿½ï¿½æ‚¤ï¿½ÉÝ’ï¿½
     owner->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    // V‚µ‚¢ƒ}ƒeƒŠƒAƒ‹‚ðì¬‚µ‚ÄÝ’è
+    // ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ì¬ï¿½ï¿½ï¿½ÄÝ’ï¿½
     UMaterialInterface* newMaterial = ALevelManager::GetInstance(world)->GetEnemyContainer()->CreateMaterial(world, materialID);
     if (!newMaterial)
         return false;
 
-    owner->GetMesh()->SetMaterial(0, newMaterial); // ƒƒbƒVƒ…‚ÉV‚µ‚¢ƒ}ƒeƒŠƒAƒ‹‚ðÝ’è
+    owner->GetMesh()->SetMaterial(0, newMaterial); // ï¿½ï¿½ï¿½bï¿½Vï¿½ï¿½ï¿½ÉVï¿½ï¿½ï¿½ï¿½ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½Ý’ï¿½
 
-    return true; // ‰Šú‰»‚ª¬Œ÷‚µ‚½ê‡
+    return true; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡
 }
 
 bool UKoopaKickedStateState::OnUpdate(float DeltaTime)
 {
-    // ˆÚ“®ƒRƒ“ƒ|[ƒlƒ“ƒg‚ª–³‚¯‚ê‚Îˆ—‚ðs‚í‚È‚¢
+    // ï¿½Ú“ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îï¿½ï¿½ï¿½ï¿½ï¿½sï¿½ï¿½È‚ï¿½
     if (!MoveComp || !mOwner || !logicComponent)
     {
         return false;
     }
 
-    // ƒŒƒCƒLƒƒƒXƒg‚ðs‚¢Ais•ûŒü‚ÉáŠQ•¨‚ª‚ ‚é‚©Šm”F
-    FVector Start = mOwner->GetActorLocation(); // Œ»Ý‚ÌˆÊ’u
-    FVector End = Start + (mOwner->GetActorForwardVector() * 100.0f); // is•ûŒü‚É100ƒ†ƒjƒbƒgæ‚Ü‚ÅƒŒƒC‚ð”ò‚Î‚·i‹——£’²®‰Â”\j
+    // ï¿½ï¿½ï¿½Cï¿½Lï¿½ï¿½ï¿½Xï¿½gï¿½ï¿½sï¿½ï¿½ï¿½Aï¿½iï¿½sï¿½ï¿½ï¿½ï¿½ï¿½Éï¿½Qï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½é‚©ï¿½mï¿½F
+    FVector Start = mOwner->GetActorLocation(); // ï¿½ï¿½ï¿½Ý‚ÌˆÊ’u
+    FVector End = Start + (mOwner->GetActorForwardVector() * 100.0f); // ï¿½iï¿½sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½100ï¿½ï¿½ï¿½jï¿½bï¿½gï¿½ï¿½Ü‚Åƒï¿½ï¿½Cï¿½ï¿½ï¿½Î‚ï¿½ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â”\ï¿½j
 
     FHitResult HitResult;
     FCollisionQueryParams CollisionParams;
-    CollisionParams.AddIgnoredActor(mOwner);  // Ž©g‚ð–³Ž‹‚·‚é
+    CollisionParams.AddIgnoredActor(mOwner);  // ï¿½ï¿½ï¿½gï¿½ð–³Žï¿½ï¿½ï¿½ï¿½ï¿½
 
-    // ƒŒƒCƒLƒƒƒXƒg‚ð”­ŽË
+    // ï¿½ï¿½ï¿½Cï¿½Lï¿½ï¿½ï¿½Xï¿½gï¿½ð”­Žï¿½
     bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
 
-    // ƒŒƒCƒLƒƒƒXƒg‚Å‰½‚©‚É“–‚½‚Á‚½ê‡
+    // ï¿½ï¿½ï¿½Cï¿½Lï¿½ï¿½ï¿½Xï¿½gï¿½Å‰ï¿½ï¿½ï¿½ï¿½É“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡
     if (bHit)
     {
-        // Õ“Ë‚µ‚½ƒAƒNƒ^[‚ðŽæ“¾
+        // ï¿½Õ“Ë‚ï¿½ï¿½ï¿½ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ï¿½æ“¾
         AActor* hitActor = HitResult.GetActor();
-        // UŒ‚ƒRƒ“ƒ|[ƒlƒ“ƒg‚ª–³‚¯‚ê‚Îˆ—‚µ‚È‚¢
+        // ï¿½Uï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½
         if (!Attack)
             return false;
 
-        // UŒ‚ˆ—‚ðŽÀs
+        // ï¿½Uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½s
         Attack->PerformAttack(hitActor);
     }
 
-    // ˆÚ“®ˆ—iR‚ç‚ê‚ÄˆÚ“®‚·‚éj
+    // ï¿½Ú“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½Rï¿½ï¿½ï¿½ÄˆÚ“ï¿½ï¿½ï¿½ï¿½ï¿½j
     FVector v = MoveComp->Movement(DeltaTime, mOwner);
     FVector m = v - mOwner->GetActorLocation();
     mOwner->SetActorLocation(v);
 
-    // •¨—ŒvŽZid—Í‚È‚Çj‚ð“K—p
-    PhysicsCal->AddGravity();
 
-    // ƒLƒƒƒ‰ƒNƒ^[‚ªŽ€–S‚µ‚½ê‡Ab—…ó‘Ô‚É‘JˆÚ
+    // ï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½^ï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½Aï¿½bï¿½ï¿½ï¿½ï¿½Ô‚É‘Jï¿½ï¿½
     if (mOwner->IsDead())
     {
         UKoopaShellState* nextState = NewObject<UKoopaShellState>(mOwner);
-        logicComponent->ChangeState(nextState, mOwner); // b—…ó‘Ô‚É‘JˆÚ
+        logicComponent->ChangeState(nextState, mOwner); // ï¿½bï¿½ï¿½ï¿½ï¿½Ô‚É‘Jï¿½ï¿½
     }
 
     return true;
 }
 
 
-// ó‘ÔI—¹Žž‚Ìˆ—
+// ï¿½ï¿½ÔIï¿½ï¿½ï¿½ï¿½ï¿½Ìï¿½ï¿½ï¿½
 bool UKoopaKickedStateState::OnExit()
 {
     return true;
 }
 
-// Õ“ËŽž‚Ìˆ—
+// ï¿½Õ“ËŽï¿½ï¿½Ìï¿½ï¿½ï¿½
 bool UKoopaKickedStateState::OnOverlap(AActor* hitActor)
 {
 
-    //// UŒ‚ƒRƒ“ƒ|[ƒlƒ“ƒg‚ª–³‚¯‚ê‚Îˆ—‚µ‚È‚¢
+    //// ï¿½Uï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½
     //if (!Attack)
     //    return false;
 
-    //// UŒ‚ˆ—‚ðŽÀs
+    //// ï¿½Uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½s
     //Attack->PerformAttack(hitActor);
     return true;
 }
 
-// ˆÚ“®•ûŒü‚ÌÝ’è
+// ï¿½Ú“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÌÝ’ï¿½
 void UKoopaKickedStateState::SetDirection(FVector d)
 {
-    // ˆÚ“®ƒRƒ“ƒ|[ƒlƒ“ƒg‚ÉˆÚ“®•ûŒü‚ðÝ’èta
+    // ï¿½Ú“ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ÉˆÚ“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý’ï¿½ta
     MoveComp->SetDirection(d);
 }

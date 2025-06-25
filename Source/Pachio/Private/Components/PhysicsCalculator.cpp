@@ -4,8 +4,7 @@
 
 // コンストラクタでデフォルト値を設定
 UPhysicsCalculator::UPhysicsCalculator()
-	: GravityScale(0)
-	, ForceScale(0)
+	: ForceScale(0)
 	, ForceDirection(FVector::ZeroVector)
 	, PreviousPosition(FVector::ZeroVector)
 	, Timer(0)
@@ -26,6 +25,8 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	if (bShouldApplyGravity)
+		AddGravity();
 	FVector MoveVector;
 
 	if (!bIsPhysicsEnabled)
@@ -78,7 +79,7 @@ void UPhysicsCalculator::ResetForce()
 	bIsPhysicsEnabled = true;
 }
 
-void UPhysicsCalculator::AddGravity(const float gravityScale)
+void UPhysicsCalculator::AddGravity()
 {
 	if (OnGround())
 	{
@@ -87,7 +88,7 @@ void UPhysicsCalculator::AddGravity(const float gravityScale)
 	}
 
 	Timer += GetWorld()->DeltaTimeSeconds;
-	GetOwner()->AddActorLocalOffset(FVector(0, 0, -gravityScale) * Timer, true);
+	GetOwner()->AddActorLocalOffset(FVector(0, 0, -GravityScale) * Timer, true);
 }
 
 bool UPhysicsCalculator::OnGround() const
@@ -130,6 +131,12 @@ bool UPhysicsCalculator::OnGround() const
 #endif
 
 	return bHit;
+}
+
+void UPhysicsCalculator::SetGravityScale(float scale, bool applyGravity)
+{
+	GravityScale = scale;
+	bShouldApplyGravity = applyGravity;
 }
 
 FVector UPhysicsCalculator::GetBlockedAdjustedVector(const FVector& MoveVector)

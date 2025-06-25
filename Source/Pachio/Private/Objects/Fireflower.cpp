@@ -15,35 +15,34 @@ void UFireflower::OnCollected(UPrimitiveComponent* OverlappedComponent, AActor* 
     if (!mOwner)
         return;
 
-    // ‘¼‚ÌƒAƒNƒ^[‚ªƒ}ƒŠƒI‚©‚Ç‚¤‚©‚ğŠm”F
+    // ï¿½ï¿½ï¿½ÌƒAï¿½Nï¿½^ï¿½[ï¿½ï¿½ï¿½}ï¿½ï¿½ï¿½Iï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½ï¿½mï¿½F
     if (IStateControllable* Mario = Cast<IStateControllable>(OtherActor))
     {
-        // ƒ}ƒŠƒI‚Éƒpƒ[ƒAƒbƒv‚Ì’Ê’m‚ğ‘—‚éiŒ»İ‚ÍƒRƒƒ“ƒgƒAƒEƒg‚³‚ê‚Ä‚¢‚éj
+        // ï¿½}ï¿½ï¿½ï¿½Iï¿½Éƒpï¿½ï¿½ï¿½[ï¿½Aï¿½bï¿½vï¿½Ì’Ê’mï¿½ğ‘—‚ï¿½iï¿½ï¿½ï¿½İ‚ÍƒRï¿½ï¿½ï¿½ï¿½ï¿½gï¿½Aï¿½Eï¿½gï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½j
         Mario->ChangeState("Fire");
 
-        // ƒpƒ[ƒAƒbƒvƒGƒtƒFƒNƒg‚ªİ’è‚³‚ê‚Ä‚¢‚ê‚Î•\¦
+        // ï¿½pï¿½ï¿½ï¿½[ï¿½Aï¿½bï¿½vï¿½Gï¿½tï¿½Fï¿½Nï¿½gï¿½ï¿½ï¿½İ’è‚³ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Î•\ï¿½ï¿½
         if (PowerUpEffect)
         {
             PowerUpEffect->Activate();
         }
 
-        // ƒAƒCƒeƒ€‚ğÁ‚·ˆ—iƒRƒƒ“ƒgƒAƒEƒg‚³‚ê‚Ä‚¢‚éj
+        // ï¿½Aï¿½Cï¿½eï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½Rï¿½ï¿½ï¿½ï¿½ï¿½gï¿½Aï¿½Eï¿½gï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½j
         mOwner->Destroy();
     }
 }
 
 void UFireflower::Init(AItemBase* owner)
 {
-    // ƒAƒCƒeƒ€‚ÌŠ—LÒ‚ª—LŒø‚©Šm”F
+    // ï¿½Aï¿½Cï¿½eï¿½ï¿½ï¿½Ìï¿½ï¿½Lï¿½Ò‚ï¿½ï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½mï¿½F
     if (!owner)
         return;
 
-    // Š—LÒ‚Ìİ’è
+    // ï¿½ï¿½ï¿½Lï¿½Ò‚Ìİ’ï¿½
     mOwner = owner;
 }
 
 void UFireflower::Update(float DeltaTime)
 {
-    // •¨—ŒvZƒRƒ“ƒ|[ƒlƒ“ƒg‚ğg—p‚µ‚Äd—Í‚ğ‰Á‚¦‚é
-    mOwner->GetPhysics()->AddGravity();
+
 }

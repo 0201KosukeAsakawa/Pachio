@@ -202,7 +202,7 @@ void ALevelManager::HandlePlayerGoalReached()
 	if (!ScoreManager || !UIManager) return;
 
 	float ClearTime = ScoreManager->GetTime();
-	EClearScore Rank = ScoreManager->EvaluateClearRank(GetWorld());
+	EStageRank Rank = ScoreManager->EvaluateClearRank(GetWorld());
 
 	UUserWidget* ResultWidget = UIManager->ShowResultWidget(ClearTime, Rank);
 
