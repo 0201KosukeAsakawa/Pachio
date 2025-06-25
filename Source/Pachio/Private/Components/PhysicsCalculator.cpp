@@ -1,95 +1,83 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Components/PhysicsCalculator.h"
 #include "Math/UnrealMathUtility.h"
+#include "DrawDebugHelpers.h"
 
 // コンストラクタでデフォルト値を設定
 UPhysicsCalculator::UPhysicsCalculator()
-	: GravityScale(0) // 重力スケール（デフォルトは0）
-	, ForceScale(0) // 力のスケール（デフォルトは0）
-	, ForceDirection(FVector(0, 0, 0)) // 力を加える方向（デフォルトはゼロベクトル）
-	, PreviousPosition(FVector(0, 0, 0)) // 前回の位置（デフォルトはゼロベクトル）
-	, Timer(0) // タイマー（デフォルトは0）
-	, bShouldApplyGravity(true) // 重力を加えるかどうか（デフォルトはtrue）
-	, bIsSweep(false) // スイープ衝突判定を使用するか（デフォルトはfalse）
-	, bIsPhysicsEnabled(false) // 物理計算が有効かどうか（デフォルトはfalse）
+	: GravityScale(0)
+	, ForceScale(0)
+	, ForceDirection(FVector::ZeroVector)
+	, PreviousPosition(FVector::ZeroVector)
+	, Timer(0)
+	, bShouldApplyGravity(true)
+	, bIsSweep(false)
+	, bIsPhysicsEnabled(false)
 {
-	// このコンポーネントは毎フレームTickします
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-// ゲーム開始時に呼ばれる
 void UPhysicsCalculator::BeginPlay()
 {
-	Super::BeginPlay(); // 親クラスのBeginPlayを呼び出す
+	Super::BeginPlay();
 }
 
-// 毎フレーム呼ばれる
-
-// 毎フレームの更新
+// 毎フレーム更新処理
 void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// 物理計算が無効化されている場合（力の適用準備）
+	FVector MoveVector;
+
 	if (!bIsPhysicsEnabled)
 	{
-		// 力の減衰（力が強すぎると減衰をかける）
-		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f); // DeltaTimeによって減衰させる
+		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f);
+		MoveVector = ForceDirection * ForceScale;
 
-		// 力の方向とスケールで移動を反映
-		GetOwner()->AddActorLocalOffset(ForceDirection * ForceScale, bIsSweep);
+		FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
+		GetOwner()->AddActorLocalOffset(Adjusted, bIsSweep);
 
-		// 現在の位置を取得
 		FVector currentPosition = GetOwner()->GetActorLocation();
 		float distanceZ = currentPosition.Z - PreviousPosition.Z;
 
-		// 着地判定（地面に着いたら力をリセット）
 		if (distanceZ < 0 && OnGround())
 		{
-			ForceDirection.Z = 0; // Z軸方向の力をリセット
-			ForceScale = 0; // 力のスケールをゼロに
-			bIsPhysicsEnabled = true; // 物理計算を有効に
-			Velocity = FVector::ZeroVector; // 速度リセット
+			ForceDirection.Z = 0;
+			ForceScale = 0;
+			bIsPhysicsEnabled = true;
+			Velocity = FVector::ZeroVector;
 		}
 		PreviousPosition = currentPosition;
 
 		return;
 	}
 
-	// 重力を速度に加算（Z軸）
+	// 通常の重力処理
 	Velocity.Z -= GravityScale * DeltaTime;
+	MoveVector = Velocity * DeltaTime;
 
-	// 速度を位置に反映
-	GetOwner()->AddActorLocalOffset(Velocity * DeltaTime, true);
+	FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
+	GetOwner()->AddActorLocalOffset(Adjusted, true);
 
 	PreviousPosition = GetOwner()->GetActorLocation();
 }
 
-// 力を加算する
 void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
 {
-	// 既存の力に新しい力を加算
-	ForceDirection = Direction; // 方向ベクトルを加算
-	ForceScale = Force; // 力の強さを加算
+	ForceDirection = Direction;
+	ForceScale = Force;
 	Timer = 0;
-	// スイープ衝突判定の設定
 	bIsSweep = bSweep;
-
-	// 物理計算を無効化して、新たな力を適用
 	bIsPhysicsEnabled = false;
 }
 
 void UPhysicsCalculator::ResetForce()
 {
-	ForceDirection = FVector(0,0,0); // 力の方向を設定
-	ForceScale = 0; // 力のスケール（強さ）を設定
+	ForceDirection = FVector::ZeroVector;
+	ForceScale = 0;
 	Timer = 0;
 	bIsPhysicsEnabled = true;
 }
 
-// 重力をオブジェクトに加える
 void UPhysicsCalculator::AddGravity(const float gravityScale)
 {
 	if (OnGround())
@@ -107,27 +95,19 @@ bool UPhysicsCalculator::OnGround() const
 	AActor* Owner = GetOwner();
 	if (!Owner) return false;
 
-	// 1. 現在の位置とスケールを取得
 	FVector ActorLocation = Owner->GetActorLocation();
 	FVector ActorScale = Owner->GetActorScale();
+	FVector BoxExtent(20.0f * ActorScale.X, 20.0f * ActorScale.Y, 2.0f);
 
-	// 2. ボックスサイズ（スケールに基づいて拡張）
-	FVector BoxExtent = FVector(20.0f * ActorScale.X, 20.0f * ActorScale.Y, 2.0f); // Zは浅く
-
-	// 3. 足元の位置 = 中心から高さの半分を引く
-	float HalfHeight = Owner->GetSimpleCollisionHalfHeight(); // Capsule などに対応
+	float HalfHeight = Owner->GetSimpleCollisionHalfHeight();
 	FVector FootLocation = ActorLocation - FVector(0, 0, HalfHeight);
-
-	// 4. レイの開始・終了位置（5ユニット下）
 	FVector StartTrace = FootLocation;
 	FVector EndTrace = FootLocation - FVector(0, 0, 5.0f);
 
-	// 5. 衝突判定設定
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Owner);
 	FHitResult Hit;
 
-	// 6. Sweep（Box Trace）
 	bool bHit = GetWorld()->SweepSingleByChannel(
 		Hit,
 		StartTrace,
@@ -138,7 +118,6 @@ bool UPhysicsCalculator::OnGround() const
 		Params
 	);
 
-	// 7. デバッグ表示
 #if WITH_EDITOR
 	DrawDebugBox(
 		GetWorld(),
@@ -151,4 +130,48 @@ bool UPhysicsCalculator::OnGround() const
 #endif
 
 	return bHit;
+}
+
+FVector UPhysicsCalculator::GetBlockedAdjustedVector(const FVector& MoveVector)
+{
+	AActor* Owner = GetOwner();
+	if (!Owner || MoveVector.IsNearlyZero()) return MoveVector;
+
+	FVector ActorLocation = Owner->GetActorLocation();
+	FVector ActorScale = Owner->GetActorScale();
+
+	// スケールを元にした固定サイズ（基準20cm）で BoxExtent を計算
+	FVector BoxExtent(
+		20.0f * ActorScale.X,  // 横幅
+		20.0f * ActorScale.Y,  // 奥行き（前後）
+		20.0f * ActorScale.Z   // 高さ
+	);
+
+	FVector Direction = MoveVector.GetSafeNormal();
+	const float BackstepDistance = 1.0f;
+	FVector Start = ActorLocation - Direction * BackstepDistance;
+	FVector End = Start + MoveVector;
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Owner);
+
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeBox(BoxExtent),
+		Params
+	);
+
+	if (bHit)
+	{
+		const float AdjustMargin = 0.1f;
+		float Distance = FMath::Max(Hit.Distance - AdjustMargin, 0.0f);
+		return Direction * Distance;
+	}
+
+	return MoveVector;
 }

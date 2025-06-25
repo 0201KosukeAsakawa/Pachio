@@ -38,6 +38,8 @@ public:
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
 	bool OnGround() const;
 
+	FVector GetBlockedAdjustedVector(const FVector& MoveVector);
+
 	// 物理計算が有効かどうかを返す
 	bool IsPhysicsEnabled() const { return bIsPhysicsEnabled; }
 
