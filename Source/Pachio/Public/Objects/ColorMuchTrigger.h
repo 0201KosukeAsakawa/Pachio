@@ -24,8 +24,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Init()override;
 private:
-	virtual void ColorAction(FLinearColor InColor) override;
+	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
+	virtual void SetupMaterial()override;
 
-	// サブクラスからも使えるカラー反映関数
-	void ApplyColorToMaterial(FLinearColor InColor);
+private:
+	UPROPERTY(EditAnywhere)
+	FLinearColor StartColor;
 };

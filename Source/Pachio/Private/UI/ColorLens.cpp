@@ -17,27 +17,23 @@ void UColorLens::NativeConstruct()
 
     // ColorManager に対して、背景色変更の対象としてこのクラスを登録
     // 登録することで色変更イベントを受け取るようになる
-    Owner->GetColorManager()->RegisterTarget(EColorTargetType::Layer, this);
+    Owner->GetColorManager()->RegisterTarget(EColorTargetType::Object, this);
 
 }
 
-// 新しい色を受け取ってフィルターの色を更新する処理
-void UColorLens::ColorAction(FLinearColor NewColor)
+void UColorLens::Animation(float i)
 {
-    if (!FilterColorImage)
-        return; // Image コンポーネントが設定されていなければ処理しない
+    if (i < -1)
+        i = -1;
+    else if (1 < i)
+        i = 1;
 
-    // 現在のフィルター画像の色を取得
-    FLinearColor CurrentColor = FilterColorImage->ColorAndOpacity;
+    if (RotationAnimation)
+    {
+        PlayAnimation(RotationAnimation, 0.f, 1, EUMGSequencePlayMode::Forward,i);
+    }
+}
 
-    // 新しい色の RGB 成分を使い、Alpha（透明度）は現状のまま維持する
-    FLinearColor CombinedColor = FLinearColor(
-        NewColor.R,
-        NewColor.G,
-        NewColor.B,
-        CurrentColor.A // 透明度は維持
-    );
-
-    // フィルター画像の色と透明度を更新
-    FilterColorImage->SetColorAndOpacity(CombinedColor);
+void UColorLens::ColorAction(FLinearColor)
+{
 }

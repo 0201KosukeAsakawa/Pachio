@@ -1,5 +1,6 @@
 #include "UI/UIManager.h"
 #include "UI/ColorLens.h"
+#include "UI/ClearResultWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "Components/ColorControllerComponent.h"
@@ -10,7 +11,8 @@ void UUIManager::Init(const AActor*)
 {
     // すべてのカテゴリのウィジェットを初期化
     InitAllWidgets();
-    ShowWidget(EWidgetCategory::Lens, "Lens");
+    if (ColorLens)
+        ColorLens->AddToViewport();
 }
 
 
@@ -63,11 +65,12 @@ void UUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Class
     }
 }
 
-void UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetName)
+UUserWidget* UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetName)
 {
+    UUserWidget* widget = nullptr;
     // 指定カテゴリが存在しない場合は無視
     if (!WidgetDataMap.Contains(CategoryName)) 
-        return;
+        return widget;
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
 
@@ -76,7 +79,11 @@ void UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetName)
     {
         Group.CurrentWidget.Add(WidgetName, *FoundWidget);
         Group.CurrentWidget[WidgetName]->AddToViewport();
+
+        widget = Group.CurrentWidget[WidgetName];
     }
+
+    return widget;
 }
 
 void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName)
@@ -130,4 +137,16 @@ void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
         Widget->RemoveFromViewport();
         Widget = nullptr;
     }
+}
+
+UUserWidget* UUIManager::ShowResultWidget(float Time, EStageRank Rank)
+{
+    UUserWidget* BaseWidget = ShowWidget(EWidgetCategory::Menu, "Result");
+
+    if (UClearResultWidget* ResultWidget = Cast<UClearResultWidget>(BaseWidget))
+    {
+        ResultWidget->SetupClearResult(Time, Rank);
+    }
+
+    return BaseWidget;
 }

@@ -31,7 +31,7 @@ FVector UMoveComponent::Movement(float DeltaTime, AActor* Owner, const FInputAct
     {
         return FVector(0, 0, 0);
     }
-        return MoveLogic->Movement(DeltaTime,Owner,Value);
+        return MoveLogic->Movement(DeltaTime,Owner, Value);
 }
 void UMoveComponent::SetDirection(FVector NewDirection)
 {

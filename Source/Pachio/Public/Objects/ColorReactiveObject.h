@@ -9,6 +9,12 @@
 
 class UColorReactiveComponent;
 
+struct FHSLColor
+{
+	float H; // 0.0〜1.0
+	float S; // 0.0〜1.0
+	float L; // 0.0〜1.0
+};
 /**
  * 色に反応するアクター（指定色でアクションを起こす）
  */
@@ -28,14 +34,14 @@ public:
 	virtual void ColorAction(FLinearColor InColor) override;
 	inline bool IsColorMuch() const override { return bColorMuch; }
 	inline void ChangeLock(bool b) override { bColorLock = b; }
-
+	inline FName GetColorEventID()const {return EventID;}
 protected:
 	virtual void Init();
-	void InitializeColorLogic();
-	void RegisterToColorManager();
-private:
-	void SetupMaterial();
-
+	virtual void InitializeColorLogic();
+	virtual void RegisterToColorManager();
+	virtual void SetupMaterial();
+	virtual void ApplyColorToMaterial(FLinearColor InColor);
+		FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 protected:
 	// コンポーネント設定
 	UPROPERTY(EditAnywhere, Category = "Reactive")
@@ -60,4 +66,7 @@ protected:
 	// 色が一致したかどうかのフラグ
 	UPROPERTY(VisibleAnywhere, Category = "Color")
 	bool bColorMuch;
+
+	UPROPERTY(EditAnywhere)
+	FName EventID;
 };

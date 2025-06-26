@@ -19,11 +19,11 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// ƒS[ƒ‹‚ÌƒRƒŠƒWƒ‡ƒ“ƒRƒ“ƒ|[ƒlƒ“ƒg
+	// ï¿½Sï¿½[ï¿½ï¿½ï¿½ÌƒRï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½g
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* GoalBox;
 
-	// Õ“Ë‚ÉŒÄ‚Î‚ê‚é
+	// ï¿½Õ“Ëï¿½ï¿½ÉŒÄ‚Î‚ï¿½ï¿½
 	UFUNCTION()
 	void OnGoalOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep,
@@ -33,11 +33,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// ƒS[ƒ‹‚ª’B¬‚³‚ê‚½‚©‚Ìó‘Ô‚ğæ“¾
+	// ï¿½Sï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½Bï¿½ï¿½ï¿½ï¿½ï¿½ê‚½ï¿½ï¿½ï¿½Ìï¿½Ô‚ï¿½æ“¾
 	inline bool IsGoal() const { return isGoal; }
 
 private:
-	// ƒS[ƒ‹‚Ìó‘Ôƒtƒ‰ƒO
+	// ï¿½Sï¿½[ï¿½ï¿½ï¿½Ìï¿½Ôƒtï¿½ï¿½ï¿½O
 	bool isGoal;
 
 	UPROPERTY(EditAnywhere)

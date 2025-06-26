@@ -3,20 +3,39 @@
 
 #include "Player/State/DeadPlayerState.h"
 #include "Interface/StateControllable.h"
+#include "Manager/LevelManager.h"
+#include "UI/UIManager.h"
 #include "Kismet/GameplayStatics.h" // �����ǉ�
 
 bool UDeadPlayerState::OnEnter(ACharacter* Owner, UWorld* World)
 {
-	if (!Owner || !World)
-		return false;
+    if (!Owner || !World)
+        return false;
 
-	IStateControllable* is = Cast<IStateControllable>(Owner);
-	if (!is)
-		return false;
+    // UI表示
+    if (ALevelManager* LevelManager = ALevelManager::GetInstance(World))
+    {
+        if (auto UIManager = LevelManager->GetUIManager())
+        {
+            UIManager->ShowWidget(EWidgetCategory::Tutorial, TEXT("Dead"));
+        }
+    }
 
-	is->ChangeState("Default");
+    // カーソルを表示＆入力モード切り替え
+    if (APlayerController* PC = Cast<APlayerController>(Owner->GetController()))
+    {
+        PC->bShowMouseCursor = true;
 
-	UGameplayStatics::OpenLevel(this, "NewWorld");
+        FInputModeGameAndUI InputMode;
+        InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        PC->SetInputMode(InputMode);
+    }
 
-	return true;
+    // ゲームをポーズする
+    if (UGameplayStatics::GetPlayerController(World, 0))
+    {
+        UGameplayStatics::SetGamePaused(World, true);
+    }
+
+    return true;
 }

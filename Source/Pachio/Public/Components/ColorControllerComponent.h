@@ -8,8 +8,9 @@
 // Blueprint からバインド可能な色変更通知デリゲート（対象タイプも含む）
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnColorChanged, FLinearColor, NewColor, EColorTargetType, TargetType);
 
-// C++コード専用のネイティブな色変更通知デリゲート（Blueprint不可）
-DECLARE_DELEGATE_OneParam(FOnColorChangedNative, FLinearColor);
+DECLARE_DELEGATE_OneParam(FColorAnimationDelegate, float);
+
+
 
 // アクターにアタッチして色の制御を行うコンポーネント
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -40,8 +41,7 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnColorChanged OnColorChanged;
 
-    // C++ 専用のデリゲート（より軽量な通知用途）
-    FOnColorChangedNative OnColorChangedNative;
+    FColorAnimationDelegate AnimationDelegate;
 
 private:
     // 次のカラーモードを取得（右回り）

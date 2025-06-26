@@ -19,15 +19,14 @@ void AColorMuchTrigger::BeginPlay()
 	{
 		if (UColorManager* ColorManager = LevelManager->GetColorManager())
 		{
-			ColorManager->RegisterTarget(EColorTargetType::Responders, this);
+			ColorManager->RegisterTarget(ColorTargetType, this);
 		}
 	}
 }
 
 void AColorMuchTrigger::Init()
 {
-	InitializeColorLogic();
-	RegisterToColorManager();
+	AColorReactiveObject::Init();
 }
 
 void AColorMuchTrigger::ColorAction(FLinearColor InColor)
@@ -36,15 +35,29 @@ void AColorMuchTrigger::ColorAction(FLinearColor InColor)
 	if (!ColorReactiveComponent)
 		return;
 	bColorMuch = ColorReactiveComponent->CheckColorMatch(InColor);
+	if (!bColorMuch)
+		return;
+	ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
+	if (levelManager == nullptr)
+		return;
+	if (levelManager->GetColorManager() == nullptr)
+		return;
+
+ 	levelManager->GetColorManager()->ColorEvent(EventID);
 }
 
-void AColorMuchTrigger::ApplyColorToMaterial(FLinearColor InColor)
+void AColorMuchTrigger::SetupMaterial()
 {
 	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
-	if (!Mesh) return;
+	if (Mesh == nullptr)
+		return;
+
+	Mesh->SetRenderCustomDepth(true);
+	Mesh->SetCustomDepthStencilValue(10);
 
 	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
-	if (!DynMaterial) return;
+	if (DynMaterial == nullptr)
+		return;
 
-	DynMaterial->SetVectorParameterValue(FName("BaseColor"), InColor);
+	DynMaterial->SetVectorParameterValue(FName("BaseColor"), StartColor);
 }

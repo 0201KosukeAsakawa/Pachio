@@ -2,19 +2,24 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "DataContainer/UIStruct.h"
 #include "LevelManager.generated.h"
 
 // 前方宣言（依存クラスの参照を軽量化）
 class USoundManager;
+class USaveManager;
+class UScoreManager;
+class UObjectManager;
+class UColorManager;
+class UUIManager;
+
 class UDataTable;
+
 class UBlockDataContainer;
 class UAttackDataContainer;
-class UObjectManager;
 class UItemDataContainer;
-class UScoreManager;
-class UUIManager;
 class UEnemyDataContainer;
-class UColorManager;
+
 
 /**
  * ステージオブジェクト1つ分の配置情報（データテーブル用構造体）
@@ -54,16 +59,14 @@ protected:
 
 public:
 	virtual void Tick(float DeltaTime) override;	
-	
+
+	void HandlePlayerGoalReached();
 	/** サウンドの再生を指示する */
 	void PlaySound(FName Category, FName CueName);
 
 	/** グローバルから取得できるレベルマネージャー（シングルトン） */
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	static ALevelManager* GetInstance(UObject* WorldContext);
-
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	inline int GetTime()const { return InGameTimer; }
 
 	/** ブロックデータ管理コンテナを取得 */
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
@@ -85,10 +88,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	inline UColorManager* GetColorManager()const { return ColorManager; }
-
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	inline UUIManager* GetUIManager()const { return UIManager; }
 
 private:
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void InitializeComponents();
 
 	/** ステージ上のオブジェクトを生成（StageData をもとに） */
@@ -97,15 +101,14 @@ private:
 	/** ブロックを生成（BlockData をもとに） */
 	void GenerateBlock();
 
-	void CountDown();
+
+	void PauseGameAndShowUI(UUserWidget* FocusWidget);
 
 private:
 	 bool bInitialize;
 
-	UPROPERTY(EditAnywhere)
-	float InGameTimer = 500.0f;
-
-	FTimerHandle CountTimerHandle;
+	 UPROPERTY(EditAnywhere)
+	 FString StageName;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UEnemyDataContainer> EnemyContainerClass;

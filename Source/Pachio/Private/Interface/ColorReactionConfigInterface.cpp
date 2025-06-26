@@ -13,3 +13,8 @@ bool IColorReactionConfigInterface::IsColorMuch() const
 void IColorReactionConfigInterface::ChangeLock(bool b)
 {
 }
+
+FName IColorReactionConfigInterface::GetColorEventID() const
+{
+	return FName();
+}

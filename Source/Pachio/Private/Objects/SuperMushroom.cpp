@@ -40,9 +40,6 @@ void USuperMushroomComponent::Update(float DeltaTime)
     FVector v = moveComp->Movement(DeltaTime, mOwner);
     FVector m = v - mOwner->GetActorLocation();
     mOwner->SetActorLocation(v);
-
-    // 物理計算コンポーネントを使用して重力を加える
-    mOwner->GetPhysics()->AddGravity();
 }
 
 void USuperMushroomComponent::OnCollected(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

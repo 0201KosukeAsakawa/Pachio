@@ -1,115 +1,105 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Enemy/Logic/GoombaAliveState.h"
 #include "Enemy/EnemyCharacter.h"
 #include "Enemy/Logic/GoombaDeadState.h"
 #include "Enemy/State/EnemyStateComponent.h"
 #include "Components/AttackComponent.h"
-#include "Components/MoveComponent.h"            // ©ì‚ÌˆÚ“®ˆ——pƒRƒ“ƒ|[ƒlƒ“ƒg
-#include "Components/PhysicsCalculator.h"        // d—Í‚È‚Ç‚Ì•¨—‰‰ZƒRƒ“ƒ|[ƒlƒ“ƒg
+#include "Components/MoveComponent.h"            // æ•µã®ç§»å‹•ã‚’åˆ¶å¾¡ã™ã‚‹ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ
+#include "Components/PhysicsCalculator.h"        // é‡åŠ›ãªã©ã®ç‰©ç†æ¼”ç®—ã‚’è¡Œã†ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ
 #include "Manager/LevelManager.h"
 #include "Logic/Movement/EnemyMoveLogic.h"
 #include "Interface/MoveLogic.h"
 #include "DataContainer/EnemyDataContainer.h"
 
-// ƒSƒ“ƒo‚Ì¶‘¶ó‘Ô‚É“ü‚é‚Ìˆ—
+// GoombaãŒç”Ÿãã¦ã„ã‚‹çŠ¶æ…‹ã«å…¥ã£ãŸã¨ãã®åˆæœŸå‡¦ç†
 bool UGoombaAliveState::OnEnter(AEnemyCharacter* owner, UWorld* currentLevel, UEnemyStateComponent* LogicComponet, EEnemyCategory materialID)
 {
-    // •K—v‚Èƒ|ƒCƒ“ƒ^‚ª–³Œø‚Å‚ ‚ê‚Îˆ—‚ğI—¹
+    // å…¥åŠ›å¼•æ•°ãŒä¸æ­£ãªå ´åˆã¯å¤±æ•—ã¨ã—ã¦çµ‚äº†
     if (!owner || !currentLevel || !LogicComponet)
         return false;
 
-    // ƒI[ƒi[‚ÆƒƒWƒbƒNƒRƒ“ƒ|[ƒlƒ“ƒg‚Ìİ’è
+    // æ‰€æœ‰è€…ã¨çŠ¶æ…‹ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®å‚ç…§ã‚’ä¿å­˜
     mOwner = owner;
     logicComponent = LogicComponet;
 
-    // ˆÚ“®ƒRƒ“ƒ|[ƒlƒ“ƒg‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚µ‚Ä‰Šú‰»
+    // ç§»å‹•ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã¨æ”»æ’ƒã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’æ–°è¦ä½œæˆ
     MoveComp = NewObject<UMoveComponent>(mOwner);
     Attack = NewObject<UAttackComponent>(mOwner);
 
-    // UŒ‚ƒf[ƒ^‚Ìİ’èi“GƒLƒƒƒ‰ƒNƒ^[‚É‘Î‚·‚éUŒ‚A‰ó‚ê‚È‚¢UŒ‚j
+    // æ”»æ’ƒã®ãƒ‡ãƒ¼ã‚¿ã‚’è¨­å®šï¼ˆæ•µã«ã‚ˆã‚‹æ”»æ’ƒã§ã€å£Šã‚Œãªã„æ€§è³ªï¼‰
     Attack->SetAttackData(EAttackType::Enemy, EBreakLevel::Unbreakable);
 
-    // ƒWƒƒƒ“ƒv‰Â”\‚Éİ’è
+    // ã‚¸ãƒ£ãƒ³ãƒ—å¯èƒ½çŠ¶æ…‹ã«è¨­å®šï¼ˆæ•µã®ç§»å‹•ãƒ­ã‚¸ãƒƒã‚¯ã§å¿…è¦ãªå ´åˆï¼‰
     mOwner->SetCanJamp(true);
 
-    // ƒLƒƒƒ‰ƒNƒ^[‚ÌƒAƒNƒ^[‚Æ‚µ‚Äİ’è
+    // ã‚¢ã‚¯ã‚¿ãƒ¼å‹ã¸ã‚­ãƒ£ã‚¹ãƒˆï¼ˆMoveComp ã® Init ã«ä½¿ç”¨ï¼‰
     AActor* actor = Cast<AActor>(mOwner);
 
-    // ƒAƒNƒ^[AˆÚ“®ƒRƒ“ƒ|[ƒlƒ“ƒgAUŒ‚ƒRƒ“ƒ|[ƒlƒ“ƒgAUŒ‚‚Ì‰Šú‰»‚ª¸”s‚µ‚½ê‡‚ÍI—¹
+    // å„ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®åˆæœŸåŒ–ã«å¤±æ•—ã—ãŸå ´åˆã¯çµ‚äº†
     if (!actor || !MoveComp || !Attack || !Attack->Init(currentLevel, "DamageOnly"))
         return false;
 
-    // ˆÚ“®ƒRƒ“ƒ|[ƒlƒ“ƒg‚ğ‰Šú‰»
-    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this),100,FVector(0,-1,0));
-    //MoveComp->SetSpeed(1000.0f); // ˆÚ“®‘¬“x‚ğİ’è
+    // ç§»å‹•ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®åˆæœŸåŒ–ï¼ˆåˆæœŸé€Ÿåº¦100ã€åˆæœŸå‘ãï¼šYãƒã‚¤ãƒŠã‚¹ï¼‰
+    MoveComp->Init(actor, NewObject<UEnemyMoveLogic>(this), 1000, FVector(-1, 0, 0));
+    // MoveComp->SetSpeed(1000.0f); // å¿…è¦ãªã‚‰å€‹åˆ¥ã«é€Ÿåº¦ã‚’è¨­å®šå¯èƒ½
 
-    // •¨—ŒvZƒRƒ“ƒ|[ƒlƒ“ƒgid—Í‚È‚Çj‚ğ¶¬
+    // é‡åŠ›æ¼”ç®—ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®ä½œæˆ
     PhysicsCal = NewObject<UPhysicsCalculator>(actor);
 
-    // ƒƒbƒVƒ…‚ª‘¶İ‚µ‚È‚¢ê‡‚ÍI—¹
+    // ãƒ¡ãƒƒã‚·ãƒ¥ãŒãªã„å ´åˆã¯å³çµ‚äº†
     if (!owner->GetMesh())
         return false;
 
-    // ƒƒbƒVƒ…‚ÌƒRƒŠƒWƒ‡ƒ“‚ğ–³Œø‚É‚·‚éi•¨—“I‚ÈÕ“Ë‚ğ–³Œø‰»j
+    // ãƒ¡ãƒƒã‚·ãƒ¥ã®ã‚³ãƒªã‚¸ãƒ§ãƒ³ã‚’ç„¡åŠ¹åŒ–ï¼ˆä»–ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ã®è¡çªã‚’é˜²ãï¼‰
     owner->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    // ƒ}ƒeƒŠƒAƒ‹‚Ìì¬
+    // ãƒãƒ†ãƒªã‚¢ãƒ«ã‚’ä½œæˆã—ã¦ã‚»ãƒƒãƒˆï¼ˆè¦‹ãŸç›®ã®ç¨®é¡è¨­å®šï¼‰
     UMaterialInterface* newMaterial = ALevelManager::GetInstance(currentLevel)->GetEnemyContainer()->CreateMaterial(currentLevel, materialID);
-
-    // V‚µ‚¢ƒ}ƒeƒŠƒAƒ‹‚Ì¶¬‚ª¸”s‚µ‚½ê‡‚ÍI—¹
     if (!newMaterial)
         return false;
 
-    // ƒƒbƒVƒ…‚ÉV‚µ‚¢ƒ}ƒeƒŠƒAƒ‹‚ğ“K—p
+    // ä½œæˆã•ã‚ŒãŸãƒãƒ†ãƒªã‚¢ãƒ«ã‚’æ•µã‚­ãƒ£ãƒ©ã«è¨­å®š
     owner->GetMesh()->SetMaterial(0, newMaterial);
 
-    return true; // ‰Šú‰»‚ª¬Œ÷‚µ‚½ê‡
+    return true; // æ­£å¸¸ã«åˆæœŸåŒ–å®Œäº†
 }
 
-// ƒSƒ“ƒo‚Ì¶‘¶ó‘Ô‚Å–ˆƒtƒŒ[ƒ€Às‚³‚ê‚éˆ—
+// GoombaãŒç”Ÿãã¦ã„ã‚‹çŠ¶æ…‹ã®æ›´æ–°å‡¦ç†ï¼ˆæ¯ãƒ•ãƒ¬ãƒ¼ãƒ å‘¼ã°ã‚Œã‚‹ï¼‰
 bool UGoombaAliveState::OnUpdate(float DeltaTime)
 {
-    // ˆÚ“®ƒRƒ“ƒ|[ƒlƒ“ƒg‚âƒI[ƒi[AƒƒWƒbƒN‚ª–³Œø‚Å‚ ‚ê‚Îˆ—‚µ‚È‚¢
+    // ä¸»è¦ãªã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆãŒç„¡åŠ¹ãªã‚‰å‡¦ç†ä¸­æ–­
     if (!MoveComp || !mOwner || !logicComponent)
-    {
         return false;
-    }
 
-    // ˆÚ“®ˆ—i’ÇÕ‚âƒpƒgƒ[ƒ‹‚È‚Çj
-    FVector v = MoveComp->Movement(DeltaTime,mOwner);
-    FVector m = v-mOwner->GetActorLocation();
+    // ç§»å‹•ä½ç½®ã®è¨ˆç®—ã¨åæ˜ ï¼ˆç¾åœ¨ä½ç½®ã‹ã‚‰ç›®æ¨™ä½ç½®ã¸ï¼‰
+    FVector v = MoveComp->Movement(DeltaTime, mOwner , MoveDirection);
+    FVector m = v - mOwner->GetActorLocation();
     mOwner->SetActorLocation(v);
 
-    // d—Í‚ğ“K—p‚·‚é
-    PhysicsCal->AddGravity();
-
-    // ƒI[ƒi[‚ª€–S‚µ‚Ä‚¢‚éê‡‚ÍA€–Só‘Ô‚É‘JˆÚ
+    // æ­»äº¡çŠ¶æ…‹ãªã‚‰æ­»äº¡ã‚¹ãƒ†ãƒ¼ãƒˆã¸é·ç§»
     if (mOwner->IsDead())
     {
         UGoombaDeadState* nextState = NewObject<UGoombaDeadState>(mOwner);
         logicComponent->ChangeState(nextState, mOwner);
     }
 
-    return true; // XV‚ª¬Œ÷‚µ‚½ê‡
+    return true; // æ›´æ–°æˆåŠŸ
 }
 
-// ƒSƒ“ƒo‚Ì¶‘¶ó‘Ô‚ğI—¹‚·‚éÛ‚Ìˆ—
+// GoombaãŒã“ã®ã‚¹ãƒ†ãƒ¼ãƒˆã‚’æŠœã‘ã‚‹ã¨ãã®å‡¦ç†
 bool UGoombaAliveState::OnExit()
 {
-    // ‰½‚à“Á•Ê‚Èˆ—‚Ís‚í‚È‚¢iI—¹ˆ—‚ª•K—v‚È‚ç’Ç‰Áj
+    // ä»Šã®ã¨ã“ã‚ç‰¹åˆ¥ãªå‡¦ç†ãªã—
     return true;
 }
 
-// Õ“Ë‚µ‚½ƒIƒuƒWƒFƒNƒg‚Æ‚Ìˆ—iUŒ‚”»’èj
+// æ•µãŒä»–ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨æ¥è§¦ã—ãŸéš›ã®å‡¦ç†
 bool UGoombaAliveState::OnOverlap(AActor* hitActor)
 {
-    // UŒ‚ƒRƒ“ƒ|[ƒlƒ“ƒg‚ª–³‚¯‚ê‚Îˆ—‚µ‚È‚¢
+    // æ”»æ’ƒã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆãŒãªã„å ´åˆã¯å‡¦ç†ä¸èƒ½
     if (!Attack)
         return false;
 
-    // UŒ‚‚ğÀs‚·‚é
+    // æ¥è§¦å¯¾è±¡ã¸æ”»æ’ƒã‚’å®Ÿè¡Œ
     Attack->PerformAttack(hitActor);
     return true;
 }

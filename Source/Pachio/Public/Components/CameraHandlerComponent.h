@@ -23,12 +23,23 @@ public:
 private:
 	void UpdateCameraPosition(float DeltaTime);
 private:
+	// グリッドサイズ（1部屋のサイズ）
+	UPROPERTY(EditAnywhere)
+	FVector2D GridSize = FVector2D(7000.f, 3000.f);
+	UPROPERTY(EditAnywhere)
+	float Zbaffa = 2000.f;
 
-	// ヘッダーに追加（必要に応じて）
-	FVector InitialSpringArmOffset;
-	FVector LocalLocation;
-	float PreviousCameraY = 0.0f;
+	// 現在のグリッド座標（整数）
+	FIntPoint CurrentGrid = FIntPoint::ZeroValue;
+
+	// カメラ目標位置
+	FVector TargetCameraLocation;
+
+	// 補間速度（カメラ移動の滑らかさ）
+	float InterpSpeed = 5.f;
+
 	// ==== カメラ ====
+	FVector CameraLocation;
 
 	// カメラの回転／位置制御用スプリングアーム
 	UPROPERTY(VisibleAnywhere, Category = Camera, meta = (AllowPrivateAccess = "true"))

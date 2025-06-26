@@ -25,25 +25,33 @@ void UColorProximitySpawner::OnMesh()
 {   
     UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
     UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-    if (!box || !mesh)
-        return;
-
-    box->SetHiddenInGame(false);
-    mesh->SetVisibility(true);
-    mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    mesh->SetCastShadow(true);
+    if (box != nullptr)
+    {
+        box->SetHiddenInGame(false);
+        box->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    }
+    if (mesh != nullptr)
+    {
+        mesh->SetVisibility(true);
+        mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        mesh->SetCastShadow(true);
+    }
 }
 
 void UColorProximitySpawner::OffMesh()
 {
     UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
     UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-    if (!box || !mesh)
-        return;
-
-    box->SetHiddenInGame(true);
-    mesh->SetVisibility(false);
-    mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    mesh->SetCastShadow(false);
+    if (box != nullptr)
+    {
+        box->SetHiddenInGame(true);
+        box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
+    if (mesh != nullptr)
+    {
+        mesh->SetVisibility(false);
+        mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        mesh->SetCastShadow(false);
+    }
 }
 
