@@ -27,7 +27,7 @@ protected:
 	UImage* FilterColorImage;
 
 private:
-	// ƒAƒjƒ[ƒVƒ‡ƒ“•Ï”iƒuƒ‹[ƒvƒŠƒ“ƒg‘¤‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚Æ•R•t‚¯‚éj
-	UPROPERTY(meta = (BindWidgetAnim), Transient)
-	UWidgetAnimation* RotationAnimation;
+	//// ï¿½Aï¿½jï¿½ï¿½ï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½Ïï¿½ï¿½iï¿½uï¿½ï¿½ï¿½[ï¿½vï¿½ï¿½ï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ÌƒAï¿½jï¿½ï¿½ï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½Æ•Rï¿½tï¿½ï¿½ï¿½ï¿½j
+	//UPROPERTY(meta = (BindWidgetAnim), Transient)
+	//UWidgetAnimation* RotationAnimation;
 };

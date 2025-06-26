@@ -13,13 +13,6 @@ void UStageSelectWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    // //仮ステージを作成（あとでDataTableやSaveGameと連携してOK）
-    //StageList = {
-    //    {TEXT("Stage01"), TEXT("STAGE 1"), 1, EStageRank::A, nullptr, true},
-    //    {TEXT("Stage02"), TEXT("STAGE 2"), 2, EStageRank::None, nullptr, true},
-    //    {TEXT("Stage03"), TEXT("STAGE 3"), 3, EStageRank::S, nullptr, true}
-    //};
-
     if (PlayButton)
         PlayButton->OnClicked.AddDynamic(this, &UStageSelectWidget::OnPlayPressed);
 
