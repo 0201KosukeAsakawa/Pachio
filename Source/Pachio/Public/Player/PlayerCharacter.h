@@ -136,7 +136,7 @@ private:
 	float JumpForce = 12;
 
 	float JumpBuff = 1;
-	float DefaultMaxSpeed = 1;
+	float DefaultMaxSpeed = 10000000000000000;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================
