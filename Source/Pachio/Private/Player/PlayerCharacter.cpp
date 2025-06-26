@@ -155,11 +155,6 @@ void APlayerCharacter::Circle()
 				ChangeColor(0.01f); // 右回し → +1
 			}
 		}
-		// カラーモードを1つ右にシフト
-		void ;
-
-		// カラーモードを1つ左にシフト
-		void ShiftArrayLeftColorMode();
 
 		PrevMouseDir = CurrentDir;
 		bHasPrevMouse = true;
