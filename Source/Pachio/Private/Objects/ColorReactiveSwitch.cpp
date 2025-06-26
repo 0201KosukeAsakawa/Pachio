@@ -10,7 +10,7 @@
 AColorReactiveSwitch::AColorReactiveSwitch()
 {
 	// Box Component を作成
-	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
 	BoxComponent->SetupAttachment(RootComponent); // アクターのルートコンポーネントに設定
 
 	// オーバーラップイベントのバインド
@@ -26,13 +26,17 @@ void AColorReactiveSwitch::ColorAction(const FLinearColor InColor)
 {
 	if (!ColorReactiveComponent)
 		return;
+	AColorReactiveObject::ColorAction(InColor);
 	bColorMuch = ColorReactiveComponent->CheckColorMatch(InColor);
 }
 
 void AColorReactiveSwitch::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	//if (!bColorMuch)
-	//	return;
+	if (!OtherActor)
+		return;
+
+	if (!OtherActor->ActorHasTag("Player"))
+		return;
 	ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
 	if (levelManager == nullptr)
 		return;

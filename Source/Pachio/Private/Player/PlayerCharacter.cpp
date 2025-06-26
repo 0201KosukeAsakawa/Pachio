@@ -85,9 +85,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 	// ステートマネージャーの時間経過更新処理を実行
 	StateManager->Update(DeltaTime);
 
-	// 重力を加える（値は任意、固定で10.0fを加算）
-	physics->AddGravity(10.0f);
-
 }
 
 // プレイヤー入力バインド処理
@@ -304,6 +301,8 @@ void APlayerCharacter::InitStateAndAttack()
 void APlayerCharacter::InitPhysicsSettings()
 {
 	physics->RegisterComponent();
+	// 重力を加える（値は任意、固定で10.0fを加算）
+	physics->SetGravityScale(10.0f);
 
 	auto* Move = GetCharacterMovement();
 

@@ -75,9 +75,6 @@ bool UGoombaAliveState::OnUpdate(float DeltaTime)
     FVector m = v - mOwner->GetActorLocation();
     mOwner->SetActorLocation(v);
 
-    // 重力を加算（ジャンプや落下に必要）
-    PhysicsCal->AddGravity();
-
     // 死亡状態なら死亡ステートへ遷移
     if (mOwner->IsDead())
     {

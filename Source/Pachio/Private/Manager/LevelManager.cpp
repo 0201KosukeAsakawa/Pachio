@@ -96,8 +96,11 @@ void ALevelManager::InitializeComponents()
 	FSaveData thisStageData;
 	thisStageData.bCleared = true;
 	if (ScoreManager)
+	{
 		thisStageData.Score = ScoreManager->GetGameScore();
-	thisStageData.Time = ScoreManager->GetTime();
+		thisStageData.Time = ScoreManager->GetTime();
+	}
+
 
 	// 2. セーブ呼び出し（静的関数なのでクラス名から直接）
 	USaveManager::SaveStageData(StageName, thisStageData);
@@ -199,7 +202,7 @@ void ALevelManager::HandlePlayerGoalReached()
 	if (!ScoreManager || !UIManager) return;
 
 	float ClearTime = ScoreManager->GetTime();
-	EClearScore Rank = ScoreManager->EvaluateClearRank(GetWorld());
+	EStageRank Rank = ScoreManager->EvaluateClearRank(GetWorld());
 
 	UUserWidget* ResultWidget = UIManager->ShowResultWidget(ClearTime, Rank);
 
