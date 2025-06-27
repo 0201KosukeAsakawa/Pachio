@@ -136,7 +136,8 @@ private:
 	float JumpForce = 12;
 
 	float JumpBuff = 1;
-	float DefaultMaxSpeed = 10000000000000000;
+	UPROPERTY(EditAnywhere)
+	float MoveSpeed = 10;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================

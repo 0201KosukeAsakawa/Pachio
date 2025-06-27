@@ -63,7 +63,6 @@ void APlayerCharacter::BeginPlay()
 	InitVisualSettings();
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
-	DefaultMaxSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (PC)
 	{
@@ -126,7 +125,6 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage, const AActor*)
 void APlayerCharacter::ResetBuff()
 {
 	 JumpBuff = 1;
-	 GetCharacterMovement()->MaxWalkSpeed = DefaultMaxSpeed;
 }
 
 void APlayerCharacter::Circle()
@@ -170,7 +168,7 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 	// 移動方向をMoveCompのロジックから取得
 	FVector direction = MoveComp->Movement(0, this, Value);
 	// 速度は現在のステートが持つ移動速度を使用
-	AddMovementInput(direction, StateManager->GetCurrentState()->GetMoveSpeed());
+	AddMovementInput(direction, MoveSpeed/* StateManager->GetCurrentState()->GetMoveSpeed()*/);
 
 	// 移動方向がある場合はキャラクターの向きを滑らかに回転させる
 	if (!direction.IsNearlyZero())
@@ -229,13 +227,13 @@ void APlayerCharacter::StopAction()
 // 色ゲージを減少させる処理
 void APlayerCharacter::DecreaseColor()
 {
-	ChangeColor(0.001);
+	ChangeColor(-0.1);
 }
 
 // 色ゲージを増加させる処理
 void APlayerCharacter::IncreaseColor()
 {
-	ChangeColor(-0.001);
+	ChangeColor(0.1);
 }
 
 void APlayerCharacter::ChangeColor(float value)
