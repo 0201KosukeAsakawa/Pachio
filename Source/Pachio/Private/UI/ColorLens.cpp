@@ -17,7 +17,7 @@ void UColorLens::NativeConstruct()
 
     // ColorManager に対して、背景色変更の対象としてこのクラスを登録
     // 登録することで色変更イベントを受け取るようになる
-    Owner->GetColorManager()->RegisterTarget(EColorTargetType::Object, this);
+    Owner->GetColorManager()->RegisterTarget(EColorTargetType::ObjectTypeGamma, this);
 
 }
 
@@ -34,6 +34,12 @@ void UColorLens::Animation(float i)
     }
 }
 
-void UColorLens::ColorAction(FLinearColor)
+void UColorLens::ColorAction(FLinearColor newColor)
 {
+
+
+    if (FilterColorImage)
+    {
+        FilterColorImage->SetColorAndOpacity(newColor);
+    }
 }

@@ -36,8 +36,6 @@ private:
 	int GameScore;
 	//コイン取得数
 	int Coin;
-	//残機
-	int remaininglives;
 	UPROPERTY(EditAnywhere)
 	float InGameTimer = 0;
 	UPROPERTY(EditAnywhere)

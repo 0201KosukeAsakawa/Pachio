@@ -20,9 +20,9 @@ enum class EBuffEffect : uint8
 UENUM(BlueprintType)
 enum class EColorTargetType : uint8
 {
-    Layer      UMETA(DisplayName = "Layer"),       // レイヤー単位での色変更
-    Object     UMETA(DisplayName = "Object"),      // オブジェクト単位での色変更
-    Background UMETA(DisplayName = "Background"),  // 背景色の変更
+    WorldColor      UMETA(DisplayName = "WorldColor"),       // レイヤー単位での色変更
+    ObjectTypeGamma       UMETA(DisplayName = "γ"),      // オブジェクト単位での色変更
+    ObjectTypeBeta   UMETA(DisplayName = "β"),
     Responders UMETA(DisplayName = "Responders"),   // 複数の反応対象（通知など）の色変更
     Event      UMETA(DisplayName = "Event"),
 };

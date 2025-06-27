@@ -9,7 +9,7 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
 {
     switch (Mode)
     {
-    case EColorTargetType::Layer:
+    case EColorTargetType::WorldColor:
         if (PostProcessMID)
         {
             // ポストプロセスマテリアルに色を適用
@@ -21,8 +21,8 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
         NotifyTargets(EColorTargetType::Responders, NewColor);
         break;
 
-    case EColorTargetType::Object:
-    case EColorTargetType::Background:
+    case EColorTargetType::ObjectTypeGamma:
+    case EColorTargetType::ObjectTypeBeta:
         // 指定されたモードのターゲットに通知
         NotifyTargets(Mode, NewColor);
         break;

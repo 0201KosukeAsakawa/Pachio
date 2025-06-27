@@ -108,7 +108,7 @@ EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType Current
     int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
     if (CurrentIndex == INDEX_NONE)
     {
-        return EColorTargetType::Layer; // デフォルトに戻す
+        return EColorTargetType::WorldColor; // デフォルトに戻す
     }
 
     return FilteredModes[(CurrentIndex + 1) % FilteredModes.Num()];
@@ -135,7 +135,7 @@ EColorTargetType UColorControllerComponent::GetPreviousMode(EColorTargetType Cur
     int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
     if (CurrentIndex == INDEX_NONE)
     {
-        return EColorTargetType::Layer; // デフォルトに戻す
+        return EColorTargetType::WorldColor; // デフォルトに戻す
     }
 
     return FilteredModes[(CurrentIndex - 1 + FilteredModes.Num()) % FilteredModes.Num()];

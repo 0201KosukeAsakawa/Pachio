@@ -8,32 +8,9 @@
 #include "Serialization/JsonSerializer.h"
 #include "DataContainer/SaveData.h"
 
-FStageSaveData CreateDefaultStageData()
-{
-    FStageSaveData DefaultData;
-
-    // �X�e�[�W1?5�𖢃N���A��Ԃœo�^
-    for (int32 i = 1; i <= 5; ++i)
-    {
-        FString StageKey = FString::Printf(TEXT("Stage%d"), i);
-        FSaveData InitStage;
-        InitStage.bCleared = false;
-        InitStage.Score = 0;
-        InitStage.Time = 0.0f;
-        DefaultData.Stages.Add(StageKey, InitStage);
-    }
-
-    return DefaultData;
-}
-
 void USaveManager::SaveStageData(const FString& StageKey, FSaveData NewData)
 {
     FStageSaveData CurrentData = LoadFromJson();
-
-    if (CurrentData.Stages.Num() == 0)
-    {
-        CurrentData = CreateDefaultStageData();
-    }
 
     CurrentData.Stages.FindOrAdd(StageKey) = NewData;
 
@@ -48,7 +25,6 @@ void USaveManager::SaveToJson(const FStageSaveData& InData)
     if (!FPaths::FileExists(SavePath))
     {
         UE_LOG(LogTemp, Warning, TEXT("Save file not found. Creating default."));
-        Data = CreateDefaultStageData();
     }
 
     FString OutputString;
