@@ -224,16 +224,18 @@ void APlayerCharacter::StopAction()
 
 }
 
-// 色ゲージを減少させる処理
-void APlayerCharacter::DecreaseColor()
+void APlayerCharacter::OnMouseScroll(const FInputActionValue& Value)
 {
-	ChangeColor(-0.1);
-}
+	float ScrollValue = Value.Get<float>();
 
-// 色ゲージを増加させる処理
-void APlayerCharacter::IncreaseColor()
-{
-	ChangeColor(0.1);
+	if (ScrollValue > 0.1f)
+	{
+		ChangeColor(0.01);
+	}
+	else if (ScrollValue < -0.01f)
+	{
+		ChangeColor(-0.1);
+	}
 }
 
 void APlayerCharacter::ChangeColor(float value)

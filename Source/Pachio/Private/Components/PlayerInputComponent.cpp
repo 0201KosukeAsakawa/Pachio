@@ -47,8 +47,8 @@ void UPlayerInputComponent::BindInput(UInputComponent* PlayerInputComponent )
 		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, PlayerCharacter, &APlayerCharacter::StopAction);
 
 		// カラーモード操作
-		EnhancedInputComponent->BindAction(IncreaseColorAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::IncreaseColor);
-		EnhancedInputComponent->BindAction(DecreaseColorAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::DecreaseColor);
+		EnhancedInputComponent->BindAction(IncreaseColorAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::OnMouseScroll);
+		//EnhancedInputComponent->BindAction(DecreaseColorAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::DecreaseColor);
 
 		EnhancedInputComponent->BindAction(ShiftArrayRightColorAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::ShiftArrayRightColorMode);
 		EnhancedInputComponent->BindAction(ShiftArrayLeftColorAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::ShiftArrayLeftColorMode);
