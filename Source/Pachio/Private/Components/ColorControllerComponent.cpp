@@ -5,6 +5,9 @@
 #include "DataContainer/EffectMatchResult.h"
 #include "FunctionLibrary.h"
 #include "UI/ColorLens.h"
+#include "Manager/LevelManager.h"
+#include "Manager/ColorManager.h"
+
 
 // Sets default values for this component's properties
 UColorControllerComponent::UColorControllerComponent()
@@ -84,6 +87,76 @@ void UColorControllerComponent::ChangeMode(int Direction)
     }
     // モードを表示（デバッグ用）
     UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
+
+    if (CurrentColorMode == EColorTargetType::ObjectColor)
+    {
+        FVector Start = GetOwner()->GetActorLocation();
+        FVector BoxExtent(1000.f, 1000.f, 1000.f);
+        FVector End = Start; // 静止BoxCast（移動しない）
+
+        TArray<FHitResult> HitResults;
+        FCollisionShape Box = FCollisionShape::MakeBox(BoxExtent);
+        FCollisionQueryParams Params;
+        Params.AddIgnoredActor(GetOwner());
+
+        bool bHit = GetWorld()->SweepMultiByChannel(
+            HitResults,
+            Start,
+            End,
+            FQuat::Identity,
+            ECC_Visibility, // または専用のカスタムチャネル
+            Box,
+            Params
+        );
+
+        IColorReactiveInterface* ClosestTarget = nullptr;
+        float ClosestDistSq = TNumericLimits<float>::Max();
+
+        for (const FHitResult& Hit : HitResults)
+        {
+            AActor* HitActor = Hit.GetActor();
+            if (!HitActor) continue;
+
+            // IColorReactiveInterface を実装しているか確認
+            if (HitActor->GetClass()->ImplementsInterface(UColorReactiveInterface::StaticClass()))
+            {
+                IColorReactiveInterface* ir = Cast<IColorReactiveInterface>(HitActor);
+                if (ir->IsColorLock())
+                    continue;
+
+                float DistSq = FVector::DistSquared(HitActor->GetActorLocation(), Start);
+                if (DistSq < ClosestDistSq)
+                {
+                    ClosestDistSq = DistSq;
+
+                    ClosestTarget = ir;
+                }
+            }
+        }
+
+        if (ClosestTarget)
+        {
+            // World → LevelManager → UIManager → SetColorTarget(Interface)
+            if (ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld()))
+            {
+                if (UColorManager* ColorManager = LevelManager->GetColorManager())
+                {
+                    ColorManager->SetColorTarget(ClosestTarget);
+                    UE_LOG(LogTemp, Warning, TEXT("ColorTarget を ColorManager に設定しました"));
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("ColorTarget が取得できませんでした"));
+                }
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("LevelManager が取得できませんでした"));
+            }
+        }
+
+    }
+
     AnimationDelegate.Execute(Direction);
 }
 
@@ -108,7 +181,7 @@ EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType Current
     int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
     if (CurrentIndex == INDEX_NONE)
     {
-        return EColorTargetType::Layer; // デフォルトに戻す
+        return EColorTargetType::WorldColor; // デフォルトに戻す
     }
 
     return FilteredModes[(CurrentIndex + 1) % FilteredModes.Num()];
@@ -135,7 +208,7 @@ EColorTargetType UColorControllerComponent::GetPreviousMode(EColorTargetType Cur
     int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
     if (CurrentIndex == INDEX_NONE)
     {
-        return EColorTargetType::Layer; // デフォルトに戻す
+        return EColorTargetType::WorldColor; // デフォルトに戻す
     }
 
     return FilteredModes[(CurrentIndex - 1 + FilteredModes.Num()) % FilteredModes.Num()];

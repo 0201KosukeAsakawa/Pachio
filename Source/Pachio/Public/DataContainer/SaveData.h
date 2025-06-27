@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataContainer/StageInfo.h"
 #include "SaveData.generated.h"
 
 USTRUCT(BlueprintType)
@@ -11,15 +12,17 @@ struct FSaveData
     GENERATED_BODY()
 
     bool bCleared = false;
-    int32 Score = 0;
-    float Time = 0.0f;
+    EStageRank ClearRank;
+    int32 difficultyRank = 0;
+    FString Title;
 
     TSharedPtr<FJsonObject> ToJson() const
     {
         TSharedPtr<FJsonObject> Obj = MakeShareable(new FJsonObject);
         Obj->SetBoolField("Cleared", bCleared);
-        Obj->SetNumberField("Score", Score);
-        Obj->SetNumberField("Time", Time);
+        Obj->SetNumberField("Rank", static_cast<int32>(ClearRank));
+        Obj->SetNumberField("DifficultyRank", difficultyRank);
+        Obj->SetStringField("Title", Title);
         return Obj;
     }
 
@@ -27,8 +30,9 @@ struct FSaveData
     {
         FSaveData Data;
         Data.bCleared = Obj->GetBoolField("Cleared");
-        Data.Score = Obj->GetIntegerField("Score");
-        Data.Time = Obj->GetNumberField("Time");
+        Data.ClearRank = static_cast<EStageRank>(Obj->GetIntegerField("Rank"));
+        Data.difficultyRank = Obj->GetNumberField("DifficultyRank");
+        Data.Title = Obj->GetStringField("Title");
         return Data;
     }
 };

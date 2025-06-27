@@ -26,8 +26,4 @@ protected:
 private:
 	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
 	virtual void SetupMaterial()override;
-
-private:
-	UPROPERTY(EditAnywhere)
-	FLinearColor StartColor;
 };

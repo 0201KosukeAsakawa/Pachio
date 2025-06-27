@@ -7,7 +7,6 @@
 UScoreManager::UScoreManager()
 	:GameScore(0)
 	,Coin(0)
-	, remaininglives(0)
 {
 }
 

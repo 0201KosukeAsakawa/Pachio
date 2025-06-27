@@ -22,11 +22,11 @@ void AColorReactiveBalanceSystem::ColorAction(const FLinearColor InColor)
         return;
 
     // ©•ª‚Ìİ’èF (Color) ‚Æ InColor ‚Ì‹——£‚ğæ“¾
-    float distToTarget = GetColorDistance(InColor, Color);
+    float distToTarget = GetColorDistance(InColor, CurrentColor);
 
     // ”½“]F‚ğæ“¾‚µ‚Ä‹——£‚à‘ª‚é
     FLinearColor ComplementaryColor = GetComplementaryColor(InColor);
-    float distToComplement = GetColorDistance(ComplementaryColor, Color);
+    float distToComplement = GetColorDistance(ComplementaryColor, CurrentColor);
 
     // Å‘å‹——£ = sqrt(3) (RGB‚Ì‹——£‚ÌÅ‘å’l)
     const float maxDist = FMath::Sqrt(3.0f);

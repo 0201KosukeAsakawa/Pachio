@@ -78,11 +78,7 @@ public:
 	// 特殊アクション終了処理（スキルリセット & ダッシュ終了）
 	void StopAction();
 
-	// 色ゲージの減少処理
-	void DecreaseColor();
-
-	// 色ゲージの増加処理
-	void IncreaseColor();
+	void OnMouseScroll(const FInputActionValue& Value);
 
 	void ChangeColor(float);
 
@@ -136,7 +132,8 @@ private:
 	float JumpForce = 12;
 
 	float JumpBuff = 1;
-	float DefaultMaxSpeed = 10000000000000000;
+	UPROPERTY(EditAnywhere)
+	float MoveSpeed = 10;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================

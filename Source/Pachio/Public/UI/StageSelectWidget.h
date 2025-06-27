@@ -11,6 +11,7 @@
  * 
  */
 class UStageCardWidget;
+class UCanvasPanel;
 
 UCLASS()
 class PACHIO_API UStageSelectWidget : public UUserWidget
@@ -21,21 +22,24 @@ public:
     virtual void NativeConstruct() override;
 
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
     TArray<FStageInfo> StageList;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
     TSubclassOf<UStageCardWidget> StageCardClass;
-
-    UPROPERTY(meta = (BindWidget))
-    class UHorizontalBox* CardBox;
+    // ヘッダファイルなどで宣言
+    UPROPERTY()
+    TArray<UStageCardWidget*> StageWidgets;
 
     UPROPERTY(meta = (BindWidget))
     class UButton* PlayButton;
 
+    UPROPERTY(meta = (BindWidget))
+    UCanvasPanel* CardCanvas;
+
     int32 CurrentIndex = 0;
 
-    void UpdateCards();
+    void GenerateStageCardsFromSave();
+    void UpdateCardPositions();
     void MoveSelection(int32 Offset);
 
     UFUNCTION()
