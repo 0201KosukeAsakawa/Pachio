@@ -76,7 +76,7 @@ void ARotationGroup::ColorAction(const FLinearColor InColor)
     // 現在色 → HSV変換
     float HueCurrent, SatCurrent, ValCurrent;
     float HueTarget, SatTarget, ValTarget;
-    RGBtoHSV(Color, HueCurrent, SatCurrent, ValCurrent);
+    RGBtoHSV(CurrentColor, HueCurrent, SatCurrent, ValCurrent);
     RGBtoHSV(InColor, HueTarget, SatTarget, ValTarget);
 
     float DeltaHue = HueTarget - HueCurrent;
@@ -99,7 +99,7 @@ void ARotationGroup::ColorAction(const FLinearColor InColor)
     UpdateBsRelativeToA(DeltaRotation);  // ここで「差分」だけ渡す！
 
     // 色の状態更新
-    Color = InColor;
+    CurrentColor = InColor;
 }
 
 

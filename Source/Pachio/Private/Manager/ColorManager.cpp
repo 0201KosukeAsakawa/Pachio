@@ -47,6 +47,11 @@ void UColorManager::ColorEvent(FName EventID)
     ColorTargetRegistry->ColorEvent(EventID);
 }
 
+void UColorManager::SetColorTarget(IColorReactiveInterface* target)
+{
+    ColorTargetRegistry->SetColorTarget(target);
+}
+
 // 色変化に反応するターゲットを登録
 void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
 {

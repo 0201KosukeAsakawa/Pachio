@@ -31,7 +31,6 @@ void AColorMuchTrigger::Init()
 
 void AColorMuchTrigger::ColorAction(FLinearColor InColor)
 {
-	ApplyColorToMaterial(InColor);
 	if (!ColorReactiveComponent)
 		return;
 	bColorMuch = ColorReactiveComponent->CheckColorMatch(InColor);

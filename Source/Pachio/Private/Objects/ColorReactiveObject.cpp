@@ -30,7 +30,7 @@ void AColorReactiveObject::InitializeColorLogic()
 {
 	if (ReactiveComponentClass == nullptr)
 		return;
-
+	CurrentColor = StartColor;
 	// 指定されたクラスからインスタンスを生成
 	ColorReactiveComponent = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
 	if (ColorReactiveComponent == nullptr)
@@ -39,7 +39,7 @@ void AColorReactiveObject::InitializeColorLogic()
 	// コンポーネントの登録とアクティベート
 	ColorReactiveComponent->RegisterComponent();
 	ColorReactiveComponent->Activate(true);
-	ColorReactiveComponent->SetMyColor(Color);
+	ColorReactiveComponent->SetMyColor(StartColor);
 
 	// StaticMesh にバインド（色の反応対象メッシュ取得）
 	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
@@ -80,7 +80,7 @@ void AColorReactiveObject::SetupMaterial()
 	if (DynMaterial == nullptr)
 		return;
 
-	DynMaterial->SetVectorParameterValue(FName("BaseColor"), Color);
+	DynMaterial->SetVectorParameterValue(FName("BaseColor"), StartColor);
 }
 
 // 色アクション実行時の処理（デフォルト実装）
@@ -91,6 +91,18 @@ void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 
 	// 入力色と一致するかチェック（結果は bColorMuch に保持）
 	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor);
+}
+
+void AColorReactiveObject::SetColor(FLinearColor newColor)
+{
+	CurrentColor = newColor;
+	ApplyColorToMaterial(CurrentColor);
+	ColorReactiveComponent->SetMyColor(CurrentColor);
+}
+
+void AColorReactiveObject::ResetColor()
+{
+	SetColor(StartColor);
 }
 
 // マテリアルに色を適用（外部から手動適用する用）
