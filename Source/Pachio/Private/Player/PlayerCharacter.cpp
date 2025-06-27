@@ -61,6 +61,7 @@ void APlayerCharacter::BeginPlay()
 	InitInput();
 	// 視覚関連設定（アウトラインなど）
 	InitVisualSettings();
+	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);

@@ -21,8 +21,7 @@ UENUM(BlueprintType)
 enum class EColorTargetType : uint8
 {
     WorldColor      UMETA(DisplayName = "WorldColor"),       // レイヤー単位での色変更
-    ObjectTypeGamma       UMETA(DisplayName = "γ"),      // オブジェクト単位での色変更
-    ObjectTypeBeta   UMETA(DisplayName = "β"),
+    ObjectColor       UMETA(DisplayName = "Object"),      // オブジェクト単位での色変更
     Responders UMETA(DisplayName = "Responders"),   // 複数の反応対象（通知など）の色変更
     Event      UMETA(DisplayName = "Event"),
 };

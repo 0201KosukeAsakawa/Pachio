@@ -9,6 +9,20 @@ void IColorReactiveInterface::ColorAction(FLinearColor)
 {
 }
 
+void IColorReactiveInterface::SetColor(FLinearColor)
+{
+
+}
+
+void IColorReactiveInterface::ResetColor()
+{
+}
+
+bool IColorReactiveInterface::IsColorLock() const
+{
+    return false;
+}
+
 FName IColorReactiveInterface::GetColorEventID() const
 {
     return FName();

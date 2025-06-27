@@ -32,6 +32,9 @@ protected:
 public:
 	// インターフェース実装
 	virtual void ColorAction(FLinearColor InColor) override;
+	virtual void SetColor(FLinearColor)override;
+	virtual void ResetColor()override;
+	bool IsColorLock()const override { return bColorLock; }
 	inline bool IsColorMuch() const override { return bColorMuch; }
 	inline void ChangeLock(bool b) override { bColorLock = b; }
 	inline FName GetColorEventID()const {return EventID;}
@@ -41,7 +44,7 @@ protected:
 	virtual void RegisterToColorManager();
 	virtual void SetupMaterial();
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
-		FLinearColor GetComplementaryColor(const FLinearColor& InColor);
+	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 protected:
 	// コンポーネント設定
 	UPROPERTY(EditAnywhere, Category = "Reactive")
@@ -52,8 +55,12 @@ protected:
 	UColorReactiveComponent* ColorReactiveComponent;
 
 	// オブジェクト固有の色
+	UPROPERTY()
+	FLinearColor CurrentColor;
+
+	// オブジェクト固有の色
 	UPROPERTY(EditAnywhere)
-	FLinearColor Color;
+	FLinearColor StartColor;
 
 	// 色の対象種別
 	UPROPERTY(EditAnywhere, Category = "Color")

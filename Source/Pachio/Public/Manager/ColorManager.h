@@ -30,6 +30,8 @@ public:
     UFUNCTION()
     void ColorEvent(FName EventID);
 
+    void SetColorTarget(IColorReactiveInterface*);
+
     // 色付け対象を登録する関数
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);
 
