@@ -70,6 +70,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	bool bColorLock = false;
 
+	UPROPERTY(EditAnywhere)
+	bool bColorVariable  = false;
 	// 色が一致したかどうかのフラグ
 	UPROPERTY(VisibleAnywhere, Category = "Color")
 	bool bColorMuch;

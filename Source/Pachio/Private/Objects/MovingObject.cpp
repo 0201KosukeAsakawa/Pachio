@@ -41,5 +41,6 @@ void AMovingObject::Tick(float DeltaTime)
 
 void AMovingObject::ColorAction(FLinearColor InColor)
 {
+    AColorReactiveObject::ColorAction(InColor);
 	bIsMoving = true;
 }

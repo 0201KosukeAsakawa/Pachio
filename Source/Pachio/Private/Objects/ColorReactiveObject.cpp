@@ -88,6 +88,8 @@ void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 {
 	if (bColorLock || ColorReactiveComponent == nullptr)
 		return;
+	if (bColorVariable)
+		ApplyColorToMaterial(NewColor);
 
 	// 入力色と一致するかチェック（結果は bColorMuch に保持）
 	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor);
