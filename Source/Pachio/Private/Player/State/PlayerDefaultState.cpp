@@ -32,9 +32,6 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 		if (N != nullptr && StaticMeshComp)
 		{
 			StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
-
-			//マテリアルのサイズを縮小
-			StaticMeshComp->SetRelativeScale3D(FVector(1.0, 1.0, 1.0));
 		}
 	}
 
