@@ -6,10 +6,10 @@
 
 UEnemyStateComponent* UEnemyDataContainer::CreateState(UObject* WorldContext, EEnemyCategory StateName) const
 {
-    if (const TSubclassOf<UEnemyStateComponent>* BlockStateClass = EnemyClassMap.Find(StateName))
-    {
-        return NewObject<UEnemyStateComponent>(WorldContext, *BlockStateClass);
-    }
+    //if (const TSubclassOf<UEnemyStateComponent>* BlockStateClass = EnemyClassMap.Find(StateName))
+    //{
+    //    return NewObject<UEnemyStateComponent>(WorldContext, *BlockStateClass);
+    //}
     return nullptr;
 }
 

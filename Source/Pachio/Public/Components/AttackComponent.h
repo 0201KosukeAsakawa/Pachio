@@ -44,11 +44,4 @@ public:
 protected:
     UPROPERTY(EditAnywhere)
     FAttackData AttackData;
-    UPROPERTY()
-    UAttackStrategy* CurrentState;
-
-private:
-    // 上攻撃用の当たり判定
-    UPROPERTY()
-    UBoxComponent* AttackBox;
 };

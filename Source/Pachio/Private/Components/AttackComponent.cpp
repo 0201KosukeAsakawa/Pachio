@@ -9,9 +9,6 @@ UAttackComponent::UAttackComponent()
 {
     // このコンポーネントはTickを使わない（毎フレームの更新は不要）
     PrimaryComponentTick.bCanEverTick = false;
-
-    // 攻撃判定用のボックスコンポーネントを探す
-    AttackBox = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCollision"));
 }
 
 void UAttackComponent::BeginPlay()
@@ -22,6 +19,11 @@ void UAttackComponent::BeginPlay()
 
 void UAttackComponent::OnAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+    if (OtherActor == GetOwner())
+        return;
+
+    CurrentStrategy->ExecuteEffect(GetOwner(), OtherActor, AttackData);
+    UE_LOG(LogTemp, Log, TEXT("hhh"));
 }
 
 
@@ -40,7 +42,7 @@ bool UAttackComponent::Init(UWorld* world, FName NewStrategy)
         ->GetAttackDataContainer()
         ->CreateStrategy(world, NewStrategy);
 
-    if (!CurrentStrategy || !AttackBox)
+    if (!CurrentStrategy)
         return false;
 
     AActor* Owner = GetOwner();
@@ -50,17 +52,17 @@ bool UAttackComponent::Init(UWorld* world, FName NewStrategy)
     USceneComponent* Root = Owner->GetRootComponent();
     if (!Root)
         return false;
-
+    // 攻撃判定用のボックスコンポーネントを探す
+    UBoxComponent* AttackBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(Owner, NewStrategy);
+    if (!AttackBox)
+        return false;
     // ここでアタッチ
     AttackBox->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
-
     // サイズ・衝突・可視化
-    AttackBox->SetBoxExtent(FVector(150.f));
     AttackBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     AttackBox->SetHiddenInGame(false);
     AttackBox->SetVisibility(true); // 念のため
     AttackBox->RegisterComponent(); // ★NewObject経由なら必要！
-
     // オーバーラップ設定
     AttackBox->OnComponentBeginOverlap.AddDynamic(this, &UAttackComponent::OnAttack);
 

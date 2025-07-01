@@ -23,6 +23,4 @@ public:
 protected:
 	UPROPERTY()
 	AEnemyCharacter* mOwner;
-	UPROPERTY()
-	UEnemyStateComponent* logicComponent;
 };

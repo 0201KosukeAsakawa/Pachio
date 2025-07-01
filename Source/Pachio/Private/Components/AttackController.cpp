@@ -2,6 +2,7 @@
 #include "Components/AttackComponent.h"
 #include "DataContainer/AttackDataContainer.h"
 #include "Manager/LevelManager.h"
+#include "FunctionLibrary.h"
 
 // コンストラクタ：このコンポーネントのデフォルト設定を初期化
 UAttackController::UAttackController()

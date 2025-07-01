@@ -291,7 +291,7 @@ void APlayerCharacter::InitStateAndAttack()
 	AttackController->Init(GetWorld());
 	AttackController->ResetMap();
 	AttackController->RegisterAttackComponent("Stomp");
-	AttackController->RegisterAttackComponent("Upper");
+	//AttackController->RegisterAttackComponent("Upper");
 
 	// ステートマネージャーのコンポーネント登録・初期化
 	StateManager->RegisterComponent();
