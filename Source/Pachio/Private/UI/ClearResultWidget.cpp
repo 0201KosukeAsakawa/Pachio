@@ -3,7 +3,7 @@
 
 #include "UI/ClearResultWidget.h"
 #include "DataContainer/ClearScoreType.h"
-void UClearResultWidget::SetupClearResult(float InClearTime, EClearScore InScore)
+void UClearResultWidget::SetupClearResult(float InClearTime, EStageRank InScore)
 {
     CachedClearTime = InClearTime;
     CachedRank = InScore;
@@ -20,13 +20,13 @@ FText UClearResultWidget::GetRankText() const
     FString RankText;
     switch (CachedRank)
     {
-    case EClearScore::S:
+    case EStageRank::S:
         RankText = TEXT("S");
         break;
-    case EClearScore::A:
+    case EStageRank::A:
         RankText = TEXT("A");
         break;
-    case EClearScore::B:
+    case EStageRank::B:
     default:
         RankText = TEXT("B");
         break;

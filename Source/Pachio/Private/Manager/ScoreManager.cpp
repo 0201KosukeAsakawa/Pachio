@@ -7,7 +7,6 @@
 UScoreManager::UScoreManager()
 	:GameScore(0)
 	,Coin(0)
-	, remaininglives(0)
 {
 }
 
@@ -27,27 +26,27 @@ void UScoreManager::Init()
     GetWorld()->GetTimerManager().SetTimer(CountTimerHandle, this, &UScoreManager::CountDown, 1.0f, true);
 }
 
-EClearScore UScoreManager::EvaluateClearRank(UWorld* World)
+EStageRank UScoreManager::EvaluateClearRank(UWorld* World)
 {
     if (!World) 
-        return EClearScore::B;
+        return EStageRank::B;
 
     ALevelManager* LevelManager = ALevelManager::GetInstance(World);
     if (!LevelManager) 
-        return EClearScore::B;
+        return EStageRank::B;
 
     int ClearTime = InGameTimer;
 
     if (ClearTime <= SRankTime)
     {
-        return EClearScore::S;
+        return EStageRank::S;
     }
     else if (ClearTime <= ARankTime)
     {
-        return EClearScore::A;
+        return EStageRank::A;
     }
     else
     {
-        return EClearScore::B;
+        return EStageRank::B;
     }
 }

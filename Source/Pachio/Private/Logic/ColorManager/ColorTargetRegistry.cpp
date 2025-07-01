@@ -9,7 +9,7 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
 {
     switch (Mode)
     {
-    case EColorTargetType::Layer:
+    case EColorTargetType::WorldColor:
         if (PostProcessMID)
         {
             // ポストプロセスマテリアルに色を適用
@@ -21,10 +21,12 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
         NotifyTargets(EColorTargetType::Responders, NewColor);
         break;
 
-    case EColorTargetType::Object:
-    case EColorTargetType::Background:
+    case EColorTargetType::ObjectColor:
         // 指定されたモードのターゲットに通知
-        NotifyTargets(Mode, NewColor);
+        if (!TargetObject)
+            return;
+
+        TargetObject->SetColor(NewColor);
         break;
 
     default:
@@ -54,7 +56,16 @@ void UColorTargetRegistry::ColorEvent(FName EventID)
     }
 }
 
+void UColorTargetRegistry::SetColorTarget(IColorReactiveInterface* InInterface)
+{
+    if (TargetObject != nullptr)
+    {
+        TargetObject->ResetColor();
+    }
 
+    TargetObject.SetObject(Cast<UObject>(InInterface));
+    TargetObject.SetInterface(InInterface);
+}
 
 void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
 {

@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "DataContainer/ClearScoreType.h"
+#include "DataContainer/StageInfo.h"
 #include "ClearResultWidget.generated.h"
 
 UCLASS()
@@ -13,7 +13,7 @@ class PACHIO_API UClearResultWidget : public UUserWidget
 public:
     // 値をセットしてウィジェットを初期化
     UFUNCTION(BlueprintCallable)
-    void SetupClearResult(float InClearTime, EClearScore InScore);
+    void SetupClearResult(float InClearTime, EStageRank InScore);
 
     // UIバインド用
     UFUNCTION(BlueprintPure)
@@ -34,5 +34,5 @@ protected:
 
 private:
     float CachedClearTime = 0.0f;
-   EClearScore CachedRank = EClearScore::B;
+    EStageRank CachedRank = EStageRank::B;
 };

@@ -1,107 +1,106 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Objects/ColorReactiveBeltConveyor.h"
 #include "Components/ColorReactiveComponent.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
 #include "Manager/LevelManager.h"
 
+// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ï¼šã‚¢ã‚¯ã‚¿ãƒ¼ã®åˆæœŸè¨­å®š
 AColorReactiveBeltConveyor::AColorReactiveBeltConveyor()
 {
-    // ‚±‚ÌƒAƒNƒ^[‚ª Tick ‚ğŒÄ‚Ño‚·‚±‚Æ‚ğİ’è
+    // ã“ã®ã‚¢ã‚¯ã‚¿ãƒ¼ãŒæ¯ãƒ•ãƒ¬ãƒ¼ãƒ  Tick ã‚’å‘¼ã³å‡ºã™ã‚ˆã†ã«è¨­å®š
     PrimaryActorTick.bCanEverTick = true;
 
-    // Box Component ‚ğì¬
-    BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
-    BoxComponent->SetupAttachment(RootComponent); // ƒAƒNƒ^[‚Ìƒ‹[ƒgƒRƒ“ƒ|[ƒlƒ“ƒg‚Éİ’è
+    // Box Component ã®ä½œæˆã¨ãƒ«ãƒ¼ãƒˆã¸ã®ã‚¢ã‚¿ãƒƒãƒ
+    BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
+    BoxComponent->SetupAttachment(RootComponent);
 
-    //// Box ‚ÌƒTƒCƒY‚ğİ’è
-    //BoxComponent->SetBoxExtent(FVector(200.0f, 200.0f, 50.0f));
-
-    // ƒI[ƒo[ƒ‰ƒbƒvƒCƒxƒ“ƒg‚ÌƒoƒCƒ“ƒh
+    // ã‚ªãƒ¼ãƒãƒ¼ãƒ©ãƒƒãƒ—ã‚¤ãƒ™ãƒ³ãƒˆã®ãƒã‚¤ãƒ³ãƒ‰ï¼ˆé–‹å§‹ãƒ»çµ‚äº†ï¼‰
     BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AColorReactiveBeltConveyor::OnOverlapBegin);
     BoxComponent->OnComponentEndOverlap.AddDynamic(this, &AColorReactiveBeltConveyor::OnOverlapEnd);
 }
 
+// ãƒ™ãƒ«ãƒˆã‚³ãƒ³ãƒ™ã‚¢åˆæœŸåŒ–ï¼ˆè¦ªã‚¯ãƒ©ã‚¹ã®åˆæœŸåŒ–ã‚‚å‘¼ã³å‡ºã—ï¼‰
 void AColorReactiveBeltConveyor::Init()
 {
-    AColorReactiveObject::Init();
-    CurrentDirection = direction;
+    AColorReactiveObject::Init(); // è¦ªã® Init ã‚’å‘¼ã¶
+    CurrentDirection = direction; // åˆæœŸæ–¹å‘ã‚’è¨­å®š
 }
 
-void AColorReactiveBeltConveyor::Tick(float)
+// æ¯ãƒ•ãƒ¬ãƒ¼ãƒ å‘¼ã°ã‚Œã‚‹å‡¦ç†ï¼ˆTickï¼‰
+void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 {
+    // ã‚³ãƒªã‚¸ãƒ§ãƒ³ç„¡åŠ¹æ™‚ã¯å‡¦ç†ã‚¹ã‚­ãƒƒãƒ—
+    if (!BoxComponent->IsCollisionEnabled())
+    {
+        // ç„¡åŠ¹ãªã®ã§ã€force ã‚’æ­¢ã‚ã‚‹ï¼ˆä¾‹: hitObject ã‚’ãƒªã‚»ãƒƒãƒˆï¼‰
+        hitObject.Empty(); // å…¨ã¦å‰Šé™¤ã™ã‚‹ãªã‚‰ã“ã‚ŒãŒæœ€ã‚‚æ˜ç¢ºã§å®‰å…¨
+        return;
+    }
+
     for (UPhysicsCalculator* target : hitObject)
     {
         if (target)
         {
-            // target ‚Íƒ|ƒCƒ“ƒ^‚È‚Ì‚ÅAƒfƒŠƒtƒ@ƒŒƒ“ƒX‚µ‚Äg‚¢‚Ü‚·
+            // åŠ›ã‚’åŠ ãˆã‚‹ï¼ˆCurrentDirection æ–¹å‘ã« power ã®å¼·ã•ã§ï¼‰
             target->AddForce(CurrentDirection, power, true);
         }
     }
 }
 
+// æŒ‡å®šã•ã‚ŒãŸè‰²ã«åå¿œã™ã‚‹å‡¦ç†
 void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
 {
-    ApplyColorToMaterial(InColor); // F‚ğƒ}ƒeƒŠƒAƒ‹‚É“K—p
+    ApplyColorToMaterial(InColor); // ãƒãƒ†ãƒªã‚¢ãƒ«ã«è‰²ã‚’é©ç”¨
+
     if (!ColorReactiveComponent)
         return;
-
-    // ’Êí‚ÌFˆê’vƒ`ƒFƒbƒN
+    AColorReactiveObject::ColorAction(InColor);
+    // å…¥åŠ›è‰²ã¨ä¸€è‡´ã™ã‚‹ã‹ã‚’åˆ¤å®š
     bColorMuch = ColorReactiveComponent->CheckColorMatch(InColor);
     if (bColorMuch)
-    {
-        CurrentDirection = direction;
+    {// è£œè‰²ãŒä¸€è‡´ã™ã‚‹å ´åˆã¯é€†æ–¹å‘ã«ãƒ™ãƒ«ãƒˆã‚’å‹•ã‹ã™
+        CurrentDirection = -direction;
+ 
     }
     else
     {
-        // InColor‚Ì”½“]F‚ğæ“¾
-        FLinearColor ComplementaryColor = GetComplementaryColor(InColor);
-
-        // ”½“]F‚ÅFˆê’vƒ`ƒFƒbƒN
-        bColorMuch = ColorReactiveComponent->CheckColorMatch(ComplementaryColor);
-        if (bColorMuch)
-        {
-            // ”½“]F‚Åˆê’v‚µ‚½ê‡‚Ìˆ—
-            CurrentDirection = -direction;
-        }
+        // ä¸€è‡´ã™ã‚‹å ´åˆã¯é€šå¸¸ã®æ–¹å‘ã¸
+        CurrentDirection = direction;
     }
 }
 
+// ã‚ªãƒ¼ãƒãƒ¼ãƒ©ãƒƒãƒ—é–‹å§‹æ™‚ã®å‡¦ç†
 void AColorReactiveBeltConveyor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
-    // ‚Ü‚¸OtherActor‚ªnullptr‚©‚Ç‚¤‚©‚ğƒ`ƒFƒbƒN
-     if (OtherActor == nullptr)
+    if (OtherActor == nullptr)
         return;
 
-    // •¨—ŒvZƒRƒ“ƒ|[ƒlƒ“ƒgiUPhysicsCalculatorj‚ªƒAƒ^ƒbƒ`‚³‚ê‚Ä‚¢‚é‚©Šm”F
+    // å¯¾è±¡ã‚¢ã‚¯ã‚¿ãƒ¼ã« UPhysicsCalculator ãŒã‚ã‚‹ã‹ç¢ºèª
     UPhysicsCalculator* PhysicsCalculator = OtherActor->FindComponentByClass<UPhysicsCalculator>();
     if (PhysicsCalculator == nullptr)
-        return; // UPhysicsCalculator‚ªƒAƒ^ƒbƒ`‚³‚ê‚Ä‚¢‚È‚¢ê‡‚Í‰½‚à‚µ‚È‚¢
+        return;
 
-    // ‚·‚Å‚ÉhitObject‚É“¯‚¶ƒIƒuƒWƒFƒNƒg‚ª“o˜^‚³‚ê‚Ä‚¢‚é‚©‚ğŠm”F
+    // ã™ã§ã«ãƒªã‚¹ãƒˆã«è¿½åŠ ã•ã‚Œã¦ã„ãªã‘ã‚Œã°è¿½åŠ 
     if (!hitObject.Contains(PhysicsCalculator))
     {
-        // “¯‚¶ƒIƒuƒWƒFƒNƒg‚ª“o˜^‚³‚ê‚Ä‚¢‚È‚¢ê‡AhitObject‚É’Ç‰Á
         hitObject.Add(PhysicsCalculator);
     }
 }
 
-
+// ã‚ªãƒ¼ãƒãƒ¼ãƒ©ãƒƒãƒ—çµ‚äº†æ™‚ã®å‡¦ç†
 void AColorReactiveBeltConveyor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
     if (OtherActor == nullptr)
         return;
 
-    // UPhysicsCalculatorƒRƒ“ƒ|[ƒlƒ“ƒg‚ğæ“¾
+    // å¯¾è±¡ã‹ã‚‰ UPhysicsCalculator ã‚’å–å¾—
     UPhysicsCalculator* PhysicsCalculator = OtherActor->FindComponentByClass<UPhysicsCalculator>();
     if (PhysicsCalculator == nullptr)
-        return; // UPhysicsCalculator‚ªƒAƒ^ƒbƒ`‚³‚ê‚Ä‚¢‚È‚¢ê‡
+        return;
 
-    // hitObject ‚©‚ç PhysicsCalculator ‚ğíœ
-    hitObject.Remove(PhysicsCalculator); // TArray‚Ìê‡
+    // å¯¾è±¡ã‚’ãƒªã‚¹ãƒˆã‹ã‚‰é™¤å¤–
+    hitObject.Remove(PhysicsCalculator);
 }
