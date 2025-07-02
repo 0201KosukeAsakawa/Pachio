@@ -13,22 +13,27 @@ AEnemyCharacter::AEnemyCharacter()
     PrimaryActorTick.bCanEverTick = true;
 }
 
-// ゲーム開始時に呼び出される初期化処理
 void AEnemyCharacter::BeginPlay()
 {
     Super::BeginPlay();
 
-    // メッシュコンポーネントを探し、meshComponentに設定
-    meshComponent = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("MeshComp"));
+    UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("Collision"));
 
-    // メッシュコンポーネントをルートコンポーネントとして設定
-    RootComponent = meshComponent;
+    if (box)
+    {
+        // OnOverlapBegin は自分のクラスの関数名に置き換えてください
+        box->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
+    }
 }
 
 // 初期化処理
-void AEnemyCharacter::Init(const EEnemyCategory logicID,const EEnemyCategory materialID)
+void AEnemyCharacter::Init()
 {
 
+}
+
+void AEnemyCharacter::Overlap(AActor*)
+{
 }
 
 // 毎フレーム実行される更新処理
@@ -51,4 +56,6 @@ void AEnemyCharacter::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
     // プレイヤーの攻撃判定と衝突した場合は無視
     if (OtherComp->ComponentHasTag("Attack"))
         return;
+
+    Overlap(OtherActor);
 }
