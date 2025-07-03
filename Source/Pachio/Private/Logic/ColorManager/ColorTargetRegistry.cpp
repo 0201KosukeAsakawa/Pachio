@@ -58,10 +58,10 @@ void UColorTargetRegistry::ColorEvent(FName EventID)
 
 void UColorTargetRegistry::SetColorTarget(IColorReactiveInterface* InInterface)
 {
-    if (TargetObject != nullptr)
-    {
-        TargetObject->ResetColor();
-    }
+    //if (TargetObject != nullptr)
+    //{
+    //    TargetObject->ResetColor();
+    //}
 
     TargetObject.SetObject(Cast<UObject>(InInterface));
     TargetObject.SetInterface(InInterface);

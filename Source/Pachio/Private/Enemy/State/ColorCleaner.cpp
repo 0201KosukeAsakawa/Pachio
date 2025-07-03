@@ -35,7 +35,22 @@ void AColorCleaner::Tick(float DeltaTime)
 
     if (TargetActor)
     {
-        MoveTowards(TargetActor->GetActorLocation(), DeltaTime);
+        if (!IsInsideMoveRange(TargetActor->GetActorLocation()))
+        {
+            TargetActor = nullptr;
+        }
+        else
+        {
+            IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(TargetActor);
+            if (Interface && (Interface->IsColorModifiable() || Interface->IsColorChange()))
+            {
+                TargetActor = nullptr;
+            }
+            else
+            {
+                MoveTowards(TargetActor->GetActorLocation(), DeltaTime);
+            }
+        }
     }
     else
     {
@@ -50,6 +65,8 @@ void AColorCleaner::Tick(float DeltaTime)
         }
     }
 }
+
+
 
 AActor* AColorCleaner::FindTarget()
 {
@@ -74,8 +91,8 @@ AActor* AColorCleaner::FindTarget()
     {
         AActor* HitActor = Hit.GetActor();
         if (!HitActor) continue;
-
-        if (Cast<IColorReactiveInterface>(HitActor))
+        IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(HitActor);
+        if (Interface && !Interface->IsColorModifiable() && !Interface->IsColorChange())
         {
             return HitActor;
         }
@@ -119,6 +136,24 @@ void AColorCleaner::Wander(float DeltaTime)
 void AColorCleaner::MoveTowards(const FVector& Destination, float DeltaTime)
 {
     FVector Direction = (Destination - GetActorLocation()).GetSafeNormal();
+
+    // 進行方向に障害物があるかチェック（前方チェック）
+    float CheckDistance = 50.f; // 見る距離（調整可能）
+    FVector Start = GetActorLocation();
+    FVector End = Start + Direction * CheckDistance;
+
+    FHitResult HitResult;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
+
+    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
+
+    if (bHit)
+    {
+        // 障害物があれば進行方向の反対に移動
+        Direction = -Direction;
+    }
+
     FVector NewLocation = GetActorLocation() + Direction * MoveSpeed * DeltaTime;
 
     if (FVector::Dist(NewLocation, Destination) < 50.f)
@@ -151,7 +186,7 @@ void AColorCleaner::Overlap(AActor* OtherActor)
     if (!OtherActor || OtherActor == this) return;
 
     IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(OtherActor);
-    if (Interface && !Interface->IsColorLock())
+    if (Interface && !Interface->IsColorModifiable() && !Interface->IsColorChange())
     {
         Interface->ResetColor();
     }
