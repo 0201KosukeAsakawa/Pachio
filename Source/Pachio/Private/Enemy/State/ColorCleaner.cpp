@@ -35,6 +35,13 @@ void AColorCleaner::Tick(float DeltaTime)
 
     if (TargetActor)
     {
+        // 非表示ならターゲット解除
+        if (TargetActor->IsHidden())
+        {
+            TargetActor = nullptr;
+            return;
+        }
+
         if (!IsInsideMoveRange(TargetActor->GetActorLocation()))
         {
             TargetActor = nullptr;
@@ -135,41 +142,47 @@ void AColorCleaner::Wander(float DeltaTime)
 
 void AColorCleaner::MoveTowards(const FVector& Destination, float DeltaTime)
 {
-    FVector Direction = (Destination - GetActorLocation()).GetSafeNormal();
-
-    // 進行方向に障害物があるかチェック（前方チェック）
-    float CheckDistance = 50.f; // 見る距離（調整可能）
-    FVector Start = GetActorLocation();
-    FVector End = Start + Direction * CheckDistance;
+    FVector CurrentLocation = GetActorLocation();
+    FVector Direction = (Destination - CurrentLocation).GetSafeNormal();
+    FVector DesiredLocation = CurrentLocation + Direction * MoveSpeed * DeltaTime;
 
     FHitResult HitResult;
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 
-    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
+    // 壁との衝突をチェック
+    bool bHit = GetWorld()->LineTraceSingleByChannel(
+        HitResult,
+        CurrentLocation,
+        DesiredLocation,
+        ECC_WorldStatic,
+        Params
+    );
 
     if (bHit)
     {
-        // 障害物があれば進行方向の反対に移動
-        Direction = -Direction;
+        // 壁の手前で停止（わずかに離す）
+        FVector StopLocation = HitResult.ImpactPoint - Direction * 5.0f; // 5cm手前
+        SetActorLocation(StopLocation);
+        // 移動終了（ターゲット継続 or 自由行動へ切り替え可）
+        return;
     }
 
-    FVector NewLocation = GetActorLocation() + Direction * MoveSpeed * DeltaTime;
-
-    if (FVector::Dist(NewLocation, Destination) < 50.f)
+    if (FVector::Dist(DesiredLocation, Destination) < 50.f)
     {
         SetActorLocation(Destination);
         TargetActor = nullptr;
     }
-    else if (IsInsideMoveRange(NewLocation))
+    else if (IsInsideMoveRange(DesiredLocation))
     {
-        SetActorLocation(NewLocation);
+        SetActorLocation(DesiredLocation);
     }
     else
     {
         TargetActor = nullptr;
     }
 }
+
 
 bool AColorCleaner::IsInsideMoveRange(const FVector& Point) const
 {

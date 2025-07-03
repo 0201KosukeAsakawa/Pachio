@@ -112,3 +112,19 @@ void UColorTargetRegistry::InitializePostEffect()
     }
 }
 
+FLinearColor UColorTargetRegistry::GetPostProcessColor() const
+{
+    if (!PostProcessMID) return FLinearColor::Black;  // あるいはデフォルト色
+
+    FLinearColor CurrentColor;
+    if (PostProcessMID->GetVectorParameterValue(FName("FilterColor"), CurrentColor))
+    {
+        return CurrentColor;
+    }
+    else
+    {
+        // パラメータがなければ黒とか適当な色を返す
+        return FLinearColor::Black;
+    }
+}
+

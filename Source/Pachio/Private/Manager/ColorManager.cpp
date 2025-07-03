@@ -69,6 +69,11 @@ FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& Inpu
     return EffectColorMatcher->GetClosestEffectByHue(InputColor);
 }
 
+FLinearColor UColorManager::GetWorldColor() const
+{
+    return ColorTargetRegistry->GetPostProcessColor();
+}
+
 // プレイヤーの色コントローラーとイベント接続
 void UColorManager::BindController()
 {
