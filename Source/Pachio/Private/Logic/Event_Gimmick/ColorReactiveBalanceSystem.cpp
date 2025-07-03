@@ -25,7 +25,7 @@ void AColorReactiveBalanceSystem::ColorAction(const FLinearColor InColor)
     float distToTarget = GetColorDistance(InColor, CurrentColor);
 
     // ”½“]F‚ğæ“¾‚µ‚Ä‹——£‚à‘ª‚é
-    FLinearColor ComplementaryColor = GetComplementaryColor(InColor);
+    FLinearColor ComplementaryColor = ColorReactiveComponent->GetComplementaryColor(InColor);
     float distToComplement = GetColorDistance(ComplementaryColor, CurrentColor);
 
     // Å‘å‹——£ = sqrt(3) (RGB‚Ì‹——£‚ÌÅ‘å’l)
