@@ -100,6 +100,14 @@ void AColorReactiveObject::SetColor(FLinearColor newColor)
 	CurrentColor = newColor;
 	ApplyColorToMaterial(CurrentColor);
 	ColorReactiveComponent->SetMyColor(CurrentColor);
+	ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
+	if (LevelManager == nullptr)
+		return;
+
+	UColorManager* ColorManager = LevelManager->GetColorManager();
+	if (ColorManager == nullptr)
+		return;
+	ColorAction(ColorManager->GetWorldColor());
 }
 
 void AColorReactiveObject::ResetColor()

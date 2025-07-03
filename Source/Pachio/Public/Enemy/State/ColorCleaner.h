@@ -23,8 +23,15 @@ public:
 
     // オーバーラップイベント
     void Overlap(AActor* OtherActor)override;
-
 private:
+    // ロジック関数
+    AActor* FindTarget();
+    void Wander(float DeltaTime);
+    void MoveTowards(const FVector& Destination, float DeltaTime);
+    bool IsInsideMoveRange(const FVector& Point) const;
+private:    
+    UPROPERTY()
+    AActor* TargetActor = nullptr;
     // 相対範囲（初期位置 ±）
     UPROPERTY(EditAnywhere, Category = "Search")
     FVector SearchAreaMin = FVector(-500.f, -500.f, 0.f);
@@ -38,11 +45,5 @@ private:
     float WanderCooldown = 0.f;
     bool bIsIdle = true;
 
-    AActor* TargetActor = nullptr;
 
-    // ロジック関数
-    AActor* FindTarget();
-    void Wander(float DeltaTime);
-    void MoveTowards(const FVector& Destination, float DeltaTime);
-    bool IsInsideMoveRange(const FVector& Point) const;
 };

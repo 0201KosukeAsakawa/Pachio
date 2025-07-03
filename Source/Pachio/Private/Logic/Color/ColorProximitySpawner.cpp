@@ -22,36 +22,47 @@ void UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 }
 
 void UColorProximitySpawner::OnMesh()
-{   
-    UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
-    UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-    if (box != nullptr)
+{
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    Owner->SetActorHiddenInGame(false);
+    Owner->SetActorTickEnabled(true);
+    Owner->SetActorEnableCollision(true);
+
+    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
+    for (UActorComponent* Comp : Components)
     {
-        box->SetHiddenInGame(false);
-        box->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    }
-    if (mesh != nullptr)
-    {
-        mesh->SetVisibility(true);
-        mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-        mesh->SetCastShadow(true);
+        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        {
+            Prim->SetVisibility(true);
+            Prim->SetHiddenInGame(false);
+            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            Prim->SetComponentTickEnabled(true);
+            Prim->SetCastShadow(true);
+        }
     }
 }
 
 void UColorProximitySpawner::OffMesh()
 {
-    UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
-    UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-    if (box != nullptr)
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    Owner->SetActorHiddenInGame(true);
+    Owner->SetActorTickEnabled(false);
+    Owner->SetActorEnableCollision(false);
+
+    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
+    for (UActorComponent* Comp : Components)
     {
-        box->SetHiddenInGame(true);
-        box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    }
-    if (mesh != nullptr)
-    {
-        mesh->SetVisibility(false);
-        mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        mesh->SetCastShadow(false);
+        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        {
+            Prim->SetVisibility(false);
+            Prim->SetHiddenInGame(true);
+            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            Prim->SetComponentTickEnabled(false);
+            Prim->SetCastShadow(false);
+        }
     }
 }
-
