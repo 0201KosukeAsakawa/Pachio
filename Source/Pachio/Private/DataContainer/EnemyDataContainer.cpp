@@ -6,27 +6,27 @@
 
 UEnemyStateComponent* UEnemyDataContainer::CreateState(UObject* WorldContext, EEnemyCategory StateName) const
 {
-    if (const TSubclassOf<UEnemyStateComponent>* BlockStateClass = EnemyClassMap.Find(StateName))
-    {
-        return NewObject<UEnemyStateComponent>(WorldContext, *BlockStateClass);
-    }
+    //if (const TSubclassOf<UEnemyStateComponent>* BlockStateClass = EnemyClassMap.Find(StateName))
+    //{
+    //    return NewObject<UEnemyStateComponent>(WorldContext, *BlockStateClass);
+    //}
     return nullptr;
 }
 
 UMaterialInterface* UEnemyDataContainer::CreateMaterial(UObject* WorldContext, EEnemyCategory StateName, FString Type)
 {
-    // StateName ‚É‘Î‰ž‚·‚é FMaterialData ‚ð MaterialMap ‚©‚çŽæ“¾
+    // StateName ï¿½É‘Î‰ï¿½ï¿½ï¿½ï¿½ï¿½ FMaterialData ï¿½ï¿½ MaterialMap ï¿½ï¿½ï¿½ï¿½æ“¾
     if (const FMaterialData* MaterialData = MaterialMap.Find(StateName))
     {
-        // Type ‚É‘Î‰ž‚·‚éƒ}ƒeƒŠƒAƒ‹‚ðŽæ“¾
+        // Type ï¿½É‘Î‰ï¿½ï¿½ï¿½ï¿½ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½æ“¾
         if (const TSoftObjectPtr<UMaterialInterface>* MaterialPtr = MaterialData->material.Find(Type))
         {
-            // ƒ}ƒeƒŠƒAƒ‹‚ð“¯Šú“I‚Éƒ[ƒh‚µ‚Ä•Ô‚·
+            // ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ð“¯Šï¿½ï¿½Iï¿½Éƒï¿½ï¿½[ï¿½hï¿½ï¿½ï¿½Ä•Ô‚ï¿½
             return MaterialPtr->LoadSynchronous();
         }
     }
 
-    // Œ©‚Â‚©‚ç‚È‚©‚Á‚½ê‡‚Í nullptr ‚ð•Ô‚·
+    // ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½È‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½ï¿½ nullptr ï¿½ï¿½Ô‚ï¿½
     return nullptr;
 }
 
@@ -42,8 +42,8 @@ bool UEnemyDataContainer::GenerateEnemy(EEnemyCategory stateID, FString dropItem
     if (!NewEnemy)
         return false;
     NewEnemy->SetActorScale3D(scale);
-    // Init ‚É thisiƒRƒ“ƒeƒij‚ð“n‚µ‚ÄAó‘ÔEƒ}ƒeƒŠƒAƒ‹‚ð“à•”‚ÅŽæ“¾
-    NewEnemy->Init(stateID, materialID);
+    // Init ï¿½ï¿½ thisï¿½iï¿½Rï¿½ï¿½ï¿½eï¿½iï¿½jï¿½ï¿½nï¿½ï¿½ï¿½ÄAï¿½ï¿½ÔEï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅŽæ“¾
+    NewEnemy->Init();
 
     return true;
 }

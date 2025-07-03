@@ -53,13 +53,13 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 
 	// 通常の重力処理
-	Velocity.Z -= GravityScale * DeltaTime;
-	MoveVector = Velocity * DeltaTime;
+	//Velocity.Z -= GravityScale * DeltaTime;
+	//MoveVector = Velocity * DeltaTime;
 
-	FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
-	GetOwner()->AddActorLocalOffset(Adjusted, true);
+	//FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
+	//GetOwner()->AddActorLocalOffset(Adjusted, true);
 
-	PreviousPosition = GetOwner()->GetActorLocation();
+	//PreviousPosition = GetOwner()->GetActorLocation();
 }
 
 void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)

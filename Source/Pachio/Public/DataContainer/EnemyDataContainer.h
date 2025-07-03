@@ -32,8 +32,7 @@ public:
 
 
 private:
-    UPROPERTY(EditAnywhere, Category = "Data")
-    TMap<EEnemyCategory, TSubclassOf<UEnemyStateComponent>> EnemyClassMap;
+
 
     UPROPERTY(EditAnywhere, Category = "Data")
     TMap<EEnemyCategory,FMaterialData> MaterialMap;

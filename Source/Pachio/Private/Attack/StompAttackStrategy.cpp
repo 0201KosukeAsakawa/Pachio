@@ -6,7 +6,7 @@
 
 bool UStompAttackStrategy::ExecuteEffect(AActor* Attacker, AActor* Target, FAttackData attackData, float FinalDamage)
 {
-	if (!Attacker || !Target)
+  	if (!Attacker || !Target)
 		return false;
 
 	IDamageable* id = Cast<IDamageable>(Target);

@@ -2,7 +2,6 @@
 
 
 #include "Components/EnemyState.h"
-#include "Enemy/State/EnemyStateComponent.h"
 
 bool UEnemyState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEnemyStateComponent* LogicComponet , EEnemyCategory)
 {
