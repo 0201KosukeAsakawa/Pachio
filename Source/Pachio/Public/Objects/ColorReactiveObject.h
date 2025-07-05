@@ -9,12 +9,6 @@
 
 class UColorReactiveComponent;
 
-struct FHSLColor
-{
-	float H; // 0.0〜1.0
-	float S; // 0.0〜1.0
-	float L; // 0.0〜1.0
-};
 /**
  * 色に反応するアクター（指定色でアクションを起こす）
  */
@@ -34,17 +28,17 @@ public:
 	virtual void ColorAction(FLinearColor InColor) override;
 	virtual void SetColor(FLinearColor)override;
 	virtual void ResetColor()override;
-	bool IsColorLock()const override { return bColorLock; }
+	virtual bool IsColorChange()const override;	
+	inline void ChangeLock(bool b) override { bColorVariable = b; }
+	inline bool IsColorModifiable()const override { return bColorVariable; }
 	inline bool IsColorMuch() const override { return bColorMuch; }
-	inline void ChangeLock(bool b) override { bColorLock = b; }
-	inline FName GetColorEventID()const {return EventID;}
+	inline FName GetColorEventID()const override{return EventID;}
 protected:
 	virtual void Init();
 	virtual void InitializeColorLogic();
 	virtual void RegisterToColorManager();
 	virtual void SetupMaterial();
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
-	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 protected:
 	// コンポーネント設定
 	UPROPERTY(EditAnywhere, Category = "Reactive")
@@ -54,7 +48,8 @@ protected:
 	UPROPERTY()
 	UColorReactiveComponent* ColorReactiveComponent;
 
-	// オブジェクト固有の色
+	// オブジェクトの現在の
+	// 色
 	UPROPERTY()
 	FLinearColor CurrentColor;
 
@@ -66,12 +61,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Color")
 	EColorTargetType ColorTargetType;
 
-	// 色ロック（変更不可）
-	UPROPERTY(EditAnywhere)
-	bool bColorLock = false;
-
 	UPROPERTY(EditAnywhere)
 	bool bColorVariable  = false;
+	UPROPERTY(EditAnywhere)
+	bool bPlayColorAction = true;
+	
 	// 色が一致したかどうかのフラグ
 	UPROPERTY(VisibleAnywhere, Category = "Color")
 	bool bColorMuch;

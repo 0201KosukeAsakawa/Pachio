@@ -15,35 +15,54 @@ UColorTriggerStopComponent::UColorTriggerStopComponent()
 
 void UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
-    UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
-    UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-    if (box != nullptr)
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    // アクター非表示
+    Owner->SetActorHiddenInGame(true);
+    // Tick停止
+    Owner->SetActorTickEnabled(false);
+    // 当たり判定オフ
+    Owner->SetActorEnableCollision(false);
+
+    // 念のため、全コンポーネントのTickもオフ＆非表示＆コリジョンなしにする
+    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
+    for (UActorComponent* Comp : Components)
     {
-        box->SetHiddenInGame(true);
-        box->SetCollisionEnabled(ECollisionEnabled::NoCollision); 
-    }
-    if (mesh != nullptr)
-    {
-        mesh->SetVisibility(false);
-        mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        mesh->SetCastShadow(false);
+        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        {
+            Prim->SetVisibility(false);
+            Prim->SetHiddenInGame(true);
+            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            Prim->SetComponentTickEnabled(false);
+            Prim->SetCastShadow(false);
+        }
     }
 }
 
 void UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterColor)
 {
-    UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
-    UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-    if (box != nullptr)
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    // アクター再表示
+    Owner->SetActorHiddenInGame(false);
+    // Tick再有効化
+    Owner->SetActorTickEnabled(true);
+    // 当たり判定再有効化
+    Owner->SetActorEnableCollision(true);
+
+    // 全コンポーネントも元に戻す
+    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
+    for (UActorComponent* Comp : Components)
     {
-        box->SetHiddenInGame(false);
-        box->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    }
-    if (mesh != nullptr)
-    {
-        mesh->SetVisibility(true);
-        mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-        mesh->SetCastShadow(true);
+        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        {
+            Prim->SetVisibility(true);
+            Prim->SetHiddenInGame(false);
+            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            Prim->SetComponentTickEnabled(true);
+            Prim->SetCastShadow(true);
+        }
     }
 }
-

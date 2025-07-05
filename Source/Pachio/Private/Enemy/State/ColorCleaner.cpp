@@ -35,7 +35,29 @@ void AColorCleaner::Tick(float DeltaTime)
 
     if (TargetActor)
     {
-        MoveTowards(TargetActor->GetActorLocation(), DeltaTime);
+        // 非表示ならターゲット解除
+        if (TargetActor->IsHidden())
+        {
+            TargetActor = nullptr;
+            return;
+        }
+
+        if (!IsInsideMoveRange(TargetActor->GetActorLocation()))
+        {
+            TargetActor = nullptr;
+        }
+        else
+        {
+            IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(TargetActor);
+            if (Interface && (Interface->IsColorModifiable() || Interface->IsColorChange()))
+            {
+                TargetActor = nullptr;
+            }
+            else
+            {
+                MoveTowards(TargetActor->GetActorLocation(), DeltaTime);
+            }
+        }
     }
     else
     {
@@ -50,6 +72,8 @@ void AColorCleaner::Tick(float DeltaTime)
         }
     }
 }
+
+
 
 AActor* AColorCleaner::FindTarget()
 {
@@ -74,8 +98,8 @@ AActor* AColorCleaner::FindTarget()
     {
         AActor* HitActor = Hit.GetActor();
         if (!HitActor) continue;
-
-        if (Cast<IColorReactiveInterface>(HitActor))
+        IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(HitActor);
+        if (Interface && !Interface->IsColorModifiable() && !Interface->IsColorChange())
         {
             return HitActor;
         }
@@ -118,23 +142,47 @@ void AColorCleaner::Wander(float DeltaTime)
 
 void AColorCleaner::MoveTowards(const FVector& Destination, float DeltaTime)
 {
-    FVector Direction = (Destination - GetActorLocation()).GetSafeNormal();
-    FVector NewLocation = GetActorLocation() + Direction * MoveSpeed * DeltaTime;
+    FVector CurrentLocation = GetActorLocation();
+    FVector Direction = (Destination - CurrentLocation).GetSafeNormal();
+    FVector DesiredLocation = CurrentLocation + Direction * MoveSpeed * DeltaTime;
 
-    if (FVector::Dist(NewLocation, Destination) < 50.f)
+    FHitResult HitResult;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
+
+    // 壁との衝突をチェック
+    bool bHit = GetWorld()->LineTraceSingleByChannel(
+        HitResult,
+        CurrentLocation,
+        DesiredLocation,
+        ECC_WorldStatic,
+        Params
+    );
+
+    if (bHit)
+    {
+        // 壁の手前で停止（わずかに離す）
+        FVector StopLocation = HitResult.ImpactPoint - Direction * 5.0f; // 5cm手前
+        SetActorLocation(StopLocation);
+        // 移動終了（ターゲット継続 or 自由行動へ切り替え可）
+        return;
+    }
+
+    if (FVector::Dist(DesiredLocation, Destination) < 50.f)
     {
         SetActorLocation(Destination);
         TargetActor = nullptr;
     }
-    else if (IsInsideMoveRange(NewLocation))
+    else if (IsInsideMoveRange(DesiredLocation))
     {
-        SetActorLocation(NewLocation);
+        SetActorLocation(DesiredLocation);
     }
     else
     {
         TargetActor = nullptr;
     }
 }
+
 
 bool AColorCleaner::IsInsideMoveRange(const FVector& Point) const
 {
@@ -151,7 +199,7 @@ void AColorCleaner::Overlap(AActor* OtherActor)
     if (!OtherActor || OtherActor == this) return;
 
     IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(OtherActor);
-    if (Interface && !Interface->IsColorLock())
+    if (Interface && !Interface->IsColorModifiable() && !Interface->IsColorChange())
     {
         Interface->ResetColor();
     }

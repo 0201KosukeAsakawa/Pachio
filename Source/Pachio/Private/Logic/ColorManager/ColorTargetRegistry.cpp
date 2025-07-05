@@ -58,10 +58,10 @@ void UColorTargetRegistry::ColorEvent(FName EventID)
 
 void UColorTargetRegistry::SetColorTarget(IColorReactiveInterface* InInterface)
 {
-    if (TargetObject != nullptr)
-    {
-        TargetObject->ResetColor();
-    }
+    //if (TargetObject != nullptr)
+    //{
+    //    TargetObject->ResetColor();
+    //}
 
     TargetObject.SetObject(Cast<UObject>(InInterface));
     TargetObject.SetInterface(InInterface);
@@ -109,6 +109,22 @@ void UColorTargetRegistry::InitializePostEffect()
         // マテリアルインスタンスを作成しポストプロセスに適用
         PostProcessMID = UMaterialInstanceDynamic::Create(PostProcessMaterial, this);
         PostProcessVolume->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, PostProcessMID));
+    }
+}
+
+FLinearColor UColorTargetRegistry::GetPostProcessColor() const
+{
+    if (!PostProcessMID) return FLinearColor::Black;  // あるいはデフォルト色
+
+    FLinearColor CurrentColor;
+    if (PostProcessMID->GetVectorParameterValue(FName("FilterColor"), CurrentColor))
+    {
+        return CurrentColor;
+    }
+    else
+    {
+        // パラメータがなければ黒とか適当な色を返す
+        return FLinearColor::Black;
     }
 }
 
