@@ -28,36 +28,50 @@ void AColorCleaner::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // 範囲の可視化（デバッグ用）
+    // デバッグ：探索範囲の可視化
     FVector Center = StartLocation + (SearchAreaMin + SearchAreaMax) * 0.5f;
     FVector Extent = (SearchAreaMax - SearchAreaMin) * 0.5f;
     DrawDebugBox(GetWorld(), Center, Extent, FColor::Green, false, 0.1f);
 
+    if (bIsRotating)
+    {
+        RotationElapsed += DeltaTime;
+        float Alpha = FMath::Clamp(RotationElapsed / RotationDuration, 0.f, 1.f);
+
+        FRotator CurrentRotation = GetActorRotation();
+        FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 10.0f);
+        SetActorRotation(NewRotation);
+
+        if (Alpha >= 1.0f || CurrentRotation.Equals(TargetRotation, 1.0f))
+        {
+            bIsRotating = false;
+            RotationElapsed = 0.f;
+
+            if (bHasPendingMove)
+            {
+                bHasPendingMove = false;
+                MoveTowards(PendingMoveDestination, DeltaTime);
+            }
+        }
+        return;
+    }
+
     if (TargetActor)
     {
-        // 非表示ならターゲット解除
-        if (TargetActor->IsHidden())
+        if (TargetActor->IsHidden() || !IsInsideMoveRange(TargetActor->GetActorLocation()))
         {
             TargetActor = nullptr;
             return;
         }
 
-        if (!IsInsideMoveRange(TargetActor->GetActorLocation()))
+        IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(TargetActor);
+        if (Interface && (Interface->IsColorModifiable() || Interface->IsColorChange()))
         {
             TargetActor = nullptr;
+            return;
         }
-        else
-        {
-            IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(TargetActor);
-            if (Interface && (Interface->IsColorModifiable() || Interface->IsColorChange()))
-            {
-                TargetActor = nullptr;
-            }
-            else
-            {
-                MoveTowards(TargetActor->GetActorLocation(), DeltaTime);
-            }
-        }
+
+        MoveTowards(TargetActor->GetActorLocation(), DeltaTime);
     }
     else
     {
@@ -72,8 +86,6 @@ void AColorCleaner::Tick(float DeltaTime)
         }
     }
 }
-
-
 
 AActor* AColorCleaner::FindTarget()
 {
@@ -103,7 +115,6 @@ AActor* AColorCleaner::FindTarget()
         {
             return HitActor;
         }
-
     }
 
     return nullptr;
@@ -117,40 +128,95 @@ void AColorCleaner::Wander(float DeltaTime)
 
         if (!bIsIdle)
         {
-            FVector NewLocation = GetActorLocation() + WanderDirection * MoveSpeed * DeltaTime;
-            if (IsInsideMoveRange(NewLocation))
+            FVector Forward = GetActorForwardVector();
+            FVector NewLocation = GetActorLocation() + Forward * MoveSpeed * DeltaTime;
+
+            FHitResult HitResult;
+            FVector Start = GetActorLocation();
+            FVector End = Start + Forward * 100.f;
+
+            FCollisionQueryParams Params;
+            Params.AddIgnoredActor(this);
+
+            bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
+
+            if (bHit || !IsInsideMoveRange(NewLocation) || IsCliffAhead(Forward))
             {
-                SetActorLocation(NewLocation);
+                WanderCooldown = 0.f;
+                return;
             }
+
+            SetActorLocation(NewLocation);
         }
 
         return;
     }
 
-    int32 Choice = FMath::RandRange(0, 4);
-    switch (Choice)
+    TArray<FVector> LocalDirections = {
+        GetActorForwardVector(),
+        -GetActorForwardVector(),
+        GetActorRightVector(),
+        -GetActorRightVector()
+    };
+
+    for (int i = 0; i < LocalDirections.Num(); ++i)
     {
-    case 0: WanderDirection = FVector::ForwardVector;  bIsIdle = false; break;
-    case 1: WanderDirection = -FVector::ForwardVector; bIsIdle = false; break;
-    case 2: WanderDirection = FVector::RightVector;    bIsIdle = false; break;
-    case 3: WanderDirection = -FVector::RightVector;   bIsIdle = false; break;
-    case 4: WanderDirection = FVector::ZeroVector;     bIsIdle = true;  break;
+        int32 SwapIdx = FMath::RandRange(i, LocalDirections.Num() - 1);
+        LocalDirections.Swap(i, SwapIdx);
     }
 
-    WanderCooldown = FMath::FRandRange(1.0f, 3.0f);
+    for (const FVector& Dir : LocalDirections)
+    {
+        FVector Start = GetActorLocation();
+        FVector End = Start + Dir * 100.f;
+
+        FHitResult HitResult;
+        FCollisionQueryParams Params;
+        Params.AddIgnoredActor(this);
+
+        bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
+
+        if (!bHit && !IsCliffAhead(Dir))
+        {
+            TargetRotation = Dir.Rotation();
+            bIsRotating = true;
+            RotationElapsed = 0.f;
+
+            bIsIdle = false;
+            WanderCooldown = FMath::FRandRange(1.0f, 3.0f);
+            return;
+        }
+    }
+
+    bIsIdle = true;
+    WanderCooldown = FMath::FRandRange(1.0f, 2.0f);
 }
 
 void AColorCleaner::MoveTowards(const FVector& Destination, float DeltaTime)
 {
     FVector CurrentLocation = GetActorLocation();
     FVector Direction = (Destination - CurrentLocation).GetSafeNormal();
+
+    const float AngleThreshold = 5.0f;
+    float AngleDiff = FMath::Abs(FRotator::NormalizeAxis(Direction.Rotation().Yaw - GetActorRotation().Yaw));
+
+    if (AngleDiff > AngleThreshold)
+    {
+        TargetRotation = Direction.Rotation();
+        bIsRotating = true;
+        RotationElapsed = 0.f;
+
+        PendingMoveDestination = Destination;
+        bHasPendingMove = true;
+        return;
+    }
+
     FVector DesiredLocation = CurrentLocation + Direction * MoveSpeed * DeltaTime;
 
     FHitResult HitResult;
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 
-    // 壁との衝突をチェック
     bool bHit = GetWorld()->LineTraceSingleByChannel(
         HitResult,
         CurrentLocation,
@@ -159,12 +225,13 @@ void AColorCleaner::MoveTowards(const FVector& Destination, float DeltaTime)
         Params
     );
 
-    if (bHit)
+    if (bHit || IsCliffAhead(Direction))
     {
-        // 壁の手前で停止（わずかに離す）
-        FVector StopLocation = HitResult.ImpactPoint - Direction * 5.0f; // 5cm手前
+        FVector StopLocation = bHit ? HitResult.ImpactPoint - Direction * 5.0f : GetActorLocation();
         SetActorLocation(StopLocation);
-        // 移動終了（ターゲット継続 or 自由行動へ切り替え可）
+
+        TargetActor = nullptr;
+        WanderCooldown = 0.f;
         return;
     }
 
@@ -183,15 +250,26 @@ void AColorCleaner::MoveTowards(const FVector& Destination, float DeltaTime)
     }
 }
 
-
 bool AColorCleaner::IsInsideMoveRange(const FVector& Point) const
 {
     FVector AbsMin = StartLocation + SearchAreaMin;
     FVector AbsMax = StartLocation + SearchAreaMax;
 
     return Point.X >= AbsMin.X && Point.X <= AbsMax.X &&
-        Point.Y >= AbsMin.Y && Point.Y <= AbsMax.Y &&
-        Point.Z >= AbsMin.Z && Point.Z <= AbsMax.Z;
+           Point.Y >= AbsMin.Y && Point.Y <= AbsMax.Y &&
+           Point.Z >= AbsMin.Z && Point.Z <= AbsMax.Z;
+}
+
+bool AColorCleaner::IsCliffAhead(const FVector& Direction)
+{
+    FVector Start = GetActorLocation() + Direction * 50.0f;
+    FVector End = Start - FVector(0, 0, 100.0f);
+
+    FHitResult HitResult;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
+
+    return !GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
 }
 
 void AColorCleaner::Overlap(AActor* OtherActor)

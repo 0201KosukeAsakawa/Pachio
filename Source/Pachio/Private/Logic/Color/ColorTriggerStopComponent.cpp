@@ -18,14 +18,14 @@ void UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // ƒAƒNƒ^[”ñ•\¦
+    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ï¿½\ï¿½ï¿½
     Owner->SetActorHiddenInGame(true);
-    // Tick’â~
+    // Tickï¿½ï¿½~
     Owner->SetActorTickEnabled(false);
-    // “–‚½‚è”»’èƒIƒt
+    // ï¿½ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½Iï¿½t
     Owner->SetActorEnableCollision(false);
 
-    // ”O‚Ì‚½‚ßA‘SƒRƒ“ƒ|[ƒlƒ“ƒg‚ÌTick‚àƒIƒt•”ñ•\¦•ƒRƒŠƒWƒ‡ƒ“‚È‚µ‚É‚·‚é
+    // ï¿½Oï¿½Ì‚ï¿½ï¿½ßAï¿½Sï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½Tickï¿½ï¿½Iï¿½tï¿½ï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½É‚ï¿½ï¿½ï¿½
     TArray<UActorComponent*> Components = Owner->GetComponents().Array();
     for (UActorComponent* Comp : Components)
     {
@@ -45,14 +45,14 @@ void UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // ƒAƒNƒ^[Ä•\¦
+    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Ä•\ï¿½ï¿½
     Owner->SetActorHiddenInGame(false);
-    // TickÄ—LŒø‰»
+    // Tickï¿½Ä—Lï¿½ï¿½ï¿½ï¿½
     Owner->SetActorTickEnabled(true);
-    // “–‚½‚è”»’èÄ—LŒø‰»
+    // ï¿½ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½Ä—Lï¿½ï¿½ï¿½ï¿½
     Owner->SetActorEnableCollision(true);
 
-    // ‘SƒRƒ“ƒ|[ƒlƒ“ƒg‚àŒ³‚É–ß‚·
+    // ï¿½Sï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½É–ß‚ï¿½
     TArray<UActorComponent*> Components = Owner->GetComponents().Array();
     for (UActorComponent* Comp : Components)
     {
