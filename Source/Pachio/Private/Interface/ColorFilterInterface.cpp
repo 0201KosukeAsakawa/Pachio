@@ -18,7 +18,12 @@ void IColorReactiveInterface::ResetColor()
 {
 }
 
-bool IColorReactiveInterface::IsColorLock() const
+bool IColorReactiveInterface::IsColorChange() const
+{
+    return true;
+}
+
+bool IColorReactiveInterface::IsColorModifiable() const
 {
     return false;
 }

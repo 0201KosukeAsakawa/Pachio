@@ -15,35 +15,54 @@ UColorTriggerStopComponent::UColorTriggerStopComponent()
 
 void UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
-    UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
-    UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-    if (box != nullptr)
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    // �A�N�^�[��\��
+    Owner->SetActorHiddenInGame(true);
+    // Tick��~
+    Owner->SetActorTickEnabled(false);
+    // �����蔻��I�t
+    Owner->SetActorEnableCollision(false);
+
+    // �O�̂��߁A�S�R���|�[�l���g��Tick��I�t����\�����R���W�����Ȃ��ɂ���
+    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
+    for (UActorComponent* Comp : Components)
     {
-        box->SetHiddenInGame(true);
-        box->SetCollisionEnabled(ECollisionEnabled::NoCollision); 
-    }
-    if (mesh != nullptr)
-    {
-        mesh->SetVisibility(false);
-        mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        mesh->SetCastShadow(false);
+        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        {
+            Prim->SetVisibility(false);
+            Prim->SetHiddenInGame(true);
+            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            Prim->SetComponentTickEnabled(false);
+            Prim->SetCastShadow(false);
+        }
     }
 }
 
 void UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterColor)
 {
-    UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
-    UStaticMeshComponent* mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-    if (box != nullptr)
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    // �A�N�^�[�ĕ\��
+    Owner->SetActorHiddenInGame(false);
+    // Tick�ėL����
+    Owner->SetActorTickEnabled(true);
+    // �����蔻��ėL����
+    Owner->SetActorEnableCollision(true);
+
+    // �S�R���|�[�l���g����ɖ߂�
+    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
+    for (UActorComponent* Comp : Components)
     {
-        box->SetHiddenInGame(false);
-        box->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    }
-    if (mesh != nullptr)
-    {
-        mesh->SetVisibility(true);
-        mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-        mesh->SetCastShadow(true);
+        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        {
+            Prim->SetVisibility(true);
+            Prim->SetHiddenInGame(false);
+            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            Prim->SetComponentTickEnabled(true);
+            Prim->SetCastShadow(true);
+        }
     }
 }
-

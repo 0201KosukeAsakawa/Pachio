@@ -31,20 +31,17 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 // 初期化関数 (StateID, DropItemID, OptionalなMaterialID)
-	void Init(const EEnemyCategory stateID,const EEnemyCategory materialID);
+	virtual void Init();
+
+	UFUNCTION()
+	virtual void Overlap(AActor* hitActor);
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-private:
-	UPROPERTY()
-	UStaticMeshComponent* meshComponent;
 
-private:
+protected:
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed = 0.0f;
-
-	UPROPERTY(EditAnywhere)
-	EEnemyCategory LogicID;
 };

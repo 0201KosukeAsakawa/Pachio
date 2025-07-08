@@ -62,7 +62,7 @@ void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
         CurrentDirection = -direction;
  
     }
-    else
+    else if(!bColorMuch && IsRevers)
     {
         // 一致する場合は通常の方向へ
         CurrentDirection = direction;

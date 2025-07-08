@@ -37,6 +37,8 @@ public:
 
     FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
 
+
+    FLinearColor GetWorldColor()const;
 private:
 
     void BindController();
@@ -50,11 +52,6 @@ private:
 
     UPROPERTY(EditAnywhere)
     TSubclassOf<UColorTargetRegistry> ColorTargetRegistryClass;
-
-    // 色付け対象インスタンスのマップ（モードごとに保持）
-    UPROPERTY()
-    TMap<EColorTargetType, FColorTargetInstanceArray> ColorableObjectsMap;
-
     //色に反応するオブジェクトに現在の色を通知
     UPROPERTY()
     TMap<EColorTargetType, FColorTargetInstanceArray> ColorResponseTargets;

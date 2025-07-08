@@ -59,4 +59,7 @@ private:
 	// ベルト上に存在する対象アクター（物理的に影響を与える）
 	UPROPERTY()
 	TArray<UPhysicsCalculator*> hitObject;
+
+	UPROPERTY(EditAnywhere)
+	bool IsRevers = false;
 };
