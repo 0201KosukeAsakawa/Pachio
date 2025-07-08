@@ -150,24 +150,27 @@ void AColorCleaner::MoveTowards(const FVector& Destination, float DeltaTime)
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 
-    // 壁との衝突をチェック
-    bool bHit = GetWorld()->LineTraceSingleByChannel(
+    // 体の大きさを考慮して移動先をスイープで判定
+    bool bHit = GetWorld()->SweepSingleByChannel(
         HitResult,
         CurrentLocation,
         DesiredLocation,
+        FQuat::Identity,
         ECC_WorldStatic,
+        GetSimpleCollisionShape(),
         Params
     );
 
     if (bHit)
     {
-        // 壁の手前で停止（わずかに離す）
-        FVector StopLocation = HitResult.ImpactPoint - Direction * 5.0f; // 5cm手前
+        // 衝突地点の少し手前で止まる
+        FVector StopLocation = HitResult.ImpactPoint - Direction * 5.0f; // 5cm手前など微調整
         SetActorLocation(StopLocation);
-        // 移動終了（ターゲット継続 or 自由行動へ切り替え可）
+        TargetActor = nullptr;
         return;
     }
 
+    // 衝突なければ普通に移動
     if (FVector::Dist(DesiredLocation, Destination) < 50.f)
     {
         SetActorLocation(Destination);
@@ -182,6 +185,7 @@ void AColorCleaner::MoveTowards(const FVector& Destination, float DeltaTime)
         TargetActor = nullptr;
     }
 }
+
 
 
 bool AColorCleaner::IsInsideMoveRange(const FVector& Point) const
@@ -203,4 +207,10 @@ void AColorCleaner::Overlap(AActor* OtherActor)
     {
         Interface->ResetColor();
     }
+}
+
+FCollisionShape AColorCleaner::GetSimpleCollisionShape() const
+{
+    FVector BoxExtent(20.f, 20.f, 20.f); // 体の大きさに合わせて調整
+    return FCollisionShape::MakeBox(BoxExtent);
 }

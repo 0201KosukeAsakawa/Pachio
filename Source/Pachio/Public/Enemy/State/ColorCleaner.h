@@ -23,12 +23,14 @@ public:
 
     // オーバーラップイベント
     void Overlap(AActor* OtherActor)override;
+
 private:
     // ロジック関数
     AActor* FindTarget();
     void Wander(float DeltaTime);
     void MoveTowards(const FVector& Destination, float DeltaTime);
-    bool IsInsideMoveRange(const FVector& Point) const;
+    bool IsInsideMoveRange(const FVector& Point) const;   
+    FCollisionShape GetSimpleCollisionShape() const;
 private:    
     UPROPERTY()
     AActor* TargetActor = nullptr;

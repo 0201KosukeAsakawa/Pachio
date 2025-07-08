@@ -18,24 +18,31 @@ void UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // アクター非表示
+    // アクター非表示 & Tick 停止
     Owner->SetActorHiddenInGame(true);
-    // Tick停止
     Owner->SetActorTickEnabled(false);
-    // 当たり判定オフ
-    Owner->SetActorEnableCollision(false);
 
-    // 念のため、全コンポーネントのTickもオフ＆非表示＆コリジョンなしにする
-    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
-    for (UActorComponent* Comp : Components)
+    // コンポーネントを調整
+    for (UActorComponent* Comp : Owner->GetComponents())
     {
         if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
         {
+            // 見た目と影を消す
             Prim->SetVisibility(false);
             Prim->SetHiddenInGame(true);
-            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-            Prim->SetComponentTickEnabled(false);
             Prim->SetCastShadow(false);
+
+            // Tick 停止（必要なければ）
+            Prim->SetComponentTickEnabled(false);
+
+            // 衝突は Overlap のみ許可（QueryOnly）
+            Prim->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+            // 一旦すべて無視
+            Prim->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+            // 例：Pawn にのみ Overlap 反応させたい場合（必要に応じて調整）
+            Prim->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
         }
     }
 }
@@ -45,24 +52,22 @@ void UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // アクター再表示
+    // アクター表示 & Tick 再開
     Owner->SetActorHiddenInGame(false);
-    // Tick再有効化
     Owner->SetActorTickEnabled(true);
-    // 当たり判定再有効化
-    Owner->SetActorEnableCollision(true);
 
-    // 全コンポーネントも元に戻す
-    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
-    for (UActorComponent* Comp : Components)
+    for (UActorComponent* Comp : Owner->GetComponents())
     {
         if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
         {
             Prim->SetVisibility(true);
             Prim->SetHiddenInGame(false);
-            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-            Prim->SetComponentTickEnabled(true);
             Prim->SetCastShadow(true);
+            Prim->SetComponentTickEnabled(true);
+
+            // 通常の衝突有効化（物理含む）
+            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            Prim->SetCollisionResponseToAllChannels(ECR_Block);  // もとの挙動に応じて変更
         }
     }
 }
