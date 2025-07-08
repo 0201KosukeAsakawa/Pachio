@@ -23,14 +23,13 @@ public:
 
     // オーバーラップイベント
     void Overlap(AActor* OtherActor)override;
-
 private:
     // ロジック関数
     AActor* FindTarget();
     void Wander(float DeltaTime);
     void MoveTowards(const FVector& Destination, float DeltaTime);
-    bool IsInsideMoveRange(const FVector& Point) const;   
-    FCollisionShape GetSimpleCollisionShape() const;
+    bool IsInsideMoveRange(const FVector& Point) const;
+    bool IsCliffAhead(const FVector& Direction);
 private:    
     UPROPERTY()
     AActor* TargetActor = nullptr;
@@ -46,6 +45,12 @@ private:
     FVector WanderDirection = FVector::ZeroVector;
     float WanderCooldown = 0.f;
     bool bIsIdle = true;
-
-
+    // 回転処理関連
+    FRotator TargetRotation;
+    bool bIsRotating = false;
+    UPROPERTY(EditAnywhere)
+    float RotationDuration = 0.5f; // 例: 0.5秒かけて回転
+    float RotationElapsed = 0.f;
+    FVector PendingMoveDestination;  // 回転完了後に移動する目的地
+    bool bHasPendingMove = false;    // 回転完了後の移動を待っているか
 };

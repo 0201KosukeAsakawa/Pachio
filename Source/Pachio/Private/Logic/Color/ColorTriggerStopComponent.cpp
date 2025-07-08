@@ -18,31 +18,24 @@ void UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // ƒAƒNƒ^[”ñ•\¦ & Tick ’â~
+    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ï¿½\ï¿½ï¿½
     Owner->SetActorHiddenInGame(true);
+    // Tickï¿½ï¿½~
     Owner->SetActorTickEnabled(false);
+    // ï¿½ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½Iï¿½t
+    Owner->SetActorEnableCollision(false);
 
-    // ƒRƒ“ƒ|[ƒlƒ“ƒg‚ğ’²®
-    for (UActorComponent* Comp : Owner->GetComponents())
+    // ï¿½Oï¿½Ì‚ï¿½ï¿½ßAï¿½Sï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½Tickï¿½ï¿½Iï¿½tï¿½ï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½É‚ï¿½ï¿½ï¿½
+    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
+    for (UActorComponent* Comp : Components)
     {
         if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
         {
-            // Œ©‚½–Ú‚Æ‰e‚ğÁ‚·
             Prim->SetVisibility(false);
             Prim->SetHiddenInGame(true);
-            Prim->SetCastShadow(false);
-
-            // Tick ’â~i•K—v‚È‚¯‚ê‚Îj
+            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
             Prim->SetComponentTickEnabled(false);
-
-            // Õ“Ë‚Í Overlap ‚Ì‚İ‹–‰ÂiQueryOnlyj
-            Prim->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-
-            // ˆê’U‚·‚×‚Ä–³‹
-            Prim->SetCollisionResponseToAllChannels(ECR_Ignore);
-
-            // —áFPawn ‚É‚Ì‚İ Overlap ”½‰‚³‚¹‚½‚¢ê‡i•K—v‚É‰‚¶‚Ä’²®j
-            Prim->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+            Prim->SetCastShadow(false);
         }
     }
 }
@@ -52,22 +45,24 @@ void UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // ƒAƒNƒ^[•\¦ & Tick ÄŠJ
+    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Ä•\ï¿½ï¿½
     Owner->SetActorHiddenInGame(false);
+    // Tickï¿½Ä—Lï¿½ï¿½ï¿½ï¿½
     Owner->SetActorTickEnabled(true);
+    // ï¿½ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½Ä—Lï¿½ï¿½ï¿½ï¿½
+    Owner->SetActorEnableCollision(true);
 
-    for (UActorComponent* Comp : Owner->GetComponents())
+    // ï¿½Sï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½É–ß‚ï¿½
+    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
+    for (UActorComponent* Comp : Components)
     {
         if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
         {
             Prim->SetVisibility(true);
             Prim->SetHiddenInGame(false);
-            Prim->SetCastShadow(true);
-            Prim->SetComponentTickEnabled(true);
-
-            // ’Êí‚ÌÕ“Ë—LŒø‰»i•¨—ŠÜ‚Şj
             Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-            Prim->SetCollisionResponseToAllChannels(ECR_Block);  // ‚à‚Æ‚Ì‹““®‚É‰‚¶‚Ä•ÏX
+            Prim->SetComponentTickEnabled(true);
+            Prim->SetCastShadow(true);
         }
     }
 }
