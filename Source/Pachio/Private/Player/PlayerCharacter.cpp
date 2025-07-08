@@ -331,7 +331,7 @@ void APlayerCharacter::InitVisualSettings()
 	{
 		// カスタム深度レンダーを有効にしてアウトラインを表示
 		pMesh->SetRenderCustomDepth(true);
-		pMesh->SetCustomDepthStencilValue(10);
+		pMesh->SetCustomDepthStencilValue(5);
 	}
 }
 
