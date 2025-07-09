@@ -26,20 +26,18 @@ void UColorProximitySpawner::OnMesh()
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
+    // アクター表示 & Tick 再開
     Owner->SetActorHiddenInGame(false);
     Owner->SetActorTickEnabled(true);
-    Owner->SetActorEnableCollision(true);
 
-    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
-    for (UActorComponent* Comp : Components)
+    for (UActorComponent* Comp : Owner->GetComponents())
     {
         if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
         {
             Prim->SetVisibility(true);
             Prim->SetHiddenInGame(false);
-            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-            Prim->SetComponentTickEnabled(true);
             Prim->SetCastShadow(true);
+            Prim->SetComponentTickEnabled(true);
         }
     }
 }
@@ -49,20 +47,21 @@ void UColorProximitySpawner::OffMesh()
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
+    // アクター非表示 & Tick 停止
     Owner->SetActorHiddenInGame(true);
     Owner->SetActorTickEnabled(false);
-    Owner->SetActorEnableCollision(false);
 
-    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
-    for (UActorComponent* Comp : Components)
+    // コンポーネントを調整
+   for (UActorComponent* Comp : Owner->GetComponents())
+{
+    if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
     {
-        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
-        {
-            Prim->SetVisibility(false);
-            Prim->SetHiddenInGame(true);
-            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-            Prim->SetComponentTickEnabled(false);
-            Prim->SetCastShadow(false);
-        }
+        Prim->SetVisibility(false);
+        Prim->SetHiddenInGame(true);
+        Prim->SetCastShadow(false);
+        Prim->SetComponentTickEnabled(false);
+
+        Prim->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     }
+}
 }
