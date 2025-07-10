@@ -14,19 +14,13 @@ class PACHIO_API UOutlineComponent : public UActorComponent
 
 public:
     UOutlineComponent();
-    UFUNCTION(BlueprintCallable)
-    void SetStencilValue(int32 Value);
-    void EnableOutline(bool bEnable);
 
 protected:
     virtual void BeginPlay() override;
-    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-    UPROPERTY(EditAnywhere, Category = "Outline")
-    int32 StencilValue = 1;
-    UMeshComponent* CachedMesh;
-
-    void InitMesh();
-    bool IsBehindWall();
+    UPROPERTY()
+    UStaticMeshComponent* OutlineMesh;
+    UPROPERTY(EditDefaultsOnly)
+    UMaterialInterface* OutlineMaterial;
 };
