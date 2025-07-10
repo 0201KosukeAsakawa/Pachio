@@ -18,7 +18,7 @@ void UOutlineComponent::BeginPlay()
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    UStaticMeshComponent* OriginalMesh = Owner->FindComponentByClass<UStaticMeshComponent>();
+    UStaticMeshComponent* OriginalMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner,"StaticMesh");
     if (!OriginalMesh)
     {
         UE_LOG(LogTemp, Warning, TEXT("OriginalMesh not found"));
@@ -40,7 +40,7 @@ void UOutlineComponent::BeginPlay()
     OutlineMesh->RegisterComponent();
 
     // スケールアップ（アウトラインの太さ調整）
-    OutlineMesh->SetRelativeScale3D(FVector(1.05f));
+    OutlineMesh->SetRelativeScale3D(FVector(10.05f));
     OutlineMesh->SetRelativeLocation(FVector::ZeroVector);
     OutlineMesh->SetRelativeRotation(FRotator::ZeroRotator);
 
