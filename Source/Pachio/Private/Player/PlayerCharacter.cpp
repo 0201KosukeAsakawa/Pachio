@@ -70,7 +70,7 @@ void APlayerCharacter::BeginPlay()
 		PC->bShowMouseCursor = false;
 		PC->SetInputMode(FInputModeGameOnly());
 	}
-
+	GetCharacterMovement()->SetWalkableFloorAngle(60.f);
 }
 
 // 毎フレーム呼ばれる更新処理
@@ -169,7 +169,7 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 	// 移動方向をMoveCompのロジックから取得
 	FVector direction = MoveComp->Movement(0, this, Value);
 	// 速度は現在のステートが持つ移動速度を使用
-	AddMovementInput(direction, MoveSpeed/* StateManager->GetCurrentState()->GetMoveSpeed()*/);
+	AddMovementInput(direction, MoveSpeed);
 
 	// 移動方向がある場合はキャラクターの向きを滑らかに回転させる
 	if (!direction.IsNearlyZero())
@@ -331,7 +331,7 @@ void APlayerCharacter::InitVisualSettings()
 	{
 		// カスタム深度レンダーを有効にしてアウトラインを表示
 		pMesh->SetRenderCustomDepth(true);
-		pMesh->SetCustomDepthStencilValue(5);
+		pMesh->SetCustomDepthStencilValue(10);
 	}
 }
 

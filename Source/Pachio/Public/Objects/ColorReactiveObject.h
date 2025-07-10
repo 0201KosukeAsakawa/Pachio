@@ -60,7 +60,6 @@ protected:
 	// 色の対象種別
 	UPROPERTY(EditAnywhere, Category = "Color")
 	EColorTargetType ColorTargetType;
-
 	UPROPERTY(EditAnywhere)
 	bool bColorVariable  = false;
 	UPROPERTY(EditAnywhere)

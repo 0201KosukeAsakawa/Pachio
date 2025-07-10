@@ -55,7 +55,7 @@ void ULineCaptureComponent::SetupSceneCapture()
 
                 // ★最重要: SCS_CustomDepth をキャプチャソースとして設定する★
                 // これにより、カスタムデプスパスの情報（深度とステンシル）がキャプチャされる
-                SceneCaptureComponent->CaptureSource = ESceneCaptureSource::SCS_CustomDepth;
+                //SceneCaptureComponent->CaptureSource = ESceneCaptureSource::SCS_CustomDepth;
 
                 SceneCaptureComponent->bCaptureEveryFrame = false; // TickComponentで手動でキャプチャ
                 SceneCaptureComponent->bAlwaysPersistRenderingState = true;

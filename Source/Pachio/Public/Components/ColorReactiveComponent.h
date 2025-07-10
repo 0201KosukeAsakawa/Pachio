@@ -36,6 +36,9 @@ private:
 	virtual void OnColorMismatched(const FLinearColor& FilterColor);
 protected:
 	UPROPERTY(EditAnywhere)
+	bool bSetStartColor = true;
+
+	UPROPERTY(EditAnywhere)
 	FLinearColor CurrentColor;
 
 	UPROPERTY()

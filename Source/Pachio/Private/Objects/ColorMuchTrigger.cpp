@@ -26,7 +26,9 @@ void AColorMuchTrigger::BeginPlay()
 
 void AColorMuchTrigger::Init()
 {
-	AColorReactiveObject::Init();
+	InitializeColorLogic();    // 色反応コンポーネントの生成・設定
+	RegisterToColorManager(); // カラーマネージャーへの登録
+	SetupMaterial();          // マテリアルとステンシル値の設定
 }
 
 void AColorMuchTrigger::ColorAction(FLinearColor InColor)
@@ -53,10 +55,6 @@ void AColorMuchTrigger::SetupMaterial()
 
 	Mesh->SetRenderCustomDepth(true);
 	Mesh->SetCustomDepthStencilValue(10);
-
-	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
-	if (DynMaterial == nullptr)
-		return;
-
-	DynMaterial->SetVectorParameterValue(FName("BaseColor"), StartColor);
 }
+
+

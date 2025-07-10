@@ -52,14 +52,18 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		return;
 	}
 
-	// 通常の重力処理
-	//Velocity.Z -= GravityScale * DeltaTime;
-	//MoveVector = Velocity * DeltaTime;
+	if (OnGround())
+	{
+		FVector GroundNormal = GetGroundNormal();
 
-	//FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
-	//GetOwner()->AddActorLocalOffset(Adjusted, true);
+		// Z軸を接地面法線に合わせて回転
+		FRotator NewRotation = FRotationMatrix::MakeFromZX(GroundNormal, GetOwner()->GetActorForwardVector()).Rotator();
 
-	//PreviousPosition = GetOwner()->GetActorLocation();
+		// なめらかに傾けたい場合は補間
+		FRotator CurrentRotation = GetOwner()->GetActorRotation();
+		FRotator SmoothedRotation = FMath::RInterpTo(CurrentRotation, NewRotation, DeltaTime, 5.0f); // 5.0f は回転速度
+		GetOwner()->SetActorRotation(SmoothedRotation);
+	}
 }
 
 void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
@@ -181,4 +185,40 @@ FVector UPhysicsCalculator::GetBlockedAdjustedVector(const FVector& MoveVector)
 	}
 
 	return MoveVector;
+}
+FVector UPhysicsCalculator::GetGroundNormal() const
+{
+	AActor* Owner = GetOwner();
+	if (!Owner) return FVector::UpVector;
+
+	FVector ActorLocation = Owner->GetActorLocation();
+	FVector ActorScale = Owner->GetActorScale();
+	FVector BoxExtent(20.0f * ActorScale.X, 20.0f * ActorScale.Y, 2.0f);
+
+	float HalfHeight = Owner->GetSimpleCollisionHalfHeight();
+	FVector FootLocation = ActorLocation - FVector(0, 0, HalfHeight);
+	FVector StartTrace = FootLocation;
+	FVector EndTrace = FootLocation - FVector(0, 0, 5.0f);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Owner);
+	FHitResult Hit;
+
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		StartTrace,
+		EndTrace,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeBox(BoxExtent),
+		Params
+	);
+
+	if (bHit)
+	{
+		return Hit.Normal;
+	}
+
+	// 接地してなければ上向きを返す
+	return FVector::UpVector;
 }
