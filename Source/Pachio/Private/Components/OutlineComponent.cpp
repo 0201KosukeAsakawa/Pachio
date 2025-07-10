@@ -40,7 +40,7 @@ void UOutlineComponent::BeginPlay()
     OutlineMesh->RegisterComponent();
 
     // スケールアップ（アウトラインの太さ調整）
-    OutlineMesh->SetRelativeScale3D(FVector(10.05f));
+    OutlineMesh->SetRelativeScale3D(FVector(1.05f));
     OutlineMesh->SetRelativeLocation(FVector::ZeroVector);
     OutlineMesh->SetRelativeRotation(FRotator::ZeroRotator);
 
@@ -69,4 +69,58 @@ void UOutlineComponent::BeginPlay()
     UE_LOG(LogTemp, Warning, TEXT("OutlineMesh Visible: %s, Registered: %s"),
         OutlineMesh->IsVisible() ? TEXT("true") : TEXT("false"),
         OutlineMesh->IsRegistered() ? TEXT("true") : TEXT("false"));
+}
+
+void UOutlineComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    // カメラ位置を取得（プレイヤーのビューアクター）
+    APlayerController* PC = World->GetFirstPlayerController();
+    if (!PC) return;
+
+    FVector CameraLocation;
+    FRotator CameraRotation;
+    PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
+
+    // オブジェクトの位置（判定用）
+    FVector ObjectLocation = Owner->GetActorLocation();
+
+    FHitResult HitResult;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(Owner); // 自分自身は無視（必要に応じて外す）
+
+    bool bHit = World->LineTraceSingleByChannel(
+        HitResult,
+        CameraLocation,
+        ObjectLocation,
+        ECC_Visibility,
+        Params);
+
+    bool bIsBehind = false;
+
+    if (bHit)
+    {
+        // ヒットしたのが自分じゃないなら裏に隠れている
+        if (HitResult.GetActor() != Owner)
+        {
+            bIsBehind = true;
+        }
+    }
+    else
+    {
+        // ヒットしなかったら見えている
+        bIsBehind = false;
+    }
+
+    if (OutlineMesh)
+    {
+        OutlineMesh->SetVisibility(bIsBehind);
+    }
 }

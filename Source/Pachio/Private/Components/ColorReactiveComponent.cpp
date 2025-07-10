@@ -12,6 +12,8 @@ UColorReactiveComponent::UColorReactiveComponent()
 
 void UColorReactiveComponent::Init(UMeshComponent* mesh)
 {
+	if (!bSetStartColor)
+		return;
     // マテリアルの色を変更
     UMaterialInstanceDynamic* DynMaterial = mesh->CreateAndSetMaterialInstanceDynamic(0);
     if (DynMaterial)
@@ -129,7 +131,11 @@ FLinearColor UColorReactiveComponent::GetComplementaryColor(const FLinearColor& 
 
 void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 {
-	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
+	AActor* Owner = GetOwner();
+	if (!Owner)
+		return;
+
+	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner, TEXT("StaticMesh"));
 	if (!Mesh) return;
 
 	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);

@@ -2,51 +2,27 @@
 #include "InputAction.h"
 #include "GameFramework/Character.h"
 
-FVector UPlayerMoveLogic::Movement(float DeltaTime, AActor* Owner ,const FInputActionValue& Value)
+FVector UPlayerMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)
 {
-    if (!GetWorld())
-        return FVector(0,0,0);
+    if (!Owner)
+        return FVector::ZeroVector;
 
     FVector2D MoveInput = Value.Get<FVector2D>();
-
-    // デッドゾーン処理（小さい入力は無視）
     const float DeadZone = 0.2f;
     if (MoveInput.Size() < DeadZone)
-        return FVector(0, 0, 0);
+        return FVector::ZeroVector;
 
-    ACharacter* character = Cast<ACharacter>(Owner);
-    if (!character)
-        return FVector(0, 0, 0);
+    // オーナーのローカル方向（前と右）に入力をそのまま乗せる
+    FVector Forward = Owner->GetActorForwardVector();
+    FVector Right = Owner->GetActorRightVector();
 
-    // カメラ回転に基づく移動方向の取得
-    FRotator CamRot = character->GetControlRotation();
-    FVector CamForward = FRotationMatrix(CamRot).GetUnitAxis(EAxis::X);
-    FVector CamRight = FRotationMatrix(CamRot).GetUnitAxis(EAxis::Y);
+    FVector MoveDir = Forward * MoveInput.Y + Right * MoveInput.X;
 
-    // キャラクターが上下逆の場合、左右ベクトルを反転
-    if (FVector::DotProduct(Owner->GetActorUpVector(), FVector::UpVector) < 0.f)
-    {
-        CamRight *= -1.f;
-    }
+    // Normalize しなくてもいい場合はここは不要（速度スケールによる）
+    MoveDir = MoveDir.GetClampedToMaxSize(1.0f);
 
-    // カメラ基準での移動ベクトル（ワールド座標）
-    FVector WorldMoveDir = (CamRight * MoveInput.X + CamForward * MoveInput.Y).GetSafeNormal();
-
-    // キャラクターのローカル座標に変換
-    FVector LocalMoveDir = Owner->GetActorTransform().InverseTransformVectorNoScale(WorldMoveDir);
-
-    // キャラクターの進行方向（ローカル軸）に変換して最終的な移動ベクトルを算出
-    FVector MoveDir =
-        Owner->GetActorRightVector() * LocalMoveDir.Y +
-        Owner->GetActorForwardVector() * LocalMoveDir.X;
-
-    // 入力ベクトルをキャラクターに適用
     return MoveDir;
-
 }
-
-
-
 
 // 移動速度などの初期化関数（未実装）
 void UPlayerMoveLogic::Init(float speed, const FVector)
