@@ -88,6 +88,7 @@ public:
 	// カラーモードを1つ左にシフト
 	void ShiftArrayLeftColorMode();
 
+	void OnStickMove(const FInputActionValue& Value);
 private:
 	// ===============
 	// ==== 初期化関数 ====
@@ -118,6 +119,10 @@ private:
 
 	// 現在の色に応じた効果適用
 	void ApplyEffectFromColor(const FLinearColor& Color);
+
+	void OnStickRotate(const FVector2D& StickInput);
+	FVector2D PrevInputDir = FVector2D::ZeroVector;
+	bool bHasPrevInputDir = false;
 
 	// ダメージ処理（ダメージ値と攻撃データを受け取る）
 	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr) override;

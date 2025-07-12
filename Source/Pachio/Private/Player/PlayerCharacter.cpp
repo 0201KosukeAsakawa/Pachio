@@ -378,3 +378,45 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 	}
 	}
 }
+
+
+
+
+	void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
+	{
+		const float DeadZone = 0.2f;
+		if (StickInput.SizeSquared() < DeadZone)
+			return;
+
+		FVector2D InputDir = StickInput.GetSafeNormal(); // 正規化
+
+		if (!bHasPrevInputDir)
+		{
+			PrevInputDir = InputDir;
+			bHasPrevInputDir = true;
+			return;
+		}
+
+		// 2Dクロス積で回転方向判定（Z成分だけ取る）
+		float CrossZ = InputDir.X * PrevInputDir.Y - InputDir.Y * PrevInputDir.X;
+
+		const float epsilon = 0.01f;
+		if (CrossZ > epsilon)
+		{
+			UE_LOG(LogTemp, Log, TEXT("回転方向：左回り（反時計回り）"));
+			ChangeColor(-0.1);
+			PrevInputDir = InputDir;
+		}
+		else if (CrossZ < -epsilon)
+		{
+			UE_LOG(LogTemp, Log, TEXT("回転方向：右回り（時計回り）"));
+			ChangeColor(0.1);
+			PrevInputDir = InputDir;
+		}
+
+	}
+void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
+{
+	FVector2D StickInput = Value.Get<FVector2D>();
+	OnStickRotate(StickInput);
+}
