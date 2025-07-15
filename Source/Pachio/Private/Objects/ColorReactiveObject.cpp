@@ -77,7 +77,7 @@ void AColorReactiveObject::SetupMaterial()
 
 	// ダイナミックマテリアル作成とベース色の設定
 	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
-	if (DynMaterial == nullptr)
+	if (DynMaterial == nullptr || !bSetColor)
 		return;
 
 	DynMaterial->SetVectorParameterValue(FName("BaseColor"), StartColor);
@@ -92,7 +92,7 @@ void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 		ApplyColorToMaterial(NewColor);
 
 	// 入力色と一致するかチェック（結果は bColorMuch に保持）
-	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor);
+	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor, buseComplementaryColor);
 }
 
 void AColorReactiveObject::SetColor(FLinearColor newColor)
