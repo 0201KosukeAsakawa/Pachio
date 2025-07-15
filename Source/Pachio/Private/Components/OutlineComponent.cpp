@@ -2,6 +2,8 @@
 
 
 #include "Components/OutlineComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "FunctionLibrary.h"
 UOutlineComponent::UOutlineComponent()
@@ -12,68 +14,113 @@ UOutlineComponent::UOutlineComponent()
 void UOutlineComponent::BeginPlay()
 {
     Super::BeginPlay();
-    InitMesh();
-}
 
-void UOutlineComponent::InitMesh()
-{
     AActor* Owner = GetOwner();
-    if (Owner)
+    if (!Owner) return;
+
+    UStaticMeshComponent* OriginalMesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner,"StaticMesh");
+    if (!OriginalMesh)
     {
-        CachedMesh = Owner->FindComponentByClass<UMeshComponent>();
-        if (CachedMesh)
+        UE_LOG(LogTemp, Warning, TEXT("OriginalMesh not found"));
+        return;
+    }
+
+    if (!OutlineMesh)
+    {
+        OutlineMesh = NewObject<UStaticMeshComponent>(Owner, TEXT("OutlineMesh"));
+        if (!OutlineMesh)
         {
-            CachedMesh->SetCustomDepthStencilValue(StencilValue);
-            CachedMesh->SetRenderCustomDepth(false); // 初期は非表示
+            UE_LOG(LogTemp, Warning, TEXT("Failed to create OutlineMesh"));
+            return;
         }
     }
-}
 
-void UOutlineComponent::SetStencilValue(int32 Value)
-{
-    StencilValue = Value;
-    if (CachedMesh)
-    {
-        CachedMesh->SetCustomDepthStencilValue(Value);
-    }
-}
+    OutlineMesh->SetStaticMesh(OriginalMesh->GetStaticMesh());
+    OutlineMesh->AttachToComponent(OriginalMesh, FAttachmentTransformRules::SnapToTargetIncludingScale);
+    OutlineMesh->RegisterComponent();
 
-void UOutlineComponent::EnableOutline(bool bEnable)
-{
-    if (CachedMesh)
+    // スケールアップ（アウトラインの太さ調整）
+    OutlineMesh->SetRelativeScale3D(FVector(1.05f));
+    OutlineMesh->SetRelativeLocation(FVector::ZeroVector);
+    OutlineMesh->SetRelativeRotation(FRotator::ZeroRotator);
+
+    if (OutlineMaterial)
     {
-        CachedMesh->SetRenderCustomDepth(bEnable);
+        OutlineMesh->SetMaterial(0, OutlineMaterial);
     }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("OutlineMaterial is not set"));
+    }
+
+    OutlineMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    OutlineMesh->SetVisibility(true);
+
+    // 手前に描画したいので優先度を大きくする
+    OutlineMesh->TranslucencySortPriority = 1000;
+
+    // マテリアル側でDisable Depth TestをONにしておくこと（重要）
+
+    OutlineMesh->SetRenderCustomDepth(false);
+
+    OutlineMesh->MarkRenderStateDirty();
+    OutlineMesh->MarkRenderDynamicDataDirty();
+
+    UE_LOG(LogTemp, Warning, TEXT("OutlineMesh Visible: %s, Registered: %s"),
+        OutlineMesh->IsVisible() ? TEXT("true") : TEXT("false"),
+        OutlineMesh->IsRegistered() ? TEXT("true") : TEXT("false"));
 }
 
 void UOutlineComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    if (CachedMesh)
-    {
-        bool bBehindWall = IsBehindWall();
-        EnableOutline(bBehindWall);
-    }
-}
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
 
-bool UOutlineComponent::IsBehindWall()
-{
-    APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-    if (!PC) return false;
+    UWorld* World = GetWorld();
+    if (!World) return;
 
-    FVector CameraLoc;
-    FRotator CameraRot;
-    PC->GetPlayerViewPoint(CameraLoc, CameraRot);
+    // カメラ位置を取得（プレイヤーのビューアクター）
+    APlayerController* PC = World->GetFirstPlayerController();
+    if (!PC) return;
 
-    FVector TargetLoc = GetOwner()->GetActorLocation();
+    FVector CameraLocation;
+    FRotator CameraRotation;
+    PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
 
-    FHitResult Hit;
+    // オブジェクトの位置（判定用）
+    FVector ObjectLocation = Owner->GetActorLocation();
+
+    FHitResult HitResult;
     FCollisionQueryParams Params;
-    Params.AddIgnoredActor(GetOwner());
+    Params.AddIgnoredActor(Owner); // 自分自身は無視（必要に応じて外す）
 
-    bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, CameraLoc, TargetLoc, ECC_Visibility, Params);
+    bool bHit = World->LineTraceSingleByChannel(
+        HitResult,
+        CameraLocation,
+        ObjectLocation,
+        ECC_Visibility,
+        Params);
 
-    // 壁などに当たったら裏にいると判断
-    return bHit && Hit.GetActor() != GetOwner();
+    bool bIsBehind = false;
+
+    if (bHit)
+    {
+        // ヒットしたのが自分じゃないなら裏に隠れている
+        if (HitResult.GetActor() != Owner)
+        {
+            bIsBehind = true;
+        }
+    }
+    else
+    {
+        // ヒットしなかったら見えている
+        bIsBehind = false;
+    }
+
+    if (OutlineMesh)
+    {
+        OutlineMesh->SetVisibility(bIsBehind);
+    }
 }

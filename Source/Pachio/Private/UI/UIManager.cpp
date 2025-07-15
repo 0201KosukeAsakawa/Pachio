@@ -1,20 +1,34 @@
 #include "UI/UIManager.h"
 #include "UI/ColorLens.h"
+#include "UI/LockonWidget.h"
 #include "UI/ClearResultWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "Components/ColorControllerComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "UI/InGameHUD.h"
 
 void UUIManager::Init(const AActor*)
 {
     // すべてのカテゴリのウィジェットを初期化
     InitAllWidgets();
+
+    APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    AInGameHUD* MyHUD = Cast<AInGameHUD>(PC->GetHUD());
+    if (MyHUD)
+    {
+        MyHUD->SetUIManager(this);
+    }
     if (ColorLens)
         ColorLens->AddToViewport();
-}
 
+
+    if (UUserWidget** FoundWidget = WidgetDataMap[EWidgetCategory::Marker].WidgetMap.Find("TargetMarker"))
+    {
+        MarkerWidget = Cast<ULockonWidget>(*FoundWidget);
+    }
+}
 
 void UUIManager::InitAllWidgets()
 {
@@ -149,4 +163,23 @@ UUserWidget* UUIManager::ShowResultWidget(float Time, EStageRank Rank)
     }
 
     return BaseWidget;
+}
+
+UUserWidget* UUIManager::ShowMarker(AActor* Target)
+{
+    if (!Target || !MarkerWidget) return nullptr;
+
+    APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+    MarkerWidget->AddToViewport();
+    MarkerWidget->SetTargetActor(Target);
+
+    return MarkerWidget;
+}
+
+void UUIManager::HideMarker()
+{
+    if (MarkerWidget)
+    {
+        MarkerWidget->RemoveFromParent();
+    }
 }

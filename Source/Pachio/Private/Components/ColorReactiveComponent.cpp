@@ -12,6 +12,8 @@ UColorReactiveComponent::UColorReactiveComponent()
 
 void UColorReactiveComponent::Init(UMeshComponent* mesh)
 {
+	if (!bSetStartColor)
+		return;
     // マテリアルの色を変更
     UMaterialInstanceDynamic* DynMaterial = mesh->CreateAndSetMaterialInstanceDynamic(0);
     if (DynMaterial)
@@ -129,7 +131,11 @@ FLinearColor UColorReactiveComponent::GetComplementaryColor(const FLinearColor& 
 
 void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 {
-	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
+	AActor* Owner = GetOwner();
+	if (!Owner)
+		return;
+
+	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner, TEXT("StaticMesh"));
 	if (!Mesh) return;
 
 	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
@@ -149,6 +155,18 @@ bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, cons
     float ColorDifference = 0.299f * dR * dR + 0.587f * dG * dG + 0.114f * dB * dB;
 
     return ColorDifference <= Tolerance * Tolerance;
+}
+
+bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance) const
+{
+	float dR = TargetColor.R - FilterColor.R;
+	float dG = TargetColor.G - FilterColor.G;
+	float dB = TargetColor.B - FilterColor.B;
+
+	// 人間の目に近い重み付き色差（輝度ベース）
+	float ColorDifference = 0.299f * dR * dR + 0.587f * dG * dG + 0.114f * dB * dB;
+
+	return ColorDifference <= Tolerance * Tolerance;
 }
 
 

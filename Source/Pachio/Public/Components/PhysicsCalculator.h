@@ -37,11 +37,14 @@ public:
 
 	FVector GetBlockedAdjustedVector(const FVector& MoveVector);
 
+
 	// 物理計算が有効かどうかを返す
 	bool IsPhysicsEnabled() const { return bIsPhysicsEnabled; }
 private:
 	// オブジェクトに重力を加える
 	void AddGravity();
+	//設置面にあわせて傾ける
+	FVector GetGroundNormal() const;
 private:
 	// 重力のスケールを設定（重力の強さ）
 	float GravityScale = 9.8f;

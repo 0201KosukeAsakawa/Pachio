@@ -5,7 +5,7 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "Components/ColorReactiveComponent.h"
 ATeleportPortal::ATeleportPortal()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -21,12 +21,33 @@ void ATeleportPortal::BeginPlay()
     Super::BeginPlay();
 }
 
+void ATeleportPortal::Init()
+{
+    AColorReactiveObject::Init();
+    CurrentTargetPortal = PrimaryDestination;
+}
+
+void ATeleportPortal::ColorAction(const FLinearColor InColor)
+{
+    bool b = ColorReactiveComponent->IsColorMatch(InColor);
+    if (b)
+    {
+        CurrentTargetPortal = AlternatePortal;
+    }
+    else
+    {
+        bool c = ColorReactiveComponent->IsColorMatch(InColor, SecondColor);
+        if (c)
+            CurrentTargetPortal = PrimaryDestination;
+    }
+}
+
 void ATeleportPortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
     // 必須チェック
-    if (!OtherActor || !PairPortal || OtherActor == this)
+    if (!OtherActor || !CurrentTargetPortal || OtherActor == this)
         return;
 
     UWorld* World = GetWorld();
@@ -43,11 +64,11 @@ void ATeleportPortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
     }
 
     // 安全にテレポート処理
-    FVector TargetLocation = PairPortal->GetActorLocation();
+    FVector TargetLocation = CurrentTargetPortal->GetActorLocation();
     LastTeleportTime.Add(OtherActor, CurrentTime);
 
     // クールダウン時刻を記録（双方向）
-    PairPortal->LastTeleportTime.Add(OtherActor, CurrentTime);
+    CurrentTargetPortal->LastTeleportTime.Add(OtherActor, CurrentTime);
 
     OtherActor->SetActorLocation(TargetLocation);
 

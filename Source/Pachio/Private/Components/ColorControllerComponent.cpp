@@ -5,6 +5,7 @@
 #include "DataContainer/EffectMatchResult.h"
 #include "FunctionLibrary.h"
 #include "UI/ColorLens.h"
+#include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 
@@ -67,32 +68,28 @@ void UColorControllerComponent::AdjustColor(float Delta)
 void UColorControllerComponent::ChangeMode(int Direction)
 {
     // Directionが1以上なら1、それ未満なら-1に補正
-    if (Direction >= 1)
-    {
-        Direction = 1;
-    }
-    else
-    {
-        Direction = -1;
-    }
+    Direction = (Direction >= 1) ? 1 : -1;
+
+    EColorTargetType NextMode = CurrentColorMode;
 
     // Direction が正のときは次、負のときは前
     if (Direction > 0)
     {
-        CurrentColorMode = GetNextMode(CurrentColorMode);
+        NextMode = GetNextMode(CurrentColorMode);
     }
-    else if (Direction < 0)
+    else
     {
-        CurrentColorMode = GetPreviousMode(CurrentColorMode);
+        NextMode = GetPreviousMode(CurrentColorMode);
     }
-    // モードを表示（デバッグ用）
-    UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
 
-    if (CurrentColorMode == EColorTargetType::ObjectColor)
+    // 一時ログ
+    UE_LOG(LogTemp, Warning, TEXT("Trying Mode Change: %d -> %d"), static_cast<int32>(CurrentColorMode), static_cast<int32>(NextMode));
+
+    if (NextMode == EColorTargetType::ObjectColor)
     {
         FVector Start = GetOwner()->GetActorLocation();
         FVector BoxExtent(1000.f, 1000.f, 1000.f);
-        FVector End = Start; // 静止BoxCast（移動しない）
+        FVector End = Start;
 
         TArray<FHitResult> HitResults;
         FCollisionShape Box = FCollisionShape::MakeBox(BoxExtent);
@@ -104,45 +101,51 @@ void UColorControllerComponent::ChangeMode(int Direction)
             Start,
             End,
             FQuat::Identity,
-            ECC_Visibility, // または専用のカスタムチャネル
+            ECC_Visibility,
             Box,
             Params
         );
 
         IColorReactiveInterface* ClosestTarget = nullptr;
         float ClosestDistSq = TNumericLimits<float>::Max();
+        AActor* TargetActor = nullptr;
 
         for (const FHitResult& Hit : HitResults)
         {
             AActor* HitActor = Hit.GetActor();
             if (!HitActor) continue;
 
-            // IColorReactiveInterface を実装しているか確認
             if (HitActor->GetClass()->ImplementsInterface(UColorReactiveInterface::StaticClass()))
             {
                 IColorReactiveInterface* ir = Cast<IColorReactiveInterface>(HitActor);
-                if (ir->IsColorModifiable())
+                if (!ir || ir->IsColorModifiable())
                     continue;
 
                 float DistSq = FVector::DistSquared(HitActor->GetActorLocation(), Start);
                 if (DistSq < ClosestDistSq)
                 {
                     ClosestDistSq = DistSq;
-
                     ClosestTarget = ir;
+                    TargetActor = HitActor;
                 }
             }
         }
 
         if (ClosestTarget)
         {
-            // World → LevelManager → UIManager → SetColorTarget(Interface)
+            // 対象が見つかったのでモード確定
+            CurrentColorMode = NextMode;
+            UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
+
             if (ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld()))
             {
                 if (UColorManager* ColorManager = LevelManager->GetColorManager())
                 {
                     ColorManager->SetColorTarget(ClosestTarget);
                     UE_LOG(LogTemp, Warning, TEXT("ColorTarget を ColorManager に設定しました"));
+
+                    if (TargetActor)
+                        LevelManager->GetUIManager()->ShowMarker(TargetActor);
                 }
                 else
                 {
@@ -153,11 +156,23 @@ void UColorControllerComponent::ChangeMode(int Direction)
             {
                 UE_LOG(LogTemp, Warning, TEXT("LevelManager が取得できませんでした"));
             }
+
+            AnimationDelegate.Execute(Direction);
         }
-
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("対象が見つからなかったため、モードを変更しませんでした"));
+        }
     }
+    else
+    {
+        // 対象を必要としないモードならそのまま切り替え
+        CurrentColorMode = NextMode;
+        UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
 
-    AnimationDelegate.Execute(Direction);
+        ALevelManager::GetInstance(GetWorld())->GetUIManager()->HideMarker();
+        AnimationDelegate.Execute(Direction);
+    }
 }
 
 EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType CurrentMode)

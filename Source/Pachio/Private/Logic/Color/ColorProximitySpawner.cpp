@@ -38,6 +38,7 @@ void UColorProximitySpawner::OnMesh()
             Prim->SetHiddenInGame(false);
             Prim->SetCastShadow(true);
             Prim->SetComponentTickEnabled(true);
+            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
         }
     }
 }
@@ -52,16 +53,16 @@ void UColorProximitySpawner::OffMesh()
     Owner->SetActorTickEnabled(false);
 
     // コンポーネントを調整
-   for (UActorComponent* Comp : Owner->GetComponents())
-{
-    if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+    for (UActorComponent* Comp : Owner->GetComponents())
     {
-        Prim->SetVisibility(false);
-        Prim->SetHiddenInGame(true);
-        Prim->SetCastShadow(false);
-        Prim->SetComponentTickEnabled(false);
+        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        {
+            Prim->SetVisibility(false);
+            Prim->SetHiddenInGame(true);
+            Prim->SetCastShadow(false);
+            Prim->SetComponentTickEnabled(false);
 
-        Prim->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        }
     }
-}
 }

@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Objects/ColorReactiveObject.h"
 #include "TeleportPortal.generated.h"
 
 UCLASS()
-class PACHIO_API ATeleportPortal : public AActor
+class PACHIO_API ATeleportPortal : public AColorReactiveObject
 {
     GENERATED_BODY()
 
@@ -16,7 +16,9 @@ public:
 
 protected:
     virtual void BeginPlay() override;
-
+    // 初期化処理（親クラスも初期化）
+    virtual void Init() override;
+    virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
     UFUNCTION()
     void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
@@ -26,10 +28,17 @@ public:
     // オーバーラップを検知するコリジョン（例：Box）
     UPROPERTY(VisibleAnywhere)
     class UBoxComponent* CollisionBox;
-
+    UPROPERTY(EditAnywhere)
+    FLinearColor SecondColor;
     // 対応するペアのポータル
+    UPROPERTY()
+    ATeleportPortal* CurrentTargetPortal;
+
     UPROPERTY(EditAnywhere, Category = "Teleport")
-    ATeleportPortal* PairPortal;
+    ATeleportPortal* PrimaryDestination;
+
+    UPROPERTY(EditAnywhere, Category = "Teleport")
+    ATeleportPortal* AlternatePortal;
 
     // テレポート直後の再発動を防ぐフラグ（オプション）
     UPROPERTY()
