@@ -27,6 +27,7 @@ public :
 	bool CheckColorMatch(const FLinearColor& FilterColor);	
 	UFUNCTION(BlueprintCallable)
 	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.08f) const;
+	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
 	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 
 

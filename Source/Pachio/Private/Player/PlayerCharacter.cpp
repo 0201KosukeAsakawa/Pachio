@@ -400,20 +400,17 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 		// 2Dクロス積で回転方向判定（Z成分だけ取る）
 		float CrossZ = InputDir.X * PrevInputDir.Y - InputDir.Y * PrevInputDir.X;
 
-		// 角度そのものも取りたいなら↓
-		//float Angle = FMath::Acos(FMath::Clamp(Dot, -1.0f, 1.0f)); // ラジアン
-
-		//UE_LOG(LogTemp, Log, TEXT("X=%f Y=%f"), InputDir.X, InputDir.Y);
-
 		const float epsilon = 0.01f;
 		if (CrossZ > epsilon)
 		{
 			UE_LOG(LogTemp, Log, TEXT("回転方向：左回り（反時計回り）"));
+			ChangeColor(-0.1);
 			PrevInputDir = InputDir;
 		}
 		else if (CrossZ < -epsilon)
 		{
 			UE_LOG(LogTemp, Log, TEXT("回転方向：右回り（時計回り）"));
+			ChangeColor(0.1);
 			PrevInputDir = InputDir;
 		}
 
