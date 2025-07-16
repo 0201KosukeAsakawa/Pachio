@@ -352,28 +352,22 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 	case EBuffEffect::JumpBoost:
 	{
 		JumpBuff = 1.0f + 1.0f * Match.StrengthRatio;
-		UE_LOG(LogTemp, Log, TEXT("[ColorEffect] JumpBoost applied: %.2f"), Match.StrengthRatio);
 		break;
 	}
 
 	case EBuffEffect::SpeedBoost:
 	{
 		GetCharacterMovement()->MaxWalkSpeed = 1000.0f + 400.0f * Match.StrengthRatio;
-
-		UE_LOG(LogTemp, Log, TEXT("[ColorEffect] SpeedBoost applied: %.2f"), Match.StrengthRatio);
 		break;
 	}
 
 	case EBuffEffect::Shield:
 	{
-		// Shield効果が未実装
-		UE_LOG(LogTemp, Warning, TEXT("[ColorEffect] Shield effect detected but not implemented."));
 		break;
 	}
 
 	default:
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[ColorEffect] No matching effect. Effect type unknown or invalid."));
 		break;
 	}
 	}
@@ -404,13 +398,13 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 		if (CrossZ > epsilon)
 		{
 			UE_LOG(LogTemp, Log, TEXT("回転方向：左回り（反時計回り）"));
-			ChangeColor(-0.1);
+			ChangeColor(-0.01);
 			PrevInputDir = InputDir;
 		}
 		else if (CrossZ < -epsilon)
 		{
 			UE_LOG(LogTemp, Log, TEXT("回転方向：右回り（時計回り）"));
-			ChangeColor(0.1);
+			ChangeColor(0.01);
 			PrevInputDir = InputDir;
 		}
 

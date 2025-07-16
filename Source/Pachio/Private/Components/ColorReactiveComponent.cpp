@@ -27,22 +27,28 @@ void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor)
 	CurrentColor = FilterColor;
 }
 
-bool UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor)
+bool UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor, const bool buseComplementaryColor)
 {
-    // 色のマッチング判定は保持しておきつつ
+	FLinearColor CheckColor = FilterColor;  // コピーして変更可能に
 
-    bool bMatch = IsColorMatch(FilterColor);
+	if (buseComplementaryColor)
+	{
+		CheckColor = GetComplementaryColor(CheckColor);  // 補色を取得して代入
+		UE_LOG(LogTemp, Log, TEXT("CheckColor: %s"), *CheckColor.ToString());
+	}
+	
+	bool bMatch = IsColorMatch(CheckColor);
 
-    if (bMatch)
-    {
-        OnColorMatched(FilterColor);
-    }
-    else
-    {
-        OnColorMismatched(FilterColor);
-    }
+	if (bMatch)
+	{
+		OnColorMatched(CheckColor);
+	}
+	else
+	{
+		OnColorMismatched(CheckColor);
+	}
 
-    return bMatch;
+	return bMatch;
 }
 
 // RGB → HSL 変換関数
@@ -117,16 +123,37 @@ FLinearColor UColorReactiveComponent::GetComplementaryColor(const FLinearColor& 
 	// RGB → HSL に変換
 	FHSLColor HSL = RGBToHSL(InColor);
 
-	// パステル調に補正（元の色も淡くする）
-	HSL.S = 0.3f;
-	HSL.L = 0.75f;
-
-	// 補色（色相を180度反転）
+	// 色相を180度反転（補色）
 	HSL.H += 0.5f;
 	if (HSL.H > 1.0f) HSL.H -= 1.0f;
 
-	// HSL → RGB に変換して返す
-	return HSLToRGB(HSL);
+	// パステル調に調整（彩度を低めに、明度は中～高）
+	HSL.S = 0.3f;
+
+	// 明度を 0.8～1.0 の範囲に収める（パステルに合わせる）
+	HSL.L = FMath::Clamp(HSL.L, 0.8f, 1.0f);
+
+	// HSL → RGB 変換
+	FLinearColor Complementary = HSLToRGB(HSL);
+
+	// 最大成分を取得
+	float MaxComponent = FMath::Max3(Complementary.R, Complementary.G, Complementary.B);
+
+	// 最大成分を1.0に強制
+	if (Complementary.R == MaxComponent) Complementary.R = 1.0f;
+	if (Complementary.G == MaxComponent) Complementary.G = 1.0f;
+	if (Complementary.B == MaxComponent) Complementary.B = 1.0f;
+
+	// 他の成分は0.8～1.0の範囲にクランプ
+	if (Complementary.R != 1.0f) Complementary.R = FMath::Clamp(Complementary.R, 0.8f, 1.0f);
+	if (Complementary.G != 1.0f) Complementary.G = FMath::Clamp(Complementary.G, 0.8f, 1.0f);
+	if (Complementary.B != 1.0f) Complementary.B = FMath::Clamp(Complementary.B, 0.8f, 1.0f);
+
+	Complementary.A = 1.0f;
+	// ログ出力（RGBA各成分を表示）
+	UE_LOG(LogTemp, Log, TEXT("Applying color to material: R=%.3f, G=%.3f, B=%.3f, A=%.3f"),
+		Complementary.R, Complementary.G, Complementary.B, Complementary.A);
+	return Complementary;
 }
 
 void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
@@ -143,6 +170,7 @@ void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 
 	DynMaterial->SetVectorParameterValue(FName("BaseColor"), InColor);
 }
+
 
 
 bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const
