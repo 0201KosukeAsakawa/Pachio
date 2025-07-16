@@ -15,19 +15,27 @@ class UImage;
 UCLASS()
 class PACHIO_API UColorLens : public UUserWidget,public IColorReactiveInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 public:
-	void NativeConstruct();
-	void Animation(float);
-private:
-	void ColorAction(FLinearColor)override;
-protected:
-	//
-	UPROPERTY(meta = (BindWidget))
-	UImage* FilterColorImage;
+    virtual void NativeConstruct() override;
+    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
+    void Animation(float DeltaTime); // 使わなければ削除してOK
+
+    // 拍のタイミングで呼ぶ
+    UFUNCTION()
+    void PlayBeatAnimation();
 
 private:
-	//// �A�j���[�V�����ϐ��i�u���[�v�����g���̃A�j���[�V�����ƕR�t����j
-	//UPROPERTY(meta = (BindWidgetAnim), Transient)
-	//UWidgetAnimation* RotationAnimation;
+    void ColorAction(FLinearColor InColor) override;
+
+    UPROPERTY(meta = (BindWidget))
+    UImage* FilterColorImage;
+
+    // アニメーション用メンバ変数
+    bool bIsAnimating = false;
+    float AnimationTime = 0.f;
+    float AnimationDuration = 0.3f;   // アニメーション全体時間（秒）
+    FVector2D OriginalScale = FVector2D(1.f, 1.f);
+    FVector2D TargetScale = FVector2D(1.3f, 1.3f); // 拍で拡大する倍率
 };

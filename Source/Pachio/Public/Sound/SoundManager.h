@@ -7,21 +7,26 @@
 #include "Components/AudioComponent.h"
 #include "Components/ActorComponent.h"
 #include "Interface/Soundable.h"
+#include "fmod_studio.hpp"     // FMOD Studio APIのC++ラッパー
 #include "SoundManager.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBeatDetected);  
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnConfirmedBeat);  // マーカーで受けた正確なビート
 
+class UFMODAudioComponent;
+class UFMODEvent;
 // サウンドデータを格納する構造体
 USTRUCT()
 struct FSoundData : public FTableRowBase
 {
     GENERATED_USTRUCT_BODY()
-
 public:
-    // サウンドウェーブとその対応するオーディオコンポーネントを保持
+    // 再生対象の音（SoundWave or SoundCue）を保持
     UPROPERTY(EditAnywhere, Category = "Sound")
-    TMap<FName, USoundWave*> SoundWaveMap;
+    TMap<FName, USoundBase*> SoundAssetMap;
 
-    UPROPERTY()
+    // AudioComponent（再生時に生成される）を保持
+    UPROPERTY(Transient)
     TMap<FName, UAudioComponent*> AudioComponentMap;
 };
 
@@ -39,7 +44,7 @@ public:
 
     // サウンドマネージャーを初期化
     void Init();
-
+    void Tick(float DeltaTim);
 private:
     // サウンドを再生するメソッド
     UFUNCTION(BlueprintCallable)
@@ -56,7 +61,9 @@ private:
 
     void PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volume, float FadeDuration) override;
     void StopBGMWithFadeOut(float FadeDuration) override;
-
+    UFUNCTION()
+    void OnEnvelopeValue(const USoundWave* SoundWave, const float EnvelopeValue);
+    bool PlayBGM(/*UFMODEvent* EventAsset, float InBPM*/);
 private:
     // サウンドデータを保持するためのマップ
     UPROPERTY(EditAnywhere, Category = "Sound")
@@ -64,7 +71,7 @@ private:
 
     // 現在再生中のBGM
     UPROPERTY()
-    UAudioComponent* mCurrentBGM;
+    UFMODAudioComponent* mCurrentBGM;
 
     // BGM音量
     float BGMVolume;
@@ -72,4 +79,30 @@ private:
     // SE音量
     float SEVolume;
 
+    UPROPERTY()
+    UFMODAudioComponent* TestSound;
+    UPROPERTY(EditAnywhere, Category = "FMOD")
+    UFMODEvent* TestEventAsset;
+    // SoundManager.h に追加
+    UPROPERTY(EditAnywhere, Category = "BPM")
+    float MusicBPM = 166.0f;  // 任意のBPM
+
+    FTimerHandle BeatTimerHandle;// Beat発火処理
+    UFUNCTION()
+    void OnBeatTimerElapsed();
+    void InitTestSound();
+
+    float BeatInterval = 0.5f;
+    float StartTime = 0.0f;
+    int32 LastPredictedBeat = -1;
+    float LastConfirmedBeatTime = 0.0f;
+    UPROPERTY(BlueprintAssignable)
+    FOnConfirmedBeat OnConfirmedBeat;
+    UPROPERTY()
+    class UFMODAudioComponent* FMODAudioComponent;
+    FMOD::Studio::EventInstance* EventInstance;
+public:
+    UPROPERTY(BlueprintAssignable, Category = "Beat")
+    FOnBeatDetected OnBeatDetected;
+    void OnMarkerBeat(int64 MarkerPositionMs); // マーカーで発火されたとき
 };
