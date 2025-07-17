@@ -72,6 +72,7 @@
 		</relationship>
 		<relationship name="markers">
 			<destination>{2859ea94-60f7-4b70-98b6-4ce42075b950}</destination>
+			<destination>{3a171fff-2a18-4220-8be4-cbc77413b17d}</destination>
 		</relationship>
 	</object>
 	<object class="EventMixerMaster" id="{08ae8ca6-12b5-4dff-b408-2c035e8f5644}">
@@ -119,6 +120,20 @@
 		</property>
 		<property name="tempo">
 			<value>180</value>
+		</property>
+		<relationship name="timeline">
+			<destination>{af0796bc-edf1-4f88-a6d5-bc4ff8fe9f6b}</destination>
+		</relationship>
+		<relationship name="markerTrack">
+			<destination>{da7afbcd-5adc-4538-a894-3fcbc365f705}</destination>
+		</relationship>
+	</object>
+	<object class="NamedMarker" id="{3a171fff-2a18-4220-8be4-cbc77413b17d}">
+		<property name="position">
+			<value>34</value>
+		</property>
+		<property name="name">
+			<value>Beat</value>
 		</property>
 		<relationship name="timeline">
 			<destination>{af0796bc-edf1-4f88-a6d5-bc4ff8fe9f6b}</destination>
