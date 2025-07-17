@@ -8,6 +8,7 @@
 #include "ColorReactiveObject.generated.h"
 
 class UColorReactiveComponent;
+class UBeatScalerComponent;
 
 /**
  * 色に反応するアクター（指定色でアクションを起こす）
@@ -24,6 +25,8 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	UFUNCTION()
+	virtual void PlayBeatAnimation();
 	// インターフェース実装
 	virtual void ColorAction(FLinearColor InColor) override;
 	virtual void SetColor(FLinearColor)override;
@@ -33,6 +36,7 @@ public:
 	inline bool IsColorModifiable()const override { return bColorVariable; }
 	inline bool IsColorMuch() const override { return bColorMuch; }
 	inline FName GetColorEventID()const override{return EventID;}
+	
 protected:
 	virtual void Init();
 	virtual void InitializeColorLogic();
@@ -40,6 +44,10 @@ protected:
 	virtual void SetupMaterial();
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
 protected:
+	
+	UPROPERTY()
+	UBeatScalerComponent* BeatScalerComponent;
+	
 	// コンポーネント設定
 	UPROPERTY(EditAnywhere, Category = "Reactive")
 	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;	

@@ -94,6 +94,7 @@ void USoundManager::Tick(float DeltaTime)
     if (CurrentBeat > LastPredictedBeat)
     {
         LastPredictedBeat = CurrentBeat;
+        UE_LOG(LogTemp, Error, TEXT("Beat"));
         OnBeatDetected.Broadcast();
     }
 }
