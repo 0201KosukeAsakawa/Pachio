@@ -33,7 +33,7 @@ public:
 	virtual void ResetColor()override;
 	virtual bool IsColorChange()const override;	
 	inline void ChangeLock(bool b) override { bColorVariable = b; }
-	inline bool IsColorModifiable()const override { return bColorVariable; }
+	inline bool IsColorModifiable()const override { return bSetColor; }
 	inline bool IsColorMuch() const override { return bColorMuch; }
 	inline FName GetColorEventID()const override{return EventID;}
 	

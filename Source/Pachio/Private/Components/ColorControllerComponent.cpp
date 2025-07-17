@@ -118,7 +118,7 @@ void UColorControllerComponent::ChangeMode(int Direction)
             if (HitActor->GetClass()->ImplementsInterface(UColorReactiveInterface::StaticClass()))
             {
                 IColorReactiveInterface* ir = Cast<IColorReactiveInterface>(HitActor);
-                if (!ir || ir->IsColorModifiable())
+                if (!ir /*|| ir->IsColorModifiable()*/)
                     continue;
 
                 float DistSq = FVector::DistSquared(HitActor->GetActorLocation(), Start);
