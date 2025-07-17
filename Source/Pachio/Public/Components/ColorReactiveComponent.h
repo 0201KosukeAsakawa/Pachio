@@ -24,9 +24,10 @@ public :
 	virtual void Init(UMeshComponent* mesh);
 	void SetMyColor(const FLinearColor& FilterColor);	
 	void ApplyColorToMaterial(FLinearColor InColor);
-	bool CheckColorMatch(const FLinearColor& FilterColor);	
+	bool CheckColorMatch(const FLinearColor& FilterColor,const bool buseComplementaryColor = false);
 	UFUNCTION(BlueprintCallable)
-	bool IsColorMatch(const FLinearColor& FilterColor,const float Tolerance = 0.08f) const;
+	virtual bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
+	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
 	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 
 
@@ -37,7 +38,6 @@ private:
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bSetStartColor = true;
-
 	UPROPERTY(EditAnywhere)
 	FLinearColor CurrentColor;
 

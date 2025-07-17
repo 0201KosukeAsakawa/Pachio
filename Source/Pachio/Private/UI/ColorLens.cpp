@@ -1,12 +1,17 @@
 #include "UI/ColorLens.h"
-#include "Manager/ColorManager.h"
 #include "Components/Image.h"
+#include "Manager/ColorManager.h"
+#include "Sound/SoundManager.h"
 #include "Manager/LevelManager.h"
 
 // UColorLens の初期化処理
 void UColorLens::NativeConstruct()
 {
     Super::NativeConstruct();
+    if (FilterColorImage)
+    {
+        OriginalScale = FilterColorImage->RenderTransform.Scale;
+    }
 
     // レベルマネージャのインスタンスを取得
     // GetWorld() から現在のワールドコンテキストを取得し、
@@ -19,19 +24,57 @@ void UColorLens::NativeConstruct()
     // 登録することで色変更イベントを受け取るようになる
     Owner->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 
+    // 初期化時（BeginPlayなど）
+    if (USoundManager* soundManager = ALevelManager::GetInstance(GetWorld())->GetSoundManager())
+    {
+        soundManager->OnBeatDetected.AddDynamic(this, &UColorLens::PlayBeatAnimation);
+    }
+}
+
+void UColorLens::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+
+    if (!bIsAnimating || !FilterColorImage) return;
+
+    AnimationTime += InDeltaTime;
+    float HalfDuration = AnimationDuration * 0.5f;
+
+    float ScaleFactor = 1.f;
+
+    if (AnimationTime <= HalfDuration)
+    {
+        // 拡大フェーズ（0～半分）
+        ScaleFactor = FMath::Lerp(OriginalScale.X, TargetScale.X, AnimationTime / HalfDuration);
+    }
+    else if (AnimationTime <= AnimationDuration)
+    {
+        // 縮小フェーズ（半分～終わり）
+        ScaleFactor = FMath::Lerp(TargetScale.X, OriginalScale.X, (AnimationTime - HalfDuration) / HalfDuration);
+    }
+    else
+    {
+        // アニメーション終了
+        ScaleFactor = OriginalScale.X;
+        bIsAnimating = false;
+    }
+
+    FWidgetTransform Transform = FilterColorImage->RenderTransform;
+    Transform.Scale = FVector2D(ScaleFactor, ScaleFactor);
+    FilterColorImage->SetRenderTransform(Transform);
 }
 
 void UColorLens::Animation(float i)
 {
-    //if (i < -1)
-    //    i = -1;
-    //else if (1 < i)
-    //    i = 1;
 
-    //if (RotationAnimation)
-    //{
-    //    PlayAnimation(RotationAnimation, 0.f, 1, EUMGSequencePlayMode::Forward,i);
-    //}
+}
+
+void UColorLens::PlayBeatAnimation()
+{
+    if (bIsAnimating) return;  // 連打防止（任意）
+
+    AnimationTime = 0.f;
+    bIsAnimating = true;
 }
 
 void ConvertRGBToHSV(const FLinearColor& InColor, float& OutH, float& OutS, float& OutV)

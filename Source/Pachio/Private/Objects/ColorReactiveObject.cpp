@@ -1,13 +1,16 @@
 #include "Objects/ColorReactiveObject.h"
 #include "Components/ColorReactiveComponent.h"
+#include "Components/BeatScalerComponent.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
+#include "Sound/SoundManager.h"
 #include "FunctionLibrary.h"
 
 // コンストラクタ：Tick はデフォルトで無効（基本的にリアルタイム更新不要）
 AColorReactiveObject::AColorReactiveObject()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	BeatScalerComponent = CreateDefaultSubobject<UBeatScalerComponent>(TEXT("BeatScalerComponent"));
 }
 
 // BeginPlay（ゲーム開始時）に初期化処理を実行
@@ -15,6 +18,11 @@ void AColorReactiveObject::BeginPlay()
 {
 	Super::BeginPlay();
 	Init();
+	// 初期化時（BeginPlayなど）
+	if (USoundManager* soundManager = ALevelManager::GetInstance(GetWorld())->GetSoundManager())
+	{
+		soundManager->OnBeatDetected.AddDynamic(this, &AColorReactiveObject::PlayBeatAnimation);
+	}
 }
 
 // 色反応オブジェクトの初期化処理
@@ -23,6 +31,7 @@ void AColorReactiveObject::Init()
 	InitializeColorLogic();    // 色反応コンポーネントの生成・設定
 	RegisterToColorManager(); // カラーマネージャーへの登録
 	SetupMaterial();          // マテリアルとステンシル値の設定
+
 }
 
 // 色反応ロジックの初期化（UColorReactiveComponentの生成）
@@ -77,10 +86,16 @@ void AColorReactiveObject::SetupMaterial()
 
 	// ダイナミックマテリアル作成とベース色の設定
 	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
-	if (DynMaterial == nullptr)
+	if (DynMaterial == nullptr || !bSetColor)
 		return;
 
 	DynMaterial->SetVectorParameterValue(FName("BaseColor"), StartColor);
+}
+
+void AColorReactiveObject::PlayBeatAnimation()
+{
+	if (BeatScalerComponent)
+		BeatScalerComponent->PlayBeat();
 }
 
 // 色アクション実行時の処理（デフォルト実装）
@@ -92,7 +107,7 @@ void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 		ApplyColorToMaterial(NewColor);
 
 	// 入力色と一致するかチェック（結果は bColorMuch に保持）
-	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor);
+	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor, buseComplementaryColor);
 }
 
 void AColorReactiveObject::SetColor(FLinearColor newColor)

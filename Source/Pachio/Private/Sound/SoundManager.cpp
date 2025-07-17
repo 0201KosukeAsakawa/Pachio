@@ -1,9 +1,50 @@
 #include "Sound/SoundManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
+#include "Manager/LevelManager.h"
+
+// FMODの低レベルAPIのヘッダーをインクルードします。
+// F_CALLBACK マクロが正しく定義されるように、FMOD_API_TRUE または FMOD_STUDIO_API_TRUE を定義します。
+// これは、コンパイラがFMODのAPI関数の正しい呼び出し規約（例: __stdcall）を使用するように指示します。
+#define FMOD_API_TRUE
+#define FMOD_STUDIO_API_TRUE // FMOD Studio APIを使用している場合、これも定義します。
+
+// FMODのコアAPIとStudio APIのヘッダー
+#include "fmod_studio.h"
+#include "fmod.h"
+#include "fmod_common.h"       // F_CALLBACK マクロの定義が含まれることが多い
+#include "fmod_studio.hpp"     // FMOD Studio APIのC++ラッパー
+#include "fmod_studio_common.h" // FMOD Studioの共通定義（コールバック関連も含む）
+
+// FMODAudioComponentの定義が必要なため、インクルードします。
+// UFMODAudioComponent::EventInstance メンバーにアクセスするために必要です。
+#include "FMODAudioComponent.h"
+
+
+
+static FMOD_RESULT OnTimelineMarker(FMOD_STUDIO_EVENT_CALLBACK_TYPE type, FMOD_STUDIO_EVENTINSTANCE* eventInstance, void* parameters)
+{
+    if (type == FMOD_STUDIO_EVENT_CALLBACK_TIMELINE_MARKER)
+    {
+        auto* Marker = static_cast<FMOD_STUDIO_TIMELINE_MARKER_PROPERTIES*>(parameters);
+        FString MarkerName = UTF8_TO_TCHAR(Marker->name);
+
+        if (MarkerName == "Beat")
+        {
+            void* RawUserData = nullptr;
+            ((FMOD::Studio::EventInstance*)eventInstance)->getUserData(&RawUserData);
+            USoundManager* Manager = static_cast<USoundManager*>(RawUserData);
+            if (Manager)
+            {
+                Manager->OnMarkerBeat(Marker->position);
+            }
+        }
+    }
+    return FMOD_OK;
+}
 
 USoundManager::USoundManager()
-    : BGMVolume(0.5f)
+    : BGMVolume(1)
     , SEVolume(1)
     , mCurrentBGM(nullptr)
 {
@@ -15,32 +56,46 @@ void USoundManager::Init()
     {
         const FName dataTag = soundMap.Key;
         FSoundData& soundData = soundMap.Value;
-        soundData.AudioComponentMap.Reset();  // AudioComponentMapをリセット
-
-        for (const auto& soundwaveMap : soundData.SoundWaveMap)
+        soundData.AudioComponentMap.Reset();
+        for (const auto& soundAssetPair : soundData.SoundAssetMap)
         {
-            const FName waveTag = soundwaveMap.Key;
-            USoundWave* soundWave = soundwaveMap.Value;
-            if (waveTag.IsNone() || (soundWave == nullptr))
+            const FName waveTag = soundAssetPair.Key;
+            USoundBase* sound = soundAssetPair.Value;
+            if (waveTag.IsNone() || !sound)
                 continue;
 
-            // すでにAudioComponentが存在する場合はスキップ
             if (soundData.AudioComponentMap.Contains(waveTag))
                 continue;
 
-            // AudioComponentを作成してシーンにアタッチ
-            UAudioComponent* AudioComponent = UGameplayStatics::CreateSound2D(this, soundWave);
+            UAudioComponent* AudioComponent = UGameplayStatics::CreateSound2D(this, sound);
             if (AudioComponent)
             {
-                AudioComponent->bAutoDestroy = false;  // 自動削除を無効にする
+                AudioComponent->bAutoDestroy = false;
 
                 if (dataTag == "BGM")
-                    soundWave->bLooping = true;
+                {
+                    AudioComponent->OnAudioSingleEnvelopeValue.AddDynamic(this, &USoundManager::OnEnvelopeValue);
+                }
 
-                // AudioComponentMapに追加
                 soundData.AudioComponentMap.Add(waveTag, AudioComponent);
             }
         }
+    }
+
+    InitTestSound();
+}
+
+void USoundManager::Tick(float DeltaTime)
+{
+    float Now = GetWorld()->GetTimeSeconds();
+    float Elapsed = Now - StartTime;
+
+    int32 CurrentBeat = FMath::FloorToInt(Elapsed / BeatInterval);
+    if (CurrentBeat > LastPredictedBeat)
+    {
+        LastPredictedBeat = CurrentBeat;
+        UE_LOG(LogTemp, Error, TEXT("Beat"));
+        OnBeatDetected.Broadcast();
     }
 }
 
@@ -56,7 +111,7 @@ void USoundManager::SetSoundVolume(float BGMVol, float SEVol)
     if (mCurrentBGM && previousBGMVolume != BGMVolume)
     {
         // 音量を設定
-        mCurrentBGM->SetVolumeMultiplier(BGMVolume);
+        //mCurrentBGM->SetVolumeMultiplier(BGMVolume);
 
         // 音量が0でなく、かつBGMが停止している場合のみ再生
         if (BGMVolume > 0.0f && !mCurrentBGM->IsPlaying())
@@ -72,6 +127,13 @@ void USoundManager::SetSoundVolume(float BGMVol, float SEVol)
 
 bool USoundManager::PlaySound(FName DataID, FName SoundID, float Volume, bool IsSpecifyLocation, FVector place)
 {
+    if (DataID == "BGM")
+    {
+        PlayBGM();
+       //PlayBGM(SoundID, Volume);
+       return true;
+    }
+
     if (!SoundDataMap.Contains(DataID))
     {
         UE_LOG(LogTemp, Error, TEXT("SoundDataMap does not contain DataID: %s"), *DataID.ToString());
@@ -84,7 +146,7 @@ bool USoundManager::PlaySound(FName DataID, FName SoundID, float Volume, bool Is
         return false;
     }
 
-    UAudioComponent* AudioComponent = SoundDataMap[DataID].AudioComponentMap[SoundID];
+    UAudioComponent* AudioComponent = Cast<UAudioComponent>(SoundDataMap[DataID].AudioComponentMap[SoundID]);
     if (!AudioComponent)
     {
         UE_LOG(LogTemp, Error, TEXT("AudioComponent is null for SoundID: %s in DataID: %s"), *SoundID.ToString(), *DataID.ToString());
@@ -110,11 +172,11 @@ bool USoundManager::PlaySound(FName DataID, FName SoundID, float Volume, bool Is
     // サウンドを再生
     AudioComponent->Play();
 
-    // BGMが再生される場合、mCurrentBGMを更新
-    if (DataID == "BGM")
-    {
-        mCurrentBGM = AudioComponent;
-    }
+    //// BGMが再生される場合、mCurrentBGMを更新
+    //if (DataID == "BGM")
+    //{
+    //    mCurrentBGM = AudioComponent;
+    //}
 
     return true;
 }
@@ -144,7 +206,7 @@ void USoundManager::PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volum
     if (!SoundDataMap.Contains(DataID) || !SoundDataMap[DataID].AudioComponentMap.Contains(SoundID))
         return;
 
-    UAudioComponent* AudioComponent = SoundDataMap[DataID].AudioComponentMap[SoundID];
+    UAudioComponent* AudioComponent = Cast<UAudioComponent>(SoundDataMap[DataID].AudioComponentMap[SoundID]);
     if (!AudioComponent)
         return;
 
@@ -155,8 +217,77 @@ void USoundManager::PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volum
 
 void USoundManager::StopBGMWithFadeOut(float FadeDuration)
 {
-    if (mCurrentBGM)
+    //if (mCurrentBGM)
+    //{
+    //    mCurrentBGM->FadeOut(FadeDuration, 0.0f);  // フェードアウト
+    //}
+}
+
+void USoundManager::OnEnvelopeValue(const USoundWave* SoundWave, const float EnvelopeValue)
+{
+
+        //// ここで通知
+        //OnBeatDetected.Broadcast();
+    
+}
+
+bool USoundManager::PlayBGM(/*UFMODEvent* EventAsset, float InBPM*/)
+{
+    if (!TestEventAsset) return false;
+
+    //MusicBPM = InBPM;
+    BeatInterval = 60.0f / MusicBPM;
+
+    if (!FMODAudioComponent)
     {
-        mCurrentBGM->FadeOut(FadeDuration, 0.0f);  // フェードアウト
+        FMODAudioComponent = NewObject<UFMODAudioComponent>(this);
+        FMODAudioComponent->RegisterComponent();
     }
+
+    FMODAudioComponent->SetEvent(TestEventAsset);
+    FMODAudioComponent->Play();
+
+    EventInstance = FMODAudioComponent->StudioInstance;
+    if (EventInstance)
+    {
+        EventInstance->setUserData(this);
+        EventInstance->setCallback(OnTimelineMarker, FMOD_STUDIO_EVENT_CALLBACK_TIMELINE_MARKER);
+    }
+
+    StartTime = GetWorld()->GetTimeSeconds();
+    LastPredictedBeat = -1;
+
+    return true;
+}
+
+void USoundManager::OnBeatTimerElapsed()
+{
+    // ここで通知
+    OnBeatDetected.Broadcast();
+}
+
+void USoundManager::InitTestSound()
+{
+    if (!TestSound)
+    {
+        TestSound = NewObject<UFMODAudioComponent>(this);
+        TestSound->RegisterComponent();
+
+        if (TestEventAsset)
+        {
+            TestSound->SetEvent(TestEventAsset);  // ← これが MyFMODEventAsset 相当
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("TestEventAsset is null!"));
+        }
+    }
+}
+
+void USoundManager::OnMarkerBeat(int64 MarkerPositionMs)
+{
+    LastConfirmedBeatTime = MarkerPositionMs / 1000.0f;
+    OnBeatDetected.Broadcast();
+
+    UE_LOG(LogTemp, Log, TEXT("Confirmed Beat at %.3f sec"), LastConfirmedBeatTime);
 }

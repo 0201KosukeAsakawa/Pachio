@@ -35,8 +35,17 @@ void ALevelManager::InitializeComponents()
 {
 	if (bInitialize)
 		return;
-
-
+	if (ScoreManagerClass)
+		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
+	if (ScoreManager)
+		ScoreManager->Init();
+	if (SoundManagerClass)
+		SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
+	if (SoundManager)
+	{
+		SoundManager->Init();
+		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
+	}
 	if (BlockContainerClass)
 		BlockContainer = NewObject<UBlockDataContainer>(this, BlockContainerClass);
 	if (UIManagerClass)
@@ -55,12 +64,7 @@ void ALevelManager::InitializeComponents()
 		ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
 	if (AttackContainerClass)
 		AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
-	if (ScoreManagerClass)
 
-		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
-
-	if (ScoreManager)
-		ScoreManager->Init();
 
 	if (EnemyContainerClass)
 		EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
@@ -77,15 +81,6 @@ void ALevelManager::InitializeComponents()
 		}
 	}
 
-
-	if (SoundManagerClass)
-		SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
-	if (SoundManager)
-	{
-		SoundManager->Init();
-		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
-	}
-
 	GenerateStage();
 	GenerateBlock();
 
@@ -95,6 +90,8 @@ void ALevelManager::InitializeComponents()
 void ALevelManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (SoundManager)
+		SoundManager->Tick(DeltaTime);
 }
 
 // GetInstance関数で、インスタンスが未設定の場合は初期化処理を強制する

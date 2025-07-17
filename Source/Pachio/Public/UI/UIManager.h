@@ -9,6 +9,7 @@
 #include "UIManager.generated.h"
 
 class UWidgetComponent;
+class ULockonWidget;
 class UColorLens;
 
 /**
@@ -42,6 +43,12 @@ public:
     UColorLens* GetColorLens() { return ColorLens; }    
     
     UUserWidget* ShowResultWidget(float Time, EStageRank Rank);
+
+    UUserWidget* ShowMarker(AActor*);
+
+    void HideMarker();
+
+    ULockonWidget* GetMarker() const { return MarkerWidget; }
 private:
     /** 全てのカテゴリに対してウィジェットを初期化 */
     void InitAllWidgets();
@@ -62,4 +69,7 @@ private:
 
     UPROPERTY(EditAnywhere)
     UColorLens* ColorLens;
+
+    UPROPERTY()
+    ULockonWidget* MarkerWidget;
 };
