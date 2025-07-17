@@ -39,10 +39,6 @@ FEffectMatchResult UEffectColorMatcher::GetClosestEffectByHue(const FLinearColor
     float StrengthRatio = 1.0f - (MinDistance / MaxPossibleDistance);
     StrengthRatio = FMath::Clamp(StrengthRatio, 0.0f, 1.0f); // 念のため
 
-    // ログ出力
-    UE_LOG(LogTemp, Log, TEXT("ClosestEffect: %d (RGB Distance = %.4f, StrengthRatio = %.2f)"),
-        static_cast<int32>(ClosestEffect), MinDistance, StrengthRatio);
-
     // 結果設定
     result.ClosestEffect = ClosestEffect;
     result.Distance = MinDistance;

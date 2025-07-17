@@ -16,10 +16,11 @@ public class Pachio : ModuleRules
             "UMG",
             "CableComponent",
             "Json",
-            "JsonUtilities"
+            "JsonUtilities",
+             "FMODStudio",
         });
-
     }
+   
 }
 
 

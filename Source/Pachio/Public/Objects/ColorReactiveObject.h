@@ -64,7 +64,10 @@ protected:
 	bool bColorVariable  = false;
 	UPROPERTY(EditAnywhere)
 	bool bPlayColorAction = true;
-	
+	UPROPERTY(EditAnywhere)
+	bool buseComplementaryColor = false;	
+	UPROPERTY(EditAnywhere)
+	bool bSetColor = true;
 	// 色が一致したかどうかのフラグ
 	UPROPERTY(VisibleAnywhere, Category = "Color")
 	bool bColorMuch;
