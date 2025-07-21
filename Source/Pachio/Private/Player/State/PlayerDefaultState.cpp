@@ -1,14 +1,16 @@
 // プロジェクト設定の Description ページに著作権情報を記入
 
 #include "Player/State/PlayerDefaultState.h"
+#include "Player/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/MoveComponent.h"
 #include "FunctionLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
-#include "Player/PlayerCharacter.h"
+#include "Logic/Movement/PlayerMoveLogic.h"
 
 // ステートに入る際に実行される処理
 bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
@@ -20,9 +22,16 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 	}
 
 	// 内部に所有者とワールドを保存
+	if(!mOwner)
 	mOwner = owner;
+	if(!pWorld)
 	pWorld = world;
-
+	if(!MoveComp)
+	{
+		MoveComp = NewObject<UMoveComponent>(mOwner);
+		UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
+		MoveComp->Init(mOwner, PlayerLogic);
+	}
 	// マテリアルの設定（デフォルトステート用）
 	//if (NewMaterial)
 	{
@@ -68,16 +77,35 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue&)
 	return true;
 }
 
-//ダメージを受けたときの処理
-bool UPlayerDefaultState::TakeDamage()
+void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 {
-	if (!mOwner)
-		return false;
+	// 移動方向をMoveCompのロジックから取得
+	FVector direction = MoveComp->Movement(0, mOwner, Value);
+	// 速度は現在のステートが持つ移動速度を使用
+	mOwner->AddMovementInput(direction, MoveSpeed);
 
-	IStateControllable* is = Cast<IStateControllable>(mOwner);
-	if (!is)
-		return false;
+	// 移動方向がある場合はキャラクターの向きを滑らかに回転させる
+	if (!direction.IsNearlyZero())
+	{
+		// 目標の回転角度を計算（キャラクター位置→移動方向のベクトル）
+		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(
+			mOwner->GetActorLocation(),
+			mOwner->GetActorLocation() + direction
+		);
 
-	is->ChangeState("Dead");
-	return true;
+		// PitchとRollを0に固定（上下の傾きを防止）
+		TargetRot.Pitch = 0.0f;
+		TargetRot.Roll = 0.0f;
+
+		// 現在の回転から目標回転へ一定速度で補間（スムーズな回転）
+		FRotator SmoothRot = FMath::RInterpTo(
+			mOwner->GetActorRotation(),
+			TargetRot,
+			GetWorld()->GetDeltaSeconds(),
+			10.0f
+		);
+
+		// キャラクターの回転を更新
+		mOwner->SetActorRotation(SmoothRot);
+	}
 }

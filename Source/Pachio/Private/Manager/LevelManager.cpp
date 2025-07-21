@@ -66,8 +66,8 @@ void ALevelManager::InitializeComponents()
 		AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
 
 
-	if (EnemyContainerClass)
-		EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
+	//if (EnemyContainerClass)
+	//	EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
 
 	if (ObjectManagerClass)
 	{

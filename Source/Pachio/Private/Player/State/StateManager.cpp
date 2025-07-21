@@ -1,6 +1,5 @@
 #include "Player/State/StateManager.h"
 #include "Player/State/PlayerDefaultState.h"
-#include "Player/State/PlayerSuperState.h"
 #include "Components/PlayerStateComponent.h"
 
 // コンストラクタ：このコンポーネントが毎フレームTickするように設定
@@ -21,9 +20,6 @@ void UStateManager::Init(ACharacter* owner, UWorld* world)
 
 	// 各ステートのインスタンスを生成
 	UPlayerDefaultState* Default = NewObject<UPlayerDefaultState>(mOwner); // 通常状態
-	UPlayerSuperState* Super = NewObject<UPlayerSuperState>(mOwner);       // スーパー状態（強化状態）
-
-	// 今後 "Fire" や "Jumping" などを追加していくことも可能
 
 	// 初期状態を "Default" に設定
 	ChangeState("Default");
@@ -39,10 +35,10 @@ void UStateManager::Update(float deltaTime)
 	}
 }
 
-bool UStateManager::ChangeState(FString NextStateTag)
+UPlayerStateComponent* UStateManager::ChangeState(FString NextStateTag)
 {
 	if (StateClassMap.IsEmpty() || !StateClassMap.Contains(NextStateTag) || !mOwner || !pWorld)
-		return false;
+		return nullptr;
 
 	TSubclassOf<UPlayerStateComponent> StateClass = StateClassMap[NextStateTag];
 
@@ -57,8 +53,8 @@ bool UStateManager::ChangeState(FString NextStateTag)
 	// 新しいステートを生成
 	CurrentState = NewObject<UPlayerStateComponent>(mOwner, StateClass);
 	if (!CurrentState)
-		return false;
+		return nullptr;
 
 	CurrentState->OnEnter(mOwner, pWorld);
-	return true;
+	return CurrentState;
 }

@@ -78,6 +78,8 @@ public:
 	// 特殊アクション終了処理（スキルリセット & ダッシュ終了）
 	void StopAction();
 
+	void SetGravityScale(bool, const float = 9.8f);
+
 	void OnMouseScroll(const FInputActionValue& Value);
 
 	void ChangeColor(float);
@@ -94,9 +96,6 @@ private:
 	// ==== 初期化関数 ====
 	// ===============
 	void ColorAction(FLinearColor)override;
-
-	// 移動ロジックの初期化
-	void InitMovementLogic();
 
 	// 状態(State)と攻撃コントローラの初期化
 	void InitStateAndAttack();
@@ -130,6 +129,9 @@ private:
 	void ResetBuff();
 
 	void Circle();
+
+	bool TryEnterLadderOnJump()const;
+
 	FVector2D PrevMouseDir;
 	bool bHasPrevMouse = false;
 private:
@@ -162,10 +164,6 @@ private:
 	// 攻撃管理コンポーネント（攻撃の登録・管理・実行）
 	UPROPERTY()
 	UAttackController* AttackController;
-
-	// プレイヤー移動処理を司るコンポーネント
-	UPROPERTY()
-	UMoveComponent* MoveComp;
 
 	// 物理計算用コンポーネント（地面判定、重力加算など）
 	UPROPERTY()

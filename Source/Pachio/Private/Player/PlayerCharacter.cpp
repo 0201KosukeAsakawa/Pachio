@@ -4,8 +4,8 @@
 
 #include "Player/PlayerCharacter.h"
 #include "Player/State/PlayerDefaultState.h"
-#include "Player/State/PlayerFireState.h"
 #include "Player/State/StateManager.h"
+#include "Player/State/LadderClimberState.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
@@ -37,7 +37,6 @@ APlayerCharacter::APlayerCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	// 各種コンポーネントを生成・初期化
 	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
-	MoveComp = CreateDefaultSubobject<UMoveComponent>(TEXT("MoveComponent"));
 	AttackController = CreateDefaultSubobject<UAttackController>(TEXT("AttackController"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
@@ -51,8 +50,6 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	// 移動ロジック初期化
-	InitMovementLogic();
 	// ステート管理・攻撃管理初期化
 	InitStateAndAttack();
 	// 物理パラメータ設定
@@ -120,7 +117,7 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage, const AActor*)
 	InvincibilityComponent->StartInvincible();
 
 	// 現在のステートにダメージ処理を委譲
-	return StateManager->GetCurrentState()->TakeDamage();
+	return true;
 }
 
 void APlayerCharacter::ResetBuff()
@@ -163,40 +160,7 @@ void APlayerCharacter::Circle()
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	if (!MoveComp)
-		return;
-
-	// 移動方向をMoveCompのロジックから取得
-	FVector direction = MoveComp->Movement(0, this, Value);
-	// 速度は現在のステートが持つ移動速度を使用
-	AddMovementInput(direction, MoveSpeed);
-
-	// 移動方向がある場合はキャラクターの向きを滑らかに回転させる
-	if (!direction.IsNearlyZero())
-	{
-		// 目標の回転角度を計算（キャラクター位置→移動方向のベクトル）
-		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(
-			GetActorLocation(),
-			GetActorLocation() + direction
-		);
-
-		// PitchとRollを0に固定（上下の傾きを防止）
-		TargetRot.Pitch = 0.0f;
-		TargetRot.Roll = 0.0f;
-
-		// 現在の回転から目標回転へ一定速度で補間（スムーズな回転）
-		FRotator SmoothRot = FMath::RInterpTo(
-			GetActorRotation(),
-			TargetRot,
-			GetWorld()->GetDeltaSeconds(),
-			10.0f
-		);
-
-		// キャラクターの回転を更新
-		SetActorRotation(SmoothRot);
-	}
-
-	return;
+	StateManager->GetCurrentState()->Movement(Value);
 }
 
 // ジャンプ処理（地面に接地している場合のみ力を加える）
@@ -205,11 +169,63 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
+	if (TryEnterLadderOnJump())
+	{
+		physics->SetGravityScale(false);
+		return;
+	}
+
 	if (!physics || !physics->OnGround())
 		return;
 
 	// ジャンプ力を掛けて力を加える
 	physics->AddForce(GetActorUpVector(), JumpForce);
+}
+
+bool APlayerCharacter::TryEnterLadderOnJump() const
+{
+	FVector Start = GetActorLocation();
+	FVector End = Start + FVector(0, 0, 100.f);
+	FVector BoxHalfExtent = FVector(30.f, 30.f, 100.f);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	TArray<FHitResult> Hits;
+	bool bAnyHit = GetWorld()->SweepMultiByChannel(
+		Hits,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_Visibility, // カスタムチャンネルでも可
+		FCollisionShape::MakeBox(BoxHalfExtent),
+		Params
+	);
+
+	if (!bAnyHit)
+		return false;
+
+	for (const FHitResult& Hit : Hits)
+	{
+		if (!Hit.GetActor() || !Hit.GetActor()->ActorHasTag("Ladder"))
+			continue;
+
+		ALadderActor* Ladder = Cast<ALadderActor>(Hit.GetActor());
+		if (!Ladder)
+			continue;
+
+		// ステート切り替え
+		if (UPlayerStateComponent* NewState = StateManager->ChangeState("Climb"))
+		{
+			if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
+			{
+				ClimbState->SetTargetLadder(Ladder);
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 
@@ -223,6 +239,13 @@ void APlayerCharacter::Action(const FInputActionValue& Value)
 void APlayerCharacter::StopAction()
 {
 
+}
+
+void APlayerCharacter::SetGravityScale(bool applyGravity, float scale)
+{
+	if (physics == nullptr)
+		return;
+	physics->SetGravityScale(applyGravity, scale);
 }
 
 void APlayerCharacter::OnMouseScroll(const FInputActionValue& Value)
@@ -268,14 +291,10 @@ void APlayerCharacter::ShiftArrayLeftColorMode()
 // 状態の変更（ステートタグを指定して遷移）
 bool APlayerCharacter::ChangeState(FString Tag)
 {
-	return StateManager->ChangeState(Tag);
-}
+	if (!StateManager->ChangeState(Tag))
+		return false;
 
-// 移動ロジックの初期化（MoveCompにプレイヤー用移動ロジックをセット）
-void APlayerCharacter::InitMovementLogic()
-{
-	UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
-	MoveComp->Init(this, PlayerLogic);
+	return true;
 }
 
 // ステート管理・攻撃管理の初期化
@@ -303,7 +322,7 @@ void APlayerCharacter::InitPhysicsSettings()
 {
 	physics->RegisterComponent();
 	// 重力を加える（値は任意、固定で10.0fを加算）
-	physics->SetGravityScale(10.0f);
+	physics->SetGravityScale(true,10.0f);
 
 	auto* Move = GetCharacterMovement();
 

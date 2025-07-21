@@ -34,7 +34,6 @@ bool UPlayerStateComponent::OnSkill(const FInputActionValue&)
 	return false;
 }
 
-bool UPlayerStateComponent::TakeDamage()
+void UPlayerStateComponent::Movement(const FInputActionValue& Value)
 {
-	return false;
 }

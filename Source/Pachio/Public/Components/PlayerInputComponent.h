@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "PlayerInputComponent.generated.h"
-
-class UInputAction;
-class UInputMappingContext;
 
 UCLASS( Blueprintable )
 class PACHIO_API UPlayerInputComponent : public UActorComponent

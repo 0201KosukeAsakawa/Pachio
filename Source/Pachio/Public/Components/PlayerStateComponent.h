@@ -33,7 +33,7 @@ public:
 	// スキル入力時の処理
 	virtual bool OnSkill(const FInputActionValue& Input);
 
-	virtual bool TakeDamage();
+	virtual void Movement(const FInputActionValue& Value);
 	
 	//移動速度
 	inline virtual float GetMoveSpeed()const { return mMoveSpeed; }

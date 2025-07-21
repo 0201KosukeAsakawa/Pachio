@@ -137,7 +137,7 @@ bool UPhysicsCalculator::OnGround() const
 	return bHit;
 }
 
-void UPhysicsCalculator::SetGravityScale(float scale, bool applyGravity)
+void UPhysicsCalculator::SetGravityScale(bool applyGravity, float scale)
 {
 	GravityScale = scale;
 	bShouldApplyGravity = applyGravity;

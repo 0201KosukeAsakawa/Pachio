@@ -27,7 +27,7 @@ public:
 	void Update(float DeltaTime);
 
 	// 状態を切り替える（タグ指定）
-	bool ChangeState(FString NextStateTag);
+	UPlayerStateComponent* ChangeState(FString NextStateTag);
 
 	// 現在のステートを取得
 	inline UPlayerStateComponent* GetCurrentState() const { return CurrentState; }

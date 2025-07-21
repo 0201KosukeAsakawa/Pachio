@@ -33,7 +33,7 @@ public:
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
 	bool OnGround() const;
 
-	void SetGravityScale(float scale, const bool applyGravity = true);
+	void SetGravityScale(const bool applyGravity = true, float scale = 9.8f);
 
 	FVector GetBlockedAdjustedVector(const FVector& MoveVector);
 

@@ -5,10 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/PlayerStateComponent.h"
 #include "PlayerDefaultState.generated.h"
-
-/**
- * 
- */
+class UMoveComponent;
 UCLASS(Blueprintable)
 class PACHIO_API UPlayerDefaultState : public UPlayerStateComponent
 {
@@ -19,5 +16,11 @@ public:
 	bool OnUpdate(float)override;
 	bool OnExit(ACharacter*)override;
 	bool OnSkill(const FInputActionValue&)override;
-	bool TakeDamage()override;
+	void Movement(const FInputActionValue& Value)override;
+
+private:
+	// プレイヤー移動処理を司るコンポーネント
+	UPROPERTY()
+	UMoveComponent* MoveComp;
+	float MoveSpeed = 10;
 };
