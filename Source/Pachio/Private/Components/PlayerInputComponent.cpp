@@ -29,31 +29,3 @@ UPlayerInputComponent::UPlayerInputComponent()
 	// ...
 }
 
-void UPlayerInputComponent::BindInput(UInputComponent* PlayerInputComponent )
-{
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
-		if (!PlayerCharacter) return;
-
-		// ジャンプ
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, PlayerCharacter, &APlayerCharacter::Jump);
-
-		// 移動
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::Movement);
-
-		// アクション
-		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::Action);
-		EnhancedInputComponent->BindAction(SpecialAction, ETriggerEvent::Completed, PlayerCharacter, &APlayerCharacter::StopAction);
-
-		// カラーモード操作
-		EnhancedInputComponent->BindAction(IncreaseColorAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::OnMouseScroll);
-
-		EnhancedInputComponent->BindAction(ShiftArrayRightColorAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::ShiftArrayRightColorMode);
-		EnhancedInputComponent->BindAction(ShiftArrayLeftColorAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::ShiftArrayLeftColorMode);
-
-		EnhancedInputComponent->BindAction(StickAction, ETriggerEvent::Triggered, PlayerCharacter, &APlayerCharacter::OnStickMove);
-
-	}
-
-}

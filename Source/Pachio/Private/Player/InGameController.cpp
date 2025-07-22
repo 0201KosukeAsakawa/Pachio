@@ -28,6 +28,13 @@ void AInGameController::TogglePossession()
         bIsPossessing = true;
     }
 }
+void AInGameController::ReturnToOriginalPlayer()
+{
+    if (OriginalPawn)
+    {
+        Possess(OriginalPawn);
+    }
+}
 
 AActor* AInGameController::FindPossessableObject()
 {
@@ -36,16 +43,18 @@ AActor* AInGameController::FindPossessableObject()
     GetPlayerViewPoint(Start, Rotation);
 
     FVector End = Start + Rotation.Vector() * DetectionDistance;
-    FHitResult Hit;
-
     const FQuat TraceRotation = FQuat::Identity;
-    const FCollisionShape Box = FCollisionShape::MakeBox(BoxHalfSize);
+
+    // BoxHalfSize‚ð10”{‚ÉŠg‘å
+    const FVector EnlargedBoxHalfSize = BoxHalfSize * 100000.0f;
+    const FCollisionShape Box = FCollisionShape::MakeBox(EnlargedBoxHalfSize);
 
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(GetPawn());
 
-    bool bHit = GetWorld()->SweepSingleByChannel(
-        Hit,
+    TArray<FHitResult> HitResults;
+    bool bHit = GetWorld()->SweepMultiByChannel(
+        HitResults,
         Start,
         End,
         TraceRotation,
@@ -54,9 +63,15 @@ AActor* AInGameController::FindPossessableObject()
         Params
     );
 
-    if (bHit && Hit.GetActor() && Hit.GetActor()->ActorHasTag("Possessable"))
+    if (bHit)
     {
-        return Hit.GetActor();
+        for (const FHitResult& Hit : HitResults)
+        {
+            if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(TEXT("Possessable")))
+            {
+                return Hit.GetActor();
+            }
+        }
     }
 
     return nullptr;

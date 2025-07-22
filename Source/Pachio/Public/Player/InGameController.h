@@ -16,9 +16,11 @@ class PACHIO_API AInGameController : public APlayerController
 
 protected:
     virtual void SetupInputComponent() override;
-
+public:
+ void TogglePossession();
+ void ReturnToOriginalPlayer();
 private:
-    void TogglePossession();
+   
     AActor* FindPossessableObject();
 
 private:

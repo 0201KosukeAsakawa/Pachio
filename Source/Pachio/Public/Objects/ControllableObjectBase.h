@@ -4,10 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interface/ActionControl/CharacterActionInterfaces.h"
 #include "ControllableObjectBase.generated.h"
-
+class UInputComponent;
+class UMoveComponent;
 UCLASS()
-class PACHIO_API AControllableObjectBase : public AActor
+class PACHIO_API AControllableObjectBase :	public APawn , public IControllableMover,
+											public IControllableAbility
 {
 	GENERATED_BODY()
 	
@@ -22,8 +25,23 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)override;
+
+	void Movement(const FInputActionValue& Value)override;
+	void Action(const FInputActionValue& Value)override;
+	UFUNCTION()
+	void OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+		bool bFromSweep, const FHitResult& SweepResult);
+	void OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 private:
-	/** Controller currently possessing this Actor */
 	UPROPERTY()
-	TObjectPtr<AController> Controller;
+	UMoveComponent* MoveComp;
+
+	// 足元のトリガーコンポーネント
+	UPROPERTY(VisibleAnywhere)
+	class UBoxComponent* FootTrigger;
+	UPROPERTY()
+	TArray<AActor*> AttachedActors;
 };
