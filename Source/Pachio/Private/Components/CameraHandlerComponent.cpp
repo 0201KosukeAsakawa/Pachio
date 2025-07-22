@@ -48,7 +48,7 @@ void UCameraHandlerComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
 {
-    if (!Camera || !GetOwner()) 
+    if (!Camera || !GetOwner())
         return;
 
     FVector PlayerLocation = GetOwner()->GetActorLocation();
@@ -72,4 +72,24 @@ void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
     FVector CurrentLocation = Camera->GetComponentLocation();
     FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetCameraLocation, DeltaTime, InterpSpeed);
     Camera->SetWorldLocation(NewLocation);
+}
+
+void UCameraHandlerComponent::Set(FVector2D newSize, float newBuffa)
+{
+    GridSize = newSize;
+    Zbaffa = newBuffa;
+    FVector PlayerLocation = GetOwner()->GetActorLocation();
+    // Y: 横方向 / Z: 縦方向
+    CurrentGrid = FIntPoint(
+        FMath::FloorToInt(PlayerLocation.Y / GridSize.X),
+        FMath::FloorToInt(PlayerLocation.Z / GridSize.Y)
+    );
+
+    TargetCameraLocation = FVector(
+        -Zbaffa,  // ← X方向に配置（プレイヤーの右側）
+        CurrentGrid.X * GridSize.X + GridSize.X / 2,
+        CurrentGrid.Y * GridSize.Y + GridSize.Y / 2
+    );
+
+    Camera->SetWorldLocation(TargetCameraLocation);
 }
