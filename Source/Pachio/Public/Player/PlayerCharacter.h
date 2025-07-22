@@ -66,7 +66,8 @@ public:
 	// ======================
 	// ==== 入力アクション ====
 	// ======================
-	void SetCameraLocation(FVector, float);
+	UFUNCTION(BlueprintCallable)
+	void SetCameraLocation(FVector2D NewGridSize, float NewZBuffa);
 
 	// 移動入力処理
 	void Movement(const FInputActionValue& Value)override;
