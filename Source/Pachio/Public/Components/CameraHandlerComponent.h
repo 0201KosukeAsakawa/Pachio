@@ -20,6 +20,7 @@ public:
 	void Init(TObjectPtr<USceneComponent>);
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void Set(FVector2D, float);
 private:
 	void UpdateCameraPosition(float DeltaTime);
 private:
@@ -28,6 +29,9 @@ private:
 	FVector2D GridSize = FVector2D(7000.f, 3000.f);
 	UPROPERTY(EditAnywhere)
 	float Zbaffa = 2000.f;
+
+	FVector2D CurrentGridSize;
+	float CurrentZbaffa;
 
 	// 現在のグリッド座標（整数）
 	FIntPoint CurrentGrid = FIntPoint::ZeroValue;

@@ -6,6 +6,7 @@
 #include "Interface/IDamageable.h"
 #include "Interface/StateControllable.h"
 #include "Interface/ColorFilterInterface.h"
+#include "Interface/ActionControl/CharacterActionInterfaces.h"
 #include "PlayerCharacter.generated.h"
 
 // ===========================
@@ -29,9 +30,6 @@ class UInvincibilityComponent;
 class UPhysicsCalculator;
 class UMoveComponent;
 
-class UPlayerInputComponent;
-
-
 struct FInputActionValue;
 /**
  * APlayerCharacter
@@ -39,7 +37,10 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable, public IDamageable,public IColorReactiveInterface
+class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable, 
+									public IDamageable,public IControllableMover,
+									public IControllableJumper,public IControllableAbility,
+									public IColorModeController,public IStickAction
 {
 	GENERATED_BODY()
 
@@ -65,37 +66,35 @@ public:
 	// ======================
 	// ==== 入力アクション ====
 	// ======================
+	UFUNCTION(BlueprintCallable)
+	void SetCameraLocation(FVector2D NewGridSize, float NewZBuffa);
 
 	// 移動入力処理
-	void Movement(const FInputActionValue& Value);
+	void Movement(const FInputActionValue& Value)override;
 
 	// ジャンプ開始処理
-	void Jump(const FInputActionValue& Value);
+	void Jump(const FInputActionValue& Value)override;
 
 	// 特殊アクション（スキル発動 or ダッシュ）開始処理
-	void Action(const FInputActionValue& Value);
-
-	// 特殊アクション終了処理（スキルリセット & ダッシュ終了）
-	void StopAction();
+	void Action(const FInputActionValue& Value)override;
 
 	void SetGravityScale(bool, const float = 9.8f);
 
 	void OnMouseScroll(const FInputActionValue& Value);
 
-	void ChangeColor(float);
+	void ChangeColor(float)override;
 
 	// カラーモードを1つ右にシフト
-	void ShiftArrayRightColorMode();
+	void ShiftArrayRightColorMode()override;
 
 	// カラーモードを1つ左にシフト
-	void ShiftArrayLeftColorMode();
+	void ShiftArrayLeftColorMode()override;
 
-	void OnStickMove(const FInputActionValue& Value);
+	void OnStickMove(const FInputActionValue& Value)override;
 private:
 	// ===============
 	// ==== 初期化関数 ====
 	// ===============
-	void ColorAction(FLinearColor)override;
 
 	// 状態(State)と攻撃コントローラの初期化
 	void InitStateAndAttack();
