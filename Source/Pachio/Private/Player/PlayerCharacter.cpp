@@ -6,6 +6,7 @@
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/StateManager.h"
 #include "Player/State/LadderClimberState.h"
+#include "Player/InGameController.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AttackComponent.h"
@@ -93,7 +94,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	UPlayerInputComponent* PlayerInputData = GetComponentByClass<UPlayerInputComponent>();
 	if (PlayerInputData)
 	{
-		PlayerInputData->BindInput(PlayerInputComponent);
+		PlayerInputData->BindInput<APlayerCharacter>(PlayerInputComponent);
 	}
 }
 
@@ -118,6 +119,11 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage, const AActor*)
 
 	// 現在のステートにダメージ処理を委譲
 	return true;
+}
+
+void APlayerCharacter::SetCameraLocation(FVector grid, float ZBuffer)
+{
+	CameraComponent->SetCane
 }
 
 void APlayerCharacter::ResetBuff()
@@ -230,15 +236,24 @@ bool APlayerCharacter::TryEnterLadderOnJump() const
 
 
 // ダッシュ・スキル開始処理
+// APlayerCharacter.cpp 内の Action メソッド
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
-
-}
-
-// ダッシュ終了処理（速度を元に戻す）
-void APlayerCharacter::StopAction()
-{
-
+	if (Value.Get<bool>()) // 入力が有効な場合（ボタンが押された場合など）
+	{
+		// このPawnを操作しているコントローラーを取得
+		AController* OwningController = GetController();
+		if (OwningController)
+		{
+			// AInGameController にキャスト（もし AInGameController がこのPlayerCharacterをPossessしている場合）
+			AInGameController* InGameController = Cast<AInGameController>(OwningController);
+			if (InGameController)
+			{
+				// コントローラーのTogglePossession関数を呼び出す
+				InGameController->TogglePossession();
+			}
+		}
+	}
 }
 
 void APlayerCharacter::SetGravityScale(bool applyGravity, float scale)
@@ -310,7 +325,7 @@ void APlayerCharacter::InitStateAndAttack()
 	AttackController->Init(GetWorld());
 	AttackController->ResetMap();
 	AttackController->RegisterAttackComponent("Stomp");
-	//AttackController->RegisterAttackComponent("Upper");
+
 
 	// ステートマネージャーのコンポーネント登録・初期化
 	StateManager->RegisterComponent();
@@ -352,11 +367,6 @@ void APlayerCharacter::InitVisualSettings()
 		pMesh->SetRenderCustomDepth(true);
 		pMesh->SetCustomDepthStencilValue(10);
 	}
-}
-
-void APlayerCharacter::ColorAction(FLinearColor Color)
-{
-	ApplyEffectFromColor(Color);
 }
 
 void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
