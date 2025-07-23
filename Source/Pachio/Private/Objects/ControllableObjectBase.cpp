@@ -4,6 +4,7 @@
 #include "Objects/ControllableObjectBase.h"
 #include "Player/InGameController.h"
 
+
 AControllableObjectBase::AControllableObjectBase()
 {
 }

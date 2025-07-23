@@ -239,22 +239,9 @@ bool APlayerCharacter::TryEnterLadderOnJump() const
 // APlayerCharacter.cpp 内の Action メソッド
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
-	if (Value.Get<bool>()) // 入力が有効な場合（ボタンが押された場合など）
-	{
-		// このPawnを操作しているコントローラーを取得
-		AController* OwningController = GetController();
-		if (OwningController)
-		{
-			// AInGameController にキャスト（もし AInGameController がこのPlayerCharacterをPossessしている場合）
-			AInGameController* InGameController = Cast<AInGameController>(OwningController);
-			if (InGameController)
-			{
-				// コントローラーのTogglePossession関数を呼び出す
-				InGameController->TogglePossession();
-			}
-		}
-	}
+	StateManager->GetCurrentState()->OnSkill(Value);
 }
+
 
 void APlayerCharacter::SetGravityScale(bool applyGravity, float scale)
 {

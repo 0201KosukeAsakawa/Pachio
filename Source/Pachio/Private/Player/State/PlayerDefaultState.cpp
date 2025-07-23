@@ -2,6 +2,7 @@
 
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/PlayerCharacter.h"
+#include "Player/InGameController.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/MoveComponent.h"
@@ -72,8 +73,24 @@ bool UPlayerDefaultState::OnExit(ACharacter*)
 }
 
 // スキルボタン入力時の処理（現時点では何もしない）
-bool UPlayerDefaultState::OnSkill(const FInputActionValue&)
+bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
+	if (Value.Get<bool>()) // 入力が有効な場合（ボタンが押された場合など）
+	{
+		// このPawnを操作しているコントローラーを取得
+		AController* OwningController = mOwner->GetController();
+		if (OwningController)
+		{
+			// AInGameController にキャスト（もし AInGameController がこのPlayerCharacterをPossessしている場合）
+			AInGameController* InGameController = Cast<AInGameController>(OwningController);
+			if (InGameController)
+			{
+				// コントローラーのTogglePossession関数を呼び出す
+				InGameController->TogglePossession();
+			}
+		}
+	}
+
 	return true;
 }
 

@@ -99,6 +99,15 @@ bool ULadderClimberState::OnExit(ACharacter* Owner)
 	return true;
 }
 
+bool ULadderClimberState::OnSkill(const FInputActionValue& Input)
+{
+	IStateControllable* owner = Cast<IStateControllable>(mOwner);
+	if (owner == nullptr)
+		return false;
+
+	return owner->ChangeState("Default");
+}
+
 void ULadderClimberState::Movement(const FInputActionValue& Value)
 {
 	// 移動方向をMoveCompのロジックから取得

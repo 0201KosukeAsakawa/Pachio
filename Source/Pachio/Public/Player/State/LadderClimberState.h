@@ -25,6 +25,7 @@ private:
 	// ステートから出るときの処理
 	virtual bool OnExit(ACharacter* Owner)override;
 
+	virtual bool OnSkill(const FInputActionValue& Input)override;
 private:
 	UPROPERTY()
 	const ALadderActor* Ladder;
