@@ -39,7 +39,7 @@ private:
 	UPROPERTY()
 	UMoveComponent* MoveComp;
 
-	// ‘«Œ³‚ÌƒgƒŠƒK[ƒRƒ“ƒ|[ƒlƒ“ƒg
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ìƒgï¿½ï¿½ï¿½Kï¿½[ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½g
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* FootTrigger;
 	UPROPERTY()

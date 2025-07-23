@@ -12,11 +12,9 @@ ALadderActor::ALadderActor()
 	LadderVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComonent"));
 }
 
-// Called when the game starts or when spawned
-void ALadderActor::BeginPlay()
+void ALadderActor::Init()
 {
-	Super::BeginPlay();
-	
+	AColorReactiveObject::Init(); // 親の Init を呼ぶ
 }
 
 // Called every frame

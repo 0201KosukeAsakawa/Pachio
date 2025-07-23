@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Objects/ColorReactiveObject.h"
 #include "LadderActor.generated.h"
 
 class UBoxComponent;
 
 UCLASS()
-class PACHIO_API ALadderActor : public AActor
+class PACHIO_API ALadderActor : public AColorReactiveObject
 {
 	GENERATED_BODY()
 	
@@ -18,9 +18,7 @@ public:
 	ALadderActor();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
+	virtual void Init()override;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
