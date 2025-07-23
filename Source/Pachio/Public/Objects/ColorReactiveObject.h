@@ -81,5 +81,8 @@ protected:
 	bool bColorMuch;
 
 	UPROPERTY(EditAnywhere)
+	bool bPlayBeat = true;
+
+	UPROPERTY(EditAnywhere)
 	FName EventID;
 };

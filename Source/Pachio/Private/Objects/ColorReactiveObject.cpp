@@ -94,7 +94,7 @@ void AColorReactiveObject::SetupMaterial()
 
 void AColorReactiveObject::PlayBeatAnimation()
 {
-	if (BeatScalerComponent)
+	if (BeatScalerComponent && bPlayBeat)
 		BeatScalerComponent->PlayBeat();
 }
 
