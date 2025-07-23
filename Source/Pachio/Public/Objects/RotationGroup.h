@@ -8,17 +8,17 @@
 
 class AActor;
 
-USTRUCT(BlueprintType)
-struct FTargetData
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere,Category = "TargetData")
-	AActor* targetActor;
-	UPROPERTY(EditAnywhere, Category = "TargetData")
-	float rotateSpeed;
-};
+//USTRUCT(BlueprintType)
+//struct FTargetData
+//{
+//	GENERATED_BODY()
+//
+//public:
+//	UPROPERTY(EditAnywhere,Category = "TargetData")
+//	AActor* targetActor;
+//	UPROPERTY(EditAnywhere, Category = "TargetData")
+//	float rotateSpeed;
+//};
 
 UCLASS()
 class PACHIO_API ARotationGroup : public AColorReactiveObject
