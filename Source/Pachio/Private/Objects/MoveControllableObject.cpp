@@ -110,7 +110,7 @@ void AMoveControllableObject::OnFootBeginOverlap(UPrimitiveComponent* Overlapped
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!ActorHasTag(TEXT("Carryable")))
+	if (!ActorHasTag(TEXT("Carryable")) || !OtherActor->ActorHasTag("Moveable"))
 		return;
 	if (OtherActor && OtherActor != this)
 	{
