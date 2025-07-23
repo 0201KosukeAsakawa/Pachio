@@ -52,18 +52,18 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		return;
 	}
 
-	if (OnGround())
-	{
-		FVector GroundNormal = GetGroundNormal();
+	//if (OnGround())
+	//{
+	//	FVector GroundNormal = GetGroundNormal();
 
-		// Z軸を接地面法線に合わせて回転
-		FRotator NewRotation = FRotationMatrix::MakeFromZX(GroundNormal, GetOwner()->GetActorForwardVector()).Rotator();
+	//	// Z軸を接地面法線に合わせて回転
+	//	FRotator NewRotation = FRotationMatrix::MakeFromZX(GroundNormal, GetOwner()->GetActorForwardVector()).Rotator();
 
-		// なめらかに傾けたい場合は補間
-		FRotator CurrentRotation = GetOwner()->GetActorRotation();
-		FRotator SmoothedRotation = FMath::RInterpTo(CurrentRotation, NewRotation, DeltaTime, 5.0f); // 5.0f は回転速度
-		GetOwner()->SetActorRotation(SmoothedRotation);
-	}
+	//	// なめらかに傾けたい場合は補間
+	//	FRotator CurrentRotation = GetOwner()->GetActorRotation();
+	//	FRotator SmoothedRotation = FMath::RInterpTo(CurrentRotation, NewRotation, DeltaTime, 5.0f); // 5.0f は回転速度
+	//	GetOwner()->SetActorRotation(SmoothedRotation);
+	//}
 }
 
 void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
@@ -102,22 +102,30 @@ bool UPhysicsCalculator::OnGround() const
 
 	FVector ActorLocation = Owner->GetActorLocation();
 	FVector ActorScale = Owner->GetActorScale();
-	FVector BoxExtent(20.0f * ActorScale.X, 20.0f * ActorScale.Y, 2.0f);
+	FVector BoxExtent(20.0f * ActorScale.X, 20.0f * ActorScale.Y, 2.0f); // 薄い足元のボックス
 
 	float HalfHeight = Owner->GetSimpleCollisionHalfHeight();
-	FVector FootLocation = ActorLocation - FVector(0, 0, HalfHeight);
+
+	// オーナーの回転を取得
+	const FQuat ActorRotation = Owner->GetActorQuat();
+
+	// 回転を考慮して足元の位置を計算
+	FVector DownVector = ActorRotation.GetUpVector() * -1.f;
+	FVector FootLocation = ActorLocation + DownVector * HalfHeight;
+
 	FVector StartTrace = FootLocation;
-	FVector EndTrace = FootLocation - FVector(0, 0, 5.0f);
+	FVector EndTrace = FootLocation + DownVector * 5.0f; // 足元の下方向へ5cmトレース
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Owner);
+
 	FHitResult Hit;
 
 	bool bHit = GetWorld()->SweepSingleByChannel(
 		Hit,
 		StartTrace,
 		EndTrace,
-		FQuat::Identity,
+		ActorRotation, // ★回転を考慮したボックスの方向
 		ECC_Visibility,
 		FCollisionShape::MakeBox(BoxExtent),
 		Params
@@ -128,7 +136,7 @@ bool UPhysicsCalculator::OnGround() const
 		GetWorld(),
 		StartTrace,
 		BoxExtent,
-		FQuat::Identity,
+		ActorRotation, // ★ここも回転を反映
 		bHit ? FColor::Green : FColor::Red,
 		false, 1.0f
 	);
@@ -136,6 +144,7 @@ bool UPhysicsCalculator::OnGround() const
 
 	return bHit;
 }
+
 
 void UPhysicsCalculator::SetGravityScale(bool applyGravity, float scale)
 {
