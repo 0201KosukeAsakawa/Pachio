@@ -3,144 +3,26 @@
 
 #include "Objects/ControllableObjectBase.h"
 #include "Player/InGameController.h"
-#include "Logic/Movement/PlayerMoveLogic.h"
-#include "Components/MoveComponent.h"
-#include "Components/PlayerInputComponent.h"
-#include "Components/BoxComponent.h"
-#include "Kismet/KismetMathLibrary.h"
 
-// Sets default values
 AControllableObjectBase::AControllableObjectBase()
 {
-	PrimaryActorTick.bCanEverTick = true;
-
-	// RootComponent ‚É‚·‚é BoxComponent ‚ğì¬
-	FootTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("FootTrigger"));
-	RootComponent = FootTrigger;  // © ‚±‚±d—vI
-
-	// Õ“Ëİ’è‚È‚Ç
-	FootTrigger->SetGenerateOverlapEvents(true);
-	FootTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	FootTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
-	FootTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-
-	// OverlapƒCƒxƒ“ƒg‚ğƒoƒCƒ“ƒh
-	FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &AControllableObjectBase::OnFootBeginOverlap);
-	FootTrigger->OnComponentEndOverlap.AddDynamic(this, &AControllableObjectBase::OnFootEndOverlap);
 }
-
-
-// Called when the game starts or when spawned
-void AControllableObjectBase::BeginPlay()
-{
-	Super::BeginPlay();
-	UPlayerInputComponent* PlayerInputData = GetComponentByClass<UPlayerInputComponent>();
-	if (!MoveComp)
-	{
-		MoveComp = NewObject<UMoveComponent>(this);
-		UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
-		MoveComp->Init(this, PlayerLogic);
-	}
-	if (PlayerInputData)
-	{
-		PlayerInputData->Init(Controller);
-	}
-}
-
-// Called every frame
-void AControllableObjectBase::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-// ƒvƒŒƒCƒ„[“ü—ÍƒoƒCƒ“ƒhˆ—
-void AControllableObjectBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-
-	// UPlayerInputComponent ‚©‚ç“Æ©‚Ì“ü—ÍƒoƒCƒ“ƒfƒBƒ“ƒOˆ—‚ğŒÄ‚Ño‚·
-	UPlayerInputComponent* PlayerInputData = GetComponentByClass<UPlayerInputComponent>();
-	if (PlayerInputData)
-	{
-		PlayerInputData->BindInput<AControllableObjectBase>(PlayerInputComponent);
-	}
-}
-
-void AControllableObjectBase::Movement(const FInputActionValue& Value)
-{
-	FVector direction = MoveComp->Movement(0, this, Value);
-	UE_LOG(LogTemp, Log, TEXT("Direction: X=%.3f, Y=%.3f, Z=%.3f"), direction.X, direction.Y, direction.Z);
-
-	float MovementScale = 10.0f;
-	FVector MovementDelta = direction * MovementScale;
-
-	// ©g‚ÌˆÚ“®iAddMovementInput ‚Å‚Í‚È‚­A•¨—Õ“Ë‚ğl—¶‚µ‚½ƒIƒtƒZƒbƒgj
-	FHitResult SelfHit;
-	AddActorWorldOffset(MovementDelta, true, &SelfHit);
-
-	if (SelfHit.IsValidBlockingHit())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Blocked by: %s"), *SelfHit.GetActor()->GetName());
-		MovementDelta = FVector::ZeroVector; // ƒuƒƒbƒN‚³‚ê‚½‚Ì‚Å’â~
-	}
-
-	// ã‚Éæ‚Á‚Ä‚¢‚éƒIƒuƒWƒFƒNƒg‚ÌˆÚ“®
-	for (AActor* ActorOnTop : AttachedActors)
-	{
-		if (ActorOnTop)
-		{
-			FHitResult Hit;
-			ActorOnTop->AddActorWorldOffset(MovementDelta, true, &Hit);
-
-			if (Hit.IsValidBlockingHit())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Attached actor %s blocked by: %s"), *ActorOnTop->GetName(), *Hit.GetActor()->GetName());
-			}
-		}
-	}
-}
-
-
 
 void AControllableObjectBase::Action(const FInputActionValue& Value)
 {
-	if (Value.Get<bool>()) // “ü—Í‚ª—LŒø‚Èê‡iƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½ê‡‚È‚Çj
+	if (Value.Get<bool>()) // ï¿½ï¿½ï¿½Í‚ï¿½ï¿½Lï¿½ï¿½ï¿½Èê‡ï¿½iï¿½{ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‚½ï¿½ê‡ï¿½È‚Çj
 	{
-		// ‚±‚ÌPawn‚ğ‘€ì‚µ‚Ä‚¢‚éƒRƒ“ƒgƒ[ƒ‰[‚ğæ“¾
+		// ï¿½ï¿½ï¿½ï¿½Pawnï¿½ğ‘€ì‚µï¿½Ä‚ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½[ï¿½ï¿½æ“¾
 		AController* OwningController = GetController();
 		if (OwningController)
 		{
-			// AInGameController ‚ÉƒLƒƒƒXƒgi‚à‚µ AInGameController ‚ª‚±‚ÌPlayerCharacter‚ğPossess‚µ‚Ä‚¢‚éê‡j
+			// AInGameController ï¿½ÉƒLï¿½ï¿½ï¿½Xï¿½gï¿½iï¿½ï¿½ï¿½ AInGameController ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PlayerCharacterï¿½ï¿½Possessï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ê‡ï¿½j
 			AInGameController* InGameController = Cast<AInGameController>(OwningController);
 			if (InGameController)
 			{
-				// ƒRƒ“ƒgƒ[ƒ‰[‚ÌTogglePossessionŠÖ”‚ğŒÄ‚Ño‚·
+				// ï¿½Rï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½[ï¿½ï¿½TogglePossessionï¿½Öï¿½ï¿½ï¿½Ä‚Ñoï¿½ï¿½
 				InGameController->ReturnToOriginalPlayer();
 			}
 		}
-	}
-}
-
-void AControllableObjectBase::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-	bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor && OtherActor != this)
-	{
-		if (!AttachedActors.Contains(OtherActor))
-		{
-			AttachedActors.Add(OtherActor);
-			UE_LOG(LogTemp, Log, TEXT("Added actor on top: %s"), *OtherActor->GetName());
-		}
-	}
-}
-
-void AControllableObjectBase::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (OtherActor && AttachedActors.Contains(OtherActor))
-	{
-		AttachedActors.Remove(OtherActor);
-		UE_LOG(LogTemp, Log, TEXT("Removed actor from top: %s"), *OtherActor->GetName());
 	}
 }

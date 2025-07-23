@@ -32,5 +32,5 @@ private:
     float DetectionDistance = 300.f;
 
     UPROPERTY(EditDefaultsOnly)
-    FVector BoxHalfSize = FVector(50.f, 50.f, 50.f);
+    FVector BoxHalfSize = FVector(5000.f, 5000.f, 5000.f);
 };

@@ -31,7 +31,7 @@ void ARotationGroup::Tick(float DeltaTime)
 
 }
 
-// RGB‚©‚çHSV‚Ö‚Ì•ÏŠ·iHue[0-360], Saturation[0-1], Value[0-1]j
+// RGBï¿½ï¿½ï¿½ï¿½HSVï¿½Ö‚Ì•ÏŠï¿½ï¿½iHue[0-360], Saturation[0-1], Value[0-1]ï¿½j
 void RGBtoHSV(const FLinearColor& InColor, float& OutH, float& OutS, float& OutV)
 {
     float R = InColor.R;
@@ -73,7 +73,7 @@ void RGBtoHSV(const FLinearColor& InColor, float& OutH, float& OutS, float& OutV
 
 void ARotationGroup::ColorAction(const FLinearColor InColor)
 {
-    // Œ»İF ¨ HSV•ÏŠ·
+    // ï¿½ï¿½ï¿½İF ï¿½ï¿½ HSVï¿½ÏŠï¿½
     float HueCurrent, SatCurrent, ValCurrent;
     float HueTarget, SatTarget, ValTarget;
     RGBtoHSV(CurrentColor, HueCurrent, SatCurrent, ValCurrent);
@@ -85,9 +85,9 @@ void ARotationGroup::ColorAction(const FLinearColor InColor)
     else if (DeltaHue < -180.f)
         DeltaHue += 360.f;
 
-    // ƒXƒ€[ƒY‚É‚·‚é‚È‚ç DeltaHue *= 0.2f; ‚È‚Ç‚Å’²®‰Â
+    // ï¿½Xï¿½ï¿½ï¿½[ï¿½Yï¿½É‚ï¿½ï¿½ï¿½È‚ï¿½ DeltaHue *= 0.2f; ï¿½È‚Ç‚Å’ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    // ‰ñ“]“K—piZ²EYaw‰ñ“]j
+    // ï¿½ï¿½]ï¿½Kï¿½pï¿½iZï¿½ï¿½ï¿½EYawï¿½ï¿½]ï¿½j
     FRotator CurrentRotation = GetActorRotation();
     FVector v = FVector(RotationAxis.X * DeltaHue, RotationAxis.Y * DeltaHue, RotationAxis.Z * DeltaHue);
     FRotator DeltaRotation = FRotator(v.X, v.Y, v.Z);
@@ -95,10 +95,10 @@ void ARotationGroup::ColorAction(const FLinearColor InColor)
 
     SetActorRotation(NewRotation);
 
-    // BŒQ‚É·•ª‰ñ“]‚¾‚¯“K—p
-    UpdateBsRelativeToA(DeltaRotation);  // ‚±‚±‚Åu·•ªv‚¾‚¯“n‚·I
+    // Bï¿½Qï¿½Éï¿½ï¿½ï¿½ï¿½ï¿½]ï¿½ï¿½ï¿½ï¿½ï¿½Kï¿½p
+    UpdateBsRelativeToA(DeltaRotation);  // ï¿½ï¿½ï¿½ï¿½ï¿½Åuï¿½ï¿½ï¿½ï¿½ï¿½vï¿½ï¿½ï¿½ï¿½ï¿½nï¿½ï¿½ï¿½I
 
-    // F‚Ìó‘ÔXV
+    // ï¿½Fï¿½Ìï¿½ÔXï¿½V
     CurrentColor = InColor;
 }
 
@@ -118,16 +118,16 @@ void ARotationGroup::UpdateBsRelativeToA(const FRotator& DeltaRotation)
         if (!BActor)
             continue;
 
-        // ‘¬“x‚ğ”½‰f‚µ‚½‰ñ“]ƒNƒH[ƒ^ƒjƒIƒ“
+        // ï¿½ï¿½ï¿½xï¿½ğ”½‰fï¿½ï¿½ï¿½ï¿½ï¿½ï¿½]ï¿½Nï¿½Hï¿½[ï¿½^ï¿½jï¿½Iï¿½ï¿½
         FRotator ScaledRotation = DeltaRotation * TargetData.rotateSpeed;
         FQuat DeltaQuat = ScaledRotation.Quaternion();
 
-        // ˆÊ’u‚ğ‰ñ“]
+        // ï¿½Ê’uï¿½ï¿½ï¿½]
         FVector Relative = BActor->GetActorLocation() - Center;
         FVector Rotated = DeltaQuat.RotateVector(Relative);
         BActor->SetActorLocation(Center + Rotated);
 
-        // ‰ñ“]‚à‰Á‚¦‚éiŠp“x•ÏXj
+        // ï¿½ï¿½]ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½pï¿½xï¿½ÏXï¿½j
         if (bShouldRotate)
         {
             FQuat CurrentQuat = BActor->GetActorQuat();
