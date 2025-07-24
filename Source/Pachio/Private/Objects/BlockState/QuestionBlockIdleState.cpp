@@ -27,11 +27,6 @@ bool UQuestionBlockIdleState::OnEnter(ABaseBlock* owner, UWorld* world,  FString
 	if (materialName == "None")
 		materialName = MaterialID;
 
-	UMaterialInterface* newMaterial = ALevelManager::GetInstance(GetWorld())->GetBlockContainer()->CreateMaterial(world, materialName);
-	if (MeshComp && newMaterial)
-	{
-		MeshComp->SetMaterial(0, newMaterial);
-	}
 
 	return true;
 }
@@ -50,41 +45,6 @@ bool UQuestionBlockIdleState::OnExit(ABaseBlock*)
 
 bool UQuestionBlockIdleState::OnHit(FAttackData, FVector , const AActor* hitActor)
 {
-	--count;
-	if ( !mOwner)
-		return false;
-
-	UBlockState* nextState = ALevelManager::GetInstance(GetWorld())->GetBlockContainer()->CreateState(GetWorld(), "Empty");
-
-	if (!nextState)
-		return false;
-	
-	if (mOwner->GetDropItemID() == "Coin")
-	{
-		ALevelManager::GetInstance(GetWorld())->GetScoreManager()->AddScore(100);
-	}
-	else if (mOwner->GetDropItemID() != "PowerUP")
-	{
-		ALevelManager::GetInstance(GetWorld())->GetItemContainer()->GenerateItem(mOwner->GetDropItemID(), mOwner->GetActorLocation() + FVector(0, 5, 0), FVector(0, /*YComponent*/1, 0), 5.0f, FVector(0, 0, 1));
-	}
-	else
-	{
-		const IStateControllable* is = Cast<IStateControllable>(hitActor);
-		if (!is)
-			return false;
-
-		if (Cast<UPlayerDefaultState>(is->GetPlayerState()))
-		{
-			ALevelManager::GetInstance(GetWorld())->GetItemContainer()->GenerateItem("SuperMush", mOwner->GetActorLocation() + FVector(0, 5, 0), FVector(0, /*YComponent*/1, 0), 5.0f, FVector(0, 0, 1));
-		}
-		else
-			ALevelManager::GetInstance(GetWorld())->GetItemContainer()->GenerateItem("Flower", mOwner->GetActorLocation() + FVector(0, 5, 0), FVector(0, /*YComponent*/1, 0), 5.0f, FVector(0, 0, 1));
-	}
-	
-	mOwner->ChangeState(nextState);
-
-
-
 	return true;
 }
 

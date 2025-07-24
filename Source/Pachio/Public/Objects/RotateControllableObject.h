@@ -13,9 +13,9 @@ struct FTargetData
 
 public:
 	UPROPERTY(EditAnywhere, Category = "TargetData")
-	AActor* targetActor;
+	AActor* targetActor = nullptr;
 	UPROPERTY(EditAnywhere, Category = "TargetData")
-	float rotateSpeed;
+	float rotateSpeed = 0;
 };
 
 UCLASS()

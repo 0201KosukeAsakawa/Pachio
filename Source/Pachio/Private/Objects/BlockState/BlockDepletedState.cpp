@@ -13,22 +13,6 @@
 
 bool UBlockDepletedState::OnEnter(ABaseBlock* owner, UWorld* world, FString materialID)
 {
-    if (!owner)
-        return false;
-    mOwner = owner;
-
-    // アクターにアタッチされている全てのコンポーネントを取得
-    UStaticMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(mOwner, "StaticMesh");
-    pWorld = world;
-
-    if (materialID == "None")
-        materialID = MaterialID;
-
-    UMaterialInterface* newMaterial = ALevelManager::GetInstance(pWorld)->GetBlockContainer()->CreateMaterial(world, materialID);
-    if (MeshComp && newMaterial)
-    {
-        MeshComp->SetMaterial(0, newMaterial);
-    }
     return true;
 }
 

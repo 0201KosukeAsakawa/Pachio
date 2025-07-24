@@ -46,8 +46,6 @@ void ALevelManager::InitializeComponents()
 		SoundManager->Init();
 		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
 	}
-	if (BlockContainerClass)
-		BlockContainer = NewObject<UBlockDataContainer>(this, BlockContainerClass);
 	if (UIManagerClass)
 		UIManager = NewObject<UUIManager>(this, UIManagerClass);
 	if (ColorManagerClass)
@@ -60,29 +58,6 @@ void ALevelManager::InitializeComponents()
 	{
 		UIManager->Init(this);
 	}
-	if (ItemContainerClass)
-		ItemContainer = NewObject<UItemDataContainer>(this, ItemContainerClass);
-	if (AttackContainerClass)
-		AttackContainer = NewObject<UAttackDataContainer>(this, AttackContainerClass);
-
-
-	//if (EnemyContainerClass)
-	//	EnemyContainer = NewObject<UEnemyDataContainer>(this, EnemyContainerClass);
-
-	if (ObjectManagerClass)
-	{
-		ObjectManager = NewObject<UObjectManager>(this, ObjectManagerClass);
-		if (ObjectManager)
-		{
-			if (auto* DefaultObj = Cast<UObjectManager>(ObjectManagerClass->GetDefaultObject()))
-			{
-				ObjectManager->DuplicateContentsFrom(DefaultObj);
-			}
-		}
-	}
-
-	GenerateStage();
-	GenerateBlock();
 
 	bInitialize = true;
 }
@@ -130,52 +105,6 @@ void ALevelManager::PlaySound(FName WaveName, FName SoundName)
 	}
 
 	SoundManager->PlaySound(WaveName, SoundName);
-}
-
-void ALevelManager::GenerateStage()
-{
-	if (!StageData.IsValid())
-		StageData.LoadSynchronous();
-
-	if (!StageData)
-		return;
-
-	for (FName RowName : StageData->GetRowNames())
-	{
-		const FStageData* data = StageData->FindRow<FStageData>(RowName, FString());
-		if (!data)
-			continue;
-
-		FVector location(data->Location_X, data->Location_Y, data->Location_Z);
-		FVector scale(data->Scale_X, data->Scale_Y, data->Scale_Z);
-		FRotator rotate(data->Rotate_X, data->Rotate_Y, data->Rotate_Z);
-
-		if (ObjectManager)
-			ObjectManager->GenerateObject(data->ObjectName, data->MaterialName, location, scale, rotate);
-	}
-}
-
-void ALevelManager::GenerateBlock()
-{
-	if (!BlockData.IsValid())
-		BlockData.LoadSynchronous();
-
-	if (!BlockData)
-		return;
-
-	for (FName RowName : BlockData->GetRowNames())
-	{
-		const FInstansBlockData* data = BlockData->FindRow<FInstansBlockData>(RowName, FString());
-		if (!data)
-			continue;
-
-		FVector location(data->Location_X, data->Location_Y, data->Location_Z);
-		FVector scale(data->Scale_X, data->Scale_Y, data->Scale_Z);
-		FRotator rotate(data->Rotate_X, data->Rotate_Y, data->Rotate_Z);
-
-		if (BlockContainer)
-			BlockContainer->GenerateBlock(data->StateID, data->DropItem, data->MaterialID, location, scale, rotate);
-	}
 }
 
 void ALevelManager::HandlePlayerGoalReached()

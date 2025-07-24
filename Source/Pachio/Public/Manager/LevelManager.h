@@ -20,29 +20,6 @@ class UAttackDataContainer;
 class UItemDataContainer;
 class UEnemyDataContainer;
 
-
-/**
- * ステージオブジェクト1つ分の配置情報（データテーブル用構造体）
- */
-USTRUCT(BlueprintType)
-struct FStageData : public FTableRowBase
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere) FString ObjectName;      // 生成するオブジェクト名（Blueprint名など）
-	UPROPERTY(EditAnywhere) FString MaterialName;    // 使用するマテリアル名
-	UPROPERTY(EditAnywhere) float Location_X;        // 配置位置（X）
-	UPROPERTY(EditAnywhere) float Location_Y;        // 配置位置（Y）
-	UPROPERTY(EditAnywhere) float Location_Z;        // 配置位置（Z）
-	UPROPERTY(EditAnywhere) float Rotate_X;          // 回転（X軸）
-	UPROPERTY(EditAnywhere) float Rotate_Y;          // 回転（Y軸）
-	UPROPERTY(EditAnywhere) float Rotate_Z;          // 回転（Z軸）
-	UPROPERTY(EditAnywhere) float Scale_X;           // スケール（X軸）
-	UPROPERTY(EditAnywhere) float Scale_Y;           // スケール（Y軸）
-	UPROPERTY(EditAnywhere) float Scale_Z;           // スケール（Z軸）
-};
-
 /**
  * ステージ全体の生成・管理・シングルトンアクセスを提供するマネージャー
  */
@@ -68,10 +45,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	static ALevelManager* GetInstance(UObject* WorldContext);
 
-	/** ブロックデータ管理コンテナを取得 */
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	inline UBlockDataContainer* GetBlockContainer() const { return BlockContainer; }
-
 	/** アイテムデータ管理コンテナを取得 */
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	inline UItemDataContainer* GetItemContainer() const { return ItemContainer; }
@@ -96,13 +69,6 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void InitializeComponents();
 
-	/** ステージ上のオブジェクトを生成（StageData をもとに） */
-	void GenerateStage();
-
-	/** ブロックを生成（BlockData をもとに） */
-	void GenerateBlock();
-
-
 	void PauseGameAndShowUI(UUserWidget* FocusWidget);
 
 private:
@@ -118,21 +84,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<USoundManager> SoundManagerClass;
 
-	/** ブロックコンテナクラス（Blueprintで指定） */
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UBlockDataContainer> BlockContainerClass;
 
-	/** オブジェクトマネージャークラス（Blueprintで指定） */
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UObjectManager> ObjectManagerClass;
-
-	/** 攻撃データコンテナクラス（Blueprintで指定） */
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UAttackDataContainer> AttackContainerClass;
-
-	/** アイテムデータコンテナクラス（Blueprintで指定） */
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UItemDataContainer> ItemContainerClass;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UScoreManager> ScoreManagerClass;
@@ -143,26 +95,12 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UColorManager> ColorManagerClass;
 
-
-
-	/** ステージオブジェクト配置データテーブル */
-	UPROPERTY(EditAnywhere)
-	TSoftObjectPtr<UDataTable> StageData;
-
-	/** ブロック配置データテーブル */
-	UPROPERTY(EditAnywhere)
-	TSoftObjectPtr<UDataTable> BlockData;
-
 	UPROPERTY()
 	TObjectPtr<UEnemyDataContainer> EnemyContainer;
 
 	/** 実行時に生成されたサウンドマネージャー */
 	UPROPERTY()
 	TObjectPtr<USoundManager> SoundManager;
-
-	/** 実行時に生成されたブロックコンテナ */
-	UPROPERTY()
-	TObjectPtr<UBlockDataContainer> BlockContainer;
 
 	/** 実行時に生成されたアイテムコンテナ */
 	UPROPERTY()

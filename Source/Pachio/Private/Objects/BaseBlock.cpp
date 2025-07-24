@@ -29,13 +29,6 @@ void ABaseBlock::Init(FString stateID, FString dorpItemID, FString materialID)
     DropItemID = dorpItemID;
 
 
-
-    // Containerが有効な場合、現在の状態を設定
-
-
-    CurrentState = ALevelManager::GetInstance(GetWorld())->GetBlockContainer()->CreateState(GetWorld(), StateID);
-
-
     // 現在の状態が設定されている場合、状態に応じてOnEnter処理を実行
     if (CurrentState)
     {
