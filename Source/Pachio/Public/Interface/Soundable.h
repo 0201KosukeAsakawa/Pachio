@@ -28,7 +28,7 @@ public:
 	//サウンドの再生(フェードイン))
 	virtual void PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volume, float FadeDuration);
 	//BGMの停止(完全停止)
-	virtual void StopBGM(bool b);
+	virtual void StopBGM();
 	//BGMの停止(フェードアウト)
 	virtual void StopBGMWithFadeOut(float FadeDuration);
 	//BGMの音量取得

@@ -53,7 +53,7 @@ private:
     bool PlaySound(FName DataID, FName SoundID) override;
     UFUNCTION(BlueprintCallable)
     void SetSoundVolume(float BGMvol, float SEVol) override;
-    void StopBGM(bool b) override;
+    void StopBGM() override;
     UFUNCTION(BlueprintCallable)
     float GetBGMVolume() const override { return BGMVolume; }
     UFUNCTION(BlueprintCallable)
@@ -63,7 +63,10 @@ private:
     void StopBGMWithFadeOut(float FadeDuration) override;
     UFUNCTION()
     void OnEnvelopeValue(const USoundWave* SoundWave, const float EnvelopeValue);
-    bool PlayBGM();
+    bool PlayBGM();    
+    UFUNCTION()
+    void OnBeatTimerElapsed();
+    void InitTestSound();
 private:
     // サウンドデータを保持するためのマップ
     UPROPERTY(EditAnywhere, Category = "Sound")
@@ -88,9 +91,7 @@ private:
     float MusicBPM = 166.0f;  // 任意のBPM
 
     FTimerHandle BeatTimerHandle;// Beat発火処理
-    UFUNCTION()
-    void OnBeatTimerElapsed();
-    void InitTestSound();
+
 
     float BeatInterval = 0.5f;
     float StartTime = 0.0f;

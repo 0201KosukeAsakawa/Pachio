@@ -82,11 +82,14 @@ void AMoveControllableObject::Movement(const FInputActionValue& Value)
 		UE_LOG(LogTemp, Warning, TEXT("Blocked by: %s"), *SelfHit.GetActor()->GetName());
 		MovementDelta = FVector::ZeroVector; // �u���b�N���ꂽ�̂Œ�~
 	}
-	if(AttachedActors.IsEmpty())
+	if (AttachedActors.IsEmpty())
 		return;
 	// ��ɏ���Ă���I�u�W�F�N�g�̈ړ�
-	for (AActor* ActorOnTop : AttachedActors)
+	TArray<AActor*> ActorsToMove = AttachedActors;
+
+	for (AActor* ActorOnTop : ActorsToMove)
 	{
+
 		if (ActorOnTop)
 		{
 			FHitResult Hit;
@@ -95,6 +98,7 @@ void AMoveControllableObject::Movement(const FInputActionValue& Value)
 			if (Hit.IsValidBlockingHit())
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Attached actor %s blocked by: %s"), *ActorOnTop->GetName(), *Hit.GetActor()->GetName());
+
 			}
 		}
 	}
@@ -111,25 +115,30 @@ void AMoveControllableObject::OnFootBeginOverlap(UPrimitiveComponent* Overlapped
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
+	// OtherCompがnullptrでなく、タグ"Hoge"を持っていたら処理しない
+	if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))
+		return;
+
 	if (!ActorHasTag(TEXT("Carryable")) || !OtherActor->ActorHasTag("Moveable"))
 		return;
+
 	if (OtherActor && OtherActor != this)
 	{
-		// このオブジェクトが "Carryable" タグを持っているか確認
-
-
 		if (!AttachedActors.Contains(OtherActor))
 		{
 			AttachedActors.Add(OtherActor);
 			UE_LOG(LogTemp, Log, TEXT("Added actor on top: %s"), *OtherActor->GetName());
 		}
-
 	}
 }
 
 void AMoveControllableObject::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	// OtherCompがnullptrでなく、タグ"Hoge"を持っていたら処理しない
+	if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))
+		return;
+
 	if (OtherActor && AttachedActors.Contains(OtherActor))
 	{
 		AttachedActors.Remove(OtherActor);

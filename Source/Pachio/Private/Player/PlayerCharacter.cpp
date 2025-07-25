@@ -196,7 +196,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 
 	// ジャンプ力を掛けて力を加える
 	physics->AddForce(GetActorUpVector(), JumpForce);
-	ISoundable* sound = Cast<ISoundable>(ALevelManager::GetInstance(GetWorld())->GetSoundManager());
+	ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
 	sound->PlaySound("SE", "Jump");
 }
 
@@ -474,7 +474,7 @@ void APlayerCharacter::CallOnClosestOverlappingActor()
 
 	if (ClosestActor)
 	{
-		ClosestActor->hoge(this);
+		ClosestActor->SwitchControll(this);
 		// 呼んだら終わり
 		return;
 	}
@@ -515,7 +515,7 @@ void APlayerCharacter::HandleMoveSound(float DeltaTime)
 	FVector Velocity = GetVelocity();
 	bool bIsMoving = Velocity.SizeSquared() > KINDA_SMALL_NUMBER;
 
-	ISoundable* sound = Cast<ISoundable>(ALevelManager::GetInstance(GetWorld())->GetSoundManager());
+	ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
 	if (!sound)
 		return;
 

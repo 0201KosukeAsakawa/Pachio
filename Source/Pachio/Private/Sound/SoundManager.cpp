@@ -193,11 +193,11 @@ bool USoundManager::PlaySound(FName DataID, FName SoundID)
     return PlaySound(DataID, SoundID, volume);
 }
 
-void USoundManager::StopBGM(bool b)
+void USoundManager::StopBGM()
 {
-    if (mCurrentBGM)
+    if (FMODAudioComponent)
     {
-        mCurrentBGM->Stop();
+        FMODAudioComponent->Stop();
     }
 }
 
@@ -225,10 +225,6 @@ void USoundManager::StopBGMWithFadeOut(float FadeDuration)
 
 void USoundManager::OnEnvelopeValue(const USoundWave* SoundWave, const float EnvelopeValue)
 {
-
-        //// ここで通知
-        //OnBeatDetected.Broadcast();
-    
 }
 
 bool USoundManager::PlayBGM(/*UFMODEvent* EventAsset, float InBPM*/)

@@ -10,7 +10,7 @@ void ISoundable::PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volume, 
 {
 }
 
-void ISoundable::StopBGM(bool b)
+void ISoundable::StopBGM()
 {
 }
 

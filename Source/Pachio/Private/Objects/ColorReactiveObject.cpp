@@ -19,7 +19,7 @@ void AColorReactiveObject::BeginPlay()
 	Super::BeginPlay();
 	Init();
 	// 初期化時（BeginPlayなど）
-	if (USoundManager* soundManager = ALevelManager::GetInstance(GetWorld())->GetSoundManager())
+	if (USoundManager* soundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject()))
 	{
 		soundManager->OnBeatDetected.AddDynamic(this, &AColorReactiveObject::PlayBeatAnimation);
 	}

@@ -10,7 +10,7 @@ AControllableObjectBase::AControllableObjectBase()
 {
 }
 
-void AControllableObjectBase::hoge(ACharacter* player)
+void AControllableObjectBase::SwitchControll(ACharacter* player)
 {
 	// このPawnを操作しているコントローラーを取得
 	AController* OwningController = player->GetController();

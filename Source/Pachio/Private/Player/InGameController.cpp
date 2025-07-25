@@ -2,6 +2,8 @@
 
 
 #include "Player/InGameController.h"
+#include "Manager/LevelManager.h"
+#include "Sound/SoundManager.h"
 #include "Objects/ControllableObjectBase.h"
 
 // 入力をセットアップする関数
@@ -18,6 +20,7 @@ void AInGameController::TogglePossession(AActor* HitActor)
     {
         Possess(OriginalPawn);        // 元のPawnに所有権を戻す
         bIsPossessing = false;        // 所有状態フラグをリセット
+        ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE","PlayChange");
         return;
     }
 
@@ -27,6 +30,7 @@ void AInGameController::TogglePossession(AActor* HitActor)
         OriginalPawn = GetPawn();                     // 現在のPawnを保存
         Possess(Cast<APawn>(Target));                // 対象をPawnとしてキャストして憑依
         bIsPossessing = true;                         // 所有状態フラグをセット
+        ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE", "PlayChange");
     }
 }
 

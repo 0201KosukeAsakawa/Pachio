@@ -17,7 +17,7 @@ void UColorConfigurator::BeginPlay()
 {
 	Init();
 	// ‰Šú‰»ŽžiBeginPlay‚È‚Çj
-	if (USoundManager* soundManager = ALevelManager::GetInstance(GetWorld())->GetSoundManager())
+	if (USoundManager* soundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject()))
 	{
 		soundManager->OnBeatDetected.AddDynamic(this, &UColorConfigurator::PlayBeatAnimation);
 	}

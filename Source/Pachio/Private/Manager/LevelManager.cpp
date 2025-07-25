@@ -107,6 +107,12 @@ void ALevelManager::PlaySound(FName WaveName, FName SoundName)
 	SoundManager->PlaySound(WaveName, SoundName);
 }
 
+TScriptInterface<ISoundable> ALevelManager::GetSoundManager() const
+{
+	return TScriptInterface<ISoundable>(SoundManager);
+}
+
+
 void ALevelManager::HandlePlayerGoalReached()
 {
 	if (!ScoreManager || !UIManager) return;
@@ -115,7 +121,8 @@ void ALevelManager::HandlePlayerGoalReached()
 	EStageRank Rank = ScoreManager->EvaluateClearRank(GetWorld());
 
 	UUserWidget* ResultWidget = UIManager->ShowResultWidget(ClearTime, Rank);
-
+	SoundManager->StopBGM();
+	SoundManager->PlaySound("SE", "Fanfare");
 	PauseGameAndShowUI(ResultWidget);
 }
 

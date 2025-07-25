@@ -14,7 +14,7 @@ class UColorManager;
 class UUIManager;
 
 class UDataTable;
-
+class ISoundable;
 class UBlockDataContainer;
 class UAttackDataContainer;
 class UItemDataContainer;
@@ -41,6 +41,9 @@ public:
 	/** サウンドの再生を指示する */
 	void PlaySound(FName Category, FName CueName);
 
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	TScriptInterface<ISoundable> GetSoundManager() const;
+
 	/** グローバルから取得できるレベルマネージャー（シングルトン） */
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	static ALevelManager* GetInstance(UObject* WorldContext);
@@ -63,8 +66,7 @@ public:
 	inline UColorManager* GetColorManager()const { return ColorManager; }
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	inline UUIManager* GetUIManager()const { return UIManager; }
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	inline USoundManager* GetSoundManager()const { return SoundManager; }
+
 private:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	void InitializeComponents();
