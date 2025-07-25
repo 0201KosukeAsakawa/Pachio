@@ -29,6 +29,7 @@
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
+#include "Objects/ControllableObjectBase.h"
 
 
 // コンストラクタ
@@ -37,6 +38,7 @@ APlayerCharacter::APlayerCharacter()
 	// 毎フレームTickを実行可能に設定
 	PrimaryActorTick.bCanEverTick = true;
 	// 各種コンポーネントを生成・初期化
+	InteractionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionBox"));
 	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
 	AttackController = CreateDefaultSubobject<UAttackController>(TEXT("AttackController"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
@@ -71,18 +73,31 @@ void APlayerCharacter::BeginPlay()
 	GetCharacterMovement()->SetWalkableFloorAngle(60.f);
 }
 
-// 毎フレーム呼ばれる更新処理
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// ステートマネージャーが存在しない場合は処理中断
 	if (!StateManager)
 		return;
-	Circle();
-	// ステートマネージャーの時間経過更新処理を実行
-	StateManager->Update(DeltaTime);
 
+	// BoxComponentの重なり判定（例）
+	TArray<AActor*> OverlappingActors;
+	InteractionBox->GetOverlappingActors(OverlappingActors);
+
+	bool bIsOverlapping = OverlappingActors.Num() > 0;
+
+	if (bIsOverlapping)
+	{
+		// UI表示フラグONにする処理
+	}
+	else
+	{
+		// UI非表示にする処理
+	}
+
+	Circle();
+
+	StateManager->Update(DeltaTime);
 }
 
 // プレイヤー入力バインド処理
@@ -239,7 +254,8 @@ bool APlayerCharacter::TryEnterLadderOnJump() const
 // APlayerCharacter.cpp 内の Action メソッド
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
-	StateManager->GetCurrentState()->OnSkill(Value);
+	//StateManager->GetCurrentState()->OnSkill(Value);
+	CallOnClosestOverlappingActor();
 }
 
 
@@ -429,4 +445,40 @@ void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
 {
 	FVector2D StickInput = Value.Get<FVector2D>();
 	OnStickRotate(StickInput);
+}
+
+void APlayerCharacter::CallOnClosestOverlappingActor()
+{
+	if (!InteractionBox)
+		return;
+
+	TArray<AActor*> OverlappingActors;
+	InteractionBox->GetOverlappingActors(OverlappingActors);
+
+	AControllableObjectBase* ClosestActor = nullptr;
+	float MinDistanceSq = FLT_MAX;
+	FVector MyLocation = GetActorLocation();
+
+	for (AActor* Actor : OverlappingActors)
+	{
+		if (!IsValid(Actor))
+			continue;
+
+		if (AControllableObjectBase* CastedActor = Cast<AControllableObjectBase>(Actor))
+		{
+			float DistSq = FVector::DistSquared(MyLocation, CastedActor->GetActorLocation());
+			if (DistSq < MinDistanceSq)
+			{
+				MinDistanceSq = DistSq;
+				ClosestActor = CastedActor;
+			}
+		}
+	}
+
+	if (ClosestActor)
+	{
+		ClosestActor->hoge(this);
+		// 呼んだら終わり
+		return;
+	}
 }

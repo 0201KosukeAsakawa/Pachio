@@ -86,7 +86,7 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 			if (InGameController)
 			{
 				// コントローラーのTogglePossession関数を呼び出す
-				InGameController->TogglePossession();
+				InGameController->TogglePossession(mOwner);
 			}
 		}
 	}

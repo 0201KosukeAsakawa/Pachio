@@ -16,5 +16,6 @@ class PACHIO_API AControllableObjectBase :	public APawn , public IControllableAb
 public:	
 	// Sets default values for this actor's properties
 	AControllableObjectBase();
+	void hoge(ACharacter* player);
 	virtual void Action(const FInputActionValue& Value)override;
 };

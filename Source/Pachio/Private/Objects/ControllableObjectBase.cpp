@@ -2,11 +2,28 @@
 
 
 #include "Objects/ControllableObjectBase.h"
+#include "GameFramework/Character.h"
 #include "Player/InGameController.h"
 
 
 AControllableObjectBase::AControllableObjectBase()
 {
+}
+
+void AControllableObjectBase::hoge(ACharacter* player)
+{
+	// このPawnを操作しているコントローラーを取得
+	AController* OwningController = player->GetController();
+	if (OwningController)
+	{
+		// AInGameController にキャスト（もし AInGameController がこのPlayerCharacterをPossessしている場合）
+		AInGameController* InGameController = Cast<AInGameController>(OwningController);
+		if (InGameController)
+		{
+			// コントローラーのTogglePossession関数を呼び出す
+			InGameController->TogglePossession(this);
+		}
+	}
 }
 
 void AControllableObjectBase::Action(const FInputActionValue& Value)

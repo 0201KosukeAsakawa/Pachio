@@ -91,6 +91,7 @@ public:
 	void ShiftArrayLeftColorMode()override;
 
 	void OnStickMove(const FInputActionValue& Value)override;
+	void CallOnClosestOverlappingActor();
 private:
 	// ===============
 	// ==== 初期化関数 ====
@@ -171,4 +172,7 @@ private:
 	// カラーゲージ管理コンポーネント（色状態とその変化を制御）
 	UPROPERTY()
 	UColorControllerComponent* colorController;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* InteractionBox;
 };
