@@ -145,7 +145,7 @@ void UColorControllerComponent::ChangeMode(int Direction)
                     UE_LOG(LogTemp, Warning, TEXT("ColorTarget を ColorManager に設定しました"));
 
                     if (TargetActor)
-                        LevelManager->GetUIManager()->ShowMarker(TargetActor);
+                        LevelManager->GetUIManager()->ShowMarker(TEXT("ChangeColorTarget"), TargetActor);
                 }
                 else
                 {
@@ -170,7 +170,7 @@ void UColorControllerComponent::ChangeMode(int Direction)
         CurrentColorMode = NextMode;
         UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
 
-        ALevelManager::GetInstance(GetWorld())->GetUIManager()->HideMarker();
+        ALevelManager::GetInstance(GetWorld())->GetUIManager()->HideMarker(TEXT("ChangeColorTarget"));
         AnimationDelegate.Execute(Direction);
     }
 }

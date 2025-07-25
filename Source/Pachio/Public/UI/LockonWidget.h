@@ -23,7 +23,8 @@ protected:
     // UMG‚Ì‰æ‘œ‚ÉBind‚·‚éê‡‚Ímeta BindWidget‚ğg‚¤
     UPROPERTY(meta = (BindWidget))
     UImage* LockonImage;
-
+    UPROPERTY(EditAnywhere)
+    FVector2D AddVectorScale = FVector2D(0,0);
 private:
     UPROPERTY()
     AActor* TargetActor;

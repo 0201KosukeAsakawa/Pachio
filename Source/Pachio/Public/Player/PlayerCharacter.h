@@ -92,7 +92,9 @@ public:
 
 	void OnStickMove(const FInputActionValue& Value)override;
 	void CallOnClosestOverlappingActor();
+	
 private:
+		void UpdateOverlapUI();
 	// ===============
 	// ==== 初期化関数 ====
 	// ===============
@@ -173,6 +175,6 @@ private:
 	UPROPERTY()
 	UColorControllerComponent* colorController;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	UBoxComponent* InteractionBox;
 };

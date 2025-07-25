@@ -10,24 +10,32 @@ void AInGameHUD::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    if (!UIManager || !UIManager->GetMarker())
+    if (!UIManager)
         return;
 
-    ULockonWidget* MarkerWidget = UIManager->GetMarker();
-    AActor* Target = MarkerWidget->GetTargetActor();
-    if (!Target) return;
-
-    FVector2D ScreenPos = FVector2D{0,0};
+    const TMap<FName, ULockonWidget*>& Markers = UIManager->GetAllMarkers();
     APlayerController* PlayerController = GetOwningPlayerController();
 
-    if (PlayerController->ProjectWorldLocationToScreen(Target->GetActorLocation(), ScreenPos))
-    {
-        float Scale = UWidgetLayoutLibrary::GetViewportScale(this); // this = any widget
-        ScreenPos /= Scale;
+    if (!PlayerController)
+        return;
 
-        if (MarkerWidget)
+    float Scale = UWidgetLayoutLibrary::GetViewportScale(this); // ウィジェットスケール補正
+
+    for (const auto& Pair : Markers)
+    {
+        ULockonWidget* MarkerWidget = Pair.Value;
+        if (!MarkerWidget || !MarkerWidget->IsInViewport())
+            continue;
+
+        AActor* Target = MarkerWidget->GetTargetActor();
+        if (!Target)
+            continue;
+
+        FVector2D ScreenPos;
+        if (PlayerController->ProjectWorldLocationToScreen(Target->GetActorLocation(), ScreenPos))
         {
-            MarkerWidget->UpdateScreenPosition(ScreenPos); // false = 手動で補正済み
+            ScreenPos /= Scale;
+            MarkerWidget->UpdateScreenPosition(ScreenPos);
         }
     }
 }

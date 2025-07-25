@@ -27,6 +27,7 @@
 #include "Kismet/GameplayStatics.h" 
 #include "DataContainer/EffectMatchResult.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
+#include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Objects/ControllableObjectBase.h"
@@ -38,7 +39,7 @@ APlayerCharacter::APlayerCharacter()
 	// 毎フレームTickを実行可能に設定
 	PrimaryActorTick.bCanEverTick = true;
 	// 各種コンポーネントを生成・初期化
-	InteractionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionBox"));
+	/*InteractionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("IBox"));*/
 	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
 	AttackController = CreateDefaultSubobject<UAttackController>(TEXT("AttackController"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
@@ -71,6 +72,9 @@ void APlayerCharacter::BeginPlay()
 		PC->SetInputMode(FInputModeGameOnly());
 	}
 	GetCharacterMovement()->SetWalkableFloorAngle(60.f);
+	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("Interaction"));
+	if(box)
+	InteractionBox = box;
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -80,20 +84,15 @@ void APlayerCharacter::Tick(float DeltaTime)
 	if (!StateManager)
 		return;
 
-	// BoxComponentの重なり判定（例）
-	TArray<AActor*> OverlappingActors;
-	InteractionBox->GetOverlappingActors(OverlappingActors);
-
-	bool bIsOverlapping = OverlappingActors.Num() > 0;
-
-	if (bIsOverlapping)
+	if (InteractionBox)
 	{
-		// UI表示フラグONにする処理
+		FVector BoxLocation = InteractionBox->GetComponentLocation();
+		FRotator BoxRotation = InteractionBox->GetComponentRotation();
+		FVector BoxExtent = InteractionBox->GetScaledBoxExtent();
+
+		DrawDebugBox(GetWorld(), BoxLocation, BoxExtent, BoxRotation.Quaternion(), FColor::Green, false, -1.f, 0, 2.f);
 	}
-	else
-	{
-		// UI非表示にする処理
-	}
+	UpdateOverlapUI();
 
 	Circle();
 
@@ -480,5 +479,35 @@ void APlayerCharacter::CallOnClosestOverlappingActor()
 		ClosestActor->hoge(this);
 		// 呼んだら終わり
 		return;
+	}
+}
+
+void APlayerCharacter::UpdateOverlapUI()
+{
+	if (!InteractionBox)
+		return;
+
+	TArray<AActor*> OverlappingActors;
+	InteractionBox->GetOverlappingActors(OverlappingActors);
+
+	AActor* OverlappedActor = nullptr;
+	for (AActor* Actor : OverlappingActors)
+	{
+		if (IsValid(Actor) && Actor->IsA(AControllableObjectBase::StaticClass()))
+		{
+			OverlappedActor = Actor;
+			break;
+		}
+	}
+
+	if (OverlappedActor)
+	{
+		ALevelManager::GetInstance(GetWorld())->GetUIManager()
+		->ShowMarker(TEXT("ChageMovemet"), this);
+	}
+	else
+	{
+		ALevelManager::GetInstance(GetWorld())->GetUIManager()
+			->HideMarker(TEXT("ChageMovemet"));
 	}
 }

@@ -44,11 +44,15 @@ public:
     
     UUserWidget* ShowResultWidget(float Time, EStageRank Rank);
 
-    UUserWidget* ShowMarker(AActor*);
+    UUserWidget* ShowMarker(FName MarkerName, AActor* Target);
 
-    void HideMarker();
+    void HideMarker(FName MarkerName);
 
-    ULockonWidget* GetMarker() const { return MarkerWidget; }
+    const TMap<FName, ULockonWidget*>& GetAllMarkers() const;
+
+    ULockonWidget* GetMarker(FName MarkerName) const { return MarkerWidgets[MarkerName]; }
+
+
 private:
     /** 全てのカテゴリに対してウィジェットを初期化 */
     void InitAllWidgets();
@@ -70,6 +74,6 @@ private:
     UPROPERTY(EditAnywhere)
     UColorLens* ColorLens;
 
-    UPROPERTY()
-    ULockonWidget* MarkerWidget;
+private:
+    TMap<FName, ULockonWidget*> MarkerWidgets;
 };

@@ -11,7 +11,6 @@
 
 void UUIManager::Init(const AActor*)
 {
-    // すべてのカテゴリのウィジェットを初期化
     InitAllWidgets();
 
     APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
@@ -23,14 +22,19 @@ void UUIManager::Init(const AActor*)
     if (ColorLens)
         ColorLens->AddToViewport();
 
+    // MarkerカテゴリがあればすべてのウィジェットをMarkerWidgetsに登録
     if (FWidgetData* WidgetSet = WidgetDataMap.Find(EWidgetCategory::Marker))
     {
-        if (UUserWidget** FoundWidget = WidgetSet->WidgetMap.Find("TargetMarker"))
+        for (auto& Pair : WidgetSet->WidgetMap)
         {
-            MarkerWidget = Cast<ULockonWidget>(*FoundWidget);
+            if (ULockonWidget* LockonWidget = Cast<ULockonWidget>(Pair.Value))
+            {
+                MarkerWidgets.Add(Pair.Key, LockonWidget);
+            }
         }
     }
 }
+
 
 void UUIManager::InitAllWidgets()
 {
@@ -167,21 +171,37 @@ UUserWidget* UUIManager::ShowResultWidget(float Time, EStageRank Rank)
     return BaseWidget;
 }
 
-UUserWidget* UUIManager::ShowMarker(AActor* Target)
+UUserWidget* UUIManager::ShowMarker(FName MarkerName, AActor* Target)
 {
-    if (!Target || !MarkerWidget) return nullptr;
+    if (!Target)
+        return nullptr;
 
-    APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-    MarkerWidget->AddToViewport();
+    ULockonWidget** FoundWidget = MarkerWidgets.Find(MarkerName);
+    if (!FoundWidget || !(*FoundWidget))
+        return nullptr;
+
+    ULockonWidget* MarkerWidget = *FoundWidget;
+
+    if (!MarkerWidget->IsInViewport())
+    {
+        MarkerWidget->AddToViewport();
+    }
     MarkerWidget->SetTargetActor(Target);
 
     return MarkerWidget;
 }
 
-void UUIManager::HideMarker()
+
+void UUIManager::HideMarker(FName MarkerName)
 {
-    if (MarkerWidget)
+    ULockonWidget** FoundWidget = MarkerWidgets.Find(MarkerName);
+    if (FoundWidget && *FoundWidget)
     {
-        MarkerWidget->RemoveFromParent();
+        (*FoundWidget)->RemoveFromParent();
     }
+}
+
+const TMap<FName, ULockonWidget*>& UUIManager::GetAllMarkers() const
+{
+    return MarkerWidgets;
 }

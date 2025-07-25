@@ -12,7 +12,7 @@ void ULockonWidget::UpdateScreenPosition(const FVector2D& ScreenPosition)
     {
         if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(LockonImage->Slot))
         {
-            CanvasSlot->SetPosition(ScreenPosition);
+            CanvasSlot->SetPosition(ScreenPosition+ AddVectorScale);
         }
     }
 }
