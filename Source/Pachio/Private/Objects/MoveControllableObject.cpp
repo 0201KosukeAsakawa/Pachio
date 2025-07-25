@@ -82,7 +82,8 @@ void AMoveControllableObject::Movement(const FInputActionValue& Value)
 		UE_LOG(LogTemp, Warning, TEXT("Blocked by: %s"), *SelfHit.GetActor()->GetName());
 		MovementDelta = FVector::ZeroVector; // �u���b�N���ꂽ�̂Œ�~
 	}
-
+	if(AttachedActors.IsEmpty())
+		return;
 	// ��ɏ���Ă���I�u�W�F�N�g�̈ړ�
 	for (AActor* ActorOnTop : AttachedActors)
 	{

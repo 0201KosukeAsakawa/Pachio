@@ -95,6 +95,7 @@ public:
 	
 private:
 		void UpdateOverlapUI();
+		void HandleMoveSound(float);
 	// ===============
 	// ==== 初期化関数 ====
 	// ===============
@@ -134,8 +135,7 @@ private:
 
 	bool TryEnterLadderOnJump()const;
 
-	FVector2D PrevMouseDir;
-	bool bHasPrevMouse = false;
+
 private:
 	UPROPERTY(EditAnywhere)
 	float JumpForce = 12;
@@ -143,6 +143,9 @@ private:
 	float JumpBuff = 1;
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed = 10;
+
+	float MoveSoundCooldown = 0.f;
+	const float MoveSoundInterval = 0.5f; // 0.5秒に1回まで再生可能
 	// =====================
 	// ==== コンポーネント ====
 	// =====================
@@ -177,4 +180,7 @@ private:
 
 	UPROPERTY()
 	UBoxComponent* InteractionBox;
+
+	FVector2D PrevMouseDir;
+	bool bHasPrevMouse = false;
 };

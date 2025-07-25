@@ -63,7 +63,7 @@ private:
     void StopBGMWithFadeOut(float FadeDuration) override;
     UFUNCTION()
     void OnEnvelopeValue(const USoundWave* SoundWave, const float EnvelopeValue);
-    bool PlayBGM(/*UFMODEvent* EventAsset, float InBPM*/);
+    bool PlayBGM();
 private:
     // サウンドデータを保持するためのマップ
     UPROPERTY(EditAnywhere, Category = "Sound")

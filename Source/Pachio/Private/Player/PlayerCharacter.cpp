@@ -31,6 +31,7 @@
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Objects/ControllableObjectBase.h"
+#include "Interface/Soundable.h"
 
 
 // コンストラクタ
@@ -74,7 +75,9 @@ void APlayerCharacter::BeginPlay()
 	GetCharacterMovement()->SetWalkableFloorAngle(60.f);
 	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("Interaction"));
 	if(box)
-	InteractionBox = box;
+	{
+		InteractionBox = box;
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -84,14 +87,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	if (!StateManager)
 		return;
 
-	if (InteractionBox)
-	{
-		FVector BoxLocation = InteractionBox->GetComponentLocation();
-		FRotator BoxRotation = InteractionBox->GetComponentRotation();
-		FVector BoxExtent = InteractionBox->GetScaledBoxExtent();
-
-		DrawDebugBox(GetWorld(), BoxLocation, BoxExtent, BoxRotation.Quaternion(), FColor::Green, false, -1.f, 0, 2.f);
-	}
+	HandleMoveSound(DeltaTime);
 	UpdateOverlapUI();
 
 	Circle();
@@ -200,6 +196,8 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 
 	// ジャンプ力を掛けて力を加える
 	physics->AddForce(GetActorUpVector(), JumpForce);
+	ISoundable* sound = Cast<ISoundable>(ALevelManager::GetInstance(GetWorld())->GetSoundManager());
+	sound->PlaySound("SE", "Jump");
 }
 
 bool APlayerCharacter::TryEnterLadderOnJump() const
@@ -509,5 +507,29 @@ void APlayerCharacter::UpdateOverlapUI()
 	{
 		ALevelManager::GetInstance(GetWorld())->GetUIManager()
 			->HideMarker(TEXT("ChageMovemet"));
+	}
+}
+
+void APlayerCharacter::HandleMoveSound(float DeltaTime)
+{
+	FVector Velocity = GetVelocity();
+	bool bIsMoving = Velocity.SizeSquared() > KINDA_SMALL_NUMBER;
+
+	ISoundable* sound = Cast<ISoundable>(ALevelManager::GetInstance(GetWorld())->GetSoundManager());
+	if (!sound)
+		return;
+
+	if (bIsMoving)
+	{
+		MoveSoundCooldown -= DeltaTime;
+		if (MoveSoundCooldown <= 0.f)
+		{
+			sound->PlaySound("SE", "MoveStep");  // ループしないSEをここで再生
+			MoveSoundCooldown = MoveSoundInterval;
+		}
+	}
+	else
+	{
+		MoveSoundCooldown = 0.f; // 移動してない時はリセット
 	}
 }
