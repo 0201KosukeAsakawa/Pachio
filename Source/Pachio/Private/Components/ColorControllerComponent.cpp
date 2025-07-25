@@ -67,6 +67,9 @@ void UColorControllerComponent::AdjustColor(float Delta)
 
 void UColorControllerComponent::ChangeMode(int Direction)
 {
+    ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
+    UColorManager* ColorManager = LevelManager->GetColorManager();
+
     // Directionが1以上なら1、それ未満なら-1に補正
     Direction = (Direction >= 1) ? 1 : -1;
 
@@ -137,9 +140,9 @@ void UColorControllerComponent::ChangeMode(int Direction)
             CurrentColorMode = NextMode;
             UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
 
-            if (ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld()))
+            if (LevelManager)
             {
-                if (UColorManager* ColorManager = LevelManager->GetColorManager())
+                if (ColorManager)
                 {
                     ColorManager->SetColorTarget(ClosestTarget);
                     UE_LOG(LogTemp, Warning, TEXT("ColorTarget を ColorManager に設定しました"));
@@ -169,7 +172,7 @@ void UColorControllerComponent::ChangeMode(int Direction)
         // 対象を必要としないモードならそのまま切り替え
         CurrentColorMode = NextMode;
         UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
-
+        ColorManager->ResetColorTarget();
         ALevelManager::GetInstance(GetWorld())->GetUIManager()->HideMarker(TEXT("ChangeColorTarget"));
         AnimationDelegate.Execute(Direction);
     }

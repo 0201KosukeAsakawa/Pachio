@@ -30,7 +30,7 @@ public :
 	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
 	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 
-
+	void SetSelectMode(bool);
 private:
     UFUNCTION(BlueprintCallable)
     virtual void OnColorMatched(const FLinearColor& FilterColor);  
@@ -38,6 +38,7 @@ private:
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bSetStartColor = true;
+
 	UPROPERTY(EditAnywhere)
 	FLinearColor CurrentColor;
 

@@ -18,6 +18,7 @@ public:
 	void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
 	void ColorEvent(FName);
 	void SetColorTarget(IColorReactiveInterface*);
+	void ResetColorTarget();
     // 色付け対象を登録する関数
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);
 	void InitializePostEffect();

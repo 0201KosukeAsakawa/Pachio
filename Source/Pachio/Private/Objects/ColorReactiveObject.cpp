@@ -138,6 +138,14 @@ bool AColorReactiveObject::IsColorChange() const
 	return ColorReactiveComponent->IsColorMatch(StartColor);
 }
 
+void AColorReactiveObject::SetSelectMode(bool bIsSelected)
+{
+	if (!ColorReactiveComponent)
+		return;
+
+	return ColorReactiveComponent->SetSelectMode(bIsSelected);
+}
+
 // マテリアルに色を適用（外部から手動適用する用）
 void AColorReactiveObject::ApplyColorToMaterial(FLinearColor InColor)
 {

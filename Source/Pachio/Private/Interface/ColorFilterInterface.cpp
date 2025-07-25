@@ -18,6 +18,10 @@ void IColorReactiveInterface::ResetColor()
 {
 }
 
+void IColorReactiveInterface::SetSelectMode(bool)
+{
+}
+
 bool IColorReactiveInterface::IsColorChange() const
 {
     return true;

@@ -32,6 +32,7 @@ public:
 	virtual void SetColor(FLinearColor)override;
 	virtual void ResetColor()override;
 	virtual bool IsColorChange()const override;	
+	virtual void SetSelectMode(bool)override;
 	inline void ChangeLock(bool b) override { bColorVariable = b; }
 	inline bool IsColorModifiable()const override { return bSetColor; }
 	inline bool IsColorMuch() const override { return bColorMuch; }

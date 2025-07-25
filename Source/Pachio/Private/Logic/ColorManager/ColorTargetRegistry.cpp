@@ -60,6 +60,14 @@ void UColorTargetRegistry::SetColorTarget(IColorReactiveInterface* InInterface)
 {
     TargetObject.SetObject(Cast<UObject>(InInterface));
     TargetObject.SetInterface(InInterface);
+    InInterface->SetSelectMode(true);
+}
+
+void UColorTargetRegistry::ResetColorTarget()
+{   
+    TargetObject->SetSelectMode(false);
+    //TargetObject.SetObject(Cast<UObject>(nullptr));
+    //TargetObject.SetInterface(nullptr);
 }
 
 void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)

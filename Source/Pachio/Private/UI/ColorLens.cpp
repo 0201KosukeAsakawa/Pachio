@@ -116,11 +116,24 @@ void ConvertRGBToHSV(const FLinearColor& InColor, float& OutH, float& OutS, floa
     OutV = Max;
 }
 
+FLinearColor AdjustColor(FLinearColor InColor)
+{
+    // RGB → HSV に変換
+    FLinearColor HSV = InColor.LinearRGBToHSV();
+
+    // 彩度（S）と明度（V）を補正
+    HSV.G = FMath::Clamp(HSV.G * 1.5f, 0.0f, 1.0f); // 彩度を強調
+    HSV.B = FMath::Clamp(HSV.B * 0.7f, 0.0f, 1.0f); // 明度を下げて濃く
+
+    // HSV → RGB に戻して返す
+    return HSV.HSVToLinearRGB();
+}
+
 void UColorLens::ColorAction(FLinearColor InColor)
 {
     float H, S, V;
     ConvertRGBToHSV(InColor, H, S, V);
-
+    CurrentColorImage->SetColorAndOpacity(AdjustColor(InColor));
     if (FilterColorImage)
     {
         FWidgetTransform Transform = FilterColorImage->RenderTransform;

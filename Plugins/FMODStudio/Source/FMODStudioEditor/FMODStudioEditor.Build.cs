@@ -52,7 +52,6 @@ namespace UnrealBuildTool.Rules
                     "MovieSceneTools",
                     "PropertyEditor",
                     "Settings",
-                    "SequencerCore",
                     "Slate",
                     "SlateCore",
                     "Sockets",

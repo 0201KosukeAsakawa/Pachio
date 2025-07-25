@@ -25,6 +25,7 @@ public:
 	virtual void ColorAction(const FLinearColor = FLinearColor::White);
 	virtual void SetColor(FLinearColor);
 	virtual void ResetColor();
+	virtual void SetSelectMode(bool);
 	virtual bool IsColorChange()const;
 	virtual bool IsColorModifiable()const;
 	virtual FName GetColorEventID()const;

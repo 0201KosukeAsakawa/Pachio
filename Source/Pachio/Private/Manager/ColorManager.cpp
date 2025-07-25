@@ -52,12 +52,16 @@ void UColorManager::SetColorTarget(IColorReactiveInterface* target)
     ColorTargetRegistry->SetColorTarget(target);
 }
 
+void UColorManager::ResetColorTarget()
+{
+    ColorTargetRegistry->ResetColorTarget();
+}
+
 // 色変化に反応するターゲットを登録
 void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
 {
     if (!this || !ColorTargetRegistry)
         return;
-
     ColorTargetRegistry->RegisterTarget(Mode, Target);
 }
 

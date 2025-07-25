@@ -156,6 +156,25 @@ FLinearColor UColorReactiveComponent::GetComplementaryColor(const FLinearColor& 
 	return Complementary;
 }
 
+void UColorReactiveComponent::SetSelectMode(bool bIsSelected)
+{
+	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
+	if (!Mesh) return;
+
+	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
+	if (!DynMaterial) return;
+	if (bIsSelected)
+	{
+		// 発光：白色にセット
+		DynMaterial->SetVectorParameterValue(FName("EmissiveColor"), FLinearColor(10,10,10,10));
+	}
+	else
+	{
+		// 発光なし：黒（発光なし）にセット
+		DynMaterial->SetVectorParameterValue(FName("EmissiveColor"), FLinearColor::Black);
+	}
+}
+
 void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 {
 	AActor* Owner = GetOwner();

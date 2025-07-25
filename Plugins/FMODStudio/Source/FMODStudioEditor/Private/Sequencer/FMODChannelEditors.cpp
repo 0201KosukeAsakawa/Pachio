@@ -131,7 +131,8 @@ bool CanCreateKeyEditor(const FFMODEventControlChannel *Channel)
     return true;
 }
 
-TSharedRef<SWidget> CreateKeyEditor(const TMovieSceneChannelHandle<FFMODEventControlChannel> &Channel, const UE::Sequencer::FCreateKeyEditorParams& Params)
+TSharedRef<SWidget> CreateKeyEditor(const TMovieSceneChannelHandle<FFMODEventControlChannel> &Channel, UMovieSceneSection *Section,
+    const FGuid &InObjectBindingID, TWeakPtr<FTrackInstancePropertyBindings> PropertyBindings, TWeakPtr<ISequencer> InSequencer)
 {
     const FFMODEventControlChannel *RawChannel = Channel.Get();
 
@@ -141,7 +142,7 @@ TSharedRef<SWidget> CreateKeyEditor(const TMovieSceneChannelHandle<FFMODEventCon
     }
 
     UEnum *Enum = RawChannel->GetEnum();
-	return SNew(SFMODEventControlKeyEditor, Channel, TWeakObjectPtr(Params.OwningSection), Params.Sequencer.ToWeakPtr(), Enum);
+    return SNew(SFMODEventControlKeyEditor, Channel, Section, InSequencer, Enum);
 }
 
 void DrawKeys(FFMODEventControlChannel *Channel, TArrayView<const FKeyHandle> InKeyHandles, const UMovieSceneSection* InOwner, TArrayView<FKeyDrawParams> OutKeyDrawParams)
