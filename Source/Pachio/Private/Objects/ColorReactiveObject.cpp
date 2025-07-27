@@ -92,10 +92,10 @@ bool AColorReactiveObject::IsColorChange() const
 
 void AColorReactiveObject::SetSelectMode(bool bIsSelected)
 {
-	//	if (!ColorReactiveComponent)
-	//		return;
-	//
-	//ColorReactiveComponent->SetSelectMode(bIsSelected);
+		if (!ColorConfigurator)
+			return;
+	
+		ColorConfigurator->SetSelectMode(bIsSelected);
 }
 
 void AColorReactiveObject::ChangeLock(bool b)

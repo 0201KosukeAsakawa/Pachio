@@ -6,114 +6,103 @@
 #include "Sound/SoundManager.h"
 #include "FunctionLibrary.h"
 
-// �R���X�g���N�^�FTick �̓f�t�H���g�Ŗ����i��{�I�Ƀ��A���^�C���X�V�s�v�j
 UColorConfigurator::UColorConfigurator()
 {
 	BeatScalerComponent = CreateDefaultSubobject<UBeatScalerComponent>(TEXT("BeatScalerComponent"));
 }
 
-// �F�����I�u�W�F�N�g�̏���������
 void UColorConfigurator::Init()
 {
-	InitializeColorLogic();    // �F�����R���|�[�l���g�̐����E�ݒ�
-	RegisterToColorManager(); // �J���[�}�l�[�W���[�ւ̓o�^
-	SetupMaterial();          // �}�e���A���ƃX�e���V���l�̐ݒ�
-	// ���������iBeginPlay�Ȃǁj
-	if (USoundManager* soundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject()))
-	{
-		soundManager->OnBeatDetected.AddDynamic(this, &UColorConfigurator::PlayBeatAnimation);
-	}
+	InitializeColorLogic();
+	RegisterToColorManager();
+	SetupMaterial();
+
+	const TObjectPtr<USoundManager> SoundManager = Cast<USoundManager>(GetLevelManager()->GetSoundManager().GetObject());
+	if (!SoundManager) return;
+
+	SoundManager->OnBeatDetected.AddDynamic(this, &UColorConfigurator::PlayBeatAnimation);
 }
 
-// �F�������W�b�N�̏������iUColorReactiveComponent�̐����j
 void UColorConfigurator::InitializeColorLogic()
 {
-	if (ReactiveComponentClass == nullptr)
-		return;
-	CurrentColor = StartColor;
-	// �w�肳�ꂽ�N���X����C���X�^���X�𐶐�
-	ColorReactiveComponent = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
-	if (ColorReactiveComponent == nullptr)
-		return;
+	if (!ReactiveComponentClass) return;
 
-	// �R���|�[�l���g�̓o�^�ƃA�N�e�B�x�[�g
+	CurrentColor = StartColor;
+	ColorReactiveComponent = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
+	if (!ColorReactiveComponent) return;
+
 	ColorReactiveComponent->RegisterComponent();
 	ColorReactiveComponent->Activate(true);
 	ColorReactiveComponent->SetMyColor(StartColor);
 
-	// StaticMesh �Ƀo�C���h�i�F�̔����Ώۃ��b�V���擾�j
-	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-	if (Mesh == nullptr)
-		return;
-
-	ColorReactiveComponent->Init(Mesh); // ���b�V����o�^���ď�����
+	if (UStaticMeshComponent* Mesh = GetStaticMesh())
+	{
+		ColorReactiveComponent->Init(Mesh);
+	}
 }
 
-// ���x����̃J���[�}�l�[�W���[�Ɏ��g��o�^
 void UColorConfigurator::RegisterToColorManager()
 {
-	ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
-	if (LevelManager == nullptr)
-		return;
-
-	UColorManager* ColorManager = LevelManager->GetColorManager();
-	if (ColorManager == nullptr)
-		return;
-
-	// �^�[�Q�b�g��ʂƂƂ�Ɏ�����o�^
-	ColorManager->RegisterTarget(ColorTargetType, GetOwner());
+	if (UColorManager* ColorManager = GetColorManager())
+	{
+		ColorManager->RegisterTarget(ColorTargetType, GetOwner());
+	}
 }
 
-// �}�e���A���ƃJ�X�^���f�v�X�ݒ�
 void UColorConfigurator::SetupMaterial()
 {
-	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
-	if (Mesh == nullptr)
-		return;
+	if (!bSetColor) return;
 
-	// �֊s�`��p�̃f�v�X�X�e���V���ݒ�
-	Mesh->SetRenderCustomDepth(true);
-	Mesh->SetCustomDepthStencilValue(10);
+	if (UStaticMeshComponent* Mesh = GetStaticMesh())
+	{
+		Mesh->SetRenderCustomDepth(true);
+		Mesh->SetCustomDepthStencilValue(10);
 
-	// �_�C�i�~�b�N�}�e���A���쐬�ƃx�[�X�F�̐ݒ�
-	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
-	if (DynMaterial == nullptr || !bSetColor)
-		return;
-
-	DynMaterial->SetVectorParameterValue(FName("BaseColor"), StartColor);
+		if (UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0))
+		{
+			DynMaterial->SetVectorParameterValue(FName("BaseColor"), StartColor);
+		}
+	}
 }
 
 void UColorConfigurator::PlayBeatAnimation()
 {
 	if (BeatScalerComponent)
+	{
 		BeatScalerComponent->PlayBeat();
+	}
 }
 
-// �F�A�N�V�������s���̏����i�f�t�H���g�����j
 void UColorConfigurator::ColorAction(FLinearColor NewColor)
 {
-	if (!bPlayColorAction || ColorReactiveComponent == nullptr)
-		return;
-	if (bColorVariable)
-		ApplyColorToMaterial(NewColor);
+	if (!bPlayColorAction || !ColorReactiveComponent) return;
 
-	// ���͐F�ƈ�v���邩�`�F�b�N�i���ʂ� bColorMuch �ɕێ��j
-	bColorMuch = ColorReactiveComponent->CheckColorMuch(NewColor, buseComplementaryColor);
+	if (bColorVariable)
+	{
+		ApplyColorToMaterial(NewColor);
+	}
+
+	bColorMuch = ColorReactiveComponent->CheckColorMuch(NewColor, bUseComplementaryColor);
 }
 
-void UColorConfigurator::SetColor(FLinearColor newColor)
+void UColorConfigurator::SetColor(FLinearColor NewColor)
 {
-	CurrentColor = newColor;
-	ApplyColorToMaterial(CurrentColor);
-	ColorReactiveComponent->SetMyColor(CurrentColor);
-	ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
-	if (LevelManager == nullptr)
-		return;
+	CurrentColor = NewColor;
 
-	UColorManager* ColorManager = LevelManager->GetColorManager();
-	if (ColorManager == nullptr)
-		return;
-	ColorAction(ColorManager->GetWorldColor());
+	if (bSetColor)
+	{
+		ApplyColorToMaterial(CurrentColor);
+	}
+
+	if (ColorReactiveComponent)
+	{
+		ColorReactiveComponent->SetMyColor(CurrentColor);
+	}
+
+	if (const UColorManager* ColorManager = GetColorManager())
+	{
+		ColorAction(ColorManager->GetWorldColor());
+	}
 }
 
 void UColorConfigurator::ResetColor()
@@ -121,37 +110,38 @@ void UColorConfigurator::ResetColor()
 	SetColor(StartColor);
 }
 
-void UColorConfigurator::SetCurrentColor(FLinearColor newColor)
+void UColorConfigurator::SetCurrentColor(FLinearColor NewColor)
 {
-	CurrentColor = newColor;
+	CurrentColor = NewColor;
 }
 
-void UColorConfigurator::SetColorMuch(bool b)
+void UColorConfigurator::SetColorMuch(bool bInColorMuch)
 {
-	bColorMuch = b;
+	bColorMuch = bInColorMuch;
+}
+
+void UColorConfigurator::SetSelectMode(bool bInIsSelected)
+{
+	bIsSelected = bInIsSelected;
+	if (ColorReactiveComponent)
+	{
+		ColorReactiveComponent->SetSelectMode(bIsSelected);
+	}
 }
 
 bool UColorConfigurator::IsColorChange() const
 {
-	if (!ColorReactiveComponent)
-		return false;
-
-	return ColorReactiveComponent->IsColorMuch(StartColor);
+	return ColorReactiveComponent && ColorReactiveComponent->IsColorMuch(StartColor);
 }
 
-bool UColorConfigurator::IsColorChange(FLinearColor color) const
+bool UColorConfigurator::IsColorChange(FLinearColor Color) const
 {
-	if (!ColorReactiveComponent)
-		return false;
-
-	return ColorReactiveComponent->IsColorMuch(color);
+	return ColorReactiveComponent && ColorReactiveComponent->IsColorMuch(Color);
 }
 
-bool UColorConfigurator::CheckColorMuch(const FLinearColor& FilterColor, bool ComplementaryColor) const
+bool UColorConfigurator::CheckColorMuch(const FLinearColor& FilterColor, bool buseComplementaryColor) const
 {
-	if (!ColorReactiveComponent)
-		return false;
-	return ColorReactiveComponent->CheckColorMuch(FilterColor, ComplementaryColor);
+	return ColorReactiveComponent && ColorReactiveComponent->CheckColorMuch(FilterColor, buseComplementaryColor);
 }
 
 bool UColorConfigurator::IsColorMuch() const
@@ -159,22 +149,40 @@ bool UColorConfigurator::IsColorMuch() const
 	return bColorMuch;
 }
 
-bool UColorConfigurator::IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance)const
+bool UColorConfigurator::IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance) const
 {
-	if (!ColorReactiveComponent)
-		return false;
-	return ColorReactiveComponent->IsColorMuch(FilterColor, TargetColor, Tolerance);
+	return ColorReactiveComponent && ColorReactiveComponent->IsColorMuch(FilterColor, TargetColor, Tolerance);
 }
 
-bool UColorConfigurator::IsColorMuch(const FLinearColor& FilterColor, const float Tolerance) const
+bool UColorConfigurator::IsColorMuch(const FLinearColor& FilterColor, float Tolerance) const
 {
-	if (!ColorReactiveComponent)
-		return false;
-	return ColorReactiveComponent->IsColorMuch(FilterColor, Tolerance);
+	return ColorReactiveComponent && ColorReactiveComponent->IsColorMuch(FilterColor, Tolerance);
 }
 
-// �}�e���A���ɐF��K�p�i�O������蓮�K�p����p�j
 void UColorConfigurator::ApplyColorToMaterial(FLinearColor InColor)
 {
-	ColorReactiveComponent->ApplyColorToMaterial(InColor);
+	if (ColorReactiveComponent)
+	{
+		ColorReactiveComponent->ApplyColorToMaterial(InColor);
+	}
+}
+
+// =======================
+// 補助関数（共通処理）
+// =======================
+
+UStaticMeshComponent* UColorConfigurator::GetStaticMesh() const
+{
+	return UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
+}
+
+ALevelManager* UColorConfigurator::GetLevelManager() const
+{
+	return ALevelManager::GetInstance(GetWorld());
+}
+
+UColorManager* UColorConfigurator::GetColorManager() const
+{
+	const ALevelManager* LevelManager = GetLevelManager();
+	return LevelManager ? LevelManager->GetColorManager() : nullptr;
 }
