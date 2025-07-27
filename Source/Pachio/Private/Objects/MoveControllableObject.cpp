@@ -6,6 +6,8 @@
 #include "Components/MoveComponent.h"
 #include "Components/PlayerInputComponent.h"
 #include "Components/BoxComponent.h"
+#include "Sound/SoundManager.h"
+#include "Manager/LevelManager.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -45,14 +47,57 @@ void AMoveControllableObject::BeginPlay()
 	{
 		PlayerInputData->Init(Controller);
 	}
+	const TObjectPtr<USoundManager> SoundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject());
+	if (!SoundManager) return;
+
+	SoundManager->OnBeatDetected.AddDynamic(this, &AMoveControllableObject::OnBeatDetected);
+
 }
 
-// Called every frame
+
 void AMoveControllableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!bIsMoving) return;
+
+	ElapsedTime += DeltaTime;
+	float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.f, 1.f);
+	float EasedAlpha = FMath::InterpEaseInOut(0.f, 1.f, Alpha, 2.f); // Easing optional
+
+	// 移動量を算出
+	FVector CurrentLocation = GetActorLocation();
+	FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, EasedAlpha);
+	FVector MovementDelta = NewLocation - CurrentLocation;
+
+	SetActorLocation(NewLocation);
+
+	// 上のアクターを一緒に動かす
+	if (!AttachedActors.IsEmpty())
+	{
+		for (AActor* ActorOnTop : AttachedActors)
+		{
+			if (ActorOnTop)
+			{
+				FHitResult Hit;
+				ActorOnTop->AddActorWorldOffset(MovementDelta, true, &Hit);
+
+				if (Hit.IsValidBlockingHit())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Attached actor %s blocked by: %s"),
+						*ActorOnTop->GetName(), *Hit.GetActor()->GetName());
+				}
+			}
+		}
+	}
+
+	// 終了判定
+	if (Alpha >= 1.f)
+	{
+		bIsMoving = false;
+	}
 }
+
 
 // �v���C���[���̓o�C���h����
 void AMoveControllableObject::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -67,42 +112,24 @@ void AMoveControllableObject::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 void AMoveControllableObject::Movement(const FInputActionValue& Value)
 {
-	FVector direction = MoveComp->Movement(0, this, Value);
-	UE_LOG(LogTemp, Log, TEXT("Direction: X=%.3f, Y=%.3f, Z=%.3f"), direction.X, direction.Y, direction.Z);
-
-	float MovementScale = 10.0f;
-	FVector MovementDelta = direction * MovementScale;
-
-	// ���g�̈ړ��iAddMovementInput �ł͂Ȃ��A�����Փ˂�l�������I�t�Z�b�g�j
-	FHitResult SelfHit;
-	AddActorWorldOffset(MovementDelta, true, &SelfHit);
-
-	if (SelfHit.IsValidBlockingHit())
+	FVector2D InputVec = Value.Get<FVector2D>();
+	if (InputVec.IsNearlyZero())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Blocked by: %s"), *SelfHit.GetActor()->GetName());
-		MovementDelta = FVector::ZeroVector; // �u���b�N���ꂽ�̂Œ�~
-	}
-	if (AttachedActors.IsEmpty())
+		CurrentInputDirection = FVector::ZeroVector;
 		return;
-	// ��ɏ���Ă���I�u�W�F�N�g�̈ړ�
-	TArray<AActor*> ActorsToMove = AttachedActors;
-
-	for (AActor* ActorOnTop : ActorsToMove)
-	{
-
-		if (ActorOnTop)
-		{
-			FHitResult Hit;
-			ActorOnTop->AddActorWorldOffset(MovementDelta, true, &Hit);
-
-			if (Hit.IsValidBlockingHit())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Attached actor %s blocked by: %s"), *ActorOnTop->GetName(), *Hit.GetActor()->GetName());
-
-			}
-		}
 	}
+
+	// 入力を2Dベクトルから3Dへ変換（例：X→軸方向のスケールに使う）
+	// 今回は入力のY成分を軸方向のスケールとして使う例
+	// もしスティックXでプラス・マイナスをつけたい場合はInputVec.Xを使うなど調整して下さい。
+
+	// ここでは単純にInputVec.Yを軸方向に乗算している例です
+	FVector NormalizedAxis = MovementAxis.GetSafeNormal();
+	CurrentInputDirection = NormalizedAxis * InputVec.Y;
+
+	// これで軸方向の正負方向に移動できます
 }
+
 
 void AMoveControllableObject::Action(const FInputActionValue& Value)
 {
@@ -144,4 +171,110 @@ void AMoveControllableObject::OnFootEndOverlap(UPrimitiveComponent* OverlappedCo
 		AttachedActors.Remove(OtherActor);
 		UE_LOG(LogTemp, Log, TEXT("Removed actor from top: %s"), *OtherActor->GetName());
 	}
+}
+
+void AMoveControllableObject::ExecuteMovement(const FVector& Direction)
+{
+	FVector DirectionVector = Direction;
+	if (MoveComp)
+	{
+		DirectionVector = MoveComp->Movement(0, this, FInputActionValue(Direction));
+	}
+
+	FVector MovementDelta = DirectionVector * MovementScale;
+
+	FHitResult SelfHit;
+	AddActorWorldOffset(MovementDelta, true, &SelfHit);
+
+	if (SelfHit.IsValidBlockingHit())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Blocked by: %s"), *SelfHit.GetActor()->GetName());
+		MovementDelta = FVector::ZeroVector;
+	}
+
+	if (AttachedActors.IsEmpty())
+		return;
+
+	for (AActor* ActorOnTop : AttachedActors)
+	{
+		if (!ActorOnTop) continue;
+
+		FHitResult Hit;
+		ActorOnTop->AddActorWorldOffset(MovementDelta, true, &Hit);
+
+		if (Hit.IsValidBlockingHit())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Attached actor %s blocked by: %s"),
+				*ActorOnTop->GetName(), *Hit.GetActor()->GetName());
+		}
+	}
+}
+
+void AMoveControllableObject::OnBeatDetected()
+{
+	if (CurrentInputDirection.IsNearlyZero()) return;
+
+	FVector Start = GetActorLocation();
+	FVector End = Start + CurrentInputDirection * MovementScale;
+
+	if (CanMoveToTarget(Start, End))
+	{
+		StartLocation = Start;
+		TargetLocation = End;
+		ElapsedTime = 0.f;
+		bIsMoving = true;
+	}
+}
+
+
+bool AMoveControllableObject::CanMoveToTarget(const FVector& Start, const FVector& End) const
+{
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this); // 自分自身は無視
+	for (AActor* Actor : AttachedActors)
+	{
+		QueryParams.AddIgnoredActor(Actor); // 上のアクターも無視
+	}
+
+	FVector BoxExtent = GetCollisionBoxExtent();
+
+	FHitResult Hit;
+	FQuat Rotation = GetActorQuat(); // または GetRootComponent()->GetComponentQuat();
+
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		Start,
+		End,
+		Rotation,
+		ECC_Visibility,
+		FCollisionShape::MakeBox(BoxExtent),
+		QueryParams
+	);
+	DrawDebugBox(
+		GetWorld(),
+		End,            // Boxの中心（例：終了地点）
+		BoxExtent,
+		Rotation,
+		FColor::Blue,
+		false,
+		5.0f,
+		0,
+		2.0f
+	);
+	if (bHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Blocked by %s"), *Hit.GetActor()->GetName());
+	}
+	return !bHit;
+}
+
+FVector AMoveControllableObject::GetCollisionBoxExtent() const
+{
+	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(GetRootComponent()))
+	{
+		// BoundsのBoxExtentを取得（ワールドスケール込みの半径的なサイズ）
+		return PrimComp->Bounds.BoxExtent;
+	}
+	// デフォルト値
+	return FVector(50.f, 50.f, 50.f);
 }

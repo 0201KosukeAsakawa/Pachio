@@ -97,6 +97,9 @@ void UPlayerInputComponent::BindInput(UInputComponent* PlayerInputComponent)
         if constexpr (HasMovement<T>::value)
         {
             EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, Owner, &T::Movement);
+            EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, Owner, &T::Movement);
+            EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Canceled, Owner, &T::Movement);
+
         }
 
         if constexpr (HasAction<T>::value)
