@@ -28,6 +28,7 @@ public :
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
 	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
+	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 
 	void SetSelectMode(bool);
@@ -44,4 +45,9 @@ protected:
 
 	UPROPERTY()
 	UMaterialInstanceDynamic* DynamicMaterialInstance = nullptr;
+
+		UPROPERTY()
+	UMaterialInstanceDynamic* DynMesh;
+
+	bool bSelected = false;
 };
