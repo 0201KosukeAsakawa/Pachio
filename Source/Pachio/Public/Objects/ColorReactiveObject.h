@@ -32,13 +32,13 @@ public:
 	virtual void ColorAction(FLinearColor InColor) override;
 	virtual void SetColor(FLinearColor)override;
 	virtual void ResetColor()override;
-	virtual bool IsColorChange()const override;	
+	virtual bool IsColorChange()const override;
 	virtual void SetSelectMode(bool)override;
-	inline void ChangeLock(bool b) override { bColorVariable = b; }
-	inline bool IsColorModifiable()const override { return bSetColor; }
-	inline bool IsColorMuch() const override { return bColorMuch; }
-	inline FName GetColorEventID()const override{return EventID;}
-	
+	void ChangeLock(bool b) override;
+	bool IsColorModifiable()const override;
+	bool IsColorMuch() const override;
+	FName GetColorEventID()const override;
+
 protected:
 	virtual void Init();
 	virtual void InitializeColorLogic();
@@ -46,48 +46,6 @@ protected:
 	virtual void SetupMaterial();
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
 protected:
-	
-	UPROPERTY()
-	UBeatScalerComponent* BeatScalerComponent;
-	
-	// コンポーネント設定
-	UPROPERTY(EditAnywhere, Category = "Reactive")
-	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;	
-	
-	// カラーリアクティブコンポーネントの実体
-	UPROPERTY()
-	UColorReactiveComponent* ColorReactiveComponent;
-
-	// オブジェクトの現在の
-	// 色
-	UPROPERTY()
-	FLinearColor CurrentColor;
-
-	// オブジェクト固有の色
-	UPROPERTY(EditAnywhere)
-	FLinearColor StartColor;
-
-	// 色の対象種別
-	UPROPERTY(EditAnywhere, Category = "Color")
-	EColorTargetType ColorTargetType;
-	UPROPERTY(EditAnywhere)
-	bool bColorVariable  = false;
-	UPROPERTY(EditAnywhere)
-	bool bPlayColorAction = true;
-	UPROPERTY(EditAnywhere)
-	bool buseComplementaryColor = false;	
-	UPROPERTY(EditAnywhere)
-	bool bSetColor = true;
-	// 色が一致したかどうかのフラグ
-	UPROPERTY(VisibleAnywhere, Category = "Color")
-	bool bColorMuch;
-
-	UPROPERTY(EditAnywhere)
-	bool bPlayBeat = true;
-
-	UPROPERTY(EditAnywhere)
-	FName EventID;
-
 	UPROPERTY(EditAnywhere)
 	UColorConfigurator* ColorConfigurator;
 };

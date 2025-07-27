@@ -1,5 +1,5 @@
 #include "Objects/ColorReactiveBeltConveyor.h"
-#include "Components/ColorReactiveComponent.h"
+#include "Components/ColorConfigurator.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
 #include "Manager/LevelManager.h"
@@ -52,17 +52,17 @@ void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
 {
     ApplyColorToMaterial(InColor); // マテリアルに色を適用
 
-    if (!ColorReactiveComponent)
+    if (!ColorConfigurator)
         return;
     AColorReactiveObject::ColorAction(InColor);
     // 入力色と一致するかを判定
-    bColorMuch = ColorReactiveComponent->CheckColorMatch(InColor);
-    if (bColorMuch)
+    ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));  
+    if (ColorConfigurator->IsColorMuch())
     {// 補色が一致する場合は逆方向にベルトを動かす
         CurrentDirection = -direction;
  
     }
-    else if(!bColorMuch && IsRevers)
+    else if(!ColorConfigurator->IsColorMuch() && IsRevers)
     {
         // 一致する場合は通常の方向へ
         CurrentDirection = direction;

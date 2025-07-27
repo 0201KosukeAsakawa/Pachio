@@ -18,51 +18,51 @@ void AColorReactiveBalanceSystem::Init()
 
 void AColorReactiveBalanceSystem::ColorAction(const FLinearColor InColor)
 {
-    if (!mLeftPlate || !mRightPlate || !ColorReactiveComponent)
-        return;
+    //if (!mLeftPlate || !mRightPlate || !ColorReactiveComponent)
+    //    return;
 
-    // Ž©•ª‚ÌÝ’èF (Color) ‚Æ InColor ‚Ì‹——£‚ðŽæ“¾
-    float distToTarget = GetColorDistance(InColor, CurrentColor);
+    //// ï¿½ï¿½ï¿½ï¿½ï¿½ÌÝ’ï¿½F (Color) ï¿½ï¿½ InColor ï¿½Ì‹ï¿½ï¿½ï¿½ï¿½ï¿½æ“¾
+    //float distToTarget = GetColorDistance(InColor, CurrentColor);
 
-    // ”½“]F‚ðŽæ“¾‚µ‚Ä‹——£‚à‘ª‚é
-    FLinearColor ComplementaryColor = ColorReactiveComponent->GetComplementaryColor(InColor);
-    float distToComplement = GetColorDistance(ComplementaryColor, CurrentColor);
+    //// ï¿½ï¿½ï¿½]ï¿½Fï¿½ï¿½æ“¾ï¿½ï¿½ï¿½Ä‹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    //FLinearColor ComplementaryColor = ColorReactiveComponent->GetComplementaryColor(InColor);
+    //float distToComplement = GetColorDistance(ComplementaryColor, CurrentColor);
 
-    // Å‘å‹——£ = sqrt(3) (RGB‚Ì‹——£‚ÌÅ‘å’l)
-    const float maxDist = FMath::Sqrt(3.0f);
+    //// ï¿½Å‘å‹—ï¿½ï¿½ = sqrt(3) (RGBï¿½Ì‹ï¿½ï¿½ï¿½ï¿½ÌÅ‘ï¿½l)
+    //const float maxDist = FMath::Sqrt(3.0f);
 
-    // ‹——£‚ð³‹K‰»i0?1j
-    float normDistTarget = FMath::Clamp(distToTarget / maxDist, 0.0f, 1.0f);
-    float normDistComplement = FMath::Clamp(distToComplement / maxDist, 0.0f, 1.0f);
+    //// ï¿½ï¿½ï¿½ï¿½ï¿½ð³‹Kï¿½ï¿½ï¿½i0?1ï¿½j
+    //float normDistTarget = FMath::Clamp(distToTarget / maxDist, 0.0f, 1.0f);
+    //float normDistComplement = FMath::Clamp(distToComplement / maxDist, 0.0f, 1.0f);
 
-    // ‹——£‚ª‹ß‚¢‚Ù‚Ç‘å‚«‚­ã‚°‚éƒCƒ[ƒW‚Å”ä—¦‚ðì‚é
-    // 0i‰“‚¢j¨1i‹ß‚¢j‚É•ÏŠ·
-    float targetRatio = 1.0f - normDistTarget;
-    float complementRatio = 1.0f - normDistComplement;
+    //// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß‚ï¿½ï¿½Ù‚Ç‘å‚«ï¿½ï¿½ï¿½ã‚°ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Wï¿½Å”ä—¦ï¿½ï¿½ï¿½ï¿½
+    //// 0ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½jï¿½ï¿½1ï¿½iï¿½ß‚ï¿½ï¿½jï¿½É•ÏŠï¿½
+    //float targetRatio = 1.0f - normDistTarget;
+    //float complementRatio = 1.0f - normDistComplement;
 
-    // ‚±‚±‚Å‚Ç‚¿‚ç‚ª‹­‚¢‚©”äŠr‚µ‚ÄŽM‚Ìã‚°‰º‚°—Ê‚ðŒˆ‚ß‚é
-    if (targetRatio >= complementRatio)
-    {
-        // F‚ª‹ß‚¢•û‚ªInColori‰EŽM‚ðã‚°‚éƒCƒ[ƒWj
-        FVector rightPos = mRightPlate->GetMaxPosition();
-        rightPos.Z *= targetRatio;
-        mRightPlate->SetLocation(rightPos);
+    //// ï¿½ï¿½ï¿½ï¿½ï¿½Å‚Ç‚ï¿½ï¿½ç‚ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½rï¿½ï¿½ï¿½ÄŽMï¿½Ìã‚°ï¿½ï¿½ï¿½ï¿½ï¿½Ê‚ï¿½ï¿½ï¿½ß‚ï¿½
+    //if (targetRatio >= complementRatio)
+    //{
+    //    // ï¿½Fï¿½ï¿½ï¿½ß‚ï¿½ï¿½ï¿½ï¿½ï¿½InColorï¿½iï¿½Eï¿½Mï¿½ï¿½ã‚°ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Wï¿½j
+    //    FVector rightPos = mRightPlate->GetMaxPosition();
+    //    rightPos.Z *= targetRatio;
+    //    mRightPlate->SetLocation(rightPos);
 
-        FVector leftPos = mLeftPlate->GetMinPosition();
-        leftPos.Z *= (1.0f - targetRatio);
-        mLeftPlate->SetLocation(leftPos);
-    }
-    else
-    {
-        // F‚ª‹ß‚¢•û‚ª”½“]Fi¶ŽM‚ðã‚°‚éƒCƒ[ƒWj
-        FVector leftPos = mLeftPlate->GetMaxPosition();
-        leftPos.Z *= complementRatio;
-        mLeftPlate->SetLocation(leftPos);
+    //    FVector leftPos = mLeftPlate->GetMinPosition();
+    //    leftPos.Z *= (1.0f - targetRatio);
+    //    mLeftPlate->SetLocation(leftPos);
+    //}
+    //else
+    //{
+    //    // ï¿½Fï¿½ï¿½ï¿½ß‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½]ï¿½Fï¿½iï¿½ï¿½ï¿½Mï¿½ï¿½ã‚°ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Wï¿½j
+    //    FVector leftPos = mLeftPlate->GetMaxPosition();
+    //    leftPos.Z *= complementRatio;
+    //    mLeftPlate->SetLocation(leftPos);
 
-        FVector rightPos = mRightPlate->GetMinPosition();
-        rightPos.Z *= (1.0f - complementRatio);
-        mRightPlate->SetLocation(rightPos);
-    }
+    //    FVector rightPos = mRightPlate->GetMinPosition();
+    //    rightPos.Z *= (1.0f - complementRatio);
+    //    mRightPlate->SetLocation(rightPos);
+    //}
 }
 
 

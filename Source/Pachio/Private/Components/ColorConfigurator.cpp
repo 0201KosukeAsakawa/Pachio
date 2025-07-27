@@ -61,7 +61,7 @@ void UColorConfigurator::RegisterToColorManager()
 		return;
 
 	// �^�[�Q�b�g��ʂƂƂ�Ɏ�����o�^
-	ColorManager->RegisterTarget(ColorTargetType, this);
+	ColorManager->RegisterTarget(ColorTargetType, GetOwner());
 }
 
 // �}�e���A���ƃJ�X�^���f�v�X�ݒ�
@@ -98,7 +98,7 @@ void UColorConfigurator::ColorAction(FLinearColor NewColor)
 		ApplyColorToMaterial(NewColor);
 
 	// ���͐F�ƈ�v���邩�`�F�b�N�i���ʂ� bColorMuch �ɕێ��j
-	bColorMuch = ColorReactiveComponent->CheckColorMatch(NewColor, buseComplementaryColor);
+	bColorMuch = ColorReactiveComponent->CheckColorMuch(NewColor, buseComplementaryColor);
 }
 
 void UColorConfigurator::SetColor(FLinearColor newColor)
@@ -121,6 +121,11 @@ void UColorConfigurator::ResetColor()
 	SetColor(StartColor);
 }
 
+void UColorConfigurator::SetCurrentColor(FLinearColor newColor)
+{
+	CurrentColor = newColor;
+}
+
 void UColorConfigurator::SetColorMuch(bool b)
 {
 	bColorMuch = b;
@@ -131,7 +136,7 @@ bool UColorConfigurator::IsColorChange() const
 	if (!ColorReactiveComponent)
 		return false;
 
-	return ColorReactiveComponent->IsColorMatch(StartColor);
+	return ColorReactiveComponent->IsColorMuch(StartColor);
 }
 
 bool UColorConfigurator::IsColorChange(FLinearColor color) const
@@ -139,33 +144,33 @@ bool UColorConfigurator::IsColorChange(FLinearColor color) const
 	if (!ColorReactiveComponent)
 		return false;
 
-	return ColorReactiveComponent->IsColorMatch(color);
+	return ColorReactiveComponent->IsColorMuch(color);
 }
 
-bool UColorConfigurator::CheckColorMatch(const FLinearColor& FilterColor, bool ComplementaryColor) const
+bool UColorConfigurator::CheckColorMuch(const FLinearColor& FilterColor, bool ComplementaryColor) const
 {
 	if (!ColorReactiveComponent)
 		return false;
-	return ColorReactiveComponent->CheckColorMatch(FilterColor, ComplementaryColor);
+	return ColorReactiveComponent->CheckColorMuch(FilterColor, ComplementaryColor);
 }
 
-bool UColorConfigurator::IsColorMatch() const
+bool UColorConfigurator::IsColorMuch() const
 {
 	return bColorMuch;
 }
 
-bool UColorConfigurator::IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance)const
+bool UColorConfigurator::IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance)const
 {
 	if (!ColorReactiveComponent)
 		return false;
-	return ColorReactiveComponent->IsColorMatch(FilterColor, TargetColor, Tolerance);
+	return ColorReactiveComponent->IsColorMuch(FilterColor, TargetColor, Tolerance);
 }
 
-bool UColorConfigurator::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const
+bool UColorConfigurator::IsColorMuch(const FLinearColor& FilterColor, const float Tolerance) const
 {
 	if (!ColorReactiveComponent)
 		return false;
-	return ColorReactiveComponent->IsColorMatch(FilterColor, Tolerance);
+	return ColorReactiveComponent->IsColorMuch(FilterColor, Tolerance);
 }
 
 // �}�e���A���ɐF��K�p�i�O������蓮�K�p����p�j

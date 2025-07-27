@@ -30,14 +30,15 @@ public:
 	virtual void SetupMaterial();
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
 
+	void SetCurrentColor(FLinearColor);
 	void SetColorMuch(bool);
 	virtual bool IsColorChange()const;
 	virtual bool IsColorChange(FLinearColor)const;
 
-	bool CheckColorMatch(const FLinearColor& FilterColor, const bool buseComplementaryColor = false)const;
-	bool IsColorMatch() const;
-	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f)const;
-	bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
+	bool CheckColorMuch(const FLinearColor& FilterColor, const bool buseComplementaryColor = false)const;
+	bool IsColorMuch() const;
+	bool IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f)const;
+	bool IsColorMuch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
 
 	inline void ChangeLock(bool b) { bColorVariable = b; }
 	inline bool IsColorModifiable()const { return bSetColor; }

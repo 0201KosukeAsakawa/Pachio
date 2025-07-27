@@ -3,9 +3,11 @@
 
 #include "Objects/Color/TeleportPortal.h"
 #include "Components/BoxComponent.h"
+#include "Components/ColorReactiveComponent.h"
+#include "Components/ColorConfigurator.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
-#include "Components/ColorReactiveComponent.h"
+
 ATeleportPortal::ATeleportPortal()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -29,14 +31,17 @@ void ATeleportPortal::Init()
 
 void ATeleportPortal::ColorAction(const FLinearColor InColor)
 {
-    bool b = ColorReactiveComponent->IsColorMatch(InColor);
+    if (!ColorConfigurator)
+        return;
+
+    bool b = ColorConfigurator->IsColorMuch(InColor);
     if (b)
     {
         CurrentTargetPortal = AlternatePortal;
     }
     else
     {
-        bool c = ColorReactiveComponent->IsColorMatch(InColor, SecondColor);
+        bool c = ColorConfigurator->IsColorMuch(InColor, SecondColor);
         if (c)
             CurrentTargetPortal = PrimaryDestination;
     }

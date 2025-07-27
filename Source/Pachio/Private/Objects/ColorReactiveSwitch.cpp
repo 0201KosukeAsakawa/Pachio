@@ -2,6 +2,7 @@
 
 
 #include "Objects/ColorReactiveSwitch.h"
+#include "Components/ColorConfigurator.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Components/ColorReactiveComponent.h"
@@ -9,11 +10,11 @@
 
 AColorReactiveSwitch::AColorReactiveSwitch()
 {
-	// Box Component ‚ğì¬
+	// Box Component ï¿½ï¿½ì¬
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
-	BoxComponent->SetupAttachment(RootComponent); // ƒAƒNƒ^[‚Ìƒ‹[ƒgƒRƒ“ƒ|[ƒlƒ“ƒg‚Éİ’è
+	BoxComponent->SetupAttachment(RootComponent); // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Ìƒï¿½ï¿½[ï¿½gï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Éİ’ï¿½
 
-	// ƒI[ƒo[ƒ‰ƒbƒvƒCƒxƒ“ƒg‚ÌƒoƒCƒ“ƒh
+	// ï¿½Iï¿½[ï¿½oï¿½[ï¿½ï¿½ï¿½bï¿½vï¿½Cï¿½xï¿½ï¿½ï¿½gï¿½Ìƒoï¿½Cï¿½ï¿½ï¿½h
 	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AColorReactiveSwitch::OnOverlapBegin);
 }
 
@@ -24,14 +25,17 @@ void AColorReactiveSwitch::Init()
 
 void AColorReactiveSwitch::ColorAction(const FLinearColor InColor)
 {
-	if (!ColorReactiveComponent)
+	if (!ColorConfigurator)
 		return;
 	AColorReactiveObject::ColorAction(InColor);
-	bColorMuch = ColorReactiveComponent->CheckColorMatch(InColor);
+	ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));
 }
 
 void AColorReactiveSwitch::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (ColorConfigurator == nullptr)
+		return;
+
 	if (!OtherActor)
 		return;
 
@@ -43,5 +47,5 @@ void AColorReactiveSwitch::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, A
 	if (levelManager->GetColorManager() == nullptr)
 		return;
 
-	levelManager->GetColorManager()->ColorEvent(EventID);
+	levelManager->GetColorManager()->ColorEvent(ColorConfigurator->GetColorEventID());
 }
