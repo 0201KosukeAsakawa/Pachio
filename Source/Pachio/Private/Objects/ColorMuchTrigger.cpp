@@ -26,9 +26,9 @@ void AColorMuchTrigger::BeginPlay()
 
 void AColorMuchTrigger::Init()
 {
-	InitializeColorLogic();    // F”½‰ƒRƒ“ƒ|[ƒlƒ“ƒg‚Ì¶¬Eİ’è
-	RegisterToColorManager(); // ƒJƒ‰[ƒ}ƒl[ƒWƒƒ[‚Ö‚Ì“o˜^
-	SetupMaterial();          // ƒ}ƒeƒŠƒAƒ‹‚ÆƒXƒeƒ“ƒVƒ‹’l‚Ìİ’è
+	InitializeColorLogic();    // ï¿½Fï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ìï¿½ï¿½ï¿½ï¿½Eï¿½İ’ï¿½
+	RegisterToColorManager(); // ï¿½Jï¿½ï¿½ï¿½[ï¿½}ï¿½lï¿½[ï¿½Wï¿½ï¿½ï¿½[ï¿½Ö‚Ì“oï¿½^
+	SetupMaterial();          // ï¿½}ï¿½eï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ÆƒXï¿½eï¿½ï¿½ï¿½Vï¿½ï¿½ï¿½lï¿½Ìİ’ï¿½
 }
 
 void AColorMuchTrigger::ColorAction(FLinearColor InColor)

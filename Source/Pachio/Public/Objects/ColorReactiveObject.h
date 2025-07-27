@@ -9,6 +9,7 @@
 
 class UColorReactiveComponent;
 class UBeatScalerComponent;
+class UColorConfigurator;
 
 /**
  * 色に反応するアクター（指定色でアクションを起こす）
@@ -86,4 +87,7 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	FName EventID;
+
+	UPROPERTY(EditAnywhere)
+	UColorConfigurator* ColorConfigurator;
 };

@@ -16,14 +16,11 @@ class PACHIO_API UColorConfigurator : public UActorComponent
 	GENERATED_BODY()
 public:
 	UColorConfigurator();
-protected:
-
-	virtual void BeginPlay() override;
 
 public:
 	UFUNCTION()
 	virtual void PlayBeatAnimation();
-	// ƒCƒ“ƒ^[ƒtƒF[ƒXÀ‘•
+	// ï¿½Cï¿½ï¿½ï¿½^ï¿½[ï¿½tï¿½Fï¿½[ï¿½Xï¿½ï¿½ï¿½ï¿½
 	virtual void ColorAction(FLinearColor InColor);
 	virtual void SetColor(FLinearColor);
 	virtual void ResetColor();
@@ -53,24 +50,24 @@ protected:
 	UPROPERTY()
 	UBeatScalerComponent* BeatScalerComponent;
 
-	// ƒRƒ“ƒ|[ƒlƒ“ƒgİ’è
+	// ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½İ’ï¿½
 	UPROPERTY(EditAnywhere, Category = "Reactive")
 	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;
 
-	// ƒJƒ‰[ƒŠƒAƒNƒeƒBƒuƒRƒ“ƒ|[ƒlƒ“ƒg‚ÌÀ‘Ì
+	// ï¿½Jï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½Aï¿½Nï¿½eï¿½Bï¿½uï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Ìï¿½ï¿½ï¿½
 	UPROPERTY()
 	UColorReactiveComponent* ColorReactiveComponent;
 
-	// ƒIƒuƒWƒFƒNƒg‚ÌŒ»İ‚Ì
-	// F
+	// ï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½ÌŒï¿½ï¿½İ‚ï¿½
+	// ï¿½F
 	UPROPERTY()
 	FLinearColor CurrentColor;
 
-	// ƒIƒuƒWƒFƒNƒgŒÅ—L‚ÌF
+	// ï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½Å—Lï¿½ÌF
 	UPROPERTY(EditAnywhere)
 	FLinearColor StartColor;
 
-	// F‚Ì‘ÎÛí•Ê
+	// ï¿½Fï¿½Ì‘ÎÛï¿½ï¿½
 	UPROPERTY(EditAnywhere, Category = "Color")
 	EColorTargetType ColorTargetType;
 	UPROPERTY(EditAnywhere)
@@ -81,7 +78,7 @@ protected:
 	bool buseComplementaryColor = false;
 	UPROPERTY(EditAnywhere)
 	bool bSetColor = true;
-	// F‚ªˆê’v‚µ‚½‚©‚Ç‚¤‚©‚Ìƒtƒ‰ƒO
+	// ï¿½Fï¿½ï¿½ï¿½ï¿½vï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½Ìƒtï¿½ï¿½ï¿½O
 	UPROPERTY(VisibleAnywhere, Category = "Color")
 	bool bColorMuch;
 	UPROPERTY(EditAnywhere)
