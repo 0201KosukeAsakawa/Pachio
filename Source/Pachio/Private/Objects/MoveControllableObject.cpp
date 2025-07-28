@@ -3,10 +3,13 @@
 
 #include "Objects/MoveControllableObject.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
+#include "Components/ColorConfigurator.h"
 #include "Components/MoveComponent.h"
 #include "Components/PlayerInputComponent.h"
 #include "Components/BoxComponent.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "Sound/SoundManager.h"
+#include "Manager/ColorManager.h"
 #include "Manager/LevelManager.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -15,6 +18,8 @@
 AMoveControllableObject::AMoveControllableObject()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	ColorConfigurator = CreateDefaultSubobject<UColorConfigurator>(TEXT("ColorConfigurator"));
 
 	// RootComponent �ɂ��� BoxComponent ��쐬
 	FootTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("FootTrigger"));
@@ -52,6 +57,8 @@ void AMoveControllableObject::BeginPlay()
 
 	SoundManager->OnBeatDetected.AddDynamic(this, &AMoveControllableObject::OnBeatDetected);
 
+	if(ColorConfigurator)
+	ColorConfigurator->Init();
 }
 
 
@@ -173,6 +180,58 @@ void AMoveControllableObject::OnFootEndOverlap(UPrimitiveComponent* OverlappedCo
 	}
 }
 
+void AMoveControllableObject::ColorAction(FLinearColor InColor)
+{
+	if (ColorConfigurator == nullptr)
+		return;
+
+	ColorConfigurator->ColorAction(InColor);
+	ApplyEffectFromColor(InColor);
+}
+
+void AMoveControllableObject::SetColor(FLinearColor color)
+{
+	if (ColorConfigurator == nullptr)
+		return;
+
+	ColorConfigurator->SetColor(color);
+}
+
+void AMoveControllableObject::ResetColor()
+{
+	if (ColorConfigurator == nullptr)
+		return;
+
+	ColorConfigurator->ResetColor();
+}
+
+bool AMoveControllableObject::IsColorChange() const
+{
+	if (ColorConfigurator == nullptr)
+		return false;
+
+	return ColorConfigurator->IsColorChange();
+	
+}
+
+void AMoveControllableObject::SetSelectMode(bool b)
+{
+	if (ColorConfigurator == nullptr)
+		return;
+
+	ColorConfigurator->SetSelectMode(b);
+}
+
+void AMoveControllableObject::ChangeLock(bool b)
+{
+	if (ColorConfigurator == nullptr)
+		return;
+
+	ColorConfigurator->ChangeLock(b);
+}
+
+
+
 void AMoveControllableObject::ExecuteMovement(const FVector& Direction)
 {
 	FVector DirectionVector = Direction;
@@ -225,6 +284,43 @@ void AMoveControllableObject::OnBeatDetected()
 		bIsMoving = true;
 	}
 }
+
+void AMoveControllableObject::ApplyEffectFromColor(const FLinearColor& Color)
+{
+    // 色から最も近いバフ効果と強度を取得
+    FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
+        ->GetColorManager()
+        ->GetClosestEffectByHue(Color);
+
+    // EBuffEffect と EAxisType の対応表
+    static const TMap<EBuffEffect, EAxisType> EffectToAxisMap = {
+        { EBuffEffect::Red,   EAxisType::X },
+        { EBuffEffect::Green, EAxisType::Y },
+        { EBuffEffect::Blue,  EAxisType::Z }
+    };
+
+    if (const EAxisType* Axis = EffectToAxisMap.Find(Match.ClosestEffect))
+    {
+        if (AllowedAxes.Contains(*Axis))
+        {
+            switch (*Axis)
+            {
+            case EAxisType::X:
+                MovementAxis = FVector(1, 0, 0);
+                break;
+            case EAxisType::Y:
+                MovementAxis = FVector(0, 1, 0);
+                break;
+            case EAxisType::Z:
+                MovementAxis = FVector(0, 0, 1);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+}
+
 
 
 bool AMoveControllableObject::CanMoveToTarget(const FVector& Start, const FVector& End) const

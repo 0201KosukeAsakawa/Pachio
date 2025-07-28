@@ -4,14 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "Objects/ControllableObjectBase.h"
+#include "Interface/ColorFilterInterface.h"
+#include "Interface/ColorReactionConfigInterface.h"
 #include "Interface/ActionControl/CharacterActionInterfaces.h"
 #include "MoveControllableObject.generated.h"
 
-/**
- * 
- */
+class UColorConfigurator;
+
+UENUM(BlueprintType)
+enum class EAxisType : uint8
+{
+	X UMETA(DisplayName = "X Axis"),
+	Y UMETA(DisplayName = "Y Axis"),
+	Z UMETA(DisplayName = "Z Axis")
+};
+
 UCLASS()
-class PACHIO_API AMoveControllableObject : public AControllableObjectBase, public IControllableMover
+class PACHIO_API AMoveControllableObject :	public AControllableObjectBase, public IControllableMover
+										 ,  public IColorReactiveInterface, public IColorReactionConfigInterface
 {
 	GENERATED_BODY()
 public:
@@ -36,14 +46,25 @@ public:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	
 private:
+	// インターフェース実装
+	virtual void ColorAction(FLinearColor InColor) override;
+	virtual void SetColor(FLinearColor)override;
+	virtual void ResetColor()override;
+	virtual void SetSelectMode(bool)override;
+	virtual bool IsColorChange()const override;
+	void ChangeLock(bool b) override;
+
+private:
 	// 実移動処理
 	void ExecuteMovement(const FVector& Direction);
-
+	void ApplyEffectFromColor(const FLinearColor& Color);
 	UFUNCTION()
 	void OnBeatDetected();
 	bool CanMoveToTarget(const FVector& Start, const FVector& End) const;
 	FVector GetCollisionBoxExtent() const;
 private:
+	UPROPERTY(EditAnywhere)
+	UColorConfigurator* ColorConfigurator;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
 
@@ -61,11 +82,13 @@ private:
 	FVector MovementAxis;
 	// 入力方向を保持する（正規化済）
 	FVector CurrentInputDirection = FVector::ZeroVector;
-	bool bHasInput = false;
-
 	FVector StartLocation;
 	FVector TargetLocation;
 	float MoveDuration = 0.3f; // 移動にかける時間
 	float ElapsedTime = 0.f;
 	bool bIsMoving = false;
+	bool bHasInput = false;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	TArray<EAxisType> AllowedAxes;
 };

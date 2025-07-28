@@ -378,19 +378,19 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 	ResetBuff();
 	switch (Match.ClosestEffect)
 	{
-	case EBuffEffect::JumpBoost:
+	case EBuffEffect::Red:
 	{
 		JumpBuff = 1.0f + 1.0f * Match.StrengthRatio;
 		break;
 	}
 
-	case EBuffEffect::SpeedBoost:
+	case EBuffEffect::Green:
 	{
 		GetCharacterMovement()->MaxWalkSpeed = 1000.0f + 400.0f * Match.StrengthRatio;
 		break;
 	}
 
-	case EBuffEffect::Shield:
+	case EBuffEffect::Blue:
 	{
 		break;
 	}
