@@ -46,8 +46,7 @@ APlayerCharacter::APlayerCharacter()
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
-	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
-	CameraComponent->Init(RootComponent);
+
 
 }
 
@@ -55,6 +54,8 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
+	CameraComponent->Init(RootComponent);
 	// ステート管理・攻撃管理初期化
 	InitStateAndAttack();
 	// 物理パラメータ設定

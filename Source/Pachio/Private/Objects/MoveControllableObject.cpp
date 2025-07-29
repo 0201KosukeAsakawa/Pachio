@@ -7,6 +7,7 @@
 #include "Components/MoveComponent.h"
 #include "Components/PlayerInputComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/CameraHandlerComponent.h"
 #include "DataContainer/EffectMatchResult.h"
 #include "Sound/SoundManager.h"
 #include "Manager/ColorManager.h"
@@ -18,7 +19,7 @@
 AMoveControllableObject::AMoveControllableObject()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
+	CameraHandlerComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraHandlerComponent"));
 	ColorConfigurator = CreateDefaultSubobject<UColorConfigurator>(TEXT("ColorConfigurator"));
 
 	// RootComponent �ɂ��� BoxComponent ��쐬
@@ -59,6 +60,8 @@ void AMoveControllableObject::BeginPlay()
 
 	if(ColorConfigurator)
 	ColorConfigurator->Init();
+	if (CameraHandlerComponent)
+		CameraHandlerComponent->Init(RootComponent);
 }
 
 

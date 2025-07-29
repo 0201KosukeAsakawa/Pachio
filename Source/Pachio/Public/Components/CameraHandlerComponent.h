@@ -38,7 +38,7 @@ private:
 	void SetCameraLocation(ECameraViewType);
 private:
 	UPROPERTY(EditAnywhere, Category = "Grid")
-	ECameraViewType CameraViewType = ECameraViewType::TopView;
+	ECameraViewType CameraViewType = ECameraViewType::SideView;
 
 	// グリッドサイズ（1部屋のサイズ）
 	UPROPERTY(EditAnywhere, Category = "Grid")
