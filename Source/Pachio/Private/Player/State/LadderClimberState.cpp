@@ -7,6 +7,7 @@
 #include "Objects/LadderActor.h"
 #include "Components/MoveComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Engine/OverlapResult.h"
 #include "Logic/Movement/LadderMoveLogic.h"
 
 
@@ -25,7 +26,7 @@ FVector GetLadderCenterXZ(const AActor* Ladder)
 	return FVector(Origin.X, Origin.Y, 0.f);
 }
 
-void ULadderClimberState::SetTargetLadder(const ALadderActor* ladderClimber)
+void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 {
 	if (ladderClimber == nullptr)
 		return;
@@ -67,25 +68,66 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 {
 	if (!mOwner || !Ladder) return false;
 
-	// 入力の取得（移動処理はこの関数では行わない）
 	float Input = mOwner->GetInputAxisValue("MoveUp");
 
-	// 上端と下端のワールド座標（Z軸）を取得
 	const float LadderTopZ = Ladder->GetTopWorldPosition().Z;
 	const float LadderBottomZ = Ladder->GetBottomWorldPosition().Z;
 	const float PlayerZ = mOwner->GetActorLocation().Z;
 
-	// 梯子の範囲外に出たらステート切り替え
 	if (PlayerZ > LadderTopZ || PlayerZ < LadderBottomZ)
 	{
-		if (UStateManager* StateManager = mOwner->FindComponentByClass<UStateManager>())
+		// 梯子の外に出た → 周囲に別の梯子があるか調べる
+		const FVector PlayerLocation = mOwner->GetActorLocation();
+		const FVector BoxExtent(20.0f, 20.0f, 50.0f); // 小さなボックス
+		TArray<FOverlapResult> Overlaps;
+
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(mOwner);
+		if (AActor* CurrentLadderActor = Cast<AActor>(Ladder))
 		{
-			StateManager->ChangeState("Default");
+			Params.AddIgnoredActor(CurrentLadderActor);
+		}
+
+		bool bFoundNewLadder = false;
+
+		UWorld* World = mOwner->GetWorld();
+		if (World && World->OverlapMultiByObjectType(
+			Overlaps,
+			PlayerLocation,
+			FQuat::Identity,
+			FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldDynamic),
+			FCollisionShape::MakeBox(BoxExtent),
+			Params))
+		{
+			for (const FOverlapResult& Result : Overlaps)
+			{
+				if (AActor* HitActor = Result.GetActor())
+				{
+					// 現在のLadderとは別で、Ladderクラスか派生クラスなら
+					if (HitActor->IsA(Ladder->GetClass()))
+					{
+						// 新しい梯子に切り替え
+						Ladder = Cast<ALadderActor>(HitActor); // ALadder* にキャストする場合は適宜修正
+						bFoundNewLadder = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if (!bFoundNewLadder)
+		{
+			// 近くに他の梯子がない → 通常状態へ戻す
+			if (UStateManager* StateManager = mOwner->FindComponentByClass<UStateManager>())
+			{
+				StateManager->ChangeState("Default");
+			}
 		}
 	}
 
 	return true;
 }
+
 
 bool ULadderClimberState::OnExit(ACharacter* Owner)
 {
@@ -112,8 +154,6 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 {
 	// 移動方向をMoveCompのロジックから取得
 	FVector direction = MoveComp->Movement(0, mOwner, Value);
-	//// 速度は現在のステートが持つ移動速度を使用
-	//mOwner->AddMovementInput(direction, 100000000);
 
 	GetOwner()->AddActorLocalOffset(direction* 10, true);
 }

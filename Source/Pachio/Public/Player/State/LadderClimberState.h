@@ -13,7 +13,7 @@ class PACHIO_API ULadderClimberState : public UPlayerStateComponent
 {
 	GENERATED_BODY()
 public:
-	void SetTargetLadder(const ALadderActor*);
+	void SetTargetLadder(ALadderActor*);
 	void Movement(const FInputActionValue& Value)override;
 private:
 	// ステートに入ったときの処理
@@ -28,7 +28,7 @@ private:
 	virtual bool OnSkill(const FInputActionValue& Input)override;
 private:
 	UPROPERTY()
-	const ALadderActor* Ladder;
+	ALadderActor* Ladder;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
 };
