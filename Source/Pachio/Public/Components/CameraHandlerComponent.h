@@ -13,8 +13,7 @@ UENUM(BlueprintType)
 enum class ECameraViewType : uint8
 {
 	SideView  UMETA(DisplayName = "Side View"),
-	TopView   UMETA(DisplayName = "Top View"),
-	FrontView UMETA(DisplayName = "Front View")
+	TopView   UMETA(DisplayName = "Top View")
 };
 
 
