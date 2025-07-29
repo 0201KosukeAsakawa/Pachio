@@ -77,10 +77,6 @@ void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
         }
         break;
 
-    case ECameraViewType::FrontView:
-        // ここも必要なら実装
-        break;
-
     default:
         break;
     }
@@ -100,13 +96,7 @@ void UCameraHandlerComponent::SetCameraRotation(ECameraViewType type)
         break;
     case ECameraViewType::TopView:
         // プレイヤーの方向に向ける（左を向く = -X）
-        Camera->SetWorldRotation(FRotator(-90.f, 90.f, 90.f));
-        break;
-    case ECameraViewType::FrontView:
-        // プレイヤーの方向に向ける（左を向く = -X）
-        Camera->SetWorldRotation(FRotator(-90.f, -90.f, 0.f));
-        break;
-    default:
+        Camera->SetWorldRotation(FRotator(-90.f, 0.f, 0.f));
         break;
     }
 }
@@ -140,8 +130,6 @@ void UCameraHandlerComponent::SetCameraLocation(ECameraViewType type)
             CurrentGrid.Y * GridSize.Y + GridSize.Y / 2,
             Zbaffa  // 高さ（上空から）
         );
-        break;
-    case ECameraViewType::FrontView:
         break;
     default:
         break;
