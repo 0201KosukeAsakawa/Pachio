@@ -10,6 +10,7 @@
 #include "MoveControllableObject.generated.h"
 
 class UColorConfigurator;
+class UCameraHandlerComponent;
 
 UENUM(BlueprintType)
 enum class EAxisType : uint8
@@ -67,9 +68,11 @@ private:
 	UColorConfigurator* ColorConfigurator;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
+	UPROPERTY(EditAnywhere)
+	UCameraHandlerComponent* CameraHandlerComponent;
 
 	// �����̃g���K�[�R���|�[�l���g
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	class UBoxComponent* FootTrigger;
 	UPROPERTY()
 	TArray<AActor*> AttachedActors;

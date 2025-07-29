@@ -6,6 +6,7 @@ UCameraHandlerComponent::UCameraHandlerComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
 
+    
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 
     InterpSpeed = 3.0f;
@@ -13,30 +14,11 @@ UCameraHandlerComponent::UCameraHandlerComponent()
 
 void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 {
-    Camera->SetupAttachment(RootComponent);
+    if (Camera == nullptr || RootComponent == nullptr)
+        return;
 
-    //FVector PlayerLocation = GetOwner()->GetActorLocation();
-
-    //// Y: 横方向 / Z: 縦方向
-    //CurrentGrid = FIntPoint(
-    //    FMath::FloorToInt(PlayerLocation.Y / GridSize.X),
-    //    FMath::FloorToInt(PlayerLocation.Z / GridSize.Y)
-    //);
-
-    //TargetCameraLocation = FVector(
-    //    -Zbaffa,  // ← X方向に配置（プレイヤーの右側）
-    //    CurrentGrid.X * GridSize.X + GridSize.X / 2,
-    //    CurrentGrid.Y * GridSize.Y + GridSize.Y / 2
-    //);
-
-    //Camera->SetWorldLocation(TargetCameraLocation);
     SetCameraLocation(CameraViewType);
-    // プレイヤーの方向に向ける（左を向く = -X）
-    //Camera->SetWorldRotation(FRotator(0.f, -90.f, 45.f));
     SetCameraRotation(CameraViewType);
-
-    Camera->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-
 }
 
 
@@ -114,11 +96,11 @@ void UCameraHandlerComponent::SetCameraRotation(ECameraViewType type)
     {
     case ECameraViewType::SideView:
         // プレイヤーの方向に向ける（左を向く = -X）
-        Camera->SetWorldRotation(FRotator(0.f, -90.f, 45.f));
+        Camera->SetWorldRotation(FRotator(0.f, 0.f, 0.f));
         break;
     case ECameraViewType::TopView:
         // プレイヤーの方向に向ける（左を向く = -X）
-        Camera->SetWorldRotation(FRotator(-90.f, 0.f, 0.f));
+        Camera->SetWorldRotation(FRotator(-90.f, 90.f, 90.f));
         break;
     case ECameraViewType::FrontView:
         // プレイヤーの方向に向ける（左を向く = -X）
