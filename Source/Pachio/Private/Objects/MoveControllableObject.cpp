@@ -143,6 +143,7 @@ void AMoveControllableObject::Movement(const FInputActionValue& Value)
 
 void AMoveControllableObject::Action(const FInputActionValue& Value)
 {
+	bIsMoving = false;
 	AControllableObjectBase::Action(Value);
 }
 
@@ -237,6 +238,9 @@ void AMoveControllableObject::ChangeLock(bool b)
 
 void AMoveControllableObject::ExecuteMovement(const FVector& Direction)
 {
+	if (!bIsMoving)
+		return;
+
 	FVector DirectionVector = Direction;
 	if (MoveComp)
 	{
