@@ -63,7 +63,7 @@ private:
 	bool CanMoveToTarget(const FVector& Start, const FVector& End) const;
 	FVector GetCollisionBoxExtent() const;
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Movement")
 	UColorConfigurator* ColorConfigurator;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
@@ -74,11 +74,11 @@ private:
 	UPROPERTY()
 	TArray<AActor*> AttachedActors;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MovementScale = 100.0f;
 	// 入力値を保持
 	FInputActionValue PendingInput;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Movement")
 	FVector MovementAxis;
 	// 入力方向を保持する（正規化済）
 	FVector CurrentInputDirection = FVector::ZeroVector;
