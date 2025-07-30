@@ -50,21 +50,32 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 // 指定された色に反応する処理
 void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
 {
-    ApplyColorToMaterial(InColor); // マテリアルに色を適用
+    ApplyColorToMaterial(InColor);
 
     if (!ColorConfigurator)
         return;
+
     AColorReactiveObject::ColorAction(InColor);
-    // 入力色と一致するかを判定
-    ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));  
+
+    // 色の一致状態を設定
+    ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));
+
     if (ColorConfigurator->IsColorMuch())
-    {// 補色が一致する場合は逆方向にベルトを動かす
-        CurrentDirection = -direction;
- 
-    }
-    else if(!ColorConfigurator->IsColorMuch() && IsRevers)
     {
-        // 一致する場合は通常の方向へ
+        if (IsRevers)
+        {
+            // 色が一致していて IsRevers が true → 逆方向
+            CurrentDirection = -direction;
+        }
+        else
+        {
+            // 色が一致していて IsRevers が false → 停止
+            CurrentDirection = FVector::ZeroVector;
+        }
+    }
+    else
+    {
+        // 色が一致していない → 通常方向
         CurrentDirection = direction;
     }
 }

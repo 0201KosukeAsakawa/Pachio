@@ -39,12 +39,12 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
     ColorTargetRegistry->ApplyColor(NewColor, Mode);
 }
 
-void UColorManager::ColorEvent(FName EventID)
+void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
 {
     if (!ColorTargetRegistry)
         return;
 
-    ColorTargetRegistry->ColorEvent(EventID);
+    ColorTargetRegistry->ColorEvent(EventID, NewColor);
 }
 
 void UColorManager::SetColorTarget(IColorReactiveInterface* target)

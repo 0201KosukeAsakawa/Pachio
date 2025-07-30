@@ -34,7 +34,7 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
     }
 }
 
-void UColorTargetRegistry::ColorEvent(FName EventID)
+void UColorTargetRegistry::ColorEvent(FName EventID,FLinearColor NewColor)
 {
     if (!ColorResponseTargets.Contains(EColorTargetType::Event))
     {
@@ -52,7 +52,7 @@ void UColorTargetRegistry::ColorEvent(FName EventID)
         if (TargetInstance->GetColorEventID() != EventID)
             continue;
 
-        TargetInstance->ColorAction();
+        TargetInstance->ColorAction(NewColor);
     }
 }
 

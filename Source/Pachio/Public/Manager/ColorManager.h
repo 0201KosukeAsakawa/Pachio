@@ -28,7 +28,7 @@ public:
     void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
 
     UFUNCTION()
-    void ColorEvent(FName EventID);
+    void ColorEvent(FName EventID, FLinearColor NewColor);
 
     void SetColorTarget(IColorReactiveInterface*);
     void ResetColorTarget();
