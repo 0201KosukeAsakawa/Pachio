@@ -36,6 +36,9 @@ public:
     // 色付け対象を登録する関数
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);
 
+    float GetColorDistanceRGB(const FLinearColor& A);
+    float GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B );
+
     FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
 
 

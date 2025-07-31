@@ -51,8 +51,8 @@ private:
 
 	// ベルトの推進力（Editor 設定可能）
 	UPROPERTY(EditAnywhere)
-	float power = 0;
-
+	float DefaultPower = 0;
+	float CurrentPower = 0;
 	// 実際の現在方向（色に応じて切り替わる）
 	FVector CurrentDirection;
 
@@ -62,4 +62,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	bool IsRevers = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bCanChangeSpeed = true;
 };

@@ -152,8 +152,39 @@ bool ULadderClimberState::OnSkill(const FInputActionValue& Input)
 
 void ULadderClimberState::Movement(const FInputActionValue& Value)
 {
-	// 移動方向をMoveCompのロジックから取得
-	FVector direction = MoveComp->Movement(0, mOwner, Value);
+	if (!mOwner || !Ladder) return;
 
-	GetOwner()->AddActorLocalOffset(direction* 10, true);
+	FVector direction = MoveComp->Movement(0, mOwner, Value);
+	FVector NewLocation = mOwner->GetActorLocation() + direction * 10;
+
+	// 下方向への移動（Zが負のとき）だけレイキャスト判定を行う
+	if (direction.Z < 0.f)
+	{
+		FVector Start = NewLocation;
+		FVector End = Start - FVector(0.f, 0.f, 100.f);  // 100cm下方向にレイ
+
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(mOwner);  // 自分自身は無視
+
+		UWorld* World = mOwner->GetWorld();
+		bool bHit = false;
+		if (World)
+		{
+			bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+		}
+
+		if (bHit)
+		{
+			// 地面があるので梯子から離れたと判断して状態を戻す
+			if (IStateControllable* owner = Cast<IStateControllable>(mOwner))
+			{
+				owner->ChangeState("Default");
+				return;  // 状態遷移したのでこれ以上移動しない
+			}
+		}
+	}
+
+	// 下方向以外の移動や、地面がなければ通常の移動処理
+	GetOwner()->AddActorLocalOffset(direction * 10, true);
 }

@@ -2,7 +2,9 @@
 #include "Components/ColorConfigurator.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "Manager/LevelManager.h"
+#include "Manager/ColorManager.h"
 
 // コンストラクタ：アクターの初期設定
 AColorReactiveBeltConveyor::AColorReactiveBeltConveyor()
@@ -24,6 +26,7 @@ void AColorReactiveBeltConveyor::Init()
 {
     AColorReactiveObject::Init(); // 親の Init を呼ぶ
     CurrentDirection = direction; // 初期方向を設定
+    CurrentPower = DefaultPower;
 }
 
 // 毎フレーム呼ばれる処理（Tick）
@@ -42,7 +45,7 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
         if (target)
         {
             // 力を加える（CurrentDirection 方向に power の強さで）
-            target->AddForce(CurrentDirection, power, true);
+            target->AddForce(CurrentDirection, CurrentPower, true);
         }
     }
 }
@@ -59,7 +62,14 @@ void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
 
     // 色の一致状態を設定
     ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));
+    float g = 0;
+    if (bCanChangeSpeed)
+    {
+        g = ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetColorDistanceRGB(ColorConfigurator->GetCurrentColor());
+        CurrentPower = DefaultPower * g;
+    }
 
+    UE_LOG(LogTemp, Log, TEXT("CurrentPower: %f"), g);
     if (ColorConfigurator->IsColorMuch())
     {
         if (IsRevers)

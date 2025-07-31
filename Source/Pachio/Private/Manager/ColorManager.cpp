@@ -65,6 +65,16 @@ void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColo
     ColorTargetRegistry->RegisterTarget(Mode, Target);
 }
 
+float UColorManager::GetColorDistanceRGB(const FLinearColor& A)
+{
+    return EffectColorMatcher->GetColorDistanceRGB(A, ColorTargetRegistry->GetPostProcessColor());
+}
+
+float UColorManager::GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B)
+{
+    return EffectColorMatcher->GetColorDistanceRGB(A,B);
+}
+
 FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& InputColor)
 {
     if (!EffectColorMatcher)

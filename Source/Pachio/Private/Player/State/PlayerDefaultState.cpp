@@ -100,29 +100,4 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 	FVector direction = MoveComp->Movement(0, mOwner, Value);
 	// 速度は現在のステートが持つ移動速度を使用
 	mOwner->AddMovementInput(direction, MoveSpeed);
-
-	//// 移動方向がある場合はキャラクターの向きを滑らかに回転させる
-	//if (!direction.IsNearlyZero())
-	//{
-	//	// 目標の回転角度を計算（キャラクター位置→移動方向のベクトル）
-	//	FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(
-	//		mOwner->GetActorLocation(),
-	//		mOwner->GetActorLocation() + direction
-	//	);
-
-	//	// PitchとRollを0に固定（上下の傾きを防止）
-	//	TargetRot.Pitch = 0.0f;
-	//	TargetRot.Roll = 0.0f;
-
-	//	// 現在の回転から目標回転へ一定速度で補間（スムーズな回転）
-	//	FRotator SmoothRot = FMath::RInterpTo(
-	//		mOwner->GetActorRotation(),
-	//		TargetRot,
-	//		GetWorld()->GetDeltaSeconds(),
-	//		10.0f
-	//	);
-
-	//	// キャラクターの回転を更新
-	//	mOwner->SetActorRotation(SmoothRot);
-	//}
 }

@@ -25,7 +25,6 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
         // 指定されたモードのターゲットに通知
         if (!TargetObject)
             return;
-
         TargetObject->SetColor(NewColor);
         break;
 
@@ -66,8 +65,6 @@ void UColorTargetRegistry::SetColorTarget(IColorReactiveInterface* InInterface)
 void UColorTargetRegistry::ResetColorTarget()
 {   
     TargetObject->SetSelectMode(false);
-    //TargetObject.SetObject(Cast<UObject>(nullptr));
-    //TargetObject.SetInterface(nullptr);
 }
 
 void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
