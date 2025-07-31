@@ -9,6 +9,14 @@
 class USpringArmComponent;
 class UCameraComponent;
 
+UENUM(BlueprintType)
+enum class ECameraViewType : uint8
+{
+	SideView  UMETA(DisplayName = "Side View"),
+	TopView   UMETA(DisplayName = "Top View")
+};
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PACHIO_API UCameraHandlerComponent : public UActorComponent
 {
@@ -21,13 +29,20 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void Set(FVector2D, float);
-private:
+
+private:	
+
 	void UpdateCameraPosition(float DeltaTime);
+	void SetCameraRotation(ECameraViewType);
+	void SetCameraLocation(ECameraViewType);
 private:
+	UPROPERTY(EditAnywhere, Category = "Grid")
+	ECameraViewType CameraViewType = ECameraViewType::SideView;
+
 	// グリッドサイズ（1部屋のサイズ）
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Grid")
 	FVector2D GridSize = FVector2D(7000.f, 3000.f);
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Grid")
 	float Zbaffa = 2000.f;
 
 	FVector2D CurrentGridSize;

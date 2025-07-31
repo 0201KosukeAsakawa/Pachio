@@ -34,7 +34,7 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
     }
 }
 
-void UColorTargetRegistry::ColorEvent(FName EventID)
+void UColorTargetRegistry::ColorEvent(FName EventID,FLinearColor NewColor)
 {
     if (!ColorResponseTargets.Contains(EColorTargetType::Event))
     {
@@ -52,7 +52,7 @@ void UColorTargetRegistry::ColorEvent(FName EventID)
         if (TargetInstance->GetColorEventID() != EventID)
             continue;
 
-        TargetInstance->ColorAction();
+        TargetInstance->ColorAction(NewColor);
     }
 }
 
@@ -60,6 +60,14 @@ void UColorTargetRegistry::SetColorTarget(IColorReactiveInterface* InInterface)
 {
     TargetObject.SetObject(Cast<UObject>(InInterface));
     TargetObject.SetInterface(InInterface);
+    InInterface->SetSelectMode(true);
+}
+
+void UColorTargetRegistry::ResetColorTarget()
+{   
+    TargetObject->SetSelectMode(false);
+    //TargetObject.SetObject(Cast<UObject>(nullptr));
+    //TargetObject.SetInterface(nullptr);
 }
 
 void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)

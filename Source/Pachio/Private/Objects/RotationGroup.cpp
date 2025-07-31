@@ -3,6 +3,7 @@
 
 #include "Objects/RotationGroup.h"
 #include "GameFramework/Actor.h"
+#include "Components/ColorConfigurator.h"
 
 // Sets default values
 ARotationGroup::ARotationGroup()
@@ -73,10 +74,13 @@ void RGBtoHSV(const FLinearColor& InColor, float& OutH, float& OutS, float& OutV
 
 void ARotationGroup::ColorAction(const FLinearColor InColor)
 {
+    if (ColorConfigurator == nullptr)
+        return;
+
     // ���ݐF �� HSV�ϊ�
     float HueCurrent, SatCurrent, ValCurrent;
     float HueTarget, SatTarget, ValTarget;
-    RGBtoHSV(CurrentColor, HueCurrent, SatCurrent, ValCurrent);
+    RGBtoHSV(ColorConfigurator->GetCurrentColor(), HueCurrent, SatCurrent, ValCurrent);
     RGBtoHSV(InColor, HueTarget, SatTarget, ValTarget);
 
     float DeltaHue = HueTarget - HueCurrent;
@@ -99,7 +103,7 @@ void ARotationGroup::ColorAction(const FLinearColor InColor)
     UpdateBsRelativeToA(DeltaRotation);  // �����Łu�����v�����n���I
 
     // �F�̏�ԍX�V
-    CurrentColor = InColor;
+    ColorConfigurator->SetCurrentColor(InColor);
 }
 
 

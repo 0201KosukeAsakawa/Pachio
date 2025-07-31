@@ -15,46 +15,22 @@ AColorMuchTrigger::AColorMuchTrigger()
 void AColorMuchTrigger::BeginPlay()
 {
 	Super::BeginPlay();
-	if (ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld()))
-	{
-		if (UColorManager* ColorManager = LevelManager->GetColorManager())
-		{
-			ColorManager->RegisterTarget(ColorTargetType, this);
-		}
-	}
+	
 }
 
 void AColorMuchTrigger::Init()
 {
-	InitializeColorLogic();    // 色反応コンポーネントの生成・設定
-	RegisterToColorManager(); // カラーマネージャーへの登録
-	SetupMaterial();          // マテリアルとステンシル値の設定
+	
 }
 
 void AColorMuchTrigger::ColorAction(FLinearColor InColor)
 {
-	if (!ColorReactiveComponent)
-		return;
-	bColorMuch = ColorReactiveComponent->CheckColorMatch(InColor);
-	if (!bColorMuch)
-		return;
-	ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
-	if (levelManager == nullptr)
-		return;
-	if (levelManager->GetColorManager() == nullptr)
-		return;
-
- 	levelManager->GetColorManager()->ColorEvent(EventID);
+	
 }
 
 void AColorMuchTrigger::SetupMaterial()
 {
-	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(this, TEXT("StaticMesh"));
-	if (Mesh == nullptr)
-		return;
-
-	Mesh->SetRenderCustomDepth(true);
-	Mesh->SetCustomDepthStencilValue(10);
+	
 }
 
 

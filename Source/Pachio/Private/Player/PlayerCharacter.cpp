@@ -30,6 +30,7 @@
 #include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
+#include "Objects/LadderActor.h"
 #include "Objects/ControllableObjectBase.h"
 #include "Interface/Soundable.h"
 
@@ -46,8 +47,7 @@ APlayerCharacter::APlayerCharacter()
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
-	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
-	CameraComponent->Init(RootComponent);
+
 
 }
 
@@ -55,6 +55,8 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
+	CameraComponent->Init(RootComponent);
 	// ステート管理・攻撃管理初期化
 	InitStateAndAttack();
 	// 物理パラメータ設定
@@ -269,9 +271,9 @@ void APlayerCharacter::OnMouseScroll(const FInputActionValue& Value)
 
 	if (ScrollValue > 0.1f)
 	{
-		ChangeColor(0.01);
+		ChangeColor(0.1);
 	}
-	else if (ScrollValue < -0.01f)
+	else if (ScrollValue < -0.1f)
 	{
 		ChangeColor(-0.1);
 	}
@@ -378,19 +380,19 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 	ResetBuff();
 	switch (Match.ClosestEffect)
 	{
-	case EBuffEffect::JumpBoost:
+	case EBuffEffect::Red:
 	{
 		JumpBuff = 1.0f + 1.0f * Match.StrengthRatio;
 		break;
 	}
 
-	case EBuffEffect::SpeedBoost:
+	case EBuffEffect::Green:
 	{
 		GetCharacterMovement()->MaxWalkSpeed = 1000.0f + 400.0f * Match.StrengthRatio;
 		break;
 	}
 
-	case EBuffEffect::Shield:
+	case EBuffEffect::Blue:
 	{
 		break;
 	}

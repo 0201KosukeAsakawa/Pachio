@@ -39,12 +39,12 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
     ColorTargetRegistry->ApplyColor(NewColor, Mode);
 }
 
-void UColorManager::ColorEvent(FName EventID)
+void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
 {
     if (!ColorTargetRegistry)
         return;
 
-    ColorTargetRegistry->ColorEvent(EventID);
+    ColorTargetRegistry->ColorEvent(EventID, NewColor);
 }
 
 void UColorManager::SetColorTarget(IColorReactiveInterface* target)
@@ -52,12 +52,16 @@ void UColorManager::SetColorTarget(IColorReactiveInterface* target)
     ColorTargetRegistry->SetColorTarget(target);
 }
 
+void UColorManager::ResetColorTarget()
+{
+    ColorTargetRegistry->ResetColorTarget();
+}
+
 // 色変化に反応するターゲットを登録
 void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
 {
     if (!this || !ColorTargetRegistry)
         return;
-
     ColorTargetRegistry->RegisterTarget(Mode, Target);
 }
 

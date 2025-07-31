@@ -24,13 +24,14 @@ public :
 	virtual void Init(UMeshComponent* mesh);
 	void SetMyColor(const FLinearColor& FilterColor);	
 	void ApplyColorToMaterial(FLinearColor InColor);
-	bool CheckColorMatch(const FLinearColor& FilterColor,const bool buseComplementaryColor = false);
+	bool CheckColorMuch(const FLinearColor& FilterColor,const bool buseComplementaryColor = false);
 	UFUNCTION(BlueprintCallable)
-	virtual bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
-	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
+	virtual bool IsColorMuch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
+	bool IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
+	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 
-
+	void SetSelectMode(bool);
 private:
     UFUNCTION(BlueprintCallable)
     virtual void OnColorMatched(const FLinearColor& FilterColor);  
@@ -38,9 +39,15 @@ private:
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bSetStartColor = true;
+
 	UPROPERTY(EditAnywhere)
 	FLinearColor CurrentColor;
 
 	UPROPERTY()
 	UMaterialInstanceDynamic* DynamicMaterialInstance = nullptr;
+
+		UPROPERTY()
+	UMaterialInstanceDynamic* DynMesh;
+
+	bool bSelected = false;
 };

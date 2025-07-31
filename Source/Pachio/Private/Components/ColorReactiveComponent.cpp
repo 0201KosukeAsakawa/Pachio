@@ -7,13 +7,21 @@
 // Sets default values for this component's properties
 UColorReactiveComponent::UColorReactiveComponent()
 {
-
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
 void UColorReactiveComponent::Init(UMeshComponent* mesh)
 {
 	if (!bSetStartColor)
 		return;
+	// StaticMeshComponent 取得と MaterialInstance 作成
+	if (AActor* Owner = GetOwner())
+	{
+		if (UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner, TEXT("StaticMesh")))
+		{
+			DynMesh = Mesh->CreateAndSetMaterialInstanceDynamic(0);
+		}
+	}
     // マテリアルの色を変更
     UMaterialInstanceDynamic* DynMaterial = mesh->CreateAndSetMaterialInstanceDynamic(0);
     if (DynMaterial)
@@ -27,7 +35,7 @@ void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor)
 	CurrentColor = FilterColor;
 }
 
-bool UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor, const bool buseComplementaryColor)
+bool UColorReactiveComponent::CheckColorMuch(const FLinearColor& FilterColor, const bool buseComplementaryColor)
 {
 	FLinearColor CheckColor = FilterColor;  // コピーして変更可能に
 
@@ -37,7 +45,7 @@ bool UColorReactiveComponent::CheckColorMatch(const FLinearColor& FilterColor, c
 		UE_LOG(LogTemp, Log, TEXT("CheckColor: %s"), *CheckColor.ToString());
 	}
 	
-	bool bMatch = IsColorMatch(CheckColor);
+	bool bMatch = IsColorMuch(CheckColor);
 
 	if (bMatch)
 	{
@@ -156,6 +164,20 @@ FLinearColor UColorReactiveComponent::GetComplementaryColor(const FLinearColor& 
 	return Complementary;
 }
 
+void UColorReactiveComponent::SetSelectMode(bool bIsNowSelected)
+{
+	bSelected = bIsNowSelected;
+
+	if (!DynMesh) return;
+
+	if (!bSelected)
+	{
+		// 選択解除：発光を黒に
+		DynMesh->SetVectorParameterValue(FName("EmissiveColor"), FLinearColor::Black);
+	}
+	// 選択ONのときはTickで動的に処理する
+}
+
 void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 {
 	AActor* Owner = GetOwner();
@@ -173,7 +195,7 @@ void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 
 
 
-bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const
+bool UColorReactiveComponent::IsColorMuch(const FLinearColor& FilterColor, const float Tolerance) const
 {
     float dR = CurrentColor.R - FilterColor.R;
     float dG = CurrentColor.G - FilterColor.G;
@@ -185,7 +207,7 @@ bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, cons
     return ColorDifference <= Tolerance * Tolerance;
 }
 
-bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance) const
+bool UColorReactiveComponent::IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance) const
 {
 	float dR = TargetColor.R - FilterColor.R;
 	float dG = TargetColor.G - FilterColor.G;
@@ -197,6 +219,20 @@ bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, cons
 	return ColorDifference <= Tolerance * Tolerance;
 }
 
+void UColorReactiveComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (!bSelected || !DynMesh) return;
+
+	// Sine波で点滅（時間ベース）
+	const float Time = GetWorld()->GetTimeSeconds();
+	const float SineValue = (FMath::Sin(Time * 5.0f) + 1.0f) * 0.5f; // 0～1
+	const float EmissiveStrength = 5.0f; // 最大輝度
+	const FLinearColor EmissiveColor = CurrentColor * (SineValue * EmissiveStrength);
+
+	DynMesh->SetVectorParameterValue(FName("EmissiveColor"), EmissiveColor);
+}
 
 void UColorReactiveComponent::OnColorMatched(const FLinearColor& FilterColor)
 {

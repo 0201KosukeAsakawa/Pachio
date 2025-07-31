@@ -31,7 +31,8 @@ private:
 
     UPROPERTY(meta = (BindWidget))
     UImage* FilterColorImage;
-
+    UPROPERTY(meta = (BindWidget))
+    UImage* CurrentColorImage;
     // アニメーション用メンバ変数
     bool bIsAnimating = false;
     float AnimationTime = 0.f;

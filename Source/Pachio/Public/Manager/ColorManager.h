@@ -28,9 +28,10 @@ public:
     void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
 
     UFUNCTION()
-    void ColorEvent(FName EventID);
+    void ColorEvent(FName EventID, FLinearColor NewColor);
 
     void SetColorTarget(IColorReactiveInterface*);
+    void ResetColorTarget();
 
     // 色付け対象を登録する関数
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);

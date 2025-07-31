@@ -6,9 +6,9 @@
 UEffectColorMatcher::UEffectColorMatcher()
 {
     EffectColorMap = {
-    { EBuffEffect::JumpBoost,  FLinearColor::Green },
-    { EBuffEffect::SpeedBoost, FLinearColor::Blue},
-    { EBuffEffect::Shield,     FLinearColor::Red }
+    { EBuffEffect::Green,  FLinearColor::Green },
+    { EBuffEffect::Blue, FLinearColor::Blue},
+    { EBuffEffect::Red,     FLinearColor::Red }
     };
 }
 
@@ -19,7 +19,7 @@ FEffectMatchResult UEffectColorMatcher::GetClosestEffectByHue(const FLinearColor
     float MinDistance = TNumericLimits<float>::Max();
     float MaxPossibleDistance = FMath::Sqrt(3.0f); // RGB距離の最大値（(1,1,1)と(0,0,0)の距離）
 
-    EBuffEffect ClosestEffect = EBuffEffect::None;
+    EBuffEffect ClosestEffect = EBuffEffect::Red;
 
     for (const auto& Elem : EffectColorMap)
     {

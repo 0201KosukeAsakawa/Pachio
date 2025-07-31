@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -9,84 +7,101 @@
 
 class UColorReactiveComponent;
 class UBeatScalerComponent;
+class ALevelManager;
+class UColorManager;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UColorConfigurator : public UActorComponent
 {
 	GENERATED_BODY()
+
 public:
 	UColorConfigurator();
-protected:
 
-	virtual void BeginPlay() override;
-
-public:
-	UFUNCTION()
-	virtual void PlayBeatAnimation();
-	// ƒCƒ“ƒ^[ƒtƒF[ƒXÀ‘•
-	virtual void ColorAction(FLinearColor InColor);
-	virtual void SetColor(FLinearColor);
-	virtual void ResetColor();
+	// åˆæœŸåŒ–å‡¦ç†
 	virtual void Init();
 	virtual void InitializeColorLogic();
 	virtual void RegisterToColorManager();
 	virtual void SetupMaterial();
+
+	// è‰²æ“ä½œ
+	virtual void SetColor(FLinearColor InColor);
+	virtual void ResetColor();
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
+	void SetCurrentColor(FLinearColor InColor);
+	void SetColorMuch(bool bInColorMuch);
+	void ChangeLock(bool bLock) { bColorVariable = bLock; }
+	void SetSelectMode(bool bIsSelect);
 
-	void SetColorMuch(bool);
-	virtual bool IsColorChange()const;
-	virtual bool IsColorChange(FLinearColor)const;
+	// è‰²åˆ¤å®šãƒ»ä¸€è‡´ç¢ºèª
+	virtual bool IsColorChange() const;
+	virtual bool IsColorChange(FLinearColor InColor) const;
+	bool IsColorMuch() const;
+	bool IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance = 0.08f) const;
+	bool IsColorMuch(const FLinearColor& FilterColor, float Tolerance = 0.08f) const;
+	bool CheckColorMuch(const FLinearColor& FilterColor, bool bUseComplementaryColor = false) const;
 
-	bool CheckColorMatch(const FLinearColor& FilterColor, const bool buseComplementaryColor = false)const;
-	bool IsColorMatch() const;
-	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f)const;
-	bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
+	// è‰²ã«å¿œã˜ãŸã‚¢ã‚¯ã‚·ãƒ§ãƒ³
+	virtual void ColorAction(FLinearColor InColor);
 
-	inline void ChangeLock(bool b) { bColorVariable = b; }
-	inline bool IsColorModifiable()const { return bSetColor; }
+	// ãƒ“ãƒ¼ãƒˆæ¤œå‡ºæ™‚ã®ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+	UFUNCTION()
+	virtual void PlayBeatAnimation();
 
-	inline FName GetColorEventID()const { return EventID; }
-	inline FLinearColor GetCurrentColor()const { return CurrentColor; }
-	inline EColorTargetType GetColorTargetType()const { return ColorTargetType; }
+	// Getter
+	FLinearColor GetCurrentColor() const { return CurrentColor; }
+	FName GetColorEventID() const { return EventID; }
+	EColorTargetType GetColorTargetType() const { return ColorTargetType; }
+	bool IsColorModifiable() const { return bSetColor; }
+
+private:
+	// çŠ¶æ…‹å–å¾—
+	UStaticMeshComponent* GetStaticMesh() const;
+	ALevelManager* GetLevelManager() const;
+	UColorManager* GetColorManager() const;
 protected:
-
+	// --- Component References ---
 	UPROPERTY()
 	UBeatScalerComponent* BeatScalerComponent;
 
-	// ƒRƒ“ƒ|[ƒlƒ“ƒgİ’è
 	UPROPERTY(EditAnywhere, Category = "Reactive")
 	TSubclassOf<UColorReactiveComponent> ReactiveComponentClass;
 
-	// ƒJƒ‰[ƒŠƒAƒNƒeƒBƒuƒRƒ“ƒ|[ƒlƒ“ƒg‚ÌÀ‘Ì
 	UPROPERTY()
 	UColorReactiveComponent* ColorReactiveComponent;
 
-	// ƒIƒuƒWƒFƒNƒg‚ÌŒ»İ‚Ì
-	// F
-	UPROPERTY()
-	FLinearColor CurrentColor;
-
-	// ƒIƒuƒWƒFƒNƒgŒÅ—L‚ÌF
+	// --- Color Data ---
 	UPROPERTY(EditAnywhere)
 	FLinearColor StartColor;
 
-	// F‚Ì‘ÎÛí•Ê
+	UPROPERTY(VisibleAnywhere, Category = "Color")
+	FLinearColor CurrentColor;
+
+	// --- Settings ---
 	UPROPERTY(EditAnywhere, Category = "Color")
 	EColorTargetType ColorTargetType;
+
 	UPROPERTY(EditAnywhere)
 	bool bColorVariable = false;
-	UPROPERTY(EditAnywhere)
-	bool bPlayColorAction = true;
-	UPROPERTY(EditAnywhere)
-	bool buseComplementaryColor = false;
+
 	UPROPERTY(EditAnywhere)
 	bool bSetColor = true;
-	// F‚ªˆê’v‚µ‚½‚©‚Ç‚¤‚©‚Ìƒtƒ‰ƒO
-	UPROPERTY(VisibleAnywhere, Category = "Color")
-	bool bColorMuch;
+
+	UPROPERTY(EditAnywhere)
+	bool bPlayColorAction = true;
+
+	UPROPERTY(EditAnywhere)
+	bool bUseComplementaryColor = false;
+
 	UPROPERTY(EditAnywhere)
 	bool bPlayBeat = true;
 
+	UPROPERTY(VisibleAnywhere, Category = "Color")
+	bool bColorMuch = false;
+
 	UPROPERTY(EditAnywhere)
 	FName EventID;
+
+private:
+	bool bIsSelected = false;
 };
