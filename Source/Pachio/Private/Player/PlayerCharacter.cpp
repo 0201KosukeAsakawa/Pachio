@@ -135,7 +135,7 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage, const AActor*)
 
 void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 {
-	CameraComponent->Set(grid, ZBuffa);
+	CameraComponent->ApplyCameraSettings(grid, ZBuffa);
 }
 
 void APlayerCharacter::ResetBuff()

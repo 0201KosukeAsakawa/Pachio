@@ -138,7 +138,7 @@ void UCameraHandlerComponent::SetCameraLocation(ECameraViewType type)
     Camera->SetWorldLocation(TargetCameraLocation);
 }
 
-void UCameraHandlerComponent::Set(FVector2D newSize, float newBuffa)
+void UCameraHandlerComponent::ApplyCameraSettings(FVector2D newSize, float newBuffa)
 {
     GridSize = newSize;
     Zbaffa = newBuffa;
@@ -156,4 +156,13 @@ void UCameraHandlerComponent::Set(FVector2D newSize, float newBuffa)
     );
 
     Camera->SetWorldLocation(TargetCameraLocation);
+}
+
+void UCameraHandlerComponent::ApplyCameraSettings(FVector2D newSize, float newBuffa, ECameraViewType newViewType)
+{
+    CameraViewType = newViewType;
+    GridSize = newSize;
+    Zbaffa = newBuffa;
+    SetCameraLocation(CameraViewType);
+    SetCameraRotation(CameraViewType);
 }

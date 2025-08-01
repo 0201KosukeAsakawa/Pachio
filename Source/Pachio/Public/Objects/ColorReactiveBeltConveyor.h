@@ -40,6 +40,9 @@ private:
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void OnBeatDetected();
+
 private:
 	// ベルトの当たり判定用 Box コリジョン
 	UPROPERTY(VisibleAnywhere)
@@ -64,5 +67,5 @@ private:
 	bool IsRevers = false;
 
 	UPROPERTY(EditAnywhere)
-	bool bCanChangeSpeed = true;
+	bool bPlayBeat = true;
 };
