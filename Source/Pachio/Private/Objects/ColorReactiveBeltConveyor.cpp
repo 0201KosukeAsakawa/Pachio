@@ -5,6 +5,7 @@
 #include "DataContainer/EffectMatchResult.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
+#include "Sound/SoundManager.h"
 
 // コンストラクタ：アクターの初期設定
 AColorReactiveBeltConveyor::AColorReactiveBeltConveyor()
@@ -27,11 +28,22 @@ void AColorReactiveBeltConveyor::Init()
     AColorReactiveObject::Init(); // 親の Init を呼ぶ
     CurrentDirection = direction; // 初期方向を設定
     CurrentPower = DefaultPower;
+
+    if (!bPlayBeat)
+        return;
+
+    const TObjectPtr<USoundManager> SoundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject());
+    if (!SoundManager) return;
+
+    SoundManager->OnBeatDetected.AddDynamic(this, &AColorReactiveBeltConveyor::OnBeatDetected);
 }
 
 // 毎フレーム呼ばれる処理（Tick）
 void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 {
+    if (bPlayBeat)
+        return;
+
     // コリジョン無効時は処理スキップ
     if (!BoxComponent->IsCollisionEnabled())
     {
@@ -62,14 +74,6 @@ void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
 
     // 色の一致状態を設定
     ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));
-    float g = 0;
-    if (bCanChangeSpeed)
-    {
-        g = ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetColorDistanceRGB(ColorConfigurator->GetCurrentColor());
-        CurrentPower = DefaultPower * g;
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("CurrentPower: %f"), g);
     if (ColorConfigurator->IsColorMuch())
     {
         if (IsRevers)
@@ -124,4 +128,24 @@ void AColorReactiveBeltConveyor::OnOverlapEnd(UPrimitiveComponent* OverlappedCom
 
     // 対象をリストから除外
     hitObject.Remove(PhysicsCalculator);
+}
+
+void AColorReactiveBeltConveyor::OnBeatDetected()
+{
+    // コリジョン無効時は処理スキップ
+    if (!BoxComponent->IsCollisionEnabled())
+    {
+        // 無効なので、force を止める（例: hitObject をリセット）
+        hitObject.Empty(); // 全て削除するならこれが最も明確で安全
+        return;
+    }
+
+    for (UPhysicsCalculator* target : hitObject)
+    {
+        if (target)
+        {
+            // 力を加える（CurrentDirection 方向に power の強さで）
+            target->AddForce(CurrentDirection, CurrentPower, true);
+        }
+    }
 }
