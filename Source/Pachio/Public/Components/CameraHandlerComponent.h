@@ -28,8 +28,8 @@ public:
 	void Init(TObjectPtr<USceneComponent>);
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void Set(FVector2D, float);
-
+	void ApplyCameraSettings(FVector2D, float);
+	void ApplyCameraSettings(FVector2D, float, ECameraViewType);
 private:	
 
 	void UpdateCameraPosition(float DeltaTime);

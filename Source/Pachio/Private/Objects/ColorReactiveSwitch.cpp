@@ -28,6 +28,7 @@ void AColorReactiveSwitch::ColorAction(const FLinearColor InColor)
 	if (!ColorConfigurator)
 		return;
 	AColorReactiveObject::ColorAction(InColor);
+	ColorConfigurator->SetColor(InColor);
 	if (ColorConfigurator->CheckColorMuch(InColor))
 	{
 		ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());

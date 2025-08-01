@@ -193,8 +193,6 @@ void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 	DynMaterial->SetVectorParameterValue(FName("BaseColor"), InColor);
 }
 
-
-
 bool UColorReactiveComponent::IsColorMuch(const FLinearColor& FilterColor, const float Tolerance) const
 {
     float dR = CurrentColor.R - FilterColor.R;

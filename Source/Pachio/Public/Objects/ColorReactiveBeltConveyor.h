@@ -40,6 +40,9 @@ private:
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void OnBeatDetected();
+
 private:
 	// ベルトの当たり判定用 Box コリジョン
 	UPROPERTY(VisibleAnywhere)
@@ -51,8 +54,8 @@ private:
 
 	// ベルトの推進力（Editor 設定可能）
 	UPROPERTY(EditAnywhere)
-	float power = 0;
-
+	float DefaultPower = 0;
+	float CurrentPower = 0;
 	// 実際の現在方向（色に応じて切り替わる）
 	FVector CurrentDirection;
 
@@ -62,4 +65,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	bool IsRevers = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bPlayBeat = true;
 };
