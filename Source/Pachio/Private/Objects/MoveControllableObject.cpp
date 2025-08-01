@@ -51,8 +51,13 @@ void AMoveControllableObject::Tick(float DeltaTime)
 	SetActorLocation(NewLocation);
 
 	FVector Offset = NewLocation - PreviousLocation;  // 今回の移動量を計算
+	TArray<AActor*> Target = AttachedActors;
+	if (Target.Num() == 0)
+	{
+		return;
+	}
 
-	for (AActor* ActorOnTop : AttachedActors)
+	for (AActor* ActorOnTop : Target)
 	{
 		if (ActorOnTop)
 		{

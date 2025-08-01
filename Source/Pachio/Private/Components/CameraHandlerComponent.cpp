@@ -158,9 +158,11 @@ void UCameraHandlerComponent::ApplyCameraSettings(FVector2D newSize, float newBu
     Camera->SetWorldLocation(TargetCameraLocation);
 }
 
-void UCameraHandlerComponent::ApplyCameraSettings(FVector2D newSize, float newBuffa, ECameraViewType newVieType)
+void UCameraHandlerComponent::ApplyCameraSettings(FVector2D newSize, float newBuffa, ECameraViewType newViewType)
 {
-    CameraViewType = newVieType;
+    CameraViewType = newViewType;
+    GridSize = newSize;
+    Zbaffa = newBuffa;
     SetCameraLocation(CameraViewType);
     SetCameraRotation(CameraViewType);
 }

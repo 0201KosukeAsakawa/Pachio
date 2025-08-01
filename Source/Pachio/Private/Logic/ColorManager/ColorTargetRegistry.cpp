@@ -25,7 +25,7 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
         // 指定されたモードのターゲットに通知
         if (!TargetObject)
             return;
-        TargetObject->SetColor(NewColor);
+        TargetObject->ColorAction(NewColor);
         break;
 
     default:
