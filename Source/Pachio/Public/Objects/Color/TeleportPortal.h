@@ -40,6 +40,9 @@ public:
     UPROPERTY(EditAnywhere, Category = "Teleport")
     ATeleportPortal* AlternatePortal;
 
+    UPROPERTY(EditAnywhere, Category = "Teleport")
+    TArray<FName> AllowedTags;
+
     // テレポート直後の再発動を防ぐフラグ（オプション）
     UPROPERTY()
     TMap<AActor*, float> LastTeleportTime;
