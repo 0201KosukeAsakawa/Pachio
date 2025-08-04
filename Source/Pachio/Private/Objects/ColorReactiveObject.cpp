@@ -1,5 +1,6 @@
 #include "Objects/ColorReactiveObject.h"
 #include "Components/ColorConfigurator.h"
+#include "Objects/Color/FlammableComponent.h"
 
 // コンストラクタ：Tick はデフォルトで無効（基本的にリアルタイム更新不要）
 AColorReactiveObject::AColorReactiveObject()
@@ -64,6 +65,17 @@ void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 		return;
 
 	ColorConfigurator->ColorAction(NewColor);
+	if (UFlammableComponent* FlameComp = FindComponentByClass<UFlammableComponent>())
+	{
+		if (NewColor == FLinearColor::Red)
+		{
+			FlameComp->Ignite();
+		}
+		else
+		{
+			FlameComp->Extinguish();
+		}
+	}
 }
 
 void AColorReactiveObject::SetColor(FLinearColor newColor)

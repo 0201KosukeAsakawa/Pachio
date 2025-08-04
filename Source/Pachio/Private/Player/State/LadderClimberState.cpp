@@ -44,7 +44,7 @@ bool ULadderClimberState::OnEnter(ACharacter* Owner, UWorld* World)
 	{
 		MoveComp = NewObject<UMoveComponent>(mOwner);
 		ULadderMoveLogic* PlayerLogic = NewObject<ULadderMoveLogic>(this);
-		MoveComp->Init(mOwner, PlayerLogic);
+		MoveComp->Init(PlayerLogic);
 	}
 
 	// 梯子の中心に位置補正（必要なら LadderActor を別途持っておく）

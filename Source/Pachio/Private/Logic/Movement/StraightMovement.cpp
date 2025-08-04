@@ -1,16 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Logic/Movement/EnemyMoveLogic.h"
+#include "Logic/Movement/StraightMovement.h"
 
 // コンストラクタ：特に初期化処理はなし
-UEnemyMoveLogic::UEnemyMoveLogic()
+UStraightMovement::UStraightMovement()
 {
 }
 
 // 敵キャラクターの移動処理（毎フレーム呼ばれる）
 // DeltaTime: 経過時間, Owner: 操作対象アクター, direction: 移動方向ベクトル（外部指定）
-FVector UEnemyMoveLogic::Movement(float DeltaTime, AActor* Owner,const FInputActionValue& Value)
+FVector UStraightMovement::Movement(float DeltaTime, AActor* Owner,const FInputActionValue& Value)
 {
     if (!Owner)
         return FVector::ZeroVector;
@@ -34,7 +34,7 @@ FVector UEnemyMoveLogic::Movement(float DeltaTime, AActor* Owner,const FInputAct
 
 // 壁との接触をチェックする関数
 // 指定された方向に壁があるかをレイキャストで判定する
-bool UEnemyMoveLogic::IsCollidingWithWall(FVector Direction, const AActor* Owner)
+bool UStraightMovement::IsCollidingWithWall(FVector Direction, const AActor* Owner)
 {
     if (!Owner)
         return true;  // 所有者が無効なら接触しているとみなす
@@ -57,7 +57,7 @@ bool UEnemyMoveLogic::IsCollidingWithWall(FVector Direction, const AActor* Owner
 }
 
 // 初期化処理（移動速度と初期方向を設定）
-void UEnemyMoveLogic::Init(float speed, const FVector d)
+void UStraightMovement::Init(float speed, const FVector d)
 {
     Speed = speed;
     CurrentMovementDirection = d;

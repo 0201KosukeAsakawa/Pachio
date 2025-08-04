@@ -8,7 +8,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Interface/StateControllable.h"
 #include "Objects/ItemBase.h"
-#include <Logic/Movement/EnemyMoveLogic.h>
+#include <Logic/Movement/StraightMovement.h>
 
 USuperMushroomComponent::USuperMushroomComponent()
 {
@@ -26,8 +26,7 @@ void USuperMushroomComponent::Init(AItemBase* owner)
 
     // 移動コンポーネントの初期化
     moveComp = NewObject<UMoveComponent>(this);
-    moveComp->Init(mOwner, NewObject<UEnemyMoveLogic>(this), 50.0f, FVector(0, 1, 0));  // 移動コンポーネントに所有者を設定
-    //moveComp->SetSpeed(0.0f);
+    moveComp->Init(NewObject<UStraightMovement>(this), 50.0f, FVector(0, 1, 0));  // 移動コンポーネントに所有者を設定
 }
 
 void USuperMushroomComponent::Update(float DeltaTime)

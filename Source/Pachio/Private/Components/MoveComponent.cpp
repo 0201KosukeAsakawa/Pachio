@@ -15,11 +15,8 @@ UMoveComponent::UMoveComponent()
     Speed = 600.0f; // 速度の設定
 }
 
-void UMoveComponent::Init(AActor* owner, TScriptInterface<IMoveLogic>moveLogic, const float speed, const FVector NewDirection)
+void UMoveComponent::Init(TScriptInterface<IMoveLogic>moveLogic, const float speed, const FVector NewDirection)
 {
-    if (!owner)
-        return;
-    mOwner = owner;
     Speed = speed;
     MoveLogic = moveLogic;
     MoveLogic->Init(speed,NewDirection);

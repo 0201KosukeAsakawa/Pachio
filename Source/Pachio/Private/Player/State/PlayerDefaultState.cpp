@@ -31,7 +31,7 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 	{
 		MoveComp = NewObject<UMoveComponent>(mOwner);
 		UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
-		MoveComp->Init(mOwner, PlayerLogic);
+		MoveComp->Init(PlayerLogic);
 	}
 	// マテリアルの設定（デフォルトステート用）
 	//if (NewMaterial)

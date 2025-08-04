@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Interface/MoveLogic.h"
-#include "EnemyMoveLogic.generated.h"
+#include "StraightMovement.generated.h"
 
 
 /**
  * 
  */
 UCLASS()
-class PACHIO_API UEnemyMoveLogic :public UObject,public IMoveLogic
+class PACHIO_API UStraightMovement :public UObject,public IMoveLogic
 {
 
 	GENERATED_BODY()
 public:
-	UEnemyMoveLogic();
+	UStraightMovement();
 
 private:
 	FVector Movement(float DeltaTime, AActor* Owner,const FInputActionValue& Value = FInputActionValue())override;
