@@ -96,7 +96,9 @@ void UStageSelectWidget::UpdateCardPositions()
 
     // キャンバスのサイズから画面中央を計算
     const FVector2D CanvasSize = CardCanvas->GetCachedGeometry().GetLocalSize();
-    const FVector2D CenterPos(CanvasSize.X / 2, CanvasSize.Y / 2);
+    FVector2D CenterPos = CanvasSize;
+    CenterPos = FVector2D(100.f, 100.f); // 仮に中央とする
+
 
     // 中央と左右カードのスケール・透明度設定
     const float CenterScale = 0.8f;

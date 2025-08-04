@@ -16,7 +16,7 @@ class PACHIO_API UColorTargetRegistry : public UObject
 	GENERATED_BODY()
 public:
 	void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
-	void ColorEvent(FName);
+	void ColorEvent(FName,FLinearColor);
 	void SetColorTarget(IColorReactiveInterface*);
 	void ResetColorTarget();
     // 色付け対象を登録する関数

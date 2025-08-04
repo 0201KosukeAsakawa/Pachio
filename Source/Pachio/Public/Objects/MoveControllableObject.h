@@ -3,92 +3,68 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/ControllableObjectBase.h"
-#include "Interface/ColorFilterInterface.h"
-#include "Interface/ColorReactionConfigInterface.h"
-#include "Interface/ActionControl/CharacterActionInterfaces.h"
+#include "Objects/ColorReactiveObject.h"
 #include "MoveControllableObject.generated.h"
 
+
+class UBoxComponent;
 class UColorConfigurator;
-
-UENUM(BlueprintType)
-enum class EAxisType : uint8
-{
-	X UMETA(DisplayName = "X Axis"),
-	Y UMETA(DisplayName = "Y Axis"),
-	Z UMETA(DisplayName = "Z Axis")
-};
-
+class UCameraHandlerComponent;
 UCLASS()
-class PACHIO_API AMoveControllableObject :	public AControllableObjectBase, public IControllableMover
-										 ,  public IColorReactiveInterface, public IColorReactionConfigInterface
+class PACHIO_API AMoveControllableObject : public AColorReactiveObject
 {
 	GENERATED_BODY()
+
 public:
 	AMoveControllableObject();
+
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	virtual void Init() override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)override;
 
-	void Movement(const FInputActionValue& Value)override;
-	virtual void Action(const FInputActionValue& Value)override;
+private:// オーバーラップイベント
 	UFUNCTION()
 	void OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 		bool bFromSweep, const FHitResult& SweepResult);
+
 	UFUNCTION(BlueprintCallable)
 	void OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-	
-private:
-	// インターフェース実装
-	virtual void ColorAction(FLinearColor InColor) override;
-	virtual void SetColor(FLinearColor)override;
-	virtual void ResetColor()override;
-	virtual void SetSelectMode(bool)override;
-	virtual bool IsColorChange()const override;
-	void ChangeLock(bool b) override;
 
-private:
-	// 実移動処理
-	void ExecuteMovement(const FVector& Direction);
-	void ApplyEffectFromColor(const FLinearColor& Color);
 	UFUNCTION()
 	void OnBeatDetected();
-	bool CanMoveToTarget(const FVector& Start, const FVector& End) const;
-	FVector GetCollisionBoxExtent() const;
-private:
-	UPROPERTY(EditAnywhere)
-	UColorConfigurator* ColorConfigurator;
-	UPROPERTY()
-	UMoveComponent* MoveComp;
 
-	// �����̃g���K�[�R���|�[�l���g
-	UPROPERTY(VisibleAnywhere)
-	class UBoxComponent* FootTrigger;
+private:
+
+	UPROPERTY()
+	UBoxComponent* FootTrigger;
+
 	UPROPERTY()
 	TArray<AActor*> AttachedActors;
 
-	UPROPERTY(EditAnywhere)
-	float MovementScale = 100.0f;
-	// 入力値を保持
-	FInputActionValue PendingInput;
-	UPROPERTY(EditAnywhere)
-	FVector MovementAxis;
-	// 入力方向を保持する（正規化済）
-	FVector CurrentInputDirection = FVector::ZeroVector;
-	FVector StartLocation;
-	FVector TargetLocation;
-	float MoveDuration = 0.3f; // 移動にかける時間
-	float ElapsedTime = 0.f;
-	bool bIsMoving = false;
-	bool bHasInput = false;
+	// パトロール関連
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	TArray<FVector> PatrolPoints;
 
+	UPROPERTY(EditAnywhere, Category = "Patrol")
+	float AcceptanceRadius = 50.f;
+
+	int32 CurrentPatrolIndex = 0;
+
+	// 移動関連
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	TArray<EAxisType> AllowedAxes;
+	float MoveStepSize = 0.0f;
+
+	bool bIsMoving = false;
+	float MoveDuration = 0.2f; // 移動にかける時間（秒）
+	float MoveElapsedTime = 0.0f;
+	FVector MoveStartLocation;
+	FVector MoveTargetLocation;
+
+	float PlayCount = 0;
+	UPROPERTY(EditAnywhere)
+	float BeatCount = 0;
 };

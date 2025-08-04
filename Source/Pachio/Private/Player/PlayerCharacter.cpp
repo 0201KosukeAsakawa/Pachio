@@ -30,6 +30,7 @@
 #include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
+#include "Objects/LadderActor.h"
 #include "Objects/ControllableObjectBase.h"
 #include "Interface/Soundable.h"
 
@@ -46,8 +47,7 @@ APlayerCharacter::APlayerCharacter()
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
-	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
-	CameraComponent->Init(RootComponent);
+
 
 }
 
@@ -55,6 +55,8 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
+	CameraComponent->Init(RootComponent);
 	// ステート管理・攻撃管理初期化
 	InitStateAndAttack();
 	// 物理パラメータ設定
@@ -133,7 +135,7 @@ bool APlayerCharacter::TakeDamage(FAttackData Data, float damage, const AActor*)
 
 void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 {
-	CameraComponent->Set(grid, ZBuffa);
+	CameraComponent->ApplyCameraSettings(grid, ZBuffa);
 }
 
 void APlayerCharacter::ResetBuff()
@@ -269,9 +271,9 @@ void APlayerCharacter::OnMouseScroll(const FInputActionValue& Value)
 
 	if (ScrollValue > 0.1f)
 	{
-		ChangeColor(0.01);
+		ChangeColor(0.1);
 	}
-	else if (ScrollValue < -0.01f)
+	else if (ScrollValue < -0.1f)
 	{
 		ChangeColor(-0.1);
 	}

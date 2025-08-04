@@ -39,12 +39,12 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
     ColorTargetRegistry->ApplyColor(NewColor, Mode);
 }
 
-void UColorManager::ColorEvent(FName EventID)
+void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
 {
     if (!ColorTargetRegistry)
         return;
 
-    ColorTargetRegistry->ColorEvent(EventID);
+    ColorTargetRegistry->ColorEvent(EventID, NewColor);
 }
 
 void UColorManager::SetColorTarget(IColorReactiveInterface* target)
@@ -63,6 +63,16 @@ void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColo
     if (!this || !ColorTargetRegistry)
         return;
     ColorTargetRegistry->RegisterTarget(Mode, Target);
+}
+
+float UColorManager::GetColorDistanceRGB(const FLinearColor& A)
+{
+    return EffectColorMatcher->GetColorDistanceRGB(A, ColorTargetRegistry->GetPostProcessColor());
+}
+
+float UColorManager::GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B)
+{
+    return EffectColorMatcher->GetColorDistanceRGB(A,B);
 }
 
 FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& InputColor)

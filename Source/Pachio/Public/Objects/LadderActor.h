@@ -27,6 +27,6 @@ public:
 
 	FVector GetBottomWorldPosition() const;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	UBoxComponent* LadderVolume;
 };

@@ -2,7 +2,10 @@
 #include "Components/ColorConfigurator.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "Manager/LevelManager.h"
+#include "Manager/ColorManager.h"
+#include "Sound/SoundManager.h"
 
 // コンストラクタ：アクターの初期設定
 AColorReactiveBeltConveyor::AColorReactiveBeltConveyor()
@@ -24,11 +27,23 @@ void AColorReactiveBeltConveyor::Init()
 {
     AColorReactiveObject::Init(); // 親の Init を呼ぶ
     CurrentDirection = direction; // 初期方向を設定
+    CurrentPower = DefaultPower;
+
+    if (!bPlayBeat)
+        return;
+
+    const TObjectPtr<USoundManager> SoundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject());
+    if (!SoundManager) return;
+
+    SoundManager->OnBeatDetected.AddDynamic(this, &AColorReactiveBeltConveyor::OnBeatDetected);
 }
 
 // 毎フレーム呼ばれる処理（Tick）
 void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 {
+    if (bPlayBeat)
+        return;
+
     // コリジョン無効時は処理スキップ
     if (!BoxComponent->IsCollisionEnabled())
     {
@@ -42,7 +57,7 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
         if (target)
         {
             // 力を加える（CurrentDirection 方向に power の強さで）
-            target->AddForce(CurrentDirection, power, true);
+            target->AddForce(CurrentDirection, CurrentPower, true);
         }
     }
 }
@@ -50,21 +65,31 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 // 指定された色に反応する処理
 void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
 {
-    ApplyColorToMaterial(InColor); // マテリアルに色を適用
+    ApplyColorToMaterial(InColor);
 
     if (!ColorConfigurator)
         return;
+
     AColorReactiveObject::ColorAction(InColor);
-    // 入力色と一致するかを判定
-    ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));  
+
+    // 色の一致状態を設定
+    ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));
     if (ColorConfigurator->IsColorMuch())
-    {// 補色が一致する場合は逆方向にベルトを動かす
-        CurrentDirection = -direction;
- 
-    }
-    else if(!ColorConfigurator->IsColorMuch() && IsRevers)
     {
-        // 一致する場合は通常の方向へ
+        if (IsRevers)
+        {
+            // 色が一致していて IsRevers が true → 逆方向
+            CurrentDirection = -direction;
+        }
+        else
+        {
+            // 色が一致していて IsRevers が false → 停止
+            CurrentDirection = FVector::ZeroVector;
+        }
+    }
+    else
+    {
+        // 色が一致していない → 通常方向
         CurrentDirection = direction;
     }
 }
@@ -103,4 +128,24 @@ void AColorReactiveBeltConveyor::OnOverlapEnd(UPrimitiveComponent* OverlappedCom
 
     // 対象をリストから除外
     hitObject.Remove(PhysicsCalculator);
+}
+
+void AColorReactiveBeltConveyor::OnBeatDetected()
+{
+    // コリジョン無効時は処理スキップ
+    if (!BoxComponent->IsCollisionEnabled())
+    {
+        // 無効なので、force を止める（例: hitObject をリセット）
+        hitObject.Empty(); // 全て削除するならこれが最も明確で安全
+        return;
+    }
+
+    for (UPhysicsCalculator* target : hitObject)
+    {
+        if (target)
+        {
+            // 力を加える（CurrentDirection 方向に power の強さで）
+            target->AddForce(CurrentDirection, CurrentPower, true);
+        }
+    }
 }
