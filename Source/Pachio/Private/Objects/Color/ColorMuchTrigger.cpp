@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Objects/ColorMuchTrigger.h"
+#include "Objects/Color/ColorMuchTrigger.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
-#include "Components/ColorReactiveComponent.h"
+#include "Components/Color/ColorReactiveComponent.h"
 #include "FunctionLibrary.h"
 
 AColorMuchTrigger::AColorMuchTrigger()

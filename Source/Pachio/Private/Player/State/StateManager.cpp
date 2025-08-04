@@ -1,6 +1,6 @@
 #include "Player/State/StateManager.h"
 #include "Player/State/PlayerDefaultState.h"
-#include "Components/PlayerStateComponent.h"
+#include "Components/Player/PlayerStateComponent.h"
 
 // コンストラクタ：このコンポーネントが毎フレームTickするように設定
 UStateManager::UStateManager()

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Components/ColorReactiveComponent.h"
+#include "Components/Color/ColorReactiveComponent.h"
 #include "ColorTriggerStopComponent.generated.h"
 
 

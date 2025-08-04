@@ -1,6 +1,6 @@
-#include "Objects/ColorReactiveObject.h"
-#include "Components/ColorConfigurator.h"
-#include "Objects/Color/FlammableComponent.h"
+#include "Objects/Color/ColorReactiveObject.h"
+#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/FlammableComponent.h"
 
 // コンストラクタ：Tick はデフォルトで無効（基本的にリアルタイム更新不要）
 AColorReactiveObject::AColorReactiveObject()

@@ -4,7 +4,7 @@
 #include "UI/ClearResultWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
-#include "Components/ColorControllerComponent.h"
+#include "Components/Color/ColorControllerComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/InGameHUD.h"

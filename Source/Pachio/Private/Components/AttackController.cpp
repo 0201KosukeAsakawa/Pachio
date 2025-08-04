@@ -23,30 +23,30 @@ void UAttackController::Init(UWorld* world)
 // すでに同じIDで登録されている場合や、無効なコンポーネントが指定された場合は失敗
 bool UAttackController::RegisterAttackComponent(FName AttackID)
 {
-	if (!pWorld)
-		return false;
+	//if (!pWorld)
+	//	return false;
 
-	// コンポーネントが無効であるか、すでにそのIDがマップに登録されている場合は失敗
-	if (AttackMap.Contains(AttackID))
-	{
-		return false;
-	}
+	//// コンポーネントが無効であるか、すでにそのIDがマップに登録されている場合は失敗
+	//if (AttackMap.Contains(AttackID))
+	//{
+	//	return false;
+	//}
 
-	const UAttackDataContainer* ad =  ALevelManager::GetInstance(pWorld)->GetAttackDataContainer();
+	//const UAttackDataContainer* ad =  ALevelManager::GetInstance(pWorld)->GetAttackDataContainer();
 
-	if (!ad)
-		return false;
+	//if (!ad)
+	//	return false;
 
-	UAttackComponent* AttackComponent = ad->GenerateAttackComponent(GetOwner(), AttackID);
+	//UAttackComponent* AttackComponent = ad->GenerateAttackComponent(GetOwner(), AttackID);
 
-	if (!AttackComponent)
-		return false;
+	//if (!AttackComponent)
+	//	return false;
 
-	if (!AttackComponent->Init(pWorld, AttackID))
-		return false;
+	//if (!AttackComponent->Init(pWorld, AttackID))
+	//	return false;
 
-	// 攻撃IDと攻撃コンポーネントクラスをマップに追加
-	AttackMap.Add(AttackID, AttackComponent);
+	//// 攻撃IDと攻撃コンポーネントクラスをマップに追加
+	//AttackMap.Add(AttackID, AttackComponent);
 	return true;
 }
 

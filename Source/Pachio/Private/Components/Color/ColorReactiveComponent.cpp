@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Components/ColorReactiveComponent.h"
+#include "Components/Color/ColorReactiveComponent.h"
 #include "FunctionLibrary.h"
 
 // Sets default values for this component's properties

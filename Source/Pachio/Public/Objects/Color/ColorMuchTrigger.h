@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/ColorReactiveObject.h"
+#include "Objects/Color/ColorReactiveObject.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ColorReactionConfigInterface.h"
 #include "ColorMuchTrigger.generated.h"

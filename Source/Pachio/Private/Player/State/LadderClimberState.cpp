@@ -4,7 +4,7 @@
 #include "Player/State/LadderClimberState.h"
 #include "Player/State/StateManager.h"
 #include "Player/PlayerCharacter.h"
-#include "Objects/LadderActor.h"
+#include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/OverlapResult.h"

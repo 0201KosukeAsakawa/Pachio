@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/PlayerStateComponent.h"
+#include "Components/Player/PlayerStateComponent.h"
 #include "PlayerDefaultState.generated.h"
 class UMoveComponent;
 UCLASS(Blueprintable)

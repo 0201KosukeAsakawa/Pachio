@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Components/BeatScalerComponent.h"
+#include "Components/Beat/BeatScalerComponent.h"
 
 UBeatScalerComponent::UBeatScalerComponent()
 {

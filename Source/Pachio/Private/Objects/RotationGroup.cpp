@@ -3,7 +3,7 @@
 
 #include "Objects/RotationGroup.h"
 #include "GameFramework/Actor.h"
-#include "Components/ColorConfigurator.h"
+#include "Components/Color/ColorConfigurator.h"
 
 // Sets default values
 ARotationGroup::ARotationGroup()

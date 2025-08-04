@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Objects/ColorReactiveSwitch.h"
-#include "Components/ColorConfigurator.h"
+#include "Objects/Color/ColorReactiveSwitch.h"
+#include "Components/Color/ColorConfigurator.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
-#include "Components/ColorReactiveComponent.h"
+#include "Components/Color/ColorReactiveComponent.h"
 #include "Components/BoxComponent.h"
 
 AColorReactiveSwitch::AColorReactiveSwitch()

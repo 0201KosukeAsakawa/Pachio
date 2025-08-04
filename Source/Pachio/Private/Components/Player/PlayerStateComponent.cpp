@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Components/PlayerStateComponent.h"
+#include "Components/Player/PlayerStateComponent.h"
 #include "InputActionValue.h"
 
 // Sets default values for this component's properties

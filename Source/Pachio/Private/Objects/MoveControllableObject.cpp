@@ -3,10 +3,10 @@
 
 #include "Objects/MoveControllableObject.h"
 #include "Components/MoveComponent.h"
-#include "Components/PlayerInputComponent.h"
+#include "Components/Player/PlayerInputComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CameraHandlerComponent.h"
-#include "Components/ColorConfigurator.h"
+#include "Components/Color/ColorConfigurator.h"
 #include "Sound/SoundManager.h"
 #include "Manager/LevelManager.h"
 

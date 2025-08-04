@@ -1,5 +1,5 @@
-#include "Objects/ColorReactiveBeltConveyor.h"
-#include "Components/ColorConfigurator.h"
+#include "Objects/Color/ColorReactiveBeltConveyor.h"
+#include "Components/Color/ColorConfigurator.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
 #include "DataContainer/EffectMatchResult.h"

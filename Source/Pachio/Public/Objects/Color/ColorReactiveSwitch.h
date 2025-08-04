@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/ColorReactiveObject.h"
+#include "Objects/Color/ColorReactiveObject.h"
 #include "ColorReactiveSwitch.generated.h"
 
 class UBoxComponent;

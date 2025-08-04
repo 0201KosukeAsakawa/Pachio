@@ -3,8 +3,8 @@
 
 #include "Objects/Color/TeleportPortal.h"
 #include "Components/BoxComponent.h"
-#include "Components/ColorReactiveComponent.h"
-#include "Components/ColorConfigurator.h"
+#include "Components/Color/ColorReactiveComponent.h"
+#include "Components/Color/ColorConfigurator.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 
