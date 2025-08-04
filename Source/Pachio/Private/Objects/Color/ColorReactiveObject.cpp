@@ -1,6 +1,8 @@
 #include "Objects/Color/ColorReactiveObject.h"
 #include "Components/Color/ColorConfigurator.h"
 #include "Components/Color/FlammableComponent.h"
+#include "Manager/ColorManager.h"
+#include "Manager/LevelManager.h"
 
 // コンストラクタ：Tick はデフォルトで無効（基本的にリアルタイム更新不要）
 AColorReactiveObject::AColorReactiveObject()
@@ -67,7 +69,10 @@ void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 	ColorConfigurator->ColorAction(NewColor);
 	if (UFlammableComponent* FlameComp = FindComponentByClass<UFlammableComponent>())
 	{
-		if (NewColor == FLinearColor::Red)
+		FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
+			->GetColorManager()
+			->GetClosestEffectByHue(NewColor);
+		if (Match.ClosestEffect == EBuffEffect::Red)
 		{
 			FlameComp->Ignite();
 		}

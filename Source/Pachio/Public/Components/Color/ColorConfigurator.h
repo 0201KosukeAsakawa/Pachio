@@ -24,14 +24,21 @@ public:
 	virtual void RegisterToColorManager();
 	virtual void SetupMaterial();
 
-	// 色操作
-	virtual void SetColor(FLinearColor InColor);
+	// ビート検出時のアニメーション
+	UFUNCTION()
+	virtual void PlayBeatAnimation();
+
+	// 色に応じたアクション
+	virtual void ColorAction(FLinearColor InColor);
+
+	// 色操作	
 	virtual void ResetColor();
+	virtual void SetColor(FLinearColor InColor);
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
 	void SetCurrentColor(FLinearColor InColor);
 	void SetColorMuch(bool bInColorMuch);
-	void ChangeLock(bool bLock) { bColorVariable = bLock; }
 	void SetSelectMode(bool bIsSelect);
+	void ChangeLock(bool bLock) { bColorVariable = bLock; }
 
 	// 色判定・一致確認
 	virtual bool IsColorChange() const;
@@ -42,18 +49,11 @@ public:
 	bool CheckColorMuch(const FLinearColor& FilterColor, bool bUseComplementaryColor = false) const;
 	bool IsChangeable()const;
 
-	// 色に応じたアクション
-	virtual void ColorAction(FLinearColor InColor);
-
-	// ビート検出時のアニメーション
-	UFUNCTION()
-	virtual void PlayBeatAnimation();
-
-	// Getter
+	// Getter	
+	bool IsColorModifiable() const { return bSetColor; }
 	FLinearColor GetCurrentColor() const { return CurrentColor; }
 	FName GetColorEventID() const { return EventID; }
 	EColorTargetType GetColorTargetType() const { return ColorTargetType; }
-	bool IsColorModifiable() const { return bSetColor; }
 
 private:
 	// 状態取得
@@ -80,7 +80,10 @@ protected:
 
 	// --- Settings ---
 	UPROPERTY(EditAnywhere, Category = "Color")
-	EColorTargetType ColorTargetType;
+	EColorTargetType ColorTargetType;	
+	
+	UPROPERTY(EditAnywhere, Category = "Color")
+	FName EventID;
 
 	UPROPERTY(EditAnywhere, Category = "Color")
 	bool bColorVariable = false;
@@ -99,9 +102,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Color")
 	bool bColorMuch = false;
-
-	UPROPERTY(EditAnywhere, Category = "Color")
-	FName EventID;
 
 private:
 	bool bIsSelected = false;

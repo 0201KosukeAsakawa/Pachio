@@ -3,6 +3,7 @@
 
 #include "Components/Color/FlammableComponent.h"
 #include "Components/BoxComponent.h"
+#include "Interface/StateControllable.h"
 
 UFlammableComponent::UFlammableComponent()
 {
@@ -11,12 +12,17 @@ UFlammableComponent::UFlammableComponent()
 
 void UFlammableComponent::BeginPlay()
 {
-    Super::BeginPlay(); // これがないと不具合が出やすい
+    Super::BeginPlay();
 
-    if (HitBox)
+    if (HitBox && GetOwner())
     {
+        if (USceneComponent* Root = GetOwner()->GetRootComponent())
+        {
+            HitBox->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
+            HitBox->RegisterComponent(); // 念のため明示的に登録
+        }
+
         HitBox->OnComponentBeginOverlap.AddDynamic(this, &UFlammableComponent::OnOverlap);
-        HitBox->SetupAttachment(GetOwner()->GetRootComponent()); // コンポーネントにアタッチ
     }
 }
 
@@ -24,13 +30,21 @@ void UFlammableComponent::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor*
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
+    if (!OtherActor)
+        return;
 
+    IStateControllable* IS = Cast<IStateControllable>(OtherActor);
+
+    if (!IS)
+        return;
+
+    IS->ChangeState("Dead");
 }
 void UFlammableComponent::Ignite()
 {
     if (bIsIgnited) return;
     bIsIgnited = true;
-
+    HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     if (FireEffectActor && GetOwner())
     {
         FActorSpawnParameters Params;
