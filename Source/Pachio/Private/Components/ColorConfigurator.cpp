@@ -159,6 +159,11 @@ bool UColorConfigurator::IsColorMuch(const FLinearColor& FilterColor, float Tole
 	return ColorReactiveComponent && ColorReactiveComponent->IsColorMuch(FilterColor, Tolerance);
 }
 
+bool UColorConfigurator::IsChangeable()const
+{
+	return bColorChangeable;
+}
+
 void UColorConfigurator::ApplyColorToMaterial(FLinearColor InColor)
 {
 	if (ColorReactiveComponent)

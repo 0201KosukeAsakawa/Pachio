@@ -31,7 +31,10 @@ bool IColorReactiveInterface::IsColorModifiable() const
 {
     return false;
 }
-
+bool IColorReactiveInterface::IsChangeable()const
+{
+    return false;
+}
 FName IColorReactiveInterface::GetColorEventID() const
 {
     return FName();
