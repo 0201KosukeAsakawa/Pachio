@@ -40,6 +40,7 @@ public:
 	bool IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance = 0.08f) const;
 	bool IsColorMuch(const FLinearColor& FilterColor, float Tolerance = 0.08f) const;
 	bool CheckColorMuch(const FLinearColor& FilterColor, bool bUseComplementaryColor = false) const;
+	bool IsChangeable()const;
 
 	// 色に応じたアクション
 	virtual void ColorAction(FLinearColor InColor);
@@ -81,25 +82,25 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Color")
 	EColorTargetType ColorTargetType;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Color")
 	bool bColorVariable = false;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Color")
+	bool bColorChangeable = true;
+
+	UPROPERTY(EditAnywhere, Category = "Color")
 	bool bSetColor = true;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Color")
 	bool bPlayColorAction = true;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Color")
 	bool bUseComplementaryColor = false;
-
-	UPROPERTY(EditAnywhere)
-	bool bPlayBeat = true;
 
 	UPROPERTY(VisibleAnywhere, Category = "Color")
 	bool bColorMuch = false;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Color")
 	FName EventID;
 
 private:

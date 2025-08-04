@@ -51,7 +51,7 @@ void AColorReactiveObject::SetupMaterial()
 
 void AColorReactiveObject::PlayBeatAnimation()
 {
-	if (ColorConfigurator == nullptr)
+	if (ColorConfigurator == nullptr || !bPlayBeat)
 		return;
 
 	ColorConfigurator->PlayBeatAnimation();
@@ -82,14 +82,6 @@ void AColorReactiveObject::ResetColor()
 	//SetColor(StartColor);
 }
 
-bool AColorReactiveObject::IsColorChange() const
-{
-	if (ColorConfigurator == nullptr)
-		return false;
-
-	return ColorConfigurator->IsColorChange();
-}
-
 void AColorReactiveObject::SetSelectMode(bool bIsSelected)
 {
 		if (!ColorConfigurator)
@@ -98,11 +90,30 @@ void AColorReactiveObject::SetSelectMode(bool bIsSelected)
 		ColorConfigurator->SetSelectMode(bIsSelected);
 }
 
+// マテリアルに色を適用（外部から手動適用する用）
+void AColorReactiveObject::ApplyColorToMaterial(FLinearColor InColor)
+{
+	if (ColorConfigurator == nullptr)
+		return;
+
+	ColorConfigurator->ApplyColorToMaterial(InColor);
+}
+
 void AColorReactiveObject::ChangeLock(bool b)
 {
 	if (ColorConfigurator == nullptr)
 		return;
 	ColorConfigurator->ChangeLock(b);
+}
+
+bool AColorReactiveObject::IsColorChange() const
+{
+	return ColorConfigurator&&ColorConfigurator->IsColorChange();
+}
+
+bool AColorReactiveObject::IsChangeable() const
+{
+	return ColorConfigurator&& ColorConfigurator->IsChangeable();
 }
 
 bool AColorReactiveObject::IsColorModifiable() const
@@ -114,10 +125,7 @@ bool AColorReactiveObject::IsColorModifiable() const
 
 bool AColorReactiveObject::IsColorMuch() const
 {
-	if (ColorConfigurator == nullptr)
-		return false;
-
-	return ColorConfigurator->IsColorMuch();
+	return ColorConfigurator && ColorConfigurator->IsColorMuch();
 }
 
 FName AColorReactiveObject::GetColorEventID() const
@@ -128,11 +136,3 @@ FName AColorReactiveObject::GetColorEventID() const
 	return ColorConfigurator->GetColorEventID();
 }
 
-// マテリアルに色を適用（外部から手動適用する用）
-void AColorReactiveObject::ApplyColorToMaterial(FLinearColor InColor)
-{
-	if (ColorConfigurator == nullptr)
-		return;
-
-	ColorConfigurator->ApplyColorToMaterial(InColor);
-}

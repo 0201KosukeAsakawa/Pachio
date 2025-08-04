@@ -65,7 +65,4 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	bool IsRevers = false;
-
-	UPROPERTY(EditAnywhere)
-	bool bPlayBeat = true;
 };

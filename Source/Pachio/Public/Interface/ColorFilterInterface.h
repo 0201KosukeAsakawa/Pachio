@@ -28,5 +28,6 @@ public:
 	virtual void SetSelectMode(bool);
 	virtual bool IsColorChange()const;
 	virtual bool IsColorModifiable()const;
+	virtual bool IsChangeable()const;
 	virtual FName GetColorEventID()const;
 };

@@ -32,11 +32,12 @@ public:
 	virtual void ColorAction(FLinearColor InColor) override;
 	virtual void SetColor(FLinearColor)override;
 	virtual void ResetColor()override;
-	virtual bool IsColorChange()const override;
 	virtual void SetSelectMode(bool)override;
-	void ChangeLock(bool b) override;
-	bool IsColorModifiable()const override;
-	bool IsColorMuch() const override;
+	virtual void ChangeLock(bool b) override;	
+	virtual bool IsColorChange()const override;
+	virtual bool IsChangeable()const override;
+	virtual bool IsColorModifiable()const override;
+	virtual bool IsColorMuch() const override;
 	FName GetColorEventID()const override;
 
 protected:
@@ -48,4 +49,6 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere)
 	UColorConfigurator* ColorConfigurator;
+	UPROPERTY(EditAnywhere, Category = "Beat")
+	bool bPlayBeat = true;
 };
