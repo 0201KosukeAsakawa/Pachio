@@ -43,9 +43,9 @@ public:
 	// 色判定・一致確認
 	virtual bool IsColorChange() const;
 	virtual bool IsColorChange(FLinearColor InColor) const;
-	bool IsColorMuch() const;
-	bool IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance = 0.08f) const;
-	bool IsColorMuch(const FLinearColor& FilterColor, float Tolerance = 0.08f) const;
+	bool IsColorMatch() const;
+	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance = 0.08f) const;
+	bool IsColorMatch(const FLinearColor& FilterColor, float Tolerance = 0.08f) const;
 	bool CheckColorMuch(const FLinearColor& FilterColor, bool bUseComplementaryColor = false) const;
 	bool IsChangeable()const;
 

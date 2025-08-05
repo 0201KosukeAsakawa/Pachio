@@ -26,8 +26,8 @@ public :
 	void ApplyColorToMaterial(FLinearColor InColor);
 	bool CheckColorMuch(const FLinearColor& FilterColor,const bool buseComplementaryColor = false);
 	UFUNCTION(BlueprintCallable)
-	virtual bool IsColorMuch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
-	bool IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
+	virtual bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
+	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 
