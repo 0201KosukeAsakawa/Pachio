@@ -8,8 +8,10 @@
 UFlammableComponent::UFlammableComponent()
 {
     HitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("FireBox"));
+    HitBox->SetupAttachment(GetOwner() ? GetOwner()->GetRootComponent() : nullptr);
+    HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    HitBox->SetMobility(EComponentMobility::Movable);
 }
-
 void UFlammableComponent::BeginPlay()
 {
     Super::BeginPlay();
@@ -18,11 +20,8 @@ void UFlammableComponent::BeginPlay()
     {
         if (USceneComponent* Root = GetOwner()->GetRootComponent())
         {
-            HitBox->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
-            HitBox->RegisterComponent(); // 念のため明示的に登録
+            HitBox->OnComponentBeginOverlap.AddDynamic(this, &UFlammableComponent::OnOverlap);
         }
-
-        HitBox->OnComponentBeginOverlap.AddDynamic(this, &UFlammableComponent::OnOverlap);
     }
 }
 
