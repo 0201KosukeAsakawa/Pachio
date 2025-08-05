@@ -6,7 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/PostProcessVolume.h"
 #include "Interface/ColorFilterInterface.h"
-#include "Components/ColorControllerComponent.h"
+#include "Components/Color/ColorControllerComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Logic/ColorManager/EffectColorMatcher.h"
 #include "Logic/ColorManager/ColorTargetRegistry.h"

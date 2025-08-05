@@ -2,7 +2,7 @@
 
 
 #include "Objects/RotateControllableObject.h"
-#include "Components/PlayerInputComponent.h"
+#include "Components/Player/PlayerInputComponent.h"
 
 ARotateControllableObject::ARotateControllableObject()
 {

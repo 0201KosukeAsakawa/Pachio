@@ -2,7 +2,7 @@
 
 
 #include "Logic/Event_Gimmick/ColorReactiveBalanceSystem.h"
-#include "Components/ColorReactiveComponent.h"
+#include "Components/Color/ColorReactiveComponent.h"
 #include "Objects/Color/ColorReactiveBalancePlate.h"
 #include "Kismet/KismetMathLibrary.h"
 

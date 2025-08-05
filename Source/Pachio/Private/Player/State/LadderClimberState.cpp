@@ -4,7 +4,7 @@
 #include "Player/State/LadderClimberState.h"
 #include "Player/State/StateManager.h"
 #include "Player/PlayerCharacter.h"
-#include "Objects/LadderActor.h"
+#include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/OverlapResult.h"
@@ -44,7 +44,7 @@ bool ULadderClimberState::OnEnter(ACharacter* Owner, UWorld* World)
 	{
 		MoveComp = NewObject<UMoveComponent>(mOwner);
 		ULadderMoveLogic* PlayerLogic = NewObject<ULadderMoveLogic>(this);
-		MoveComp->Init(mOwner, PlayerLogic);
+		MoveComp->Init(PlayerLogic);
 	}
 
 	// 梯子の中心に位置補正（必要なら LadderActor を別途持っておく）

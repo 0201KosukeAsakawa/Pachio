@@ -48,14 +48,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	static ALevelManager* GetInstance(UObject* WorldContext);
 
-	/** アイテムデータ管理コンテナを取得 */
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	inline UItemDataContainer* GetItemContainer() const { return ItemContainer; }
-
-	/** 攻撃データ管理コンテナを取得 */
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	inline UAttackDataContainer* GetAttackDataContainer() const { return AttackContainer; }
-
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	inline UScoreManager* GetScoreManager()const { return ScoreManager; }
 
@@ -103,10 +95,6 @@ private:
 	/** 実行時に生成されたサウンドマネージャー */
 	UPROPERTY()
 	TObjectPtr<USoundManager> SoundManager;
-
-	/** 実行時に生成されたアイテムコンテナ */
-	UPROPERTY()
-	TObjectPtr<UItemDataContainer> ItemContainer;
 
 	/** 実行時に生成されたオブジェクトマネージャー */
 	UPROPERTY()

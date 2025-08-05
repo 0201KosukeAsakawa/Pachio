@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/ColorReactiveObject.h"
+#include "Objects/Color/ColorReactiveObject.h"
 #include "ColorReactiveBalanceSystem.generated.h"
 
 class AColorReactiveBalancePlate;

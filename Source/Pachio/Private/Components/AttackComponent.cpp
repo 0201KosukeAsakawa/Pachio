@@ -38,9 +38,9 @@ bool UAttackComponent::Init(UWorld* world, FName NewStrategy)
     if (!world)
         return false;
 
-    CurrentStrategy = ALevelManager::GetInstance(GetWorld())
+  /*  CurrentStrategy = ALevelManager::GetInstance(GetWorld())
         ->GetAttackDataContainer()
-        ->CreateStrategy(world, NewStrategy);
+        ->CreateStrategy(world, NewStrategy);*/
 
     if (!CurrentStrategy)
         return false;

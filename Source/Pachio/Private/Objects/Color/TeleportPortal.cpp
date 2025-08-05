@@ -3,8 +3,8 @@
 
 #include "Objects/Color/TeleportPortal.h"
 #include "Components/BoxComponent.h"
-#include "Components/ColorReactiveComponent.h"
-#include "Components/ColorConfigurator.h"
+#include "Components/Color/ColorReactiveComponent.h"
+#include "Components/Color/ColorConfigurator.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -55,6 +55,23 @@ void ATeleportPortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
     if (!OtherActor || !CurrentTargetPortal || OtherActor == this)
         return;
 
+    // タグが一致しない場合は処理しない（空なら全許可）
+    if (AllowedTags.Num() > 0)
+    {
+        bool bMatch = false;
+        for (const FName& Tag : AllowedTags)
+        {
+            if (OtherActor->ActorHasTag(Tag))
+            {
+                bMatch = true;
+                break;
+            }
+        }
+
+        if (!bMatch)
+            return;
+    }
+
     UWorld* World = GetWorld();
     if (!World)
         return;
@@ -76,5 +93,4 @@ void ATeleportPortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
     CurrentTargetPortal->LastTeleportTime.Add(OtherActor, CurrentTime);
 
     OtherActor->SetActorLocation(TargetLocation);
-
 }

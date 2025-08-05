@@ -3,22 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/ColorReactiveObject.h"
+#include "Objects/Color/ColorReactiveObject.h"
 #include "RotationGroup.generated.h"
 
 class AActor;
-
-//USTRUCT(BlueprintType)
-//struct FTargetData
-//{
-//	GENERATED_BODY()
-//
-//public:
-//	UPROPERTY(EditAnywhere,Category = "TargetData")
-//	AActor* targetActor;
-//	UPROPERTY(EditAnywhere, Category = "TargetData")
-//	float rotateSpeed;
-//};
 
 UCLASS()
 class PACHIO_API ARotationGroup : public AColorReactiveObject
