@@ -74,7 +74,7 @@ void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
 
     // 色の一致状態を設定
     ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));
-    if (ColorConfigurator->IsColorMuch())
+    if (ColorConfigurator->IsColorMatch())
     {
         if (IsRevers)
         {

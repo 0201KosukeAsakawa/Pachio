@@ -127,4 +127,3 @@ FLinearColor UColorTargetRegistry::GetPostProcessColor() const
         return FLinearColor::Black;
     }
 }
-

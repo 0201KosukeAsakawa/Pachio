@@ -34,14 +34,14 @@ void ATeleportPortal::ColorAction(const FLinearColor InColor)
     if (!ColorConfigurator)
         return;
 
-    bool b = ColorConfigurator->IsColorMuch(InColor);
+    bool b = ColorConfigurator->IsColorMatch(InColor);
     if (b)
     {
         CurrentTargetPortal = AlternatePortal;
     }
     else
     {
-        bool c = ColorConfigurator->IsColorMuch(InColor, SecondColor);
+        bool c = ColorConfigurator->IsColorMatch(InColor, SecondColor);
         if (c)
             CurrentTargetPortal = PrimaryDestination;
     }

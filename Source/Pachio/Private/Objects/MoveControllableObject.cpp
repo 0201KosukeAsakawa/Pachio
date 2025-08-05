@@ -14,6 +14,7 @@
 AMoveControllableObject::AMoveControllableObject()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
 	FootTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("FootTrigger"));
 	RootComponent = FootTrigger;
 
@@ -24,12 +25,19 @@ AMoveControllableObject::AMoveControllableObject()
 
 	FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMoveControllableObject::OnFootBeginOverlap);
 	FootTrigger->OnComponentEndOverlap.AddDynamic(this, &AMoveControllableObject::OnFootEndOverlap);
+
+	// デフォルト設定
+	MoveDuration = 0.5f;
+	AcceptanceRadius = 10.0f;
+	MoveStepSize = 100.0f;
 }
 
 void AMoveControllableObject::Init()
 {
 	AColorReactiveObject::Init();
-	const TObjectPtr<USoundManager> SoundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject());
+
+	const TObjectPtr<USoundManager> SoundManager =
+		Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject());
 	if (!SoundManager) return;
 
 	SoundManager->OnBeatDetected.AddDynamic(this, &AMoveControllableObject::OnBeatDetected);
@@ -39,10 +47,10 @@ void AMoveControllableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!bIsMoving)
+	if (!bIsMoving || !bCanMove)
 		return;
 
-	FVector PreviousLocation = GetActorLocation();  // 移動前の位置を保持
+	FVector PreviousLocation = GetActorLocation();
 
 	MoveElapsedTime += DeltaTime;
 	float Alpha = FMath::Clamp(MoveElapsedTime / MoveDuration, 0.f, 1.f);
@@ -50,14 +58,9 @@ void AMoveControllableObject::Tick(float DeltaTime)
 	FVector NewLocation = FMath::Lerp(MoveStartLocation, MoveTargetLocation, Alpha);
 	SetActorLocation(NewLocation);
 
-	FVector Offset = NewLocation - PreviousLocation;  // 今回の移動量を計算
-	TArray<AActor*> Target = AttachedActors;
-	if (Target.Num() == 0)
-	{
-		return;
-	}
-
-	for (AActor* ActorOnTop : Target)
+	// 上に乗っているアクターを一緒に動かす
+	FVector Offset = NewLocation - PreviousLocation;
+	for (AActor* ActorOnTop : AttachedActors)
 	{
 		if (ActorOnTop)
 		{
@@ -81,13 +84,10 @@ void AMoveControllableObject::OnFootBeginOverlap(UPrimitiveComponent* Overlapped
 	if (!ActorHasTag(TEXT("Carryable")) || !OtherActor->ActorHasTag("Moveable"))
 		return;
 
-	if (OtherActor && OtherActor != this)
+	if (OtherActor && OtherActor != this && !AttachedActors.Contains(OtherActor))
 	{
-		if (!AttachedActors.Contains(OtherActor))
-		{
-			AttachedActors.Add(OtherActor);
-			UE_LOG(LogTemp, Log, TEXT("Added actor on top: %s"), *OtherActor->GetName());
-		}
+		AttachedActors.Add(OtherActor);
+		UE_LOG(LogTemp, Log, TEXT("Added actor on top: %s"), *OtherActor->GetName());
 	}
 }
 
@@ -109,15 +109,18 @@ void AMoveControllableObject::OnBeatDetected()
 	if (PatrolPoints.Num() == 0 || bIsMoving)
 		return;
 
+	// BeatCount / PlayCount の条件
 	if (BeatCount > PlayCount)
 	{
 		++PlayCount;
 		return;
 	}
+
 	FVector CurrentLocation = GetActorLocation();
 	FVector TargetLocation = PatrolPoints[CurrentPatrolIndex];
 	float Distance = FVector::Dist(CurrentLocation, TargetLocation);
 
+	// 目的地到達判定
 	if (Distance <= AcceptanceRadius)
 	{
 		CurrentPatrolIndex = (CurrentPatrolIndex + 1) % PatrolPoints.Num();
@@ -125,12 +128,34 @@ void AMoveControllableObject::OnBeatDetected()
 	}
 
 	MoveStartLocation = CurrentLocation;
-	// 目標地点までの方向を取ってMoveStepSize分だけ進む目標位置を計算
-	FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
-	MoveTargetLocation = CurrentLocation + Direction * MoveStepSize;
+
+	if (bUseStepMove)
+	{
+		// MoveStepSize分だけ進む
+		FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
+		if (!Direction.IsNearlyZero())
+		{
+			MoveTargetLocation = CurrentLocation + Direction * MoveStepSize;
+		}
+		else
+		{
+			MoveTargetLocation = TargetLocation;
+		}
+	}
+	else
+	{
+		// 目的地まで直接移動
+		MoveTargetLocation = TargetLocation;
+	}
 
 	bIsMoving = true;
 	MoveElapsedTime = 0.0f;
-
 	PlayCount = 0;
+}
+
+void AMoveControllableObject::ColorAction(FLinearColor color)
+{
+	AColorReactiveObject::ColorAction(color);
+	
+	ColorConfigurator->IsColorMatch(color, FLinearColor(1, 0.7, 0.8, 1)) ? bCanMove = false : bCanMove = true;
 }

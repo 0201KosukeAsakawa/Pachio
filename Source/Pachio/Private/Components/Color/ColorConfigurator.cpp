@@ -131,12 +131,12 @@ void UColorConfigurator::SetSelectMode(bool bInIsSelected)
 
 bool UColorConfigurator::IsColorChange() const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->IsColorMuch(StartColor);
+	return ColorReactiveComponent && ColorReactiveComponent->IsColorMatch(StartColor);
 }
 
 bool UColorConfigurator::IsColorChange(FLinearColor Color) const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->IsColorMuch(Color);
+	return ColorReactiveComponent && ColorReactiveComponent->IsColorMatch(Color);
 }
 
 bool UColorConfigurator::CheckColorMuch(const FLinearColor& FilterColor, bool buseComplementaryColor) const
@@ -144,19 +144,19 @@ bool UColorConfigurator::CheckColorMuch(const FLinearColor& FilterColor, bool bu
 	return ColorReactiveComponent && ColorReactiveComponent->CheckColorMuch(FilterColor, buseComplementaryColor);
 }
 
-bool UColorConfigurator::IsColorMuch() const
+bool UColorConfigurator::IsColorMatch() const
 {
 	return bColorMuch;
 }
 
-bool UColorConfigurator::IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance) const
+bool UColorConfigurator::IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance) const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->IsColorMuch(FilterColor, TargetColor, Tolerance);
+	return ColorReactiveComponent && ColorReactiveComponent->IsColorMatch(FilterColor, TargetColor, Tolerance);
 }
 
-bool UColorConfigurator::IsColorMuch(const FLinearColor& FilterColor, float Tolerance) const
+bool UColorConfigurator::IsColorMatch(const FLinearColor& FilterColor, float Tolerance) const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->IsColorMuch(FilterColor, Tolerance);
+	return ColorReactiveComponent && ColorReactiveComponent->IsColorMatch(FilterColor, Tolerance);
 }
 
 bool UColorConfigurator::IsChangeable()const

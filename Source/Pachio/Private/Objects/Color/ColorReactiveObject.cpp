@@ -142,7 +142,7 @@ bool AColorReactiveObject::IsColorModifiable() const
 
 bool AColorReactiveObject::IsColorMuch() const
 {
-	return ColorConfigurator && ColorConfigurator->IsColorMuch();
+	return ColorConfigurator && ColorConfigurator->IsColorMatch();
 }
 
 FName AColorReactiveObject::GetColorEventID() const
