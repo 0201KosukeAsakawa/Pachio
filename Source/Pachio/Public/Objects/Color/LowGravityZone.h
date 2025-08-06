@@ -21,6 +21,7 @@ public:
 	virtual void Init() override;
 
 private:
+	void SetPostProcessEffectEnabled(bool bEnable);
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,

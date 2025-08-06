@@ -3,6 +3,7 @@
 #include "Manager/ScoreManager.h"
 #include "Manager/ColorManager.h"
 #include "Manager/SaveManager.h"
+#include "Manager/WeatherEffectManager.h"
 #include "Kismet/GameplayStatics.h" 
 #include "UI/UIManager.h"
 #include "EngineUtils.h"
@@ -35,6 +36,7 @@ void ALevelManager::InitializeComponents()
 {
 	if (bInitialize)
 		return;
+
 	if (ScoreManagerClass)
 		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
 	if (ScoreManager)

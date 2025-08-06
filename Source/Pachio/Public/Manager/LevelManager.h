@@ -13,6 +13,7 @@ class UObjectManager;
 class UColorManager;
 class UUIManager;
 
+class UWeatherEffectManager;
 class UDataTable;
 class ISoundable;
 class UBlockDataContainer;
@@ -77,8 +78,6 @@ private:
 	/** サウンドマネージャークラス（Blueprintで指定） */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<USoundManager> SoundManagerClass;
-
-
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UScoreManager> ScoreManagerClass;
