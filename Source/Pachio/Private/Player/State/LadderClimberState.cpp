@@ -155,17 +155,31 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	if (!mOwner || !Ladder) return;
 
 	FVector direction = MoveComp->Movement(0, mOwner, Value);
+
+	// ★ 梯子の前後判定 ★
+	FVector LadderForward = Ladder->GetActorForwardVector();
+	FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
+	ToPlayer.Normalize();
+
+	float Dot = FVector::DotProduct(LadderForward, ToPlayer);
+
+	// 後ろ側にいるなら方向を反転
+	if (Dot < 0.f)
+	{
+		direction *= -1.f;
+	}
+
 	FVector NewLocation = mOwner->GetActorLocation() + direction * 10;
 
-	// 下方向への移動（Zが負のとき）だけレイキャスト判定を行う
+	// 下方向の移動なら地面チェック
 	if (direction.Z < 0.f)
 	{
 		FVector Start = NewLocation;
-		FVector End = Start - FVector(0.f, 0.f, 100.f);  // 100cm下方向にレイ
+		FVector End = Start - FVector(0.f, 0.f, 100.f);  // 100cm下方向
 
 		FHitResult HitResult;
 		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(mOwner);  // 自分自身は無視
+		Params.AddIgnoredActor(mOwner);
 
 		UWorld* World = mOwner->GetWorld();
 		bool bHit = false;
@@ -176,15 +190,14 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 
 		if (bHit)
 		{
-			// 地面があるので梯子から離れたと判断して状態を戻す
 			if (IStateControllable* owner = Cast<IStateControllable>(mOwner))
 			{
 				owner->ChangeState("Default");
-				return;  // 状態遷移したのでこれ以上移動しない
+				return;
 			}
 		}
 	}
 
-	// 下方向以外の移動や、地面がなければ通常の移動処理
+	// 通常の移動
 	GetOwner()->AddActorLocalOffset(direction * 10, true);
 }

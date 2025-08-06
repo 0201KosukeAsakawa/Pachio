@@ -394,8 +394,7 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	case EBuffEffect::Blue:
 	{
-		physics->SetGravityScale(true, 0);
-		JumpBuff = 3.0f;
+	
 		break;
 	}
 
