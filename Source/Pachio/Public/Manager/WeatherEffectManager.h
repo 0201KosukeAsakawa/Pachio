@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "UObject/NoExportTypes.h"
 #include "WeatherEffectManager.generated.h"
 
@@ -31,7 +32,7 @@ public:
     void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
     UFUNCTION(BlueprintCallable)
-    void SetWeather(EWeatherType NewWeather);
+    void SetWeather(EColorTargetType Mode,FLinearColor NewColor);
 
 protected:
     // 天候用Niagaraアセット（エディタでセット可能）

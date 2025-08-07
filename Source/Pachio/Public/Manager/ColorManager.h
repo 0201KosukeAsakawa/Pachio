@@ -41,7 +41,7 @@ public:
 
     FEffectMatchResult GetClosestEffectByHue();
     FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
-
+    UColorTargetRegistry* GetColorTargetRegistry()const {return ColorTargetRegistry;}
 
     FLinearColor GetWorldColor()const;
 private:

@@ -7,6 +7,9 @@
 #include "FlammableComponent.generated.h"
 
 class UBoxComponent;
+class UNiagaraSystem;
+class UNiagaraComponent;
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UFlammableComponent : public UActorComponent
 {
@@ -34,12 +37,12 @@ private:
     bool bKillsOnTouch = true;
 
 protected:
-    UPROPERTY(EditAnywhere)
-    TSubclassOf<AActor> FireEffectActor; // Niagara or particle
+    UPROPERTY(EditAnywhere, Category = "Flame Effects")
+    UNiagaraSystem* FlameSystem;
 
+    // 実際に再生するコンポーネント
     UPROPERTY()
-    AActor* SpawnedFire = nullptr;
-
+    UNiagaraComponent* FlameEffect;
 
     UPROPERTY(EditAnywhere)
     UBoxComponent* HitBox;

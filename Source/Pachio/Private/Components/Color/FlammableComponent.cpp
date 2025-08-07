@@ -3,6 +3,8 @@
 
 #include "Components/Color/FlammableComponent.h"
 #include "Components/BoxComponent.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Interface/StateControllable.h"
 
 UFlammableComponent::UFlammableComponent()
@@ -15,7 +17,12 @@ UFlammableComponent::UFlammableComponent()
 void UFlammableComponent::BeginPlay()
 {
     Super::BeginPlay();
-
+    if (FlameSystem && !FlameEffect)
+    {
+        FlameEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(FlameSystem, GetOwner()->GetRootComponent(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false);
+        FlameEffect->SetWorldScale3D(FVector(1.f));
+        FlameEffect->Deactivate();
+    }
     if (HitBox && GetOwner())
     {
         if (USceneComponent* Root = GetOwner()->GetRootComponent())
@@ -44,12 +51,8 @@ void UFlammableComponent::Ignite()
     if (bIsIgnited) return;
     bIsIgnited = true;
     HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-    if (FireEffectActor && GetOwner())
-    {
-        FActorSpawnParameters Params;
-        SpawnedFire = GetWorld()->SpawnActor<AActor>(FireEffectActor, GetOwner()->GetActorLocation(), FRotator::ZeroRotator, Params);
-        SpawnedFire->AttachToActor(GetOwner(), FAttachmentTransformRules::KeepWorldTransform);
-    }
+    if(FlameEffect)
+    FlameEffect->Activate();
 }
 
 void UFlammableComponent::Extinguish()
@@ -57,11 +60,7 @@ void UFlammableComponent::Extinguish()
     if (!bIsIgnited) return;
     bIsIgnited = false;
 
-    if (SpawnedFire)
-    {
-        SpawnedFire->Destroy();
-        SpawnedFire = nullptr;
-    }
+    if (FlameEffect) FlameEffect->Deactivate();
 
     HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

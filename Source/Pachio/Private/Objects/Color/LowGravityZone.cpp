@@ -5,6 +5,8 @@
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
 #include "Components/Color/ColorConfigurator.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 // Sets default values
 ALowGravityZone::ALowGravityZone()
@@ -21,6 +23,12 @@ void ALowGravityZone::Init()
 {
     ZoneBox->OnComponentBeginOverlap.AddDynamic(this, &ALowGravityZone::OnOverlapBegin);
     ZoneBox->OnComponentEndOverlap.AddDynamic(this, &ALowGravityZone::OnOverlapEnd);
+    if (UniverseSystem && !UniverseEffect)
+    {
+        UniverseEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(UniverseSystem, GetRootComponent(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false);
+  /*      UniverseEffect->SetWorldScale3D(FVector(20.f));*/
+        UniverseEffect->Deactivate();
+    }
 }
 
 void ALowGravityZone::ColorAction(const FLinearColor InColor)
@@ -39,9 +47,12 @@ void ALowGravityZone::ColorAction(const FLinearColor InColor)
             }
         }
         OverlappingActors.Empty();
+        if(UniverseEffect)
+        UniverseEffect->Deactivate();
         return;
     }
-
+    if (UniverseEffect)
+        UniverseEffect->Activate();
     FVector Center = ZoneBox->GetComponentLocation();
     FVector HalfSize = ZoneBox->GetScaledBoxExtent();
 
@@ -72,6 +83,10 @@ void ALowGravityZone::ColorAction(const FLinearColor InColor)
     }
 }
 
+
+void ALowGravityZone::SetPostProcessEffectEnabled(bool bEnable)
+{
+}
 
 void ALowGravityZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,

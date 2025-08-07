@@ -2,8 +2,12 @@
 
 
 #include "Manager/WeatherEffectManager.h"
+#include "Manager/ColorManager.h"
+#include "Manager/LevelManager.h"
+#include "DataContainer/BuffEffect.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Logic/ColorManager/ColorTargetRegistry.h"
 
 UWeatherComponent::UWeatherComponent()
 {
@@ -13,9 +17,8 @@ UWeatherComponent::UWeatherComponent()
 void UWeatherComponent::BeginPlay()
 {
     Super::BeginPlay();
-
     InitializeEffects();
-    SetWeather(EWeatherType::Rain);
+    ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetColorTargetRegistry()->OnColorApplied.AddDynamic(this, &UWeatherComponent::SetWeather);
 }
 
 void UWeatherComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -75,24 +78,46 @@ void UWeatherComponent::InitializeEffects()
     }
 }
 
-void UWeatherComponent::SetWeather(EWeatherType NewWeather)
+void UWeatherComponent::SetWeather(EColorTargetType Mode,FLinearColor NewColor)
 {
+    if (Mode != EColorTargetType::WorldColor)
+        return;
+
+    FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
+        ->GetColorManager()
+        ->GetClosestEffectByHue(NewColor);
     if (RainEffect) RainEffect->Deactivate();
     if (ThunderEffect) ThunderEffect->Deactivate();
     if (WindEffect) WindEffect->Deactivate();
-
-    switch (NewWeather)
+    EWeatherType NewWeather = EWeatherType::Clear;
+    switch (Match.ClosestEffect)
     {
-    case EWeatherType::Rain:
-        if (RainEffect) RainEffect->Activate();
+    case EBuffEffect::Red:
+    {
+        if (ThunderEffect)
+        {
+            ThunderEffect->Activate();
+            NewWeather = EWeatherType::Clear;
+        }
         break;
-    case EWeatherType::Thunder:
-        if (ThunderEffect) ThunderEffect->Activate();
+    }
+        
+    case EBuffEffect::Green:
+    {
+        if (WindEffect)
+        {
+            WindEffect->Activate();
+            NewWeather = EWeatherType::Wind;
+        }
         break;
-    case EWeatherType::Wind:
-        if (WindEffect) WindEffect->Activate();
+    }
+    case EBuffEffect::Blue:
+        if (RainEffect)
+        {
+            RainEffect->Activate();
+            NewWeather = EWeatherType::Rain;
+        }
         break;
-    case EWeatherType::Clear:
     default:
         break;
     }

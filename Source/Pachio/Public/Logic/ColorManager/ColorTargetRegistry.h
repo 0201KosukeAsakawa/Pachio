@@ -10,6 +10,9 @@
 
 class IColorReactiveInterface;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnColorAppliedDelegate, EColorTargetType, Mode, FLinearColor, NewColor);
+
+
 UCLASS(Blueprintable)
 class PACHIO_API UColorTargetRegistry : public UObject
 {
@@ -24,6 +27,10 @@ public:
 	void InitializePostEffect();
 
 	FLinearColor GetPostProcessColor() const;
+
+	UPROPERTY(BlueprintAssignable, Category = "Color")
+	FOnColorAppliedDelegate OnColorApplied;
+
 private:
     void NotifyTargets(EColorTargetType Mode, const FLinearColor& Color);
 

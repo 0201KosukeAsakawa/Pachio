@@ -7,6 +7,8 @@
 #include "LowGravityZone.generated.h"
 
 class UBoxComponent;
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 UCLASS()
 class PACHIO_API ALowGravityZone : public AColorReactiveObject
@@ -39,4 +41,11 @@ private:
 
 	UPROPERTY()
 	TSet<AActor*> OverlappingActors;  // 現在影響を受けてるアクター
+
+	UPROPERTY(EditAnywhere, Category = "Universe Effects")
+	UNiagaraSystem* UniverseSystem;
+
+	// 実際に再生するコンポーネント
+	UPROPERTY()
+	UNiagaraComponent* UniverseEffect;
 };

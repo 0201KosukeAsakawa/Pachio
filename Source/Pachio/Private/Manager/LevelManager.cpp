@@ -36,7 +36,6 @@ void ALevelManager::InitializeComponents()
 {
 	if (bInitialize)
 		return;
-
 	if (ScoreManagerClass)
 		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
 	if (ScoreManager)
