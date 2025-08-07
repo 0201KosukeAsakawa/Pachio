@@ -31,6 +31,8 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
     default:
         break;
     }
+
+    OnColorApplied.Broadcast(Mode, NewColor);
 }
 
 void UColorTargetRegistry::ColorEvent(FName EventID,FLinearColor NewColor)
@@ -127,4 +129,3 @@ FLinearColor UColorTargetRegistry::GetPostProcessColor() const
         return FLinearColor::Black;
     }
 }
-

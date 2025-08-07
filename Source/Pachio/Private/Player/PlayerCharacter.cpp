@@ -141,6 +141,7 @@ void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 void APlayerCharacter::ResetBuff()
 {
 	 JumpBuff = 1;
+	 physics->SetGravityScale();
 }
 
 void APlayerCharacter::Circle()
@@ -197,7 +198,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 		return;
 
 	// ジャンプ力を掛けて力を加える
-	physics->AddForce(GetActorUpVector(), JumpForce);
+	physics->AddForce(GetActorUpVector(), JumpForce * JumpBuff);
 	ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
 	sound->PlaySound("SE", "Jump");
 }
@@ -382,7 +383,6 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 	{
 	case EBuffEffect::Red:
 	{
-		JumpBuff = 1.0f + 1.0f * Match.StrengthRatio;
 		break;
 	}
 
@@ -394,6 +394,7 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	case EBuffEffect::Blue:
 	{
+	
 		break;
 	}
 

@@ -39,8 +39,9 @@ public:
     float GetColorDistanceRGB(const FLinearColor& A);
     float GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B );
 
+    FEffectMatchResult GetClosestEffectByHue();
     FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
-
+    UColorTargetRegistry* GetColorTargetRegistry()const {return ColorTargetRegistry;}
 
     FLinearColor GetWorldColor()const;
 private:

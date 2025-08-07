@@ -75,6 +75,14 @@ float UColorManager::GetColorDistanceRGB(const FLinearColor& A, const FLinearCol
     return EffectColorMatcher->GetColorDistanceRGB(A,B);
 }
 
+FEffectMatchResult UColorManager::GetClosestEffectByHue()
+{
+    if (!EffectColorMatcher)
+        return FEffectMatchResult();
+
+    return EffectColorMatcher->GetClosestEffectByHue(ColorTargetRegistry->GetPostProcessColor());
+}
+
 FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& InputColor)
 {
     if (!EffectColorMatcher)

@@ -45,7 +45,7 @@ bool UColorReactiveComponent::CheckColorMuch(const FLinearColor& FilterColor, co
 		UE_LOG(LogTemp, Log, TEXT("CheckColor: %s"), *CheckColor.ToString());
 	}
 	
-	bool bMatch = IsColorMuch(CheckColor);
+	bool bMatch = IsColorMatch(CheckColor);
 
 	if (bMatch)
 	{
@@ -193,7 +193,7 @@ void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 	DynMaterial->SetVectorParameterValue(FName("BaseColor"), InColor);
 }
 
-bool UColorReactiveComponent::IsColorMuch(const FLinearColor& FilterColor, const float Tolerance) const
+bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const
 {
     float dR = CurrentColor.R - FilterColor.R;
     float dG = CurrentColor.G - FilterColor.G;
@@ -205,7 +205,7 @@ bool UColorReactiveComponent::IsColorMuch(const FLinearColor& FilterColor, const
     return ColorDifference <= Tolerance * Tolerance;
 }
 
-bool UColorReactiveComponent::IsColorMuch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance) const
+bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance) const
 {
 	float dR = TargetColor.R - FilterColor.R;
 	float dG = TargetColor.G - FilterColor.G;

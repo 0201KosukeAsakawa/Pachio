@@ -18,6 +18,7 @@ public class Pachio : ModuleRules
             "Json",
             "JsonUtilities",
              "FMODStudio",
+             "Niagara",
         });
     }
    

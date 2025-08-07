@@ -37,6 +37,7 @@ private:// オーバーラップイベント
 	UFUNCTION()
 	void OnBeatDetected();
 
+	virtual void ColorAction(FLinearColor)override;
 private:
 
 	UPROPERTY()
@@ -49,8 +50,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Patrol")
 	TArray<FVector> PatrolPoints;
 
-	UPROPERTY(EditAnywhere, Category = "Patrol")
-	float AcceptanceRadius = 50.f;
+
 
 	int32 CurrentPatrolIndex = 0;
 
@@ -58,7 +58,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MoveStepSize = 0.0f;
 
-	bool bIsMoving = false;
+		UPROPERTY(EditAnywhere, Category = "Patrol")
+	float AcceptanceRadius = 50.f;
 	float MoveDuration = 0.2f; // 移動にかける時間（秒）
 	float MoveElapsedTime = 0.0f;
 	FVector MoveStartLocation;
@@ -67,4 +68,9 @@ private:
 	float PlayCount = 0;
 	UPROPERTY(EditAnywhere)
 	float BeatCount = 0;
+
+	UPROPERTY(EditAnywhere)
+	bool bUseStepMove = true;
+	bool bIsMoving = false;
+	bool bCanMove = true;
 };
