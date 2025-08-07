@@ -69,7 +69,7 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
 {
 	ForceDirection = Direction;
-	ForceScale = Force;
+	ForceScale = Force /** ForceModifier*/;
 	Timer = 0;
 	bIsSweep = bSweep;
 	bIsPhysicsEnabled = false;
@@ -92,7 +92,7 @@ void UPhysicsCalculator::AddGravity()
 	}
 
 	Timer += GetWorld()->DeltaTimeSeconds;
-	GetOwner()->AddActorLocalOffset(FVector(0, 0, -GravityScale) * Timer, true);
+	GetOwner()->AddActorLocalOffset((FVector(0, 0, -GravityScale) * Timer)/ ForceModifier, true);
 }
 
 bool UPhysicsCalculator::OnGround() const
@@ -146,10 +146,11 @@ bool UPhysicsCalculator::OnGround() const
 }
 
 
-void UPhysicsCalculator::SetGravityScale(bool applyGravity, float scale)
+void UPhysicsCalculator::SetGravityScale(bool applyGravity, float scale,float Modifier)
 {
 	GravityScale = scale;
 	bShouldApplyGravity = applyGravity;
+	ForceModifier = Modifier;
 }
 
 FVector UPhysicsCalculator::GetBlockedAdjustedVector(const FVector& MoveVector)
