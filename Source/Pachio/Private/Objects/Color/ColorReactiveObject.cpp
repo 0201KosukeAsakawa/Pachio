@@ -67,20 +67,6 @@ void AColorReactiveObject::ColorAction(FLinearColor NewColor)
 		return;
 
 	ColorConfigurator->ColorAction(NewColor);
-	if (UFlammableComponent* FlameComp = FindComponentByClass<UFlammableComponent>())
-	{
-		FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
-			->GetColorManager()
-			->GetClosestEffectByHue(NewColor);
-		if (Match.ClosestEffect == EBuffEffect::Red)
-		{
-			FlameComp->Ignite();
-		}
-		else
-		{
-			FlameComp->Extinguish();
-		}
-	}
 }
 
 void AColorReactiveObject::SetColor(FLinearColor newColor)

@@ -51,19 +51,6 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 		return;
 	}
-
-	//if (OnGround())
-	//{
-	//	FVector GroundNormal = GetGroundNormal();
-
-	//	// Z軸を接地面法線に合わせて回転
-	//	FRotator NewRotation = FRotationMatrix::MakeFromZX(GroundNormal, GetOwner()->GetActorForwardVector()).Rotator();
-
-	//	// なめらかに傾けたい場合は補間
-	//	FRotator CurrentRotation = GetOwner()->GetActorRotation();
-	//	FRotator SmoothedRotation = FMath::RInterpTo(CurrentRotation, NewRotation, DeltaTime, 5.0f); // 5.0f は回転速度
-	//	GetOwner()->SetActorRotation(SmoothedRotation);
-	//}
 }
 
 void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)

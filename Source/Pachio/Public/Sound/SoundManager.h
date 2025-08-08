@@ -7,6 +7,7 @@
 #include "Components/AudioComponent.h"
 #include "Components/ActorComponent.h"
 #include "Interface/Soundable.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "fmod_studio.hpp"     // FMOD Studio APIのC++ラッパー
 #include "SoundManager.generated.h"
 
@@ -45,6 +46,12 @@ public:
     // サウンドマネージャーを初期化
     void Init();
     void Tick(float DeltaTim);
+    UFUNCTION(Category = "Beat")
+    void SetTmp(EColorTargetType Mode, FLinearColor NewColor);
+
+    UPROPERTY(BlueprintAssignable, Category = "Beat")
+    FOnBeatDetected OnBeatDetected;
+    void OnMarkerBeat(int64 MarkerPositionMs); // マーカーで発火されたとき
 private:
     // サウンドを再生するメソッド
     UFUNCTION(BlueprintCallable)
@@ -102,8 +109,5 @@ private:
     UPROPERTY()
     class UFMODAudioComponent* FMODAudioComponent;
     FMOD::Studio::EventInstance* EventInstance;
-public:
-    UPROPERTY(BlueprintAssignable, Category = "Beat")
-    FOnBeatDetected OnBeatDetected;
-    void OnMarkerBeat(int64 MarkerPositionMs); // マーカーで発火されたとき
+
 };

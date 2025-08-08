@@ -1,7 +1,9 @@
 #include "Sound/SoundManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Logic/ColorManager/ColorTargetRegistry.h"
 #include "Components/AudioComponent.h"
 #include "Manager/LevelManager.h"
+#include "Manager/ColorManager.h"
 
 // FMODの低レベルAPIのヘッダーをインクルードします。
 // F_CALLBACK マクロが正しく定義されるように、FMOD_API_TRUE または FMOD_STUDIO_API_TRUE を定義します。
@@ -81,7 +83,7 @@ void USoundManager::Init()
             }
         }
     }
-
+    ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetColorTargetRegistry()->OnColorApplied.AddDynamic(this, &USoundManager::SetTmp);
     InitTestSound();
 }
 
@@ -94,9 +96,48 @@ void USoundManager::Tick(float DeltaTime)
     if (CurrentBeat > LastPredictedBeat)
     {
         LastPredictedBeat = CurrentBeat;
-        UE_LOG(LogTemp, Error, TEXT("Beat"));
         OnBeatDetected.Broadcast();
+        UE_LOG(LogTemp, Log, TEXT("Beat detected at BPM: %f"), MusicBPM);
     }
+}
+
+void USoundManager::SetTmp(EColorTargetType Mode, FLinearColor NewColor)
+{
+    ALevelManager* level = ALevelManager::GetInstance(GetWorld());
+    if (level == nullptr)
+        return;
+
+    UColorManager* colorManager = level->GetColorManager();
+    if (colorManager == nullptr)
+        return;
+
+    FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
+        ->GetColorManager()
+        ->GetClosestEffectByHue(NewColor);
+
+    switch (Match.ClosestEffect)
+    {
+
+        case EBuffEffect::Red:
+            MusicBPM = 160.f;
+            break;
+        case EBuffEffect::Blue:
+            MusicBPM = 90.f;
+            break;
+        case EBuffEffect::Green:
+            MusicBPM = 120.f;
+            break;
+        default:
+            MusicBPM = 120.f;
+            break;
+    }
+        BeatInterval = 60.f / MusicBPM;  // 拍の秒数を計算
+
+        StartTime = GetWorld()->GetTimeSeconds();  // ビート判定の基準時間をリセット
+        LastPredictedBeat = -1;  // 拍判定リセット
+    
+    colorManager->GetColorTargetRegistry();
+    
 }
 
 void USoundManager::SetSoundVolume(float BGMVol, float SEVol)
@@ -110,8 +151,6 @@ void USoundManager::SetSoundVolume(float BGMVol, float SEVol)
     // BGM音量が変更されていた場合、音量変更後に再生を管理
     if (mCurrentBGM && previousBGMVolume != BGMVolume)
     {
-        // 音量を設定
-        //mCurrentBGM->SetVolumeMultiplier(BGMVolume);
 
         // 音量が0でなく、かつBGMが停止している場合のみ再生
         if (BGMVolume > 0.0f && !mCurrentBGM->IsPlaying())
@@ -130,7 +169,6 @@ bool USoundManager::PlaySound(FName DataID, FName SoundID, float Volume, bool Is
     if (DataID == "BGM")
     {
         PlayBGM();
-       //PlayBGM(SoundID, Volume);
        return true;
     }
 

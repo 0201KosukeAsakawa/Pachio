@@ -36,6 +36,9 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	FString GetNextStageName()const { return NextStageName; }
+
 	virtual void Tick(float DeltaTime) override;	
 
 	void HandlePlayerGoalReached();
@@ -71,7 +74,8 @@ private:
 
 	 UPROPERTY(EditAnywhere)
 	 FString StageName;
-
+	 UPROPERTY(EditAnywhere)
+	 FString NextStageName;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UEnemyDataContainer> EnemyContainerClass;
 

@@ -35,7 +35,7 @@ void ALowGravityZone::ColorAction(const FLinearColor InColor)
 {
     if (!ColorConfigurator || !ZoneBox)
         return;
-
+    AColorReactiveObject::ColorAction(InColor);
     // �F����v���Ȃ� �� �S���߂�
     if (!ColorConfigurator->IsColorMatch(InColor))
     {
@@ -78,7 +78,7 @@ void ALowGravityZone::ColorAction(const FLinearColor InColor)
         {
             if (UPhysicsCalculator* PhysicsComp = HitActor->FindComponentByClass<UPhysicsCalculator>())
             {
-                PhysicsComp->SetGravityScale(true, GravityScale); // ����
+                PhysicsComp->SetGravityScale(true, GravityScale,JumpBuff); // ����
                 OverlappingActors.Add(HitActor);
             }
         }
