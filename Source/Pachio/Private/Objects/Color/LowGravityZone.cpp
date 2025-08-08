@@ -36,7 +36,7 @@ void ALowGravityZone::ColorAction(const FLinearColor InColor)
     if (!ColorConfigurator || !ZoneBox)
         return;
 
-    // F‚ªˆê’v‚µ‚È‚¢ ¨ ‘Sˆõ–ß‚·
+    // ï¿½Fï¿½ï¿½ï¿½ï¿½vï¿½ï¿½ï¿½È‚ï¿½ ï¿½ï¿½ ï¿½Sï¿½ï¿½ï¿½ß‚ï¿½
     if (!ColorConfigurator->IsColorMatch(InColor))
     {
         for (AActor* Actor : OverlappingActors)
@@ -49,10 +49,12 @@ void ALowGravityZone::ColorAction(const FLinearColor InColor)
         OverlappingActors.Empty();
         if(UniverseEffect)
         UniverseEffect->Deactivate();
+        b = false;
         return;
     }
     if (UniverseEffect)
         UniverseEffect->Activate();
+    b = true;
     FVector Center = ZoneBox->GetComponentLocation();
     FVector HalfSize = ZoneBox->GetScaledBoxExtent();
 
@@ -61,7 +63,7 @@ void ALowGravityZone::ColorAction(const FLinearColor InColor)
     bool bHit = GetWorld()->SweepMultiByChannel(
         HitResults,
         Center,
-        Center, // ŠJŽnEI—¹“¯‚¶‚ÅÃ“I”»’è
+        Center, // ï¿½Jï¿½nï¿½Eï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅÃ“Iï¿½ï¿½ï¿½ï¿½
         FQuat::Identity,
         ECC_PhysicsBody,
         FCollisionShape::MakeBox(HalfSize)
@@ -76,11 +78,13 @@ void ALowGravityZone::ColorAction(const FLinearColor InColor)
         {
             if (UPhysicsCalculator* PhysicsComp = HitActor->FindComponentByClass<UPhysicsCalculator>())
             {
-                PhysicsComp->SetGravityScale(true, 0.5f); // ”¼Œ¸
+                PhysicsComp->SetGravityScale(true, GravityScale); // ï¿½ï¿½ï¿½ï¿½
                 OverlappingActors.Add(HitActor);
             }
         }
     }
+
+
 }
 
 
@@ -92,12 +96,15 @@ void ALowGravityZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
+
+    if (!b)
+        return;
     if (OtherActor && OtherActor != this)
     {
         if (UPhysicsCalculator* PhysicsComp = OtherActor->FindComponentByClass<UPhysicsCalculator>())
         {
-            // Å‰‚Éd—ÍŒyŒ¸
-            PhysicsComp->SetGravityScale(true, 0.5f);
+            // ï¿½Åï¿½ï¿½Édï¿½ÍŒyï¿½ï¿½
+            PhysicsComp->SetGravityScale(true, GravityScale, JumpBuff);
             OverlappingActors.Add(OtherActor);
         }
     }
@@ -106,11 +113,13 @@ void ALowGravityZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
 void ALowGravityZone::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+    if (!b)
+        return;
     if (OtherActor && OtherActor != this)
     {
         if (UPhysicsCalculator* PhysicsComp = OtherActor->FindComponentByClass<UPhysicsCalculator>())
         {
-            // d—Í‚ðŒ³‚É–ß‚·
+            // ï¿½dï¿½Í‚ï¿½ï¿½ï¿½É–ß‚ï¿½
             PhysicsComp->SetGravityScale(true);
             OverlappingActors.Remove(OtherActor);
         }

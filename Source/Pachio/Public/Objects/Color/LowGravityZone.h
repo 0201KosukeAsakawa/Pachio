@@ -19,7 +19,7 @@ public:
 	// Sets default values for this actor's properties
 	ALowGravityZone();
 
-	// ‰Šú‰»ˆ—ieƒNƒ‰ƒX‚à‰Šú‰»j
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½eï¿½Nï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j
 	virtual void Init() override;
 
 private:
@@ -33,19 +33,26 @@ private:
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	// F”½‰ˆ—FFˆê’v‚Åis•ûŒüA•âFˆê’v‚Å‹t•ûŒü‚Ö•ÏX
+	// ï¿½Fï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Fï¿½Fï¿½ï¿½vï¿½Åiï¿½sï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½Fï¿½ï¿½vï¿½Å‹tï¿½ï¿½ï¿½ï¿½ï¿½Ö•ÏX
 	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
 private:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* ZoneBox;
 
 	UPROPERTY()
-	TSet<AActor*> OverlappingActors;  // Œ»İ‰e‹¿‚ğó‚¯‚Ä‚éƒAƒNƒ^[
+	TSet<AActor*> OverlappingActors;  // ï¿½ï¿½ï¿½İ‰eï¿½ï¿½ï¿½ï¿½ó‚¯‚Ä‚ï¿½Aï¿½Nï¿½^ï¿½[
 
 	UPROPERTY(EditAnywhere, Category = "Universe Effects")
 	UNiagaraSystem* UniverseSystem;
 
-	// ÀÛ‚ÉÄ¶‚·‚éƒRƒ“ƒ|[ƒlƒ“ƒg
+	UPROPERTY(EditAnywhere)
+	float GravityScale = 0.5f;
+	UPROPERTY(EditAnywhere)
+	float JumpBuff = 1;
+
+	// ï¿½ï¿½ï¿½Û‚ÉÄï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½g
 	UPROPERTY()
 	UNiagaraComponent* UniverseEffect;
+
+	bool b = false;
 };

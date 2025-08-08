@@ -33,7 +33,7 @@ public:
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
 	bool OnGround() const;
 
-	void SetGravityScale(const bool applyGravity = true, float scale = 9.8f);
+	void SetGravityScale(const bool applyGravity = true, float scale = 9.8f , float Modifier = 1.0F);
 
 	FVector GetBlockedAdjustedVector(const FVector& MoveVector);
 
@@ -63,6 +63,8 @@ private:
 
 	// 物理シミュレーションのタイマー（力の適用や時間ベースのロジックに使用）
 	float Timer;
+
+	float ForceModifier = 1;
 
 	// 重力を加えるかどうかのフラグ
 	UPROPERTY(EditAnywhere)

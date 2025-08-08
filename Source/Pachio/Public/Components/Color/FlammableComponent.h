@@ -40,7 +40,7 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Flame Effects")
     UNiagaraSystem* FlameSystem;
 
-    // ÀÛ‚ÉÄ¶‚·‚éƒRƒ“ƒ|[ƒlƒ“ƒg
+    // ï¿½ï¿½ï¿½Û‚ÉÄï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½g
     UPROPERTY()
     UNiagaraComponent* FlameEffect;
 

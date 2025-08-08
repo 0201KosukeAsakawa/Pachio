@@ -141,6 +141,8 @@ void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 void APlayerCharacter::ResetBuff()
 {
 	 JumpBuff = 1;
+	 GetCharacterMovement()->GroundFriction = 8.0f;
+	 GetCharacterMovement()->BrakingDecelerationWalking = 2048.f;
 	 physics->SetGravityScale();
 }
 
@@ -394,7 +396,9 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	case EBuffEffect::Blue:
 	{
-	
+		GetCharacterMovement()->GroundFriction = 0.1f;
+		GetCharacterMovement()->BrakingDecelerationWalking =100; // 通常:2048 → 小さいほど止まりにくい
+
 		break;
 	}
 

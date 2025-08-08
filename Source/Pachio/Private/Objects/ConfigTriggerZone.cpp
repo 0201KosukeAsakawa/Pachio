@@ -11,11 +11,11 @@ AConfigTriggerZone::AConfigTriggerZone()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	// Box Collision ƒZƒbƒgƒAƒbƒv
+	// Box Collision ï¿½Zï¿½bï¿½gï¿½Aï¿½bï¿½v
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	RootComponent = CollisionBox;
 
-	// ƒqƒbƒgƒCƒxƒ“ƒg‚ðƒoƒCƒ“ƒh
+	// ï¿½qï¿½bï¿½gï¿½Cï¿½xï¿½ï¿½ï¿½gï¿½ï¿½oï¿½Cï¿½ï¿½ï¿½h
 	CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AConfigTriggerZone::OnOverlapBegin);
 }
 
