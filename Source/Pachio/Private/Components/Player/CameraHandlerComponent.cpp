@@ -40,7 +40,7 @@ void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
     switch (CameraViewType)
     {
     case ECameraViewType::SideView:
-        // YZ平面
+        // グリッド計算（YZ平面）
         NewGrid = FIntPoint(
             FMath::FloorToInt(PlayerLocation.Y / GridSize.X),
             FMath::FloorToInt(PlayerLocation.Z / GridSize.Y)
@@ -49,17 +49,27 @@ void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
         if (NewGrid != CurrentGrid)
         {
             CurrentGrid = NewGrid;
+        }
 
-            TargetCameraLocation = FVector(
+        // グリッド中央 + プレイヤー位置の偏差 * 追尾割合
+        {
+            FVector GridCenter(
                 -Zbaffa,
                 CurrentGrid.X * GridSize.X + GridSize.X / 2,
                 CurrentGrid.Y * GridSize.Y + GridSize.Y / 2
             );
+
+            FVector PlayerOffset(0.f,
+                PlayerLocation.Y - GridCenter.Y,
+                PlayerLocation.Z - GridCenter.Z
+            );
+
+            // 0.2f くらいにすると「ゆるく追尾」
+            TargetCameraLocation = GridCenter + PlayerOffset * 0.2f;
         }
         break;
 
     case ECameraViewType::TopView:
-        // XY平面
         NewGrid = FIntPoint(
             FMath::FloorToInt(PlayerLocation.X / GridSize.X),
             FMath::FloorToInt(PlayerLocation.Y / GridSize.Y)
@@ -68,19 +78,29 @@ void UCameraHandlerComponent::UpdateCameraPosition(float DeltaTime)
         if (NewGrid != CurrentGrid)
         {
             CurrentGrid = NewGrid;
+        }
 
-            TargetCameraLocation = FVector(
+        {
+            FVector GridCenter(
                 CurrentGrid.X * GridSize.X + GridSize.X / 2,
                 CurrentGrid.Y * GridSize.Y + GridSize.Y / 2,
                 Zbaffa
             );
+
+            FVector PlayerOffset(
+                PlayerLocation.X - GridCenter.X,
+                PlayerLocation.Y - GridCenter.Y,
+                0.f
+            );
+
+            TargetCameraLocation = GridCenter + PlayerOffset * 0.2f;
         }
         break;
-
     default:
         break;
     }
 
+    // 補間移動
     FVector CurrentLocation = Camera->GetComponentLocation();
     FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetCameraLocation, DeltaTime, InterpSpeed);
     Camera->SetWorldLocation(NewLocation);
