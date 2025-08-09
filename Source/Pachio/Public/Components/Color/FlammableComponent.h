@@ -18,12 +18,13 @@ class PACHIO_API UFlammableComponent : public UActorComponent
 public:
     UFlammableComponent();
     void BeginPlay();
-    
-    UFUNCTION(BlueprintCallable)
-    void Ignite();
+        UFUNCTION()
+    void ColorAction(EColorTargetType Mode, FLinearColor NewColor);
 
-    UFUNCTION(BlueprintCallable)
+private:
+    void Ignite();
     void Extinguish();
+
 
 private:
     UFUNCTION()
@@ -35,6 +36,9 @@ private:
 
     UPROPERTY(EditAnywhere)
     bool bKillsOnTouch = true;
+
+    UPROPERTY(EditAnywhere)
+    bool balwaysBurning = false;
 
 protected:
     UPROPERTY(EditAnywhere, Category = "Flame Effects")

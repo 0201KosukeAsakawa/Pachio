@@ -92,6 +92,7 @@ void UColorControllerComponent::HandleObjectColorMode(int Direction, EColorTarge
     if (TargetActor)
         LevelManager->GetUIManager()->ShowMarker(TEXT("ChangeColorTarget"), TargetActor);
 
+    if(AnimationDelegate.IsBound())
     AnimationDelegate.Execute(Direction);
 }
 
@@ -105,7 +106,7 @@ void UColorControllerComponent::HandleSimpleMode(int Direction, EColorTargetType
 
     if (ColorManager) ColorManager->ResetColorTarget();
     if (LevelManager) LevelManager->GetUIManager()->HideMarker(TEXT("ChangeColorTarget"));
-
+    if (AnimationDelegate.IsBound())
     AnimationDelegate.Execute(Direction);
 }
 

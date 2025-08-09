@@ -35,7 +35,12 @@ void ALevelManager::BeginPlay()
 void ALevelManager::InitializeComponents()
 {
 	if (bInitialize)
-		return;
+		return;	
+	if (ColorManagerClass)
+	{
+		ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
+		ColorManager->Init();
+	}
 	if (ScoreManagerClass)
 		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
 	if (ScoreManager)
@@ -49,11 +54,7 @@ void ALevelManager::InitializeComponents()
 	}
 	if (UIManagerClass)
 		UIManager = NewObject<UUIManager>(this, UIManagerClass);
-	if (ColorManagerClass)
-	{
-		ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
-		ColorManager->Init();
-	}
+
 
 	if (UIManager)
 	{
