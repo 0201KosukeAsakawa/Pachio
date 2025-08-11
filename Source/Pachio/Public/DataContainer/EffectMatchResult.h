@@ -12,7 +12,10 @@ enum class EBuffEffect : uint8
 {
     Red   UMETA(DisplayName = "RED"),
     Green  UMETA(DisplayName = "GREEEEN"),
-    Blue      UMETA(DisplayName = "BLUE")
+    Blue      UMETA(DisplayName = "BLUE"),
+    Yellow UMETA(DisplayName = "YELLOW"),
+    Aqua  UMETA(DisplayName = "AQUA"),
+    Purple UMETA(DisplayName = "PURPLE"),
 };
 
 // 色モードの対象を示す列挙型
