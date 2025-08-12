@@ -129,7 +129,7 @@ FLinearColor AdjustColor(FLinearColor InColor)
     return HSV.HSVToLinearRGB();
 }
 
-void UColorLens::ColorAction(FLinearColor InColor)
+void UColorLens::ColorAction(FLinearColor InColor, FEffectMatchResult)
 {
     float H, S, V;
     ConvertRGBToHSV(InColor, H, S, V);

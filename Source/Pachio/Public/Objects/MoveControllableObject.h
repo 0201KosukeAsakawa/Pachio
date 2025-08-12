@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Objects/Color/ColorReactiveObject.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "MoveControllableObject.generated.h"
 
 
@@ -37,7 +38,7 @@ private:// オーバーラップイベント
 	UFUNCTION()
 	void OnBeatDetected();
 
-	virtual void ColorAction(FLinearColor)override;
+	virtual void ColorAction(FLinearColor, FEffectMatchResult)override;
 private:
 
 	UPROPERTY()

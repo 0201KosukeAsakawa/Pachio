@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Objects/Color/ColorReactiveObject.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveBeltConveyor.generated.h"
 
 class UBoxComponent;
@@ -29,7 +30,7 @@ public:
 
 private:
 	// 色反応処理：色一致で進行方向、補色一致で逆方向へ変更
-	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
+	virtual void ColorAction(const FLinearColor InColor, FEffectMatchResult) override;
 
 	// オーバーラップ開始処理：対象をベルト上として登録
 	UFUNCTION()

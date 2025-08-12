@@ -63,17 +63,17 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 }
 
 // 指定された色に反応する処理
-void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor)
+void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
 {
     ApplyColorToMaterial(InColor);
 
     if (!ColorConfigurator)
         return;
 
-    AColorReactiveObject::ColorAction(InColor);
+    AColorReactiveObject::ColorAction(InColor,result);
 
     // 色の一致状態を設定
-    ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMuch(InColor));
+    ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMatch(result,InColor));
     if (ColorConfigurator->IsColorMatch())
     {
         if (IsRevers)

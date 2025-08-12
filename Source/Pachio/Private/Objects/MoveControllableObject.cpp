@@ -153,9 +153,9 @@ void AMoveControllableObject::OnBeatDetected()
 	PlayCount = 0;
 }
 
-void AMoveControllableObject::ColorAction(FLinearColor color)
+void AMoveControllableObject::ColorAction(FLinearColor color, FEffectMatchResult result)
 {
-	AColorReactiveObject::ColorAction(color);
+	AColorReactiveObject::ColorAction(color,result);
 	
 	ColorConfigurator->IsColorMatch(color, FLinearColor(1, 0.7, 0.8, 1)) ? bCanMove = false : bCanMove = true;
 }

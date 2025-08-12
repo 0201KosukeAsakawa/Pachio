@@ -56,7 +56,7 @@ struct FEffectMatchResult
     GENERATED_BODY()
 
     // 最も近いバフ効果
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(EditAnywhere,BlueprintReadOnly)
     EBuffEffect ClosestEffect = EBuffEffect::Red;
 
     // 色相距離

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Objects/Color/ColorReactiveObject.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "MovingObject.generated.h"
 
 class UBoxComponent;
@@ -20,7 +21,7 @@ public:
 	virtual void Init()override;
 	virtual void Tick(float)override;
 private:
-	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
+	virtual void ColorAction(const FLinearColor InColor , FEffectMatchResult) override;
 
 	UFUNCTION()
 	void OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -37,10 +38,10 @@ private:
 	UPROPERTY(EditAnywhere)
 	TArray<AActor*> Child;
 
-	// ‘«Œ³”»’è—p‚ÌƒgƒŠƒK[
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pï¿½Ìƒgï¿½ï¿½ï¿½Kï¿½[
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* FootTrigger;
 
-	// æ‚Á‚Ä‚¢‚éƒAƒNƒ^[ŠÇ——pƒŠƒXƒg
+	// ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Ç—ï¿½ï¿½pï¿½ï¿½ï¿½Xï¿½g
 	TArray<AActor*> AttachedActors;
 };

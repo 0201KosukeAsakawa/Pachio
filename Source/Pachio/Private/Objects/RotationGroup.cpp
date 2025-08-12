@@ -72,7 +72,7 @@ void RGBtoHSV(const FLinearColor& InColor, float& OutH, float& OutS, float& OutV
         OutH += 360.f;
 }
 
-void ARotationGroup::ColorAction(const FLinearColor InColor)
+void ARotationGroup::ColorAction(const FLinearColor InColor, FEffectMatchResult)
 {
     if (ColorConfigurator == nullptr)
         return;

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Objects/Color/ColorReactiveObject.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "RotationGroup.generated.h"
 
 class AActor;
@@ -23,7 +24,7 @@ protected:
 private:
 	virtual void Init()override;
 	virtual void Tick(float)override;
-	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
+	virtual void ColorAction(const FLinearColor InColor,FEffectMatchResult) override;
 
 	void UpdateBsRelativeToA(const FRotator& NewRotation);
 

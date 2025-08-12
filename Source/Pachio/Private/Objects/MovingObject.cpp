@@ -53,7 +53,7 @@ void AMovingObject::Tick(float DeltaTime)
 
         SetActorLocation(NewLocation);
         TArray < AActor*>Target = AttachedActors;
-        // æ‚Á‚Ä‚¢‚éƒAƒNƒ^[‚àˆê‚É“®‚©‚·
+        // ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ï¿½êï¿½É“ï¿½ï¿½ï¿½ï¿½ï¿½
         for (AActor* ActorOnTop : Target)
         {
             if (ActorOnTop)
@@ -62,7 +62,7 @@ void AMovingObject::Tick(float DeltaTime)
             }
         }
 
-        // ŽqƒIƒuƒWƒFƒNƒg‚à“®‚©‚·ê‡iŠù‘¶ˆ—j
+        // ï¿½qï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j
         for (AActor* ChildActor : Child)
         {
             if (ChildActor)
@@ -74,9 +74,9 @@ void AMovingObject::Tick(float DeltaTime)
 }
 
 
-void AMovingObject::ColorAction(FLinearColor InColor)
+void AMovingObject::ColorAction(FLinearColor InColor, FEffectMatchResult result)
 {
-    AColorReactiveObject::ColorAction(InColor);
+    AColorReactiveObject::ColorAction(InColor, result);
 
     if (ColorConfigurator->IsColorMatch())
     {

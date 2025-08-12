@@ -27,7 +27,7 @@ void AColorPainter::Tick(float DeltaTime)
     FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
     FVector NewLocation = CurrentLocation + Direction * MoveSpeed * DeltaTime;
 
-    // –Ú“I’n‚É\•ª‹ß‚Ã‚¢‚½‚çŸ‚Ìƒ|ƒCƒ“ƒg‚Ö
+    // ï¿½Ú“Iï¿½nï¿½É\ï¿½ï¿½ï¿½ß‚Ã‚ï¿½ï¿½ï¿½ï¿½çŸï¿½Ìƒ|ï¿½Cï¿½ï¿½ï¿½gï¿½ï¿½
     if (FVector::Dist(NewLocation, TargetLocation) <= AcceptanceRadius)
     {
         CurrentPatrolIndex = (CurrentPatrolIndex + 1) % PatrolPoints.Num();
@@ -46,6 +46,6 @@ void AColorPainter::Overlap(AActor* OtherActor)
     IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(OtherActor);
     if (Interface)
     {
-        Interface->SetColor(PainterColor);
+        Interface->SetColor(PainterColor, Match);
     }
 }

@@ -23,7 +23,7 @@ void AColorMuchTrigger::Init()
 	
 }
 
-void AColorMuchTrigger::ColorAction(FLinearColor InColor)
+void AColorMuchTrigger::ColorAction(FLinearColor InColor, FEffectMatchResult)
 {
 	
 }

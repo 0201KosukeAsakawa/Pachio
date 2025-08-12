@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Blueprint/UserWidget.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorLens.generated.h"
 
 /**
@@ -27,7 +28,7 @@ public:
     void PlayBeatAnimation();
 
 private:
-    void ColorAction(FLinearColor InColor) override;
+    void ColorAction(FLinearColor InColor , FEffectMatchResult) override;
 
     UPROPERTY(meta = (BindWidget))
     UImage* FilterColorImage;

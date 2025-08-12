@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Objects/Color/ColorReactiveObject.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "TeleportPortal.generated.h"
 
 UCLASS()
@@ -18,7 +19,7 @@ protected:
     virtual void BeginPlay() override;
     // 初期化処理（親クラスも初期化）
     virtual void Init() override;
-    virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
+    virtual void ColorAction(const FLinearColor InColor,FEffectMatchResult) override;
     UFUNCTION()
     void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,

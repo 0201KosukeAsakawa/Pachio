@@ -6,6 +6,7 @@
 #include "Objects/Color/ColorReactiveObject.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ColorReactionConfigInterface.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorMuchTrigger.generated.h"
 
 class UColorReactiveComponent;
@@ -24,6 +25,6 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Init()override;
 private:
-	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
+	virtual void ColorAction(const FLinearColor InColor, FEffectMatchResult) override;
 	virtual void SetupMaterial()override;
 };

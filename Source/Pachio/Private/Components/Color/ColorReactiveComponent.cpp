@@ -30,12 +30,13 @@ void UColorReactiveComponent::Init(UMeshComponent* mesh)
     }
 }
 
-void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor)
+void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor,EBuffEffect newEffect)
 {
 	CurrentColor = FilterColor;
+	Effect = newEffect;
 }
 
-bool UColorReactiveComponent::CheckColorMuch(const FLinearColor& FilterColor, const bool buseComplementaryColor)
+bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FLinearColor& FilterColor, const bool buseComplementaryColor)
 {
 	FLinearColor CheckColor = FilterColor;  // コピーして変更可能に
 
@@ -45,7 +46,9 @@ bool UColorReactiveComponent::CheckColorMuch(const FLinearColor& FilterColor, co
 		UE_LOG(LogTemp, Log, TEXT("CheckColor: %s"), *CheckColor.ToString());
 	}
 	
-	bool bMatch = IsColorMatch(CheckColor);
+	//bool bMatch = IsColorMatch(CheckColor);
+
+	bool bMatch = (result.ClosestEffect == Effect);
 
 	if (bMatch)
 	{

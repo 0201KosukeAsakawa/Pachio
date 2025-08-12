@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveComponent.generated.h"
 struct FHSLColor
 {
@@ -22,9 +23,9 @@ public:
 		
 public :
 	virtual void Init(UMeshComponent* mesh);
-	void SetMyColor(const FLinearColor& FilterColor);	
+	void SetMyColor(const FLinearColor& FilterColor, EBuffEffect);
 	void ApplyColorToMaterial(FLinearColor InColor);
-	bool CheckColorMuch(const FLinearColor& FilterColor,const bool buseComplementaryColor = false);
+	bool CheckColorMatch(FEffectMatchResult,const FLinearColor& FilterColor,const bool buseComplementaryColor = false);
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
 	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
@@ -39,6 +40,8 @@ private:
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bSetStartColor = true;
+
+	EBuffEffect Effect;
 
 	UPROPERTY(EditAnywhere)
 	FLinearColor CurrentColor;
