@@ -96,6 +96,11 @@ FLinearColor UColorManager::GetWorldColor() const
     return ColorTargetRegistry->GetPostProcessColor();
 }
 
+FLinearColor UColorManager::GetEffectColor(EBuffEffect effect) const
+{
+    return EffectColorMatcher->GetEffectColor(effect);
+}
+
 // プレイヤーの色コントローラーとイベント接続
 void UColorManager::BindController()
 {

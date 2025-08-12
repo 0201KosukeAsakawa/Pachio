@@ -72,7 +72,7 @@ protected:
 	UColorReactiveComponent* ColorReactiveComponent;
 
 	// --- Color Data ---
-	UPROPERTY(EditAnywhere)
+	//UPROPERTY(EditAnywhere)
 	FLinearColor StartColor;
 
 	UPROPERTY(VisibleAnywhere, Category = "Color")

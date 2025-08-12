@@ -58,3 +58,14 @@ float UEffectColorMatcher::GetColorDistanceRGB(const FLinearColor& A, const FLin
         FMath::Square(A.B - B.B)
     );
 }
+
+FLinearColor UEffectColorMatcher::GetEffectColor(EBuffEffect effect) const
+{
+    if (const FLinearColor* FoundColor = EffectColorMap.Find(effect))
+    {
+        return *FoundColor; // マップに存在すればその色を返す
+    }
+
+    // 見つからなかった場合はデフォルト値（白など）を返す
+    return FLinearColor::White;
+}

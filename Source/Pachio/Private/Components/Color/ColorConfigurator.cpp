@@ -52,7 +52,9 @@ void UColorConfigurator::RegisterToColorManager()
 void UColorConfigurator::SetupMaterial()
 {
 	if (!bSetColor) return;
-
+	StartColor = ALevelManager::GetInstance(GetWorld())
+		->GetColorManager()
+		->GetEffectColor(Effect);
 	if (UStaticMeshComponent* Mesh = GetStaticMesh())
 	{
 		Mesh->SetRenderCustomDepth(true);

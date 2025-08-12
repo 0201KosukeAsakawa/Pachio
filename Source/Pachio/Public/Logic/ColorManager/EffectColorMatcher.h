@@ -20,7 +20,7 @@ public:
 	UEffectColorMatcher();
 	FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
 	float GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B);
-	
+	FLinearColor GetEffectColor(EBuffEffect)const;
 private:
 	TMap<EBuffEffect, FLinearColor> EffectColorMap;
 
