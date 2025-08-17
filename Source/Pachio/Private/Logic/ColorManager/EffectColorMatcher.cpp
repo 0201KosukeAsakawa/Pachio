@@ -10,8 +10,7 @@ UEffectColorMatcher::UEffectColorMatcher()
         { EBuffEffect::Blue,   FLinearColor(0.65f, 0.78f, 1.00f, 1.0f) }, // パステルスカイブルー
         { EBuffEffect::Red,    FLinearColor(1.00f, 0.75f, 0.65f, 1.0f) }, // パステルサーモン
         { EBuffEffect::Yellow, FLinearColor(1.00f, 1.00f, 0.65f, 1.0f) }, // パステルイエロー
-        { EBuffEffect::Aqua,   FLinearColor(0.65f, 1.00f, 1.00f, 1.0f) }, // パステルアクア
-        { EBuffEffect::Purple, FLinearColor(1.00f, 0.65f, 1.00f, 1.0f) }  // パステルラベンダー
+         { EBuffEffect::Black,  FLinearColor(0.f, 0.f, 0.f, 1.0f) }, // パステルミント
     };
 }
 

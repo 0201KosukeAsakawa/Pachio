@@ -10,12 +10,11 @@ class IColorReactiveInterface;
 UENUM(BlueprintType)
 enum class EBuffEffect : uint8
 {
+    Black UMETA(DisplayName = "BLACK"),
     Red   UMETA(DisplayName = "RED"),
     Green  UMETA(DisplayName = "GREEEEN"),
     Blue      UMETA(DisplayName = "BLUE"),
     Yellow UMETA(DisplayName = "YELLOW"),
-    Aqua  UMETA(DisplayName = "AQUA"),
-    Purple UMETA(DisplayName = "PURPLE"),
 };
 
 // 色モードの対象を示す列挙型
