@@ -14,9 +14,10 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
+#include "Interface/Soundable.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
-#include "Interface/Soundable.h"
+
 
 #include "Objects/Color/LadderActor.h"
 // 毎フレーム更新
@@ -200,7 +201,7 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
 {
     if (mOwner == nullptr)
         return false;
-    APlayerCharacter* owner = Cast<APlayerCharacter>(mOwner);
+    ACharacter* owner = Cast<ACharacter>(mOwner);
     if (owner == nullptr)
         return false;
 
@@ -224,6 +225,9 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
 
     if (!bAnyHit)
         return false;
+    IStateControllable* player = Cast<IStateControllable>(GetOwner());
+    if (player == nullptr)
+        return false;
 
     for (const FHitResult& Hit : Hits)
     {
@@ -235,7 +239,7 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
             continue;
 
         // ステート切り替え
-        if (UPlayerStateComponent* NewState = owner->ChangeState("Climb"))
+        if (UPlayerStateComponent* NewState = player->ChangeState("Climb"))
         {
             if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
             {

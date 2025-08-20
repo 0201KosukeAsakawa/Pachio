@@ -18,11 +18,8 @@ void UStateManager::Init(ACharacter* owner, UWorld* world)
 	mOwner = owner;
 	pWorld = world;
 
-	// 各ステートのインスタンスを生成
-	UPlayerDefaultState* Default = NewObject<UPlayerDefaultState>(mOwner); // 通常状態
-
 	// 初期状態を "Default" に設定
-	ChangeState("Default");
+	ChangeState("Preparation");
 }
 
 // 毎フレームの更新処理（Tickなどから呼び出される想定）
