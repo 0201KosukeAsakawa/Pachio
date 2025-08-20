@@ -95,7 +95,7 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
 
     // --- 前方レイ ---
     FHitResult ForwardHit;
-    FVector ForwardEnd = Start + MoveVec * 400.0f;
+    FVector ForwardEnd = Start + MoveVec * 200.0f;
     bool bHitWall = World->LineTraceSingleByChannel(ForwardHit, Start, ForwardEnd, ECC_Visibility, Params);
 
     // 前方レイを可視化（赤）
