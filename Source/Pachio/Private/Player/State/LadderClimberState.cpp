@@ -140,7 +140,7 @@ bool ULadderClimberState::OnSkill(const FInputActionValue& Input)
 	if (owner == nullptr)
 		return false;
 
-	return owner->ChangeState("Default");
+	return owner->ChangeState("Default") != nullptr;
 }
 
 void ULadderClimberState::Movement(const FInputActionValue& Value)

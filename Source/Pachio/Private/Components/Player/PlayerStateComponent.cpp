@@ -37,3 +37,7 @@ bool UPlayerStateComponent::OnSkill(const FInputActionValue&)
 void UPlayerStateComponent::Movement(const FInputActionValue& Value)
 {
 }
+
+void UPlayerStateComponent::Jump(UPhysicsCalculator* physics, float jumpForce)
+{
+}

@@ -19,6 +19,10 @@ public:
 	bool OnExit(ACharacter*)override;
 	bool OnSkill(const FInputActionValue&)override;
 	void Movement(const FInputActionValue& Value)override;
+	void Jump(UPhysicsCalculator* physics, float jumpForce)override;
+
+private:
+	bool TryEnterLadderOnJump() const;
 
 private:
 	// プレイヤー移動処理を司るコンポーネント

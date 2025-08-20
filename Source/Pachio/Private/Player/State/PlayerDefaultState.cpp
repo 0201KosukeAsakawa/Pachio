@@ -1,19 +1,26 @@
 // プロジェクト設定の Description ページに著作権情報を記入
 
 #include "Player/State/PlayerDefaultState.h"
+#include "Player/State/LadderClimberState.h"
 #include "Player/PlayerCharacter.h"
 #include "Player/InGameController.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/MoveComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/PhysicsCalculator.h"
 #include "FunctionLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
+#include "Manager/LevelManager.h"
+#include "Interface/Soundable.h"
 
+#include "Objects/Color/LadderActor.h"
+// 毎フレーム更新
+#include "DrawDebugHelpers.h"  // これを忘れずに
 UPlayerDefaultState::UPlayerDefaultState()
     : Direction(1), InitialRotationSet(false)
 {
@@ -56,8 +63,7 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
     return true;
 }
 
-// 毎フレーム更新
-#include "DrawDebugHelpers.h"  // これを忘れずに
+
 
 bool UPlayerDefaultState::OnUpdate(float DeltaTime)
 {
@@ -66,7 +72,7 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
     if (!World) return false;
 
     FVector Start = mOwner->GetActorLocation();
-    FVector DownEnd = Start - (FVector(0, 0, 400.0f));
+    FVector DownEnd = Start - (FVector(0, 0, 700.0f));
 
     // --- 床レイ ---
     FHitResult FloorHit;
@@ -169,3 +175,75 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 
 // 外部入力（オート移動なので空）
 void UPlayerDefaultState::Movement(const FInputActionValue& Value) {}
+
+void UPlayerDefaultState::Jump(UPhysicsCalculator* physics,float jumpForce)
+{
+    if (GetOwner() == nullptr || physics == nullptr)
+        return;
+
+    if (TryEnterLadderOnJump())
+    {
+        physics->SetGravityScale(false);
+        return;
+    }
+
+    if (!physics || !physics->OnGround())
+        return;
+
+    // ジャンプ力を掛けて力を加える
+    physics->AddForce(GetOwner()->GetActorUpVector(), jumpForce);
+    ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+    sound->PlaySound("SE", "Jump");
+}
+
+bool UPlayerDefaultState::TryEnterLadderOnJump() const
+{
+    if (mOwner == nullptr)
+        return false;
+    APlayerCharacter* owner = Cast<APlayerCharacter>(mOwner);
+    if (owner == nullptr)
+        return false;
+
+    FVector Start = mOwner->GetActorLocation();
+    FVector End = Start + FVector(0, 0, 100.f);
+    FVector BoxHalfExtent = FVector(30.f, 30.f, 100.f);
+
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(mOwner);
+
+    TArray<FHitResult> Hits;
+    bool bAnyHit = GetWorld()->SweepMultiByChannel(
+        Hits,
+        Start,
+        End,
+        FQuat::Identity,
+        ECC_Visibility, // カスタムチャンネルでも可
+        FCollisionShape::MakeBox(BoxHalfExtent),
+        Params
+    );
+
+    if (!bAnyHit)
+        return false;
+
+    for (const FHitResult& Hit : Hits)
+    {
+        if (!Hit.GetActor() || !Hit.GetActor()->ActorHasTag("Ladder"))
+            continue;
+
+        ALadderActor* Ladder = Cast<ALadderActor>(Hit.GetActor());
+        if (!Ladder)
+            continue;
+
+        // ステート切り替え
+        if (UPlayerStateComponent* NewState = owner->ChangeState("Climb"))
+        {
+            if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
+            {
+                ClimbState->SetTargetLadder(Ladder);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
