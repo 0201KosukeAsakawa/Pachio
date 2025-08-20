@@ -7,6 +7,7 @@
 
 // 前方宣言（InputActionValue を参照するため）
 struct FInputActionValue;
+class UPhysicsCalculator;
 
 /**
  * プレイヤーの状態（ステート）を表す基底クラス。
@@ -34,6 +35,8 @@ public:
 	virtual bool OnSkill(const FInputActionValue& Input);
 
 	virtual void Movement(const FInputActionValue& Value);
+
+	virtual void Jump(UPhysicsCalculator* physics, float jumpForce);
 	
 	//移動速度
 	inline virtual float GetMoveSpeed()const { return mMoveSpeed; }

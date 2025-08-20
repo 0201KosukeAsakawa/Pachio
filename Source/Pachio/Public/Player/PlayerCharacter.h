@@ -62,6 +62,8 @@ public:
 	// 現在のプレイヤーステート（状態）を取得
 	UPlayerStateComponent* GetPlayerState() const override;
 
+	// 状態変更（ステートタグによる遷移）
+	UPlayerStateComponent* ChangeState(FString Tag) override;
 public:
 	// ======================
 	// ==== 入力アクション ====
@@ -116,9 +118,6 @@ private:
 	// ==== 状態・ステート処理 ====
 	// ===============
 
-	// 状態変更（ステートタグによる遷移）
-	bool ChangeState(FString Tag) override;
-
 	// 現在の色に応じた効果適用
 	void ApplyEffectFromColor(const FLinearColor& Color);
 
@@ -132,9 +131,6 @@ private:
 	void ResetBuff();
 
 	void Circle();
-
-	bool TryEnterLadderOnJump()const;
-
 
 private:
 	UPROPERTY(EditAnywhere)

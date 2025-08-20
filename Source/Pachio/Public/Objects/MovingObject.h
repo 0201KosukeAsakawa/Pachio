@@ -44,4 +44,9 @@ private:
 
 	// ����Ă���A�N�^�[�Ǘ��p���X�g
 	TArray<AActor*> AttachedActors;
+
+	FVector StartLocation;
+	UPROPERTY(EditAnywhere)
+	float MoveDuration = 1.0f; // 移動にかける秒数
+	float ElapsedTime = 0.0f;
 };

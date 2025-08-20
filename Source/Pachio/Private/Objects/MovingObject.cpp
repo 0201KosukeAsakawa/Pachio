@@ -37,24 +37,16 @@ void AMovingObject::Tick(float DeltaTime)
 
     if (bIsMoving)
     {
-        FVector CurrentLocation = GetActorLocation();
-        FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
-        float Speed = 400.f;
+        ElapsedTime += DeltaTime;
+        float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
 
-        FVector NewLocation = CurrentLocation + Direction * Speed * DeltaTime;
-        FVector DeltaMove = NewLocation - CurrentLocation;
-
-        if (FVector::Dist(NewLocation, TargetLocation) < 10.f)
-        {
-            DeltaMove = TargetLocation - CurrentLocation;
-            NewLocation = TargetLocation;
-            bIsMoving = false;
-        }
+        FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
+        FVector DeltaMove = NewLocation - GetActorLocation();
 
         SetActorLocation(NewLocation);
-        TArray < AActor*>Target = AttachedActors;
-        // ����Ă���A�N�^�[��ꏏ�ɓ�����
-        for (AActor* ActorOnTop : Target)
+        TArray<AActor*> Actors = AttachedActors;
+        // 上に乗っているアクターも追従
+        for (AActor* ActorOnTop : Actors)
         {
             if (ActorOnTop)
             {
@@ -62,7 +54,7 @@ void AMovingObject::Tick(float DeltaTime)
             }
         }
 
-        // �q�I�u�W�F�N�g��������ꍇ�i���������j
+        // 子オブジェクトも追従
         for (AActor* ChildActor : Child)
         {
             if (ChildActor)
@@ -70,13 +62,21 @@ void AMovingObject::Tick(float DeltaTime)
                 ChildActor->AddActorWorldOffset(DeltaMove);
             }
         }
+
+        // 移動完了判定
+        if (Alpha >= 1.0f)
+        {
+            bIsMoving = false;
+        }
     }
 }
-
 
 void AMovingObject::ColorAction(FLinearColor InColor, FEffectMatchResult result)
 {
     AColorReactiveObject::ColorAction(InColor, result);
+
+    StartLocation = GetActorLocation();
+    ElapsedTime = 0.0f; // 経過時間リセット
 
     if (ColorConfigurator->IsColorMatch())
     {
@@ -86,6 +86,7 @@ void AMovingObject::ColorAction(FLinearColor InColor, FEffectMatchResult result)
     {
         TargetLocation = OnLocation;
     }
+
     bIsMoving = true;
 }
 
