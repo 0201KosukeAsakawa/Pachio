@@ -29,7 +29,8 @@ public:
     // オーバーラップを検知するコリジョン（例：Box）
     UPROPERTY(VisibleAnywhere)
     class UBoxComponent* CollisionBox;
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Color")
+    EBuffEffect Effect;
     FLinearColor SecondColor;
     // 対応するペアのポータル
     UPROPERTY()

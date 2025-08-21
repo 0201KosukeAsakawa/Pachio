@@ -7,6 +7,8 @@
 #include "Components/Color/ColorConfigurator.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
+#include "Manager/LevelManager.h"
+#include "Manager/ColorManager.h"
 
 ATeleportPortal::ATeleportPortal()
 {
@@ -27,6 +29,9 @@ void ATeleportPortal::Init()
 {
     AColorReactiveObject::Init();
     CurrentTargetPortal = PrimaryDestination;
+    SecondColor = ALevelManager::GetInstance(GetWorld())
+        ->GetColorManager()
+        ->GetEffectColor(Effect);
 }
 
 void ATeleportPortal::ColorAction(const FLinearColor InColor, FEffectMatchResult)
@@ -34,15 +39,16 @@ void ATeleportPortal::ColorAction(const FLinearColor InColor, FEffectMatchResult
     if (!ColorConfigurator)
         return;
 
-    bool b = ColorConfigurator->IsColorMatch(InColor);
+    bool b = ColorConfigurator->IsColorMatch(InColor, SecondColor);
     if (b)
     {
-        CurrentTargetPortal = AlternatePortal;
+        if (AlternatePortal)
+            CurrentTargetPortal = AlternatePortal;
     }
     else
     {
-        bool c = ColorConfigurator->IsColorMatch(InColor, SecondColor);
-        if (c)
+        /*bool c = ColorConfigurator->IsColorMatch(InColor, SecondColor);
+        if (c)*/
             CurrentTargetPortal = PrimaryDestination;
     }
 }
