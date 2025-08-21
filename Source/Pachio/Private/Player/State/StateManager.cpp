@@ -19,7 +19,8 @@ void UStateManager::Init(ACharacter* owner, UWorld* world)
 	pWorld = world;
 
 	// 初期状態を "Default" に設定
-	ChangeState("Preparation");
+	ChangeState("Default");
+	//ChangeState("Preparation");
 }
 
 // 毎フレームの更新処理（Tickなどから呼び出される想定）
