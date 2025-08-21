@@ -15,14 +15,11 @@ FVector GetLadderCenterXZ(const AActor* Ladder)
 {
 	if (!Ladder) return FVector::ZeroVector;
 
-	// バウンディングボックスを取得（ワールド空間）
 	FVector Origin;
 	FVector BoxExtent;
 	Ladder->GetActorBounds(true, Origin, BoxExtent);
 
-	// Origin はワールド空間で中心位置
-	// X,Y はそのまま使い、Zは無視（XZ中心だけほしいので）
-
+	// XYの中心位置を返す。Zは呼び出し元で設定する想定
 	return FVector(Origin.X, Origin.Y, 0.f);
 }
 
@@ -46,17 +43,13 @@ bool ULadderClimberState::OnEnter(ACharacter* Owner, UWorld* World)
 		ULadderMoveLogic* PlayerLogic = NewObject<ULadderMoveLogic>(this);
 		MoveComp->Init(PlayerLogic);
 	}
-
-	// 梯子の中心に位置補正（必要なら LadderActor を別途持っておく）
 	if (Ladder)
 	{
-		// 位置補正処理
-		FVector Center = GetLadderCenterXZ(Ladder);
+		FVector Center = GetLadderCenterXZ(Ladder); // XYの中心座標を返す
 		FVector OwnerLocation = Owner->GetActorLocation();
 
-		// 新しい位置は梯子の中心のX,Yを使い、Zはキャラの現在の高さを維持
+		// X,Yは梯子の中心、Zはキャラの現在位置のまま
 		FVector NewLocation = FVector(Center.X, Center.Y, OwnerLocation.Z);
-
 		Owner->SetActorLocation(NewLocation);
 	}
 
@@ -147,7 +140,7 @@ bool ULadderClimberState::OnSkill(const FInputActionValue& Input)
 	if (owner == nullptr)
 		return false;
 
-	return owner->ChangeState("Default");
+	return owner->ChangeState("Default") != nullptr;
 }
 
 void ULadderClimberState::Movement(const FInputActionValue& Value)

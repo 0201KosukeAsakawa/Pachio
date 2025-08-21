@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Objects/Color/ColorReactiveObject.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "LowGravityZone.generated.h"
 
 class UBoxComponent;
@@ -34,7 +35,7 @@ private:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	// �F���������F�F��v�Ői�s�����A��F��v�ŋt�����֕ύX
-	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
+	virtual void ColorAction(const FLinearColor InColor , FEffectMatchResult) override;
 private:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* ZoneBox;

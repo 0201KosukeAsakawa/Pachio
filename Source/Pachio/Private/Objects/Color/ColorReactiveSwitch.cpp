@@ -23,13 +23,13 @@ void AColorReactiveSwitch::Init()
 	AColorReactiveObject::Init();
 }
 
-void AColorReactiveSwitch::ColorAction(const FLinearColor InColor)
+void AColorReactiveSwitch::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
 {
 	if (!ColorConfigurator)
 		return;
-	AColorReactiveObject::ColorAction(InColor);
-	ColorConfigurator->SetColor(InColor);
-	if (ColorConfigurator->CheckColorMuch(InColor))
+	AColorReactiveObject::ColorAction(InColor, result);
+	ColorConfigurator->SetColor(InColor, result);
+	if (ColorConfigurator->CheckColorMatch(result,InColor))
 	{
 		ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
 		if (levelManager == nullptr)

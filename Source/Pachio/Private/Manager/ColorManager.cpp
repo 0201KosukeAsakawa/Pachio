@@ -35,16 +35,16 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
 {
     if (!ColorTargetRegistry)
         return;
-
-    ColorTargetRegistry->ApplyColor(NewColor, Mode);
+    FEffectMatchResult result = GetClosestEffectByHue(NewColor);
+    ColorTargetRegistry->ApplyColor(NewColor, Mode, result);
 }
 
 void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
 {
     if (!ColorTargetRegistry)
         return;
-
-    ColorTargetRegistry->ColorEvent(EventID, NewColor);
+    FEffectMatchResult result = GetClosestEffectByHue(NewColor);
+    ColorTargetRegistry->ColorEvent(EventID, NewColor, result);
 }
 
 void UColorManager::SetColorTarget(IColorReactiveInterface* target)
@@ -94,6 +94,11 @@ FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& Inpu
 FLinearColor UColorManager::GetWorldColor() const
 {
     return ColorTargetRegistry->GetPostProcessColor();
+}
+
+FLinearColor UColorManager::GetEffectColor(EBuffEffect effect) const
+{
+    return EffectColorMatcher->GetEffectColor(effect);
 }
 
 // プレイヤーの色コントローラーとイベント接続

@@ -31,11 +31,11 @@ void ALowGravityZone::Init()
     }
 }
 
-void ALowGravityZone::ColorAction(const FLinearColor InColor)
+void ALowGravityZone::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
 {
     if (!ColorConfigurator || !ZoneBox)
         return;
-    AColorReactiveObject::ColorAction(InColor);
+    AColorReactiveObject::ColorAction(InColor,result);
     // �F����v���Ȃ� �� �S���߂�
     if (!ColorConfigurator->IsColorMatch(InColor))
     {

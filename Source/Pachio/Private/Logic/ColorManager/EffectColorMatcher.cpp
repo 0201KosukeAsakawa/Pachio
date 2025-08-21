@@ -6,9 +6,11 @@
 UEffectColorMatcher::UEffectColorMatcher()
 {
     EffectColorMap = {
-    { EBuffEffect::Green,  FLinearColor::Green },
-    { EBuffEffect::Blue, FLinearColor::Blue},
-    { EBuffEffect::Red,     FLinearColor::Red }
+        { EBuffEffect::Green,  FLinearColor(0.65f, 1.00f, 0.78f, 1.0f) }, // パステルミント
+        { EBuffEffect::Blue,   FLinearColor(0.65f, 0.78f, 1.00f, 1.0f) }, // パステルスカイブルー
+        { EBuffEffect::Red,    FLinearColor(1.00f, 0.75f, 0.65f, 1.0f) }, // パステルサーモン
+        { EBuffEffect::Yellow, FLinearColor(1.00f, 1.00f, 0.65f, 1.0f) }, // パステルイエロー
+         { EBuffEffect::Black,  FLinearColor(0.f, 0.f, 0.f, 1.0f) }, // パステルミント
     };
 }
 
@@ -54,4 +56,15 @@ float UEffectColorMatcher::GetColorDistanceRGB(const FLinearColor& A, const FLin
         FMath::Square(A.G - B.G) +
         FMath::Square(A.B - B.B)
     );
+}
+
+FLinearColor UEffectColorMatcher::GetEffectColor(EBuffEffect effect) const
+{
+    if (const FLinearColor* FoundColor = EffectColorMap.Find(effect))
+    {
+        return *FoundColor; // マップに存在すればその色を返す
+    }
+
+    // 見つからなかった場合はデフォルト値（白など）を返す
+    return FLinearColor::White;
 }

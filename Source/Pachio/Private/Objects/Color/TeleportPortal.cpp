@@ -29,7 +29,7 @@ void ATeleportPortal::Init()
     CurrentTargetPortal = PrimaryDestination;
 }
 
-void ATeleportPortal::ColorAction(const FLinearColor InColor)
+void ATeleportPortal::ColorAction(const FLinearColor InColor, FEffectMatchResult)
 {
     if (!ColorConfigurator)
         return;

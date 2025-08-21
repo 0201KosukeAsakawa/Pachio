@@ -37,24 +37,16 @@ void AMovingObject::Tick(float DeltaTime)
 
     if (bIsMoving)
     {
-        FVector CurrentLocation = GetActorLocation();
-        FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
-        float Speed = 400.f;
+        ElapsedTime += DeltaTime;
+        float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
 
-        FVector NewLocation = CurrentLocation + Direction * Speed * DeltaTime;
-        FVector DeltaMove = NewLocation - CurrentLocation;
-
-        if (FVector::Dist(NewLocation, TargetLocation) < 10.f)
-        {
-            DeltaMove = TargetLocation - CurrentLocation;
-            NewLocation = TargetLocation;
-            bIsMoving = false;
-        }
+        FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
+        FVector DeltaMove = NewLocation - GetActorLocation();
 
         SetActorLocation(NewLocation);
-        TArray < AActor*>Target = AttachedActors;
-        // èÊÇ¡ÇƒÇ¢ÇÈÉAÉNÉ^Å[Ç‡àÍèèÇ…ìÆÇ©Ç∑
-        for (AActor* ActorOnTop : Target)
+        TArray<AActor*> Actors = AttachedActors;
+        // ‰∏ä„Å´‰πó„Å£„Å¶„ÅÑ„Çã„Ç¢„ÇØ„Çø„Éº„ÇÇËøΩÂæì
+        for (AActor* ActorOnTop : Actors)
         {
             if (ActorOnTop)
             {
@@ -62,7 +54,7 @@ void AMovingObject::Tick(float DeltaTime)
             }
         }
 
-        // éqÉIÉuÉWÉFÉNÉgÇ‡ìÆÇ©Ç∑èÍçáÅiä˘ë∂èàóùÅj
+        // Â≠ê„Ç™„Éñ„Ç∏„Çß„ÇØ„Éà„ÇÇËøΩÂæì
         for (AActor* ChildActor : Child)
         {
             if (ChildActor)
@@ -70,13 +62,21 @@ void AMovingObject::Tick(float DeltaTime)
                 ChildActor->AddActorWorldOffset(DeltaMove);
             }
         }
+
+        // ÁßªÂãïÂÆå‰∫ÜÂà§ÂÆö
+        if (Alpha >= 1.0f)
+        {
+            bIsMoving = false;
+        }
     }
 }
 
-
-void AMovingObject::ColorAction(FLinearColor InColor)
+void AMovingObject::ColorAction(FLinearColor InColor, FEffectMatchResult result)
 {
-    AColorReactiveObject::ColorAction(InColor);
+    AColorReactiveObject::ColorAction(InColor, result);
+
+    StartLocation = GetActorLocation();
+    ElapsedTime = 0.0f; // ÁµåÈÅéÊôÇÈñì„É™„Çª„ÉÉ„Éà
 
     if (ColorConfigurator->IsColorMatch())
     {
@@ -86,6 +86,7 @@ void AMovingObject::ColorAction(FLinearColor InColor)
     {
         TargetLocation = OnLocation;
     }
+
     bIsMoving = true;
 }
 

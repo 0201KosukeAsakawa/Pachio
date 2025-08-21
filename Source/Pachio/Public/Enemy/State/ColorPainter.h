@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Enemy/EnemyCharacter.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorPainter.generated.h"
 
 /**
@@ -18,7 +19,7 @@ public:
     virtual void BeginPlay() override;
     virtual void Init() override;
 
-    // ƒI[ƒo[ƒ‰ƒbƒvƒCƒxƒ“ƒg
+    // ï¿½Iï¿½[ï¿½oï¿½[ï¿½ï¿½ï¿½bï¿½vï¿½Cï¿½xï¿½ï¿½ï¿½g
     void Overlap(AActor* OtherActor)override;
 
 private:
@@ -26,7 +27,9 @@ private:
     TArray<FVector> PatrolPoints;
 
     int32 CurrentPatrolIndex = 0;
-    float AcceptanceRadius = 50.f; // –Ú“I’n‚É‹ß‚Ã‚¢‚½‚Æ‚İ‚È‚·‹——£
+    float AcceptanceRadius = 50.f; // ï¿½Ú“Iï¿½nï¿½É‹ß‚Ã‚ï¿½ï¿½ï¿½ï¿½Æ‚İ‚È‚ï¿½ï¿½ï¿½ï¿½ï¿½
     UPROPERTY(EditAnywhere)
     FLinearColor PainterColor;
+    UPROPERTY(EditAnywhere)
+    FEffectMatchResult Match;
 };

@@ -5,11 +5,11 @@
 
 // Add default functionality here for any IColorFilterInterface functions that are not pure virtual.
 
-void IColorReactiveInterface::ColorAction(FLinearColor)
+void IColorReactiveInterface::ColorAction(FLinearColor, FEffectMatchResult)
 {
 }
 
-void IColorReactiveInterface::SetColor(FLinearColor)
+void IColorReactiveInterface::SetColor(FLinearColor, FEffectMatchResult)
 {
 
 }

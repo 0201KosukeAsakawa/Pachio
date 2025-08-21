@@ -16,7 +16,7 @@ void AColorReactiveBalanceSystem::Init()
     AColorReactiveObject::Init();
 }
 
-void AColorReactiveBalanceSystem::ColorAction(const FLinearColor InColor)
+void AColorReactiveBalanceSystem::ColorAction(const FLinearColor InColor, FEffectMatchResult)
 {
     //if (!mLeftPlate || !mRightPlate || !ColorReactiveComponent)
     //    return;

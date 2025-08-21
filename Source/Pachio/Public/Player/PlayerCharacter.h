@@ -59,8 +59,6 @@ public:
 	// 入力バインディングの初期化処理（プレイヤー操作の割り当て）
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// 現在のプレイヤーステート（状態）を取得
-	UPlayerStateComponent* GetPlayerState() const override;
 
 public:
 	// ======================
@@ -93,7 +91,12 @@ public:
 	void OnStickMove(const FInputActionValue& Value)override;
 	void CallOnClosestOverlappingActor();
 	
-private:
+private:	
+	// 現在のプレイヤーステート（状態）を取得
+	UPlayerStateComponent* GetPlayerState() const override;
+
+	// 状態変更（ステートタグによる遷移）
+	UPlayerStateComponent* ChangeState(FString Tag) override;
 		void UpdateOverlapUI();
 		void HandleMoveSound(float);
 	// ===============
@@ -116,9 +119,6 @@ private:
 	// ==== 状態・ステート処理 ====
 	// ===============
 
-	// 状態変更（ステートタグによる遷移）
-	bool ChangeState(FString Tag) override;
-
 	// 現在の色に応じた効果適用
 	void ApplyEffectFromColor(const FLinearColor& Color);
 
@@ -132,9 +132,6 @@ private:
 	void ResetBuff();
 
 	void Circle();
-
-	bool TryEnterLadderOnJump()const;
-
 
 private:
 	UPROPERTY(EditAnywhere)

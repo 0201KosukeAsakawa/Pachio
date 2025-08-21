@@ -5,7 +5,6 @@
 #include "Player/PlayerCharacter.h"
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/StateManager.h"
-#include "Player/State/LadderClimberState.h"
 #include "Player/InGameController.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
@@ -30,7 +29,6 @@
 #include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
-#include "Objects/Color/LadderActor.h"
 #include "Objects/ControllableObjectBase.h"
 #include "Interface/Soundable.h"
 
@@ -190,67 +188,68 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	if (TryEnterLadderOnJump())
-	{
-		physics->SetGravityScale(false);
-		return;
-	}
+	StateManager->GetCurrentState()->Jump(physics, JumpForce * JumpBuff);
+	//if (TryEnterLadderOnJump())
+	//{
+	//	physics->SetGravityScale(false);
+	//	return;
+	//}
 
-	if (!physics || !physics->OnGround())
-		return;
+	//if (!physics || !physics->OnGround())
+	//	return;
 
-	// ジャンプ力を掛けて力を加える
-	physics->AddForce(GetActorUpVector(), JumpForce * JumpBuff);
-	ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-	sound->PlaySound("SE", "Jump");
+	//// ジャンプ力を掛けて力を加える
+	//physics->AddForce(GetActorUpVector(), JumpForce * JumpBuff);
+	//ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+	//sound->PlaySound("SE", "Jump");
 }
 
-bool APlayerCharacter::TryEnterLadderOnJump() const
-{
-	FVector Start = GetActorLocation();
-	FVector End = Start + FVector(0, 0, 100.f);
-	FVector BoxHalfExtent = FVector(30.f, 30.f, 100.f);
-
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	TArray<FHitResult> Hits;
-	bool bAnyHit = GetWorld()->SweepMultiByChannel(
-		Hits,
-		Start,
-		End,
-		FQuat::Identity,
-		ECC_Visibility, // カスタムチャンネルでも可
-		FCollisionShape::MakeBox(BoxHalfExtent),
-		Params
-	);
-
-	if (!bAnyHit)
-		return false;
-
-	for (const FHitResult& Hit : Hits)
-	{
-		if (!Hit.GetActor() || !Hit.GetActor()->ActorHasTag("Ladder"))
-			continue;
-
-		ALadderActor* Ladder = Cast<ALadderActor>(Hit.GetActor());
-		if (!Ladder)
-			continue;
-
-		// ステート切り替え
-		if (UPlayerStateComponent* NewState = StateManager->ChangeState("Climb"))
-		{
-			if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
-			{
-				ClimbState->SetTargetLadder(Ladder);
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
+//bool APlayerCharacter::TryEnterLadderOnJump() const
+//{
+//	FVector Start = GetActorLocation();
+//	FVector End = Start + FVector(0, 0, 100.f);
+//	FVector BoxHalfExtent = FVector(30.f, 30.f, 100.f);
+//
+//	FCollisionQueryParams Params;
+//	Params.AddIgnoredActor(this);
+//
+//	TArray<FHitResult> Hits;
+//	bool bAnyHit = GetWorld()->SweepMultiByChannel(
+//		Hits,
+//		Start,
+//		End,
+//		FQuat::Identity,
+//		ECC_Visibility, // カスタムチャンネルでも可
+//		FCollisionShape::MakeBox(BoxHalfExtent),
+//		Params
+//	);
+//
+//	if (!bAnyHit)
+//		return false;
+//
+//	for (const FHitResult& Hit : Hits)
+//	{
+//		if (!Hit.GetActor() || !Hit.GetActor()->ActorHasTag("Ladder"))
+//			continue;
+//
+//		ALadderActor* Ladder = Cast<ALadderActor>(Hit.GetActor());
+//		if (!Ladder)
+//			continue;
+//
+//		// ステート切り替え
+//		if (UPlayerStateComponent* NewState = StateManager->ChangeState("Climb"))
+//		{
+//			if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
+//			{
+//				ClimbState->SetTargetLadder(Ladder);
+//				return true;
+//			}
+//		}
+//	}
+//
+//	return false;
+//}
+//
 
 // ダッシュ・スキル開始処理
 // APlayerCharacter.cpp 内の Action メソッド
@@ -309,12 +308,11 @@ void APlayerCharacter::ShiftArrayLeftColorMode()
 }
 
 // 状態の変更（ステートタグを指定して遷移）
-bool APlayerCharacter::ChangeState(FString Tag)
+UPlayerStateComponent* APlayerCharacter::ChangeState(FString Tag)
 {
-	if (!StateManager->ChangeState(Tag))
-		return false;
-
-	return true;
+	UPlayerStateComponent* result = StateManager->ChangeState(Tag);
+	
+	return result;
 }
 
 // ステート管理・攻撃管理の初期化

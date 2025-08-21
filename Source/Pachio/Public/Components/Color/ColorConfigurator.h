@@ -29,11 +29,11 @@ public:
 	virtual void PlayBeatAnimation();
 
 	// 色に応じたアクション
-	virtual void ColorAction(FLinearColor InColor);
+	virtual void ColorAction(FLinearColor InColor, FEffectMatchResult);
 
 	// 色操作	
-	virtual void ResetColor();
-	virtual void SetColor(FLinearColor InColor);
+	virtual void ResetColor(FEffectMatchResult result);
+	virtual void SetColor(FLinearColor InColor, FEffectMatchResult);
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
 	void SetCurrentColor(FLinearColor InColor);
 	void SetColorMuch(bool bInColorMuch);
@@ -46,7 +46,7 @@ public:
 	bool IsColorMatch() const;
 	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance = 0.08f) const;
 	bool IsColorMatch(const FLinearColor& FilterColor, float Tolerance = 0.08f) const;
-	bool CheckColorMuch(const FLinearColor& FilterColor, bool bUseComplementaryColor = false) const;
+	bool CheckColorMatch(FEffectMatchResult,const FLinearColor& FilterColor, bool bUseComplementaryColor = false) const;
 	bool IsChangeable()const;
 
 	// Getter	
@@ -72,7 +72,7 @@ protected:
 	UColorReactiveComponent* ColorReactiveComponent;
 
 	// --- Color Data ---
-	UPROPERTY(EditAnywhere)
+	//UPROPERTY(EditAnywhere)
 	FLinearColor StartColor;
 
 	UPROPERTY(VisibleAnywhere, Category = "Color")
@@ -102,6 +102,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Color")
 	bool bColorMuch = false;
+
+	UPROPERTY(EditAnywhere, Category = "Color")
+	EBuffEffect Effect;
 
 private:
 	bool bIsSelected = false;

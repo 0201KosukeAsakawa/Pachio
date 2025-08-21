@@ -33,7 +33,7 @@ void UColorConfigurator::InitializeColorLogic()
 
 	ColorReactiveComponent->RegisterComponent();
 	ColorReactiveComponent->Activate(true);
-	ColorReactiveComponent->SetMyColor(StartColor);
+	ColorReactiveComponent->SetMyColor(StartColor, Effect);
 
 	if (UStaticMeshComponent* Mesh = GetStaticMesh())
 	{
@@ -52,7 +52,9 @@ void UColorConfigurator::RegisterToColorManager()
 void UColorConfigurator::SetupMaterial()
 {
 	if (!bSetColor) return;
-
+	StartColor = ALevelManager::GetInstance(GetWorld())
+		->GetColorManager()
+		->GetEffectColor(Effect);
 	if (UStaticMeshComponent* Mesh = GetStaticMesh())
 	{
 		Mesh->SetRenderCustomDepth(true);
@@ -73,7 +75,7 @@ void UColorConfigurator::PlayBeatAnimation()
 	}
 }
 
-void UColorConfigurator::ColorAction(FLinearColor NewColor)
+void UColorConfigurator::ColorAction(FLinearColor NewColor, FEffectMatchResult result)
 {
 	if (!bPlayColorAction || !ColorReactiveComponent) return;
 
@@ -82,10 +84,10 @@ void UColorConfigurator::ColorAction(FLinearColor NewColor)
 		ApplyColorToMaterial(NewColor);
 	}
 
-	bColorMuch = ColorReactiveComponent->CheckColorMuch(NewColor, bUseComplementaryColor);
+	bColorMuch = ColorReactiveComponent->CheckColorMatch(result,NewColor, bUseComplementaryColor);
 }
 
-void UColorConfigurator::SetColor(FLinearColor NewColor)
+void UColorConfigurator::SetColor(FLinearColor NewColor, FEffectMatchResult result)
 {
 	CurrentColor = NewColor;
 
@@ -96,18 +98,18 @@ void UColorConfigurator::SetColor(FLinearColor NewColor)
 
 	if (ColorReactiveComponent)
 	{
-		ColorReactiveComponent->SetMyColor(CurrentColor);
+		ColorReactiveComponent->SetMyColor(CurrentColor, result.ClosestEffect);
 	}
 
 	if (const UColorManager* ColorManager = GetColorManager())
 	{
-		ColorAction(ColorManager->GetWorldColor());
+		ColorAction(ColorManager->GetWorldColor(), result);
 	}
 }
 
-void UColorConfigurator::ResetColor()
+void UColorConfigurator::ResetColor(FEffectMatchResult result)
 {
-	SetColor(StartColor);
+	SetColor(StartColor, result);
 }
 
 void UColorConfigurator::SetCurrentColor(FLinearColor NewColor)
@@ -139,9 +141,9 @@ bool UColorConfigurator::IsColorChange(FLinearColor Color) const
 	return ColorReactiveComponent && ColorReactiveComponent->IsColorMatch(Color);
 }
 
-bool UColorConfigurator::CheckColorMuch(const FLinearColor& FilterColor, bool buseComplementaryColor) const
+bool UColorConfigurator::CheckColorMatch(FEffectMatchResult result,const FLinearColor& FilterColor, bool buseComplementaryColor) const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->CheckColorMuch(FilterColor, buseComplementaryColor);
+	return ColorReactiveComponent && ColorReactiveComponent->CheckColorMatch(result,FilterColor, buseComplementaryColor);
 }
 
 bool UColorConfigurator::IsColorMatch() const

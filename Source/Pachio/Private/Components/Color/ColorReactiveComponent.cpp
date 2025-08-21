@@ -2,6 +2,8 @@
 
 
 #include "Components/Color/ColorReactiveComponent.h"
+#include "Manager/LevelManager.h"
+#include "Manager/ColorManager.h"
 #include "FunctionLibrary.h"
 
 // Sets default values for this component's properties
@@ -12,30 +14,41 @@ UColorReactiveComponent::UColorReactiveComponent()
 
 void UColorReactiveComponent::Init(UMeshComponent* mesh)
 {
-	if (!bSetStartColor)
+	if (!bSetStartColor || !mesh)
 		return;
-	// StaticMeshComponent 取得と MaterialInstance 作成
-	if (AActor* Owner = GetOwner())
-	{
-		if (UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner, TEXT("StaticMesh")))
-		{
-			DynMesh = Mesh->CreateAndSetMaterialInstanceDynamic(0);
-		}
-	}
-    // マテリアルの色を変更
-    UMaterialInstanceDynamic* DynMaterial = mesh->CreateAndSetMaterialInstanceDynamic(0);
-    if (DynMaterial)
-    {
-        DynMaterial->SetVectorParameterValue(FName("BaseColor"), CurrentColor);
-    }
+
+	AActor* Owner = GetOwner();
+	if (!Owner)
+		return;
+
+	// StaticMeshComponent の取得
+	UStaticMeshComponent* MeshComp =
+		UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner, TEXT("StaticMesh"));
+	if (!MeshComp)
+		return;
+
+	// Dynamic Material Instance 作成
+	DynMesh = MeshComp->CreateAndSetMaterialInstanceDynamic(0);
+	if (!DynMesh)
+		return;
+
+	// 色の取得（未登録なら白）
+	CurrentColor = ALevelManager::GetInstance(GetWorld())
+		->GetColorManager()
+		->GetEffectColor(Effect);
+
+	// マテリアルに色を反映
+	DynMesh->SetVectorParameterValue(FName("BaseColor"), CurrentColor);
 }
 
-void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor)
+
+void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor,EBuffEffect newEffect)
 {
 	CurrentColor = FilterColor;
+	Effect = newEffect;
 }
 
-bool UColorReactiveComponent::CheckColorMuch(const FLinearColor& FilterColor, const bool buseComplementaryColor)
+bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FLinearColor& FilterColor, const bool buseComplementaryColor)
 {
 	FLinearColor CheckColor = FilterColor;  // コピーして変更可能に
 
@@ -45,7 +58,9 @@ bool UColorReactiveComponent::CheckColorMuch(const FLinearColor& FilterColor, co
 		UE_LOG(LogTemp, Log, TEXT("CheckColor: %s"), *CheckColor.ToString());
 	}
 	
-	bool bMatch = IsColorMatch(CheckColor);
+	//bool bMatch = IsColorMatch(CheckColor);
+
+	bool bMatch = (result.ClosestEffect == Effect);
 
 	if (bMatch)
 	{

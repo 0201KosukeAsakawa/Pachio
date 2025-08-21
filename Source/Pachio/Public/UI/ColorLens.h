@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Blueprint/UserWidget.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorLens.generated.h"
 
 /**
@@ -27,12 +28,14 @@ public:
     void PlayBeatAnimation();
 
 private:
-    void ColorAction(FLinearColor InColor) override;
+    void ColorAction(FLinearColor InColor , FEffectMatchResult) override;
 
     UPROPERTY(meta = (BindWidget))
     UImage* FilterColorImage;
+    //UPROPERTY(meta = (BindWidget))
+    //UImage* CurrentColorImage;
     UPROPERTY(meta = (BindWidget))
-    UImage* CurrentColorImage;
+    UImage* ColorCircle;
     // アニメーション用メンバ変数
     bool bIsAnimating = false;
     float AnimationTime = 0.f;

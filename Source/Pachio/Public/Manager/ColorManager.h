@@ -44,6 +44,7 @@ public:
     UColorTargetRegistry* GetColorTargetRegistry()const {return ColorTargetRegistry;}
 
     FLinearColor GetWorldColor()const;
+    FLinearColor GetEffectColor(EBuffEffect)const;
 private:
 
     void BindController();

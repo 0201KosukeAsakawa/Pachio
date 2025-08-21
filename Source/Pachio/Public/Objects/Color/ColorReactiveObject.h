@@ -29,8 +29,8 @@ public:
 	UFUNCTION()
 	virtual void PlayBeatAnimation();
 	// インターフェース実装
-	virtual void ColorAction(FLinearColor InColor) override;
-	virtual void SetColor(FLinearColor)override;
+	virtual void ColorAction(FLinearColor InColor, FEffectMatchResult) override;
+	virtual void SetColor(FLinearColor, FEffectMatchResult result)override;
 	virtual void ResetColor()override;
 	virtual void SetSelectMode(bool)override;
 	virtual void ChangeLock(bool b) override;	

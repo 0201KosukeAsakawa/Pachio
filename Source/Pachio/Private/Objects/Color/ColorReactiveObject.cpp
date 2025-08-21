@@ -61,20 +61,20 @@ void AColorReactiveObject::PlayBeatAnimation()
 }
 
 // 色アクション実行時の処理（デフォルト実装）
-void AColorReactiveObject::ColorAction(FLinearColor NewColor)
+void AColorReactiveObject::ColorAction(FLinearColor NewColor , FEffectMatchResult result)
 {
 	if (ColorConfigurator == nullptr)
 		return;
 
-	ColorConfigurator->ColorAction(NewColor);
+	ColorConfigurator->ColorAction(NewColor,result);
 }
 
-void AColorReactiveObject::SetColor(FLinearColor newColor)
+void AColorReactiveObject::SetColor(FLinearColor newColor, FEffectMatchResult result)
 {
 	if (ColorConfigurator == nullptr)
 		return;
 
-	ColorConfigurator->SetColor(newColor);
+	ColorConfigurator->SetColor(newColor, result);
 }
 
 void AColorReactiveObject::ResetColor()

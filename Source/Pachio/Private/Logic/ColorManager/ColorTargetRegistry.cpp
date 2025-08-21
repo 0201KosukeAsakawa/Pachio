@@ -2,11 +2,14 @@
 
 
 #include "Logic/ColorManager/ColorTargetRegistry.h"
+#include "Logic/ColorManager/EffectColorMatcher.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Kismet/GameplayStatics.h"
 
-void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
+
+void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mode, FEffectMatchResult effect)
 {
+
     switch (Mode)
     {
     case EColorTargetType::WorldColor:
@@ -16,16 +19,16 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
             PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
         }
         // 指定されたモードのターゲットに通知
-        NotifyTargets(Mode, NewColor);
+        NotifyTargets(Mode, NewColor, effect);
         // 常時反応するターゲット（例：UIなど）に通知
-        NotifyTargets(EColorTargetType::Responders, NewColor);
+        NotifyTargets(EColorTargetType::Responders, NewColor, effect);
         break;
 
     case EColorTargetType::ObjectColor:
         // 指定されたモードのターゲットに通知
         if (!TargetObject)
             return;
-        TargetObject->ColorAction(NewColor);
+        TargetObject->ColorAction(NewColor, effect);
         break;
 
     default:
@@ -35,7 +38,7 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
     OnColorApplied.Broadcast(Mode, NewColor);
 }
 
-void UColorTargetRegistry::ColorEvent(FName EventID,FLinearColor NewColor)
+void UColorTargetRegistry::ColorEvent(FName EventID,FLinearColor NewColor, FEffectMatchResult effect)
 {
     if (!ColorResponseTargets.Contains(EColorTargetType::Event))
     {
@@ -53,7 +56,7 @@ void UColorTargetRegistry::ColorEvent(FName EventID,FLinearColor NewColor)
         if (TargetInstance->GetColorEventID() != EventID)
             continue;
 
-        TargetInstance->ColorAction(NewColor);
+        TargetInstance->ColorAction(NewColor, effect);
     }
 }
 
@@ -81,7 +84,7 @@ void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterfac
     }
 }
 
-void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearColor& Color)
+void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearColor& Color, FEffectMatchResult effect)
 {
     if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(Mode))
     {
@@ -90,7 +93,7 @@ void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearCol
             if (Target)
             {
                 // ターゲットの反応関数を呼び出す
-                Target->ColorAction(Color);
+                Target->ColorAction(Color, effect);
             }
         }
     }
