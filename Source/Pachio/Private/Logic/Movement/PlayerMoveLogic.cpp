@@ -16,13 +16,14 @@ FVector UPlayerMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputA
     FVector Forward = Owner->GetActorForwardVector();
     FVector Right = Owner->GetActorRightVector();
 
-    FVector MoveDir = Forward * MoveInput.Y + Right * MoveInput.X;
+    FVector MoveDir = Forward * MoveInput.X + Right * MoveInput.Y;
 
     // Normalize しなくてもいい場合はここは不要（速度スケールによる）
     MoveDir = MoveDir.GetClampedToMaxSize(1.0f);
 
     return MoveDir;
 }
+
 
 // 移動速度などの初期化関数（未実装）
 void UPlayerMoveLogic::Init(float speed, const FVector)
