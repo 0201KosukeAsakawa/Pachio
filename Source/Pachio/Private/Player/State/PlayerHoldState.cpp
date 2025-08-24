@@ -28,6 +28,16 @@ bool UPlayerHoldState::OnUpdate(float DeltaTime)
 {
     if (!HoldTarget || !mOwner) return false;
 
+    if (HoldTarget->IsHidden())
+    {
+        // Hold解除して Default に戻す
+        if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
+        {
+            Player->ChangeState("Default");
+        }
+        return true;
+    }
+
     // 距離チェック
     float distance = FVector::Dist(mOwner->GetActorLocation(), HoldTarget->GetActorLocation());
     const float MaxDistance = 5; // 離れすぎる距離
