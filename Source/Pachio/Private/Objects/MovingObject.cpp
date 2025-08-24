@@ -50,7 +50,7 @@ void AMovingObject::Tick(float DeltaTime)
         {
             if (ActorOnTop)
             {
-                ActorOnTop->AddActorWorldOffset(DeltaMove);
+                ActorOnTop->AddActorWorldOffset(DeltaMove,true);
             }
         }
 
@@ -59,7 +59,7 @@ void AMovingObject::Tick(float DeltaTime)
         {
             if (ChildActor)
             {
-                ChildActor->AddActorWorldOffset(DeltaMove);
+                ChildActor->AddActorWorldOffset(DeltaMove,true);
             }
         }
 

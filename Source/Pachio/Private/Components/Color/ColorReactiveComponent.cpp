@@ -60,15 +60,14 @@ bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FL
 	
 	//bool bMatch = IsColorMatch(CheckColor);
 
-	bool bMatch = (result.ClosestEffect == Effect);
-
-	if (bMatch)
+	bool bMatch;
+	if ((result.ClosestEffect == Effect))
 	{
-		OnColorMatched(CheckColor);
+		bMatch = OnColorMatched(CheckColor);
 	}
 	else
 	{
-		OnColorMismatched(CheckColor);
+		bMatch = OnColorMismatched(CheckColor);
 	}
 
 	return bMatch;
@@ -247,12 +246,14 @@ void UColorReactiveComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	DynMesh->SetVectorParameterValue(FName("EmissiveColor"), EmissiveColor);
 }
 
-void UColorReactiveComponent::OnColorMatched(const FLinearColor& FilterColor)
+bool UColorReactiveComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
+	return true;
 }
 
-void UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
+bool UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
 {
+	return false;
 }
 
 

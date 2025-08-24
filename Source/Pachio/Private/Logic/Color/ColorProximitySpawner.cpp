@@ -11,14 +11,16 @@ UColorProximitySpawner::UColorProximitySpawner()
     OffMesh();
 }
 
-void UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
+bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
     OnMesh();
+    return false;
 }
 
-void UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
+bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 {
     OffMesh();
+    return true;
 }
 
 void UColorProximitySpawner::OnMesh()
@@ -26,7 +28,7 @@ void UColorProximitySpawner::OnMesh()
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // ƒAƒNƒ^[•\Ž¦ & Tick ÄŠJ
+    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½\ï¿½ï¿½ & Tick ï¿½ÄŠJ
     Owner->SetActorHiddenInGame(false);
     Owner->SetActorTickEnabled(true);
 
@@ -48,11 +50,11 @@ void UColorProximitySpawner::OffMesh()
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // ƒAƒNƒ^[”ñ•\Ž¦ & Tick ’âŽ~
+    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ï¿½\ï¿½ï¿½ & Tick ï¿½ï¿½~
     Owner->SetActorHiddenInGame(true);
     Owner->SetActorTickEnabled(false);
 
-    // ƒRƒ“ƒ|[ƒlƒ“ƒg‚ð’²®
+    // ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ð’²ï¿½
     for (UActorComponent* Comp : Owner->GetComponents())
     {
         if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))

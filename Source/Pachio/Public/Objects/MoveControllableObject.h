@@ -46,7 +46,8 @@ private:
 
 	UPROPERTY()
 	TArray<AActor*> AttachedActors;
-
+	UPROPERTY(EditAnywhere)
+	TArray<AActor*> Child;
 	// パトロール関連
 	UPROPERTY(EditAnywhere, Category = "Patrol")
 	TArray<FVector> PatrolPoints;

@@ -60,11 +60,20 @@ void AMoveControllableObject::Tick(float DeltaTime)
 
 	// 上に乗っているアクターを一緒に動かす
 	FVector Offset = NewLocation - PreviousLocation;
-	for (AActor* ActorOnTop : AttachedActors)
+	TArray<AActor*> target = AttachedActors;
+	for (AActor* ActorOnTop : target)
 	{
 		if (ActorOnTop)
 		{
-			ActorOnTop->AddActorWorldOffset(Offset);
+			ActorOnTop->AddActorWorldOffset(Offset,true);
+		}
+	}
+	TArray<AActor*> children = Child;
+	for (AActor* ChildActor : children)
+	{
+		if (ChildActor)
+		{
+			ChildActor->AddActorWorldOffset(Offset);
 		}
 	}
 
