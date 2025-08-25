@@ -99,7 +99,7 @@ void AColorReactiveBeltConveyor::OnOverlapBegin(UPrimitiveComponent* OverlappedC
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (OtherActor == nullptr)
+    if (OtherActor == nullptr || OtherActor == this)
         return;
 
     // 対象アクターに UPhysicsCalculator があるか確認
@@ -118,7 +118,7 @@ void AColorReactiveBeltConveyor::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 void AColorReactiveBeltConveyor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-    if (OtherActor == nullptr)
+    if (OtherActor == nullptr || OtherActor == this)
         return;
 
     // 対象から UPhysicsCalculator を取得

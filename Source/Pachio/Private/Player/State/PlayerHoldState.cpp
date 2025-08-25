@@ -40,7 +40,7 @@ bool UPlayerHoldState::OnUpdate(float DeltaTime)
 
     // 距離チェック
     float distance = FVector::Dist(mOwner->GetActorLocation(), HoldTarget->GetActorLocation());
-    const float MaxDistance = 5; // 離れすぎる距離
+    const float MaxDistance =20 ; // 離れすぎる距離
 
     if (distance > InitialHoldDistance + MaxDistance)
     {
