@@ -60,9 +60,13 @@ void UColorLens::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
         bIsAnimating = false;
     }
 
-    FWidgetTransform Transform = FilterColorImage->RenderTransform;
-    Transform.Scale = FVector2D(ScaleFactor, ScaleFactor);
-    FilterColorImage->SetRenderTransform(Transform);
+    FWidgetTransform FilterColorTransform = FilterColorImage->RenderTransform;
+    FilterColorTransform.Scale = FVector2D(ScaleFactor, ScaleFactor);
+    FilterColorImage->SetRenderTransform(FilterColorTransform);
+
+    FWidgetTransform ColorCircleTransform = ColorCircle->RenderTransform;
+    ColorCircleTransform.Scale = FVector2D(ScaleFactor, -ScaleFactor);
+    ColorCircle->SetRenderTransform(ColorCircleTransform);
 }
 
 void UColorLens::Animation(float i)
@@ -157,7 +161,7 @@ void UColorLens::ColorAction(FLinearColor InColor, FEffectMatchResult)
         float AngleRad = FMath::DegreesToRadians(AngleDeg);
 
         // 半径（中心からの距離）
-        float Radius = 100.0f; // 好きな距離に調整
+        float Radius = 150.0f; // 好きな距離に調整
 
         // 中心からのオフセット計算（X=cos, Y=sin）
         FVector2D Offset(
