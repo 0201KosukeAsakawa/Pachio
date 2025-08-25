@@ -25,6 +25,15 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	AActor* Owner = GetOwner();
+
+	// --- ここで OffMesh 状態を判定 ---
+	if (Owner->IsHidden() )
+	{
+		// オーナーが非表示 or Tick 無効なら処理を止める
+		return;
+	}
+
 	if (bShouldApplyGravity)
 		AddGravity();
 	FVector MoveVector;

@@ -255,8 +255,8 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 // APlayerCharacter.cpp 内の Action メソッド
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
-	//StateManager->GetCurrentState()->OnSkill(Value);
-	CallOnClosestOverlappingActor();
+	StateManager->GetCurrentState()->OnSkill(Value);
+	//CallOnClosestOverlappingActor();
 }
 
 

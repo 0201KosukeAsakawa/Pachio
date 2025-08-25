@@ -37,4 +37,6 @@ private:
 	bool InitialRotationSet;
 
 	FRotator InitialRotation;
+
+	FVector CurrentDirection;
 };

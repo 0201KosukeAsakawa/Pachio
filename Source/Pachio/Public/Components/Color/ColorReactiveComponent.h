@@ -35,8 +35,8 @@ public :
 	void SetSelectMode(bool);
 private:
     UFUNCTION(BlueprintCallable)
-    virtual void OnColorMatched(const FLinearColor& FilterColor);  
-	virtual void OnColorMismatched(const FLinearColor& FilterColor);
+    virtual bool OnColorMatched(const FLinearColor& FilterColor);  
+	virtual bool OnColorMismatched(const FLinearColor& FilterColor);
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bSetStartColor = true;

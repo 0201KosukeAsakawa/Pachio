@@ -2,6 +2,7 @@
 
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/LadderClimberState.h"
+#include "Player/State/PlayerHoldState.h"
 #include "Player/PlayerCharacter.h"
 #include "Player/InGameController.h"
 #include "Components/CapsuleComponent.h"
@@ -9,8 +10,8 @@
 #include "Components/MoveComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/PhysicsCalculator.h"
-#include "FunctionLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "FunctionLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
@@ -230,7 +231,7 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 
 	// 移動速度の初期値設定（ステート内で使用）
 	mMoveSpeed = 100.0f;
-
+    CurrentDirection = mOwner->GetActorForwardVector();
 	return true; // ステートの切り替え成功
 }
 
@@ -249,23 +250,37 @@ bool UPlayerDefaultState::OnExit(ACharacter*)
 // スキルボタン入力時の処理（現時点では何もしない）
 bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
-	if (Value.Get<bool>()) // 入力が有効な場合（ボタンが押された場合など）
-	{
-		// このPawnを操作しているコントローラーを取得
-		AController* OwningController = mOwner->GetController();
-		if (OwningController)
-		{
-			// AInGameController にキャスト（もし AInGameController がこのPlayerCharacterをPossessしている場合）
-			AInGameController* InGameController = Cast<AInGameController>(OwningController);
-			if (InGameController)
-			{
-				// コントローラーのTogglePossession関数を呼び出す
-				InGameController->TogglePossession(mOwner);
-			}
-		}
-	}
+    if (!Value.Get<bool>())
+        return true;
 
-	return true;
+    // 目の前に持てるオブジェクトがあるか判定
+    FVector Start = mOwner->GetActorLocation();
+    FVector End = Start + CurrentDirection * 200.f; // 2m先まで
+
+    FHitResult Hit;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(mOwner);
+
+    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    {
+        AActor* Target = Hit.GetActor();
+        if (Target && Target->ActorHasTag("Holdable")) // 持てるオブジェクトにタグを付けておく
+        {
+            IStateControllable* Player = Cast<IStateControllable>(mOwner);
+            if (Player)
+            {
+                if (UPlayerStateComponent* NewState = Player->ChangeState("Hold"))
+                {
+                    if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
+                    {
+                        HoldState->SetUp(Target);
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 void UPlayerDefaultState::Movement(const FInputActionValue& Value)
@@ -274,6 +289,8 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 	FVector direction = MoveComp->Movement(0, mOwner, Value);
 	// 速度は現在のステートが持つ移動速度を使用
 	mOwner->AddMovementInput(direction, MoveSpeed);
+    if(direction != FVector(0,0,0))
+    CurrentDirection = direction;
 }
 
 void UPlayerDefaultState::Jump(UPhysicsCalculator* physics,float jumpForce)

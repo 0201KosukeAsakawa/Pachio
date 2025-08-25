@@ -17,6 +17,6 @@ public:
 	// Sets default values for this component's properties
 	UColorTriggerStopComponent();
 private:
-	void OnColorMatched(const FLinearColor& FilterColor)override;
-	void OnColorMismatched(const FLinearColor& FilterColor)override;
+	bool OnColorMatched(const FLinearColor& FilterColor)override;
+	bool OnColorMismatched(const FLinearColor& FilterColor)override;
 };

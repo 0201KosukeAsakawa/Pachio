@@ -13,10 +13,10 @@ UColorTriggerStopComponent::UColorTriggerStopComponent()
 
 }
 
-void UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
+bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
     AActor* Owner = GetOwner();
-    if (!Owner) return;
+    if (!Owner) return false;
 
     // �A�N�^�[��\��
     Owner->SetActorHiddenInGame(true);
@@ -38,12 +38,14 @@ void UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
             Prim->SetCastShadow(false);
         }
     }
+
+    return true;
 }
 
-void UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterColor)
+bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterColor)
 {
     AActor* Owner = GetOwner();
-    if (!Owner) return;
+    if (!Owner) return false;
 
     // �A�N�^�[�ĕ\��
     Owner->SetActorHiddenInGame(false);
@@ -65,4 +67,6 @@ void UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
             Prim->SetCastShadow(true);
         }
     }
+
+    return false;
 }

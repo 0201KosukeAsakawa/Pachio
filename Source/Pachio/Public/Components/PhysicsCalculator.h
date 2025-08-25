@@ -77,6 +77,4 @@ private:
 	// 物理計算が有効かどうかのフラグ
 	UPROPERTY(EditAnywhere)
 	bool bIsPhysicsEnabled;		
-
-
 };
