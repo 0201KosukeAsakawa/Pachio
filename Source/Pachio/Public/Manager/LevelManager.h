@@ -103,10 +103,6 @@ private:
 	UPROPERTY()
 	TObjectPtr<UObjectManager> ObjectManager;
 
-	/** 実行時に生成された攻撃データコンテナ */
-	UPROPERTY()
-	TObjectPtr<UAttackDataContainer> AttackContainer;
-
 	UPROPERTY()
 	TObjectPtr<UScoreManager> ScoreManager;
 

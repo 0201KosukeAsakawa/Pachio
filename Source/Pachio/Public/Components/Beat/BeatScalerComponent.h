@@ -26,11 +26,13 @@ public:
     float AnimationDuration = 0.3f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Beat Scale")
-    FVector ScaleAxis = FVector(1.1f, 1.0f, 1.0f);  // ��FX������1.5�{
+    FVector ScaleAxis = FVector(1.1f, 1.0f, 1.0f);  // ��FX������1.5�{
 
 private:
+    //アニメーションを再生中か
     bool bIsAnimating = false;
+    //アニメーションの再生時間
     float AnimationTime = 0.f;
-
+    //もとのおおきさ
     FVector OriginalScale;
 };

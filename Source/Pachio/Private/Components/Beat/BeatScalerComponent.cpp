@@ -14,6 +14,7 @@ void UBeatScalerComponent::BeginPlay()
 
     if (AActor* Owner = GetOwner())
     {
+        //拡大縮小用
         OriginalScale = Owner->GetActorScale3D();
     }
 }
@@ -30,6 +31,7 @@ void UBeatScalerComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+    //アニメーション中なら終了
     if (!bIsAnimating) return;
 
     AnimationTime += DeltaTime;
