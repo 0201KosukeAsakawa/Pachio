@@ -30,7 +30,7 @@ public:
 
     /** 指定カテゴリの現在のウィジェットを非表示にする */
     UFUNCTION(BlueprintCallable)
-    void HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName);
+   const void HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName);
 
     /** 指定カテゴリの現在のウィジェットが表示中かを取得 */
     UFUNCTION(BlueprintCallable)

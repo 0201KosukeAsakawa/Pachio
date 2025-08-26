@@ -89,24 +89,32 @@ UUserWidget* UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetNa
 {
     UUserWidget* widget = nullptr;
     // 指定カテゴリが存在しない場合は無視
-    if (!WidgetDataMap.Contains(CategoryName)) 
+    if (!WidgetDataMap.Contains(CategoryName))
         return widget;
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
-
+    UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName);
     // 指定名のウィジェットを検索し、ビューポートに表示
-    if (UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName))
-    {
-        Group.CurrentWidget.Add(WidgetName, *FoundWidget);
-        Group.CurrentWidget[WidgetName]->AddToViewport();
+    if (FoundWidget == nullptr)
+        return widget;
 
-        widget = Group.CurrentWidget[WidgetName];
+    if (!Group.CurrentWidget.IsEmpty())
+    {
+        if (Group.CurrentWidget[WidgetName])
+            return widget;
     }
+
+
+    Group.CurrentWidget.Add(WidgetName, *FoundWidget);
+    Group.CurrentWidget[WidgetName]->AddToViewport();
+
+    widget = Group.CurrentWidget[WidgetName];
+
 
     return widget;
 }
 
-void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName)
+const void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName)
 {
     // 指定カテゴリが存在しない場合は無視
     if (!WidgetDataMap.Contains(CategoryName)) 

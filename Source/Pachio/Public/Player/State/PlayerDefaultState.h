@@ -24,7 +24,10 @@ public:
 private:
 	bool TryEnterLadderOnJump() const;
 
+	void CheckHoldableObject();
+
 private:
+	FTimerHandle CheckHoldableHandle;
 	// プレイヤー移動処理を司るコンポーネント
 	UPROPERTY()
 	UMoveComponent* MoveComp;
@@ -35,6 +38,8 @@ private:
 	float MoveSpeed = 10;
 
 	bool InitialRotationSet;
+
+	bool bPrevCanHold;
 
 	FRotator InitialRotation;
 
