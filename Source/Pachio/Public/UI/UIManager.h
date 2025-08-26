@@ -40,6 +40,9 @@ public:
     UUserWidget* GetWidget(EWidgetCategory CategoryName, FName WidgetName);
 
     UFUNCTION()
+    bool PlayWidgetAnimation(EWidgetCategory CategoryName, FName WidgetName , FName AnimationName);
+
+    UFUNCTION()
     UColorLens* GetColorLens() { return ColorLens; }    
     
     UUserWidget* ShowResultWidget(float Time, EStageRank Rank);

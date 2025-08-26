@@ -2,6 +2,7 @@
 #include "UI/ColorLens.h"
 #include "UI/LockonWidget.h"
 #include "UI/ClearResultWidget.h"
+#include "UI/PlayAnimationWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "Components/Color/ColorControllerComponent.h"
@@ -101,7 +102,7 @@ UUserWidget* UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetNa
     if (!Group.CurrentWidget.IsEmpty())
     {
         if (Group.CurrentWidget[WidgetName])
-            return widget;
+            return Group.CurrentWidget[WidgetName];
     }
 
 
@@ -123,6 +124,11 @@ const void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName Wid
     FWidgetData& Group = WidgetDataMap[CategoryName];
     if (!Group.CurrentWidget[WidgetName])
         return;
+
+    if (UPlayAnimationWidget* animWidget = Cast<UPlayAnimationWidget>(Group.CurrentWidget[WidgetName]))
+    {
+        animWidget->StopAllAnimation();
+    }
 
     // 現在のウィジェットを非表示にして nullptr に
     RemoveWidgetFromViewport(Group.CurrentWidget[WidgetName]);
@@ -155,6 +161,25 @@ UUserWidget* UUIManager::GetWidget(EWidgetCategory CategoryName, FName WidgetNam
         return nullptr;
     
     return *FoundWidget;
+}
+
+bool UUIManager::PlayWidgetAnimation(EWidgetCategory CategoryName, FName WidgetName, FName AnimationName)
+{
+    if (!WidgetDataMap.Contains(CategoryName))
+        return false;
+
+    FWidgetData& Group = WidgetDataMap[CategoryName];
+    UUserWidget** FoundWidgetPtr = Group.CurrentWidget.Find(WidgetName);
+    if (!FoundWidgetPtr || !*FoundWidgetPtr)
+        return false;
+
+    UPlayAnimationWidget* animWidget = Cast<UPlayAnimationWidget>(*FoundWidgetPtr);
+    if (animWidget == nullptr)
+        return false;
+
+    animWidget->PlayAnimationByName(AnimationName);
+
+    return true;
 }
 
 void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)

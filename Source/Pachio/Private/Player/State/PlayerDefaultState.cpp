@@ -73,7 +73,7 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
     GetWorld()->GetTimerManager().SetTimer(
         CheckHoldableHandle,
         this,
-        &UPlayerDefaultState::CheckHoldableObject,
+        &UPlayerDefaultState::UpdateInteractableUI,
         0.1f,   // 間隔
         true    // 繰り返し
     );
@@ -214,38 +214,90 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
     return false;
 }
 
+void UPlayerDefaultState::UpdateInteractableUI()
+{
+    CheckHoldableObject();
+    CheckLadderObject();
+}
+
 void UPlayerDefaultState::CheckHoldableObject()
 {
     FVector Start = mOwner->GetActorLocation();
     FVector End = Start + CurrentDirection * 200.f;
 
-    FHitResult Hit;
+    // LineTrace にしたいなら BoxShape を小さくして代用してもOK
+    FCollisionShape Shape = FCollisionShape::MakeSphere(5.f);
+
+    CheckObjectByTag(Start, End, Shape, "Holdable", bPrevCanHold, "HaveUI", "HaveUIAnimation");
+}
+
+void UPlayerDefaultState::CheckLadderObject()
+{
+    FVector Start = mOwner->GetActorLocation();
+    FVector End = Start + FVector(0, 0, 100.f);
+    FCollisionShape Shape = FCollisionShape::MakeBox(FVector(30.f, 30.f, 100.f));
+
+    CheckObjectByTag(Start, End, Shape, "Ladder", bPrevCanClim, "HaveUI", "LadderUIAnimation");
+}
+
+
+bool UPlayerDefaultState::CheckObjectByTag(
+    const FVector& Start,
+    const FVector& End,
+    const FCollisionShape& Shape,
+    const FName& Tag,
+    bool& bPrevState,
+    const FName& WidgetName,
+    const FName& AnimName
+)
+{
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(mOwner);
 
-    bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
-    bool bCanHold = bHit && Hit.GetActor() && Hit.GetActor()->ActorHasTag("Holdable");
+    TArray<FHitResult> Hits;
+    bool bAnyHit = GetWorld()->SweepMultiByChannel(
+        Hits,
+        Start,
+        End,
+        FQuat::Identity,
+        ECC_Visibility,
+        Shape,
+        Params
+    );
 
-    if (bCanHold == bPrevCanHold) // 状態が変わったときだけUIに通知
-        return;
-
-    const ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
-    if (LevelManager == nullptr)
-        return;
-
-    if (UUIManager* UIManager = LevelManager->GetUIManager())
+    bool bHit = false;
+    if (bAnyHit)
     {
-        if (bCanHold)
+        for (const FHitResult& Hit : Hits)
         {
-            UIManager->ShowWidget(EWidgetCategory::Tutorial, "HaveUI");
-        }
-        else
-        {
-            UIManager->HideCurrentWidget(EWidgetCategory::Tutorial, "HaveUI");
+            if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(Tag))
+            {
+                bHit = true;
+                break;
+            }
         }
     }
 
+    if (bPrevState == bHit)
+        return bHit; // 状態変化なし
 
+    const ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
+    if (LevelManager)
+    {
+        if (UUIManager* UIManager = LevelManager->GetUIManager())
+        {
+            if (bHit)
+            {
+                UIManager->ShowWidget(EWidgetCategory::Tutorial, WidgetName);
+                UIManager->PlayWidgetAnimation(EWidgetCategory::Tutorial, WidgetName, AnimName);
+            }
+            else
+            {
+                UIManager->HideCurrentWidget(EWidgetCategory::Tutorial, WidgetName);
+            }
+        }
+    }
 
-    bPrevCanHold = bCanHold;
+    bPrevState = bHit;
+    return bHit;
 }
