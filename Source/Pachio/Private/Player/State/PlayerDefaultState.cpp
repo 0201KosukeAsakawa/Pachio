@@ -28,46 +28,45 @@ UPlayerDefaultState::UPlayerDefaultState()
 // ステートに入る際に実行される処理
 bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 {
-	// 所有キャラクターまたはワールドが無効な場合は失敗
-	if (owner == nullptr || world == nullptr)
-	{
-		return false;
-	}
+    // 所有キャラクターまたはワールドが無効な場合は失敗
+    if (owner == nullptr || world == nullptr)
+    {
+        return false;
+    }
 
-	// 内部に所有者とワールドを保存
-	if (!mOwner)
-		mOwner = owner;
-	if (!pWorld)
-		pWorld = world;
-	if (!MoveComp)
-	{
-		MoveComp = NewObject<UMoveComponent>(mOwner);
-		UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
-		MoveComp->Init(PlayerLogic);
-	}
-	// マテリアルの設定（デフォルトステート用）
-	//if (NewMaterial)
-	{
-		// キャラクターが持つ StaticMeshComponent を取得
-		UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
-		UMaterialInterface* N = NewMaterial.LoadSynchronous(); // 非同期ロードに対応
-		if (N != nullptr && StaticMeshComp)
-		{
-			StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
-		}
-	}
-
-	//コリジョンのサイズ変更
-	mOwner->GetCharacterMovement()->Crouch();
-	mOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
-
-	APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
-	if (!aPlayer)
-		return false;
+    // 内部に所有者とワールドを保存
+    if (!mOwner)
+        mOwner = owner;
+    if (!pWorld)
+        pWorld = world;
+    if (!MoveComp)
+    {
+        MoveComp = NewObject<UMoveComponent>(mOwner);
+        UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
+        MoveComp->Init(PlayerLogic);
+    }
 
 
-	// 移動速度の初期値設定（ステート内で使用）
-	mMoveSpeed = 100.0f;
+    // キャラクターが持つ StaticMeshComponent を取得
+    UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
+    UMaterialInterface* N = NewMaterial.LoadSynchronous(); // 非同期ロードに対応
+    if (N != nullptr && StaticMeshComp)
+    {
+        StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
+    }
+
+
+    //コリジョンのサイズ変更
+    mOwner->GetCharacterMovement()->Crouch();
+    mOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
+
+    APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
+    if (!aPlayer)
+        return false;
+
+
+    // 移動速度の初期値設定（ステート内で使用）
+    mMoveSpeed = 100.0f;
     CurrentDirection = mOwner->GetActorForwardVector();
 
     GetWorld()->GetTimerManager().SetTimer(
@@ -78,7 +77,7 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
         true    // 繰り返し
     );
 
-	return true; // ステートの切り替え成功
+    return true; // ステートの切り替え成功
 }
 
 // ステートの毎フレーム更新処理（現時点では何もしない）
@@ -97,7 +96,7 @@ bool UPlayerDefaultState::OnExit(ACharacter*)
 bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
     if (!Value.Get<bool>())
-        return true;
+        return false;
 
     // 目の前に持てるオブジェクトがあるか判定
     FVector Start = mOwner->GetActorLocation();
@@ -106,25 +105,29 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
     FHitResult Hit;
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(mOwner);
+    bool bIsHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+    if (!bIsHit)
+        return false;
 
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    AActor* Target = Hit.GetActor();
+    if (Target == nullptr || !Target->ActorHasTag("Holdable")) // 持てるオブジェクトにタグを付けておく
+        return false;
+
+    IStateControllable* Player = Cast<IStateControllable>(mOwner);
+    if (Player == nullptr)
+        return false;
+    UPlayerStateComponent* NewState = Player->ChangeState("Hold");
+    if (NewState == nullptr)
+        return false;
+
+    if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
     {
-        AActor* Target = Hit.GetActor();
-        if (Target && Target->ActorHasTag("Holdable")) // 持てるオブジェクトにタグを付けておく
-        {
-            IStateControllable* Player = Cast<IStateControllable>(mOwner);
-            if (Player)
-            {
-                if (UPlayerStateComponent* NewState = Player->ChangeState("Hold"))
-                {
-                    if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
-                    {
-                        HoldState->SetUp(Target);
-                    }
-                }
-            }
-        }
+        HoldState->SetUp(Target);
     }
+
+
+
+
 
     return true;
 }

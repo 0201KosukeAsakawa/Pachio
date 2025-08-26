@@ -122,10 +122,10 @@ void UPlayerInputComponent::BindInput(UInputComponent* PlayerInputComponent)
             EnhancedInputComponent->BindAction(ShiftArrayLeftColorAction, ETriggerEvent::Triggered, Owner, &T::ShiftArrayLeftColorMode);
         }
 
-   /*     if constexpr (HasOnStickMove<T>::value)
+        if constexpr (HasOnStickMove<T>::value)
         {
-            EnhancedInputComponent->BindAction(StickMoveAction, ETriggerEvent::Triggered, Owner, &T::OnStickMove);
-        }*/
+            EnhancedInputComponent->BindAction(StickAction, ETriggerEvent::Triggered, Owner, &T::OnStickMove);
+        }
     }
 }
 

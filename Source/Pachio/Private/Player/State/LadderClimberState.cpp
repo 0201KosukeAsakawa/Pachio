@@ -162,7 +162,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
 	ToPlayer.Normalize();
 
-	float Dot = FVector::DotProduct(LadderForward, ToPlayer);
+	float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
 
 	// 後ろ側にいるなら方向を反転
 	if (Dot < 0.f)
