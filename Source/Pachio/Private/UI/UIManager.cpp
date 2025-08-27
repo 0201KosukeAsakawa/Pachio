@@ -101,7 +101,7 @@ UUserWidget* UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetNa
 
     if (!Group.CurrentWidget.IsEmpty())
     {
-        if (Group.CurrentWidget[WidgetName])
+        if (Group.CurrentWidget.Contains(WidgetName))
             return Group.CurrentWidget[WidgetName];
     }
 
