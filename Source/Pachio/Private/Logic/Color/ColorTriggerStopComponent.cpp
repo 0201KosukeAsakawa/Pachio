@@ -17,7 +17,7 @@ bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
     AActor* Owner = GetOwner();
     if (!Owner) return false;
-
+    ToggleNiagaraActiveState(false);
     // �A�N�^�[��\��
     Owner->SetActorHiddenInGame(true);
     // Tick��~
@@ -46,7 +46,7 @@ bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
 {
     AActor* Owner = GetOwner();
     if (!Owner) return false;
-
+    ToggleNiagaraActiveState(true);
     // �A�N�^�[�ĕ\��
     Owner->SetActorHiddenInGame(false);
     // Tick�ėL����

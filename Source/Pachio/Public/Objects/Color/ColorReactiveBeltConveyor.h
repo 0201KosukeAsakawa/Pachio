@@ -66,4 +66,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	bool IsRevers = false;
+
+	UPROPERTY(EditAnywhere)
+	float beatCount = 0;
+	float playBeatCount = 0;
 };
