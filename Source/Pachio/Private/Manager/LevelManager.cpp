@@ -8,8 +8,6 @@
 #include "UI/UIManager.h"
 #include "EngineUtils.h"
 #include "Engine/DataTable.h"
-#include "DataContainer/BlockDataContainer.h"
-#include "DataContainer/AttackDataContainer.h"
 #include "Sound/SoundManager.h"
 
 // シングルトン用の静的インスタンス

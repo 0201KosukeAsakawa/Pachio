@@ -1,36 +1,32 @@
-// Copyright notice を Description ページで記載
-
-// インクルード
-
 #include "Player/PlayerCharacter.h"
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/StateManager.h"
 #include "Player/InGameController.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
-#include "Components/AttackComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/AttackController.h"
 #include "Components/MoveComponent.h"
 #include "Components/Color/ColorControllerComponent.h"
 #include "Components/Player/PlayerInputComponent.h"
 #include "Components/CameraHandlerComponent.h"
 #include "Components/InvincibilityComponent.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "FunctionLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "InputAction.h"
+#include "Interface/Soundable.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h" 
-#include "DataContainer/EffectMatchResult.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
-#include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Objects/ControllableObjectBase.h"
-#include "Interface/Soundable.h"
+#include "UI/UIManager.h"
+
+
 
 
 // コンストラクタ
@@ -41,7 +37,6 @@ APlayerCharacter::APlayerCharacter()
 	// 各種コンポーネントを生成・初期化
 	/*InteractionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("IBox"));*/
 	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
-	AttackController = CreateDefaultSubobject<UAttackController>(TEXT("AttackController"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
@@ -56,7 +51,7 @@ void APlayerCharacter::BeginPlay()
 	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
 	CameraComponent->Init(RootComponent);
 	// ステート管理・攻撃管理初期化
-	InitStateAndAttack();
+	InitState();
 	// 物理パラメータ設定
 	InitPhysicsSettings();
 	// 入力設定初期化
@@ -112,23 +107,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 {
 	return StateManager->GetCurrentState();
-}
-
-// ダメージ処理
-bool APlayerCharacter::TakeDamage(FAttackData Data, float damage, const AActor*)
-{
-	// 無敵状態ならダメージを無効化
-	if (InvincibilityComponent->IsInvincible())
-		return false;
-
-	if (!StateManager)
-		return false;
-
-	// ダメージを受けたら無敵時間開始
-	InvincibilityComponent->StartInvincible();
-
-	// 現在のステートにダメージ処理を委譲
-	return true;
 }
 
 void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
@@ -189,74 +167,13 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
 	StateManager->GetCurrentState()->Jump(physics, JumpForce * JumpBuff);
-	//if (TryEnterLadderOnJump())
-	//{
-	//	physics->SetGravityScale(false);
-	//	return;
-	//}
-
-	//if (!physics || !physics->OnGround())
-	//	return;
-
-	//// ジャンプ力を掛けて力を加える
-	//physics->AddForce(GetActorUpVector(), JumpForce * JumpBuff);
-	//ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-	//sound->PlaySound("SE", "Jump");
 }
-
-//bool APlayerCharacter::TryEnterLadderOnJump() const
-//{
-//	FVector Start = GetActorLocation();
-//	FVector End = Start + FVector(0, 0, 100.f);
-//	FVector BoxHalfExtent = FVector(30.f, 30.f, 100.f);
-//
-//	FCollisionQueryParams Params;
-//	Params.AddIgnoredActor(this);
-//
-//	TArray<FHitResult> Hits;
-//	bool bAnyHit = GetWorld()->SweepMultiByChannel(
-//		Hits,
-//		Start,
-//		End,
-//		FQuat::Identity,
-//		ECC_Visibility, // カスタムチャンネルでも可
-//		FCollisionShape::MakeBox(BoxHalfExtent),
-//		Params
-//	);
-//
-//	if (!bAnyHit)
-//		return false;
-//
-//	for (const FHitResult& Hit : Hits)
-//	{
-//		if (!Hit.GetActor() || !Hit.GetActor()->ActorHasTag("Ladder"))
-//			continue;
-//
-//		ALadderActor* Ladder = Cast<ALadderActor>(Hit.GetActor());
-//		if (!Ladder)
-//			continue;
-//
-//		// ステート切り替え
-//		if (UPlayerStateComponent* NewState = StateManager->ChangeState("Climb"))
-//		{
-//			if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
-//			{
-//				ClimbState->SetTargetLadder(Ladder);
-//				return true;
-//			}
-//		}
-//	}
-//
-//	return false;
-//}
-//
 
 // ダッシュ・スキル開始処理
 // APlayerCharacter.cpp 内の Action メソッド
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
 	StateManager->GetCurrentState()->OnSkill(Value);
-	//CallOnClosestOverlappingActor();
 }
 
 
@@ -316,19 +233,13 @@ UPlayerStateComponent* APlayerCharacter::ChangeState(FString Tag)
 }
 
 // ステート管理・攻撃管理の初期化
-void APlayerCharacter::InitStateAndAttack()
+void APlayerCharacter::InitState()
 {
 	// StateManager を指定のクラスで生成
 	StateManager = NewObject<UStateManager>(this, StateManagerClass);
 
-	if (!AttackController || !StateManagerClass)
+	if ( !StateManagerClass)
 		return;
-
-	// 攻撃コントローラの初期化と攻撃登録
-	AttackController->Init(GetWorld());
-	AttackController->ResetMap();
-	AttackController->RegisterAttackComponent("Stomp");
-
 
 	// ステートマネージャーのコンポーネント登録・初期化
 	StateManager->RegisterComponent();

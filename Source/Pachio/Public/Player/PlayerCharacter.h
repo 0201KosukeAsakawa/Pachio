@@ -3,7 +3,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Interface/IDamageable.h"
 #include "Interface/StateControllable.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ActionControl/CharacterActionInterfaces.h"
@@ -37,10 +36,10 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable, 
-									public IDamageable,public IControllableMover,
-									public IControllableJumper,public IControllableAbility,
-									public IColorModeController,public IStickAction
+class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable,
+	public IControllableMover,
+	public IControllableJumper, public IControllableAbility,
+	public IColorModeController, public IStickAction
 {
 	GENERATED_BODY()
 
@@ -90,21 +89,19 @@ public:
 
 	void OnStickMove(const FInputActionValue& Value)override;
 	void CallOnClosestOverlappingActor();
-	
-private:	
+
+private:
 	// 現在のプレイヤーステート（状態）を取得
 	UPlayerStateComponent* GetPlayerState() const override;
 
 	// 状態変更（ステートタグによる遷移）
 	UPlayerStateComponent* ChangeState(FString Tag) override;
-		void UpdateOverlapUI();
-		void HandleMoveSound(float);
+	void InitState();
+	void UpdateOverlapUI();
+	void HandleMoveSound(float);
 	// ===============
 	// ==== 初期化関数 ====
 	// ===============
-
-	// 状態(State)と攻撃コントローラの初期化
-	void InitStateAndAttack();
 
 	// 物理設定の初期化（摩擦や重力など）
 	void InitPhysicsSettings();
@@ -125,9 +122,6 @@ private:
 	void OnStickRotate(const FVector2D& StickInput);
 	FVector2D PrevInputDir = FVector2D::ZeroVector;
 	bool bHasPrevInputDir = false;
-
-	// ダメージ処理（ダメージ値と攻撃データを受け取る）
-	bool TakeDamage(FAttackData Data, const float damage = 0, const AActor* = nullptr) override;
 
 	void ResetBuff();
 
@@ -162,10 +156,6 @@ private:
 	// ステート管理コンポーネント（状態遷移・更新処理）
 	UPROPERTY()
 	UStateManager* StateManager;
-
-	// 攻撃管理コンポーネント（攻撃の登録・管理・実行）
-	UPROPERTY()
-	UAttackController* AttackController;
 
 	// 物理計算用コンポーネント（地面判定、重力加算など）
 	UPROPERTY()

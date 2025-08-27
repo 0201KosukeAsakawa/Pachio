@@ -70,17 +70,18 @@ void USoundManager::Init()
                 continue;
 
             UAudioComponent* AudioComponent = UGameplayStatics::CreateSound2D(this, sound);
-            if (AudioComponent)
+            if (AudioComponent == nullptr)
+                continue;
+
+            AudioComponent->bAutoDestroy = false;
+
+            if (dataTag == "BGM")
             {
-                AudioComponent->bAutoDestroy = false;
-
-                if (dataTag == "BGM")
-                {
-                    AudioComponent->OnAudioSingleEnvelopeValue.AddDynamic(this, &USoundManager::OnEnvelopeValue);
-                }
-
-                soundData.AudioComponentMap.Add(waveTag, AudioComponent);
+                AudioComponent->OnAudioSingleEnvelopeValue.AddDynamic(this, &USoundManager::OnEnvelopeValue);
             }
+
+            soundData.AudioComponentMap.Add(waveTag, AudioComponent);
+
         }
     }
     ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetColorTargetRegistry()->OnColorApplied.AddDynamic(this, &USoundManager::SetTmp);
@@ -97,7 +98,6 @@ void USoundManager::Tick(float DeltaTime)
     {
         LastPredictedBeat = CurrentBeat;
         OnBeatDetected.Broadcast();
-        UE_LOG(LogTemp, Log, TEXT("Beat detected at BPM: %f"), MusicBPM);
     }
 }
 
@@ -210,12 +210,6 @@ bool USoundManager::PlaySound(FName DataID, FName SoundID, float Volume, bool Is
     // サウンドを再生
     AudioComponent->Play();
 
-    //// BGMが再生される場合、mCurrentBGMを更新
-    //if (DataID == "BGM")
-    //{
-    //    mCurrentBGM = AudioComponent;
-    //}
-
     return true;
 }
 
@@ -323,5 +317,4 @@ void USoundManager::OnMarkerBeat(int64 MarkerPositionMs)
     LastConfirmedBeatTime = MarkerPositionMs / 1000.0f;
     OnBeatDetected.Broadcast();
 
-    UE_LOG(LogTemp, Log, TEXT("Confirmed Beat at %.3f sec"), LastConfirmedBeatTime);
 }

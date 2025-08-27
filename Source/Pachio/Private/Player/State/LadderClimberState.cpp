@@ -61,7 +61,15 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 {
 	if (!mOwner || !Ladder) return false;
 
-	float Input = mOwner->GetInputAxisValue("MoveUp");
+	if (Ladder->IsHidden())
+	{
+		// Hold解除して Default に戻す
+		if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
+		{
+			Player->ChangeState("Default");
+		}
+		return true;
+	}
 
 	const float LadderTopZ = Ladder->GetTopWorldPosition().Z;
 	const float LadderBottomZ = Ladder->GetBottomWorldPosition().Z;
@@ -154,7 +162,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
 	ToPlayer.Normalize();
 
-	float Dot = FVector::DotProduct(LadderForward, ToPlayer);
+	float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
 
 	// 後ろ側にいるなら方向を反転
 	if (Dot < 0.f)

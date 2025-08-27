@@ -87,10 +87,10 @@ void AColorReactiveObject::ResetColor()
 
 void AColorReactiveObject::SetSelectMode(bool bIsSelected)
 {
-		if (!ColorConfigurator)
-			return;
-	
-		ColorConfigurator->SetSelectMode(bIsSelected);
+	if (!ColorConfigurator)
+		return;
+
+	ColorConfigurator->SetSelectMode(bIsSelected);
 }
 
 // マテリアルに色を適用（外部から手動適用する用）
