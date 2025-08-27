@@ -6,6 +6,10 @@
 #include "Components/ActorComponent.h"
 #include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveComponent.generated.h"
+
+
+class ANiagaraActor;
+
 struct FHSLColor
 {
 	float H; // 0.0?1.0
@@ -17,25 +21,26 @@ class PACHIO_API UColorReactiveComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UColorReactiveComponent();
-		
-public :
+
+public:
 	virtual void Init(UMeshComponent* mesh);
-	void SetMyColor(const FLinearColor& FilterColor, EBuffEffect);
+	void UpdateColorEffectAndNiagara(const FLinearColor& FilterColor, EBuffEffect, TArray<ANiagaraActor*>);
 	void ApplyColorToMaterial(FLinearColor InColor);
-	bool CheckColorMatch(FEffectMatchResult,const FLinearColor& FilterColor,const bool buseComplementaryColor = false);
+	bool CheckColorMatch(FEffectMatchResult, const FLinearColor& FilterColor, const bool buseComplementaryColor = false);
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
 	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
-
 	void SetSelectMode(bool);
+protected:
+	void ToggleNiagaraActiveState(bool);
 private:
-    UFUNCTION(BlueprintCallable)
-    virtual bool OnColorMatched(const FLinearColor& FilterColor);  
+	UFUNCTION(BlueprintCallable)
+	virtual bool OnColorMatched(const FLinearColor& FilterColor);
 	virtual bool OnColorMismatched(const FLinearColor& FilterColor);
 protected:
 	UPROPERTY(EditAnywhere)
@@ -47,9 +52,12 @@ protected:
 	FLinearColor CurrentColor;
 
 	UPROPERTY()
+	TArray<ANiagaraActor*> Niagaras;
+
+	UPROPERTY()
 	UMaterialInstanceDynamic* DynamicMaterialInstance = nullptr;
 
-		UPROPERTY()
+	UPROPERTY()
 	UMaterialInstanceDynamic* DynMesh;
 
 	bool bSelected = false;

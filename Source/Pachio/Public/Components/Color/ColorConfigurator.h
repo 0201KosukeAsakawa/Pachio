@@ -5,10 +5,13 @@
 #include "DataContainer/EffectMatchResult.h"
 #include "ColorConfigurator.generated.h"
 
-class UColorReactiveComponent;
-class UBeatScalerComponent;
 class ALevelManager;
+class ANiagaraActor;
+class UBeatScalerComponent;
+class UColorReactiveComponent;
 class UColorManager;
+
+
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UColorConfigurator : public UActorComponent
@@ -105,6 +108,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Color")
 	EBuffEffect Effect;
+
+	UPROPERTY(EditAnywhere)
+	TArray<ANiagaraActor*> Niagaras;
 
 private:
 	bool bIsSelected = false;

@@ -2,6 +2,8 @@
 
 
 #include "Components/Color/ColorReactiveComponent.h"
+#include "NiagaraActor.h"
+#include "NiagaraComponent.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "FunctionLibrary.h"
@@ -42,10 +44,11 @@ void UColorReactiveComponent::Init(UMeshComponent* mesh)
 }
 
 
-void UColorReactiveComponent::SetMyColor(const FLinearColor& FilterColor,EBuffEffect newEffect)
+void UColorReactiveComponent::UpdateColorEffectAndNiagara(const FLinearColor& FilterColor,EBuffEffect newEffect, TArray<ANiagaraActor*>NiagaraComponents)
 {
 	CurrentColor = FilterColor;
 	Effect = newEffect;
+	Niagaras = NiagaraComponents;
 }
 
 bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FLinearColor& FilterColor, const bool buseComplementaryColor)
@@ -190,6 +193,27 @@ void UColorReactiveComponent::SetSelectMode(bool bIsNowSelected)
 		DynMesh->SetVectorParameterValue(FName("EmissiveColor"), FLinearColor::Black);
 	}
 	// 選択ONのときはTickで動的に処理する
+}
+
+void UColorReactiveComponent::ToggleNiagaraActiveState(bool bVisible)
+{
+	if (GetOwner() == nullptr)
+		return;
+
+	TArray<ANiagaraActor*> NiagaraComponents = Niagaras;
+
+	for (ANiagaraActor* NiagaraActor : NiagaraComponents)
+	{
+		if (NiagaraActor == nullptr)
+			continue;
+		NiagaraActor->SetActorHiddenInGame(!bVisible); // アクター自体の非表示
+		NiagaraActor->SetActorEnableCollision(bVisible); // 当たり判定の有無（必要なら）
+
+		UNiagaraComponent* NiagaraComp = NiagaraActor->GetNiagaraComponent();
+
+		NiagaraComp->SetVisibility(bVisible, true); // コンポーネントの描画非表示
+		NiagaraComp->SetPaused(!bVisible);          // シミュレーション停止
+	}
 }
 
 void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
