@@ -119,7 +119,7 @@ void APlayerCharacter::ResetBuff()
 	 JumpBuff = 1;
 	 GetCharacterMovement()->GroundFriction = 8.0f;
 	 GetCharacterMovement()->BrakingDecelerationWalking = 2048.f;
-	 physics->SetGravityScale();
+	 physics->SetGravityScale(true,10);
 }
 
 void APlayerCharacter::Circle()
@@ -251,7 +251,7 @@ void APlayerCharacter::InitPhysicsSettings()
 {
 	physics->RegisterComponent();
 	// 重力を加える（値は任意、固定で10.0fを加算）
-	physics->SetGravityScale(true,10.0f);
+	physics->SetGravityScale(true,50.0f);
 
 	auto* Move = GetCharacterMovement();
 

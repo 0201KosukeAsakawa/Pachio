@@ -132,11 +132,17 @@ void AColorReactiveBeltConveyor::OnOverlapEnd(UPrimitiveComponent* OverlappedCom
 
 void AColorReactiveBeltConveyor::OnBeatDetected()
 {
+    if (beatCount > playBeatCount)
+    {
+        ++playBeatCount;
+        return;
+    }
+
     // コリジョン無効時は処理スキップ
     if (!BoxComponent->IsCollisionEnabled())
     {
         // 無効なので、force を止める（例: hitObject をリセット）
-        hitObject.Empty(); // 全て削除するならこれが最も明確で安全
+        hitObject.Empty();
         return;
     }
 
@@ -148,4 +154,6 @@ void AColorReactiveBeltConveyor::OnBeatDetected()
             target->AddForce(CurrentDirection, CurrentPower, true);
         }
     }
+
+    playBeatCount = 0;
 }

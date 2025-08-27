@@ -33,7 +33,7 @@ void UColorConfigurator::InitializeColorLogic()
 
 	ColorReactiveComponent->RegisterComponent();
 	ColorReactiveComponent->Activate(true);
-	ColorReactiveComponent->SetMyColor(StartColor, Effect);
+	ColorReactiveComponent->UpdateColorEffectAndNiagara(StartColor, Effect, Niagaras);
 
 	if (UStaticMeshComponent* Mesh = GetStaticMesh())
 	{
@@ -98,7 +98,7 @@ void UColorConfigurator::SetColor(FLinearColor NewColor, FEffectMatchResult resu
 
 	if (ColorReactiveComponent)
 	{
-		ColorReactiveComponent->SetMyColor(CurrentColor, result.ClosestEffect);
+		ColorReactiveComponent->UpdateColorEffectAndNiagara(CurrentColor, result.ClosestEffect , Niagaras);
 	}
 
 	if (const UColorManager* ColorManager = GetColorManager())

@@ -28,7 +28,7 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	AActor* Owner = GetOwner();
 
 	// --- ここで OffMesh 状態を判定 ---
-	if (Owner->IsHidden() )
+	if (Owner->IsHidden())
 	{
 		// オーナーが非表示 or Tick 無効なら処理を止める
 		return;
@@ -49,18 +49,18 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		FVector currentPosition = GetOwner()->GetActorLocation();
 		float distanceZ = currentPosition.Z - PreviousPosition.Z;
 
-		if (distanceZ < 0 && OnGround())
+		if (distanceZ < 0)
 		{
 			ForceDirection.Z = 0;
 			ForceScale = 0;
+			Timer = 0;
 			bIsPhysicsEnabled = true;
-			Velocity = FVector::ZeroVector;
 		}
-		PreviousPosition = currentPosition;
 
-		return;
+		PreviousPosition = currentPosition;
 	}
 }
+
 
 void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
 {
@@ -83,7 +83,7 @@ void UPhysicsCalculator::AddGravity()
 {
 	if (OnGround())
 	{
-		Timer = 0;
+		bIsPhysicsEnabled = false;
 		return;
 	}
 
@@ -98,7 +98,7 @@ bool UPhysicsCalculator::OnGround() const
 
 	FVector ActorLocation = Owner->GetActorLocation();
 	FVector ActorScale = Owner->GetActorScale();
-	FVector BoxExtent(20.0f * ActorScale.X, 20.0f * ActorScale.Y, 2.0f); // 薄い足元のボックス
+	FVector BoxExtent(40.0f * ActorScale.X, 20.0f * ActorScale.Y, 5.0f); // 薄い足元のボックス
 
 	float HalfHeight = Owner->GetSimpleCollisionHalfHeight();
 
