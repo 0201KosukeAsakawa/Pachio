@@ -69,6 +69,9 @@ void UColorConfigurator::SetupMaterial()
 
 void UColorConfigurator::PlayBeatAnimation()
 {
+	if (!bIsPlayBeat)
+		return;
+
 	if (BeatScalerComponent)
 	{
 		BeatScalerComponent->PlayBeat();

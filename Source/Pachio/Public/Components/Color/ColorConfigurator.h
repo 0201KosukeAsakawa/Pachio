@@ -114,4 +114,7 @@ protected:
 
 private:
 	bool bIsSelected = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bIsPlayBeat = true;
 };

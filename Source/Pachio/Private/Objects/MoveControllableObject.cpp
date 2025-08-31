@@ -47,40 +47,19 @@ void AMoveControllableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!bIsMoving || !bCanMove)
-		return;
 
-	FVector PreviousLocation = GetActorLocation();
-
-	MoveElapsedTime += DeltaTime;
-	float Alpha = FMath::Clamp(MoveElapsedTime / MoveDuration, 0.f, 1.f);
-
-	FVector NewLocation = FMath::Lerp(MoveStartLocation, MoveTargetLocation, Alpha);
-	SetActorLocation(NewLocation);
-
-	// 上に乗っているアクターを一緒に動かす
-	FVector Offset = NewLocation - PreviousLocation;
-	TArray<AActor*> target = AttachedActors;
-	for (AActor* ActorOnTop : target)
+	if (bPlayBeat)
 	{
-		if (ActorOnTop)
-		{
-			ActorOnTop->AddActorWorldOffset(Offset,true);
-		}
-	}
-	TArray<AActor*> children = Child;
-	for (AActor* ChildActor : children)
-	{
-		if (ChildActor)
-		{
-			ChildActor->AddActorWorldOffset(Offset);
-		}
+		if (!bIsMoving)
+			return;
 	}
 
-	if (Alpha >= 1.f)
+	if (bCanMove)
 	{
-		bIsMoving = false;
+		Movement(DeltaTime);
+		Check();
 	}
+
 }
 
 void AMoveControllableObject::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -125,6 +104,57 @@ void AMoveControllableObject::OnBeatDetected()
 		return;
 	}
 
+	Check();
+
+	bIsMoving = true;
+	MoveElapsedTime = 0.0f;
+	PlayCount = 0;
+}
+
+void AMoveControllableObject::ColorAction(FLinearColor color, FEffectMatchResult result)
+{
+	AColorReactiveObject::ColorAction(color,result);
+	
+	ColorConfigurator->IsColorMatch(color, FLinearColor(1, 0.7, 0.8, 1)) ? bCanMove = false : bCanMove = true;
+}
+
+void AMoveControllableObject::Movement(float DeltaTime)
+{
+	FVector PreviousLocation = GetActorLocation();
+
+	MoveElapsedTime += DeltaTime;
+	float Alpha = FMath::Clamp(MoveElapsedTime / MoveDuration, 0.f, 1.f);
+
+	FVector NewLocation = FMath::Lerp(MoveStartLocation, MoveTargetLocation, Alpha);
+	SetActorLocation(NewLocation);
+
+	// 上に乗っているアクターを一緒に動かす
+	FVector Offset = NewLocation - PreviousLocation;
+	TArray<AActor*> target = AttachedActors;
+	for (AActor* ActorOnTop : target)
+	{
+		if (ActorOnTop)
+		{
+			ActorOnTop->AddActorWorldOffset(Offset, true);
+		}
+	}
+	TArray<AActor*> children = Child;
+	for (AActor* ChildActor : children)
+	{
+		if (ChildActor)
+		{
+			ChildActor->AddActorWorldOffset(Offset);
+		}
+	}
+
+	if (Alpha >= 1.f)
+	{
+		bIsMoving = false;
+	}
+}
+
+void AMoveControllableObject::Check()
+{
 	FVector CurrentLocation = GetActorLocation();
 	FVector TargetLocation = PatrolPoints[CurrentPatrolIndex];
 	float Distance = FVector::Dist(CurrentLocation, TargetLocation);
@@ -156,15 +186,4 @@ void AMoveControllableObject::OnBeatDetected()
 		// 目的地まで直接移動
 		MoveTargetLocation = TargetLocation;
 	}
-
-	bIsMoving = true;
-	MoveElapsedTime = 0.0f;
-	PlayCount = 0;
-}
-
-void AMoveControllableObject::ColorAction(FLinearColor color, FEffectMatchResult result)
-{
-	AColorReactiveObject::ColorAction(color,result);
-	
-	ColorConfigurator->IsColorMatch(color, FLinearColor(1, 0.7, 0.8, 1)) ? bCanMove = false : bCanMove = true;
 }
