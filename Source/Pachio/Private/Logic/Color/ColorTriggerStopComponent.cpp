@@ -3,6 +3,8 @@
 
 #include "Logic/Color/ColorTriggerStopComponent.h"
 #include "FunctionLibrary.h"
+#include "Manager/LevelManager.h"
+#include "Manager/ColorManager.h"
 #include "Components/BoxComponent.h"
 
 
@@ -15,58 +17,69 @@ UColorTriggerStopComponent::UColorTriggerStopComponent()
 
 bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
+    if (bHide) return false;
+
     AActor* Owner = GetOwner();
     if (!Owner) return false;
-    ToggleNiagaraActiveState(false);
-    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ï¿½\ï¿½ï¿½
-    Owner->SetActorHiddenInGame(true);
-    // Tickï¿½ï¿½~
-    Owner->SetActorTickEnabled(false);
-    // ï¿½ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½Iï¿½t
-    Owner->SetActorEnableCollision(false);
 
-    // ï¿½Oï¿½Ì‚ï¿½ï¿½ßAï¿½Sï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½Tickï¿½ï¿½Iï¿½tï¿½ï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½É‚ï¿½ï¿½ï¿½
-    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
-    for (UActorComponent* Comp : Components)
+    for (UActorComponent* Component : Owner->GetComponents())
     {
-        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        if (Component->ComponentHasTag("HideTarget"))
         {
-            Prim->SetVisibility(false);
-            Prim->SetHiddenInGame(true);
-            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-            Prim->SetComponentTickEnabled(false);
-            Prim->SetCastShadow(false);
+            // PrimitiveComponent ‚È‚ç‹Šo‚ÆƒRƒŠƒWƒ‡ƒ“‚ğƒIƒt
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                Primitive->SetVisibility(false, false);
+                Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            }
+
+            // ƒAƒNƒ^[ƒRƒ“ƒ|[ƒlƒ“ƒg‚Å‚ ‚ê‚Î“®ì‚ğ’â~
+            if (Component->IsActive())
+            {
+                Component->Deactivate();
+            }
+
+            // ‚à‚µ Tick ‚à~‚ß‚½‚¢ê‡
+            Component->PrimaryComponentTick.SetTickFunctionEnable(false);
         }
     }
 
-    return true;
+    ActiveEffect();
+
+    bHide = true;
+
+    return bHide;
 }
+
 
 bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterColor)
 {
+    if (!bHide) return false;
+
     AActor* Owner = GetOwner();
     if (!Owner) return false;
-    ToggleNiagaraActiveState(true);
-    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Ä•\ï¿½ï¿½
-    Owner->SetActorHiddenInGame(false);
-    // Tickï¿½Ä—Lï¿½ï¿½ï¿½ï¿½
-    Owner->SetActorTickEnabled(true);
-    // ï¿½ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½Ä—Lï¿½ï¿½ï¿½ï¿½
-    Owner->SetActorEnableCollision(true);
 
-    // ï¿½Sï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½É–ß‚ï¿½
-    TArray<UActorComponent*> Components = Owner->GetComponents().Array();
-    for (UActorComponent* Comp : Components)
+    for (UActorComponent* Component : Owner->GetComponents())
     {
-        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        if (Component->ComponentHasTag("HideTarget"))
         {
-            Prim->SetVisibility(true);
-            Prim->SetHiddenInGame(false);
-            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-            Prim->SetComponentTickEnabled(true);
-            Prim->SetCastShadow(true);
+            // PrimitiveComponent ‚È‚ç‹Šo‚ÆƒRƒŠƒWƒ‡ƒ“‚ğƒIƒt
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                Primitive->SetVisibility(true, true);
+                Primitive->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            }
+
+            // ƒAƒNƒ^[ƒRƒ“ƒ|[ƒlƒ“ƒg‚Å‚ ‚ê‚Î“®ì‚ğ’â~
+            if (Component->IsActive())
+            {
+                Component->Activate(true);
+            }
+
+            // ‚à‚µ Tick ‚à~‚ß‚½‚¢ê‡
+            Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
 
-    return false;
+   return bHide = false;
 }
