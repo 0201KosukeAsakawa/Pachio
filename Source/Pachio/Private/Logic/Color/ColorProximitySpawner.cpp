@@ -15,60 +15,80 @@ UColorProximitySpawner::UColorProximitySpawner()
 bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(true);
-    OnMesh();
    
+    OffMesh();
     return false;
 }
 
 bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(false);
-    OffMesh();
+    OnMesh();
     return true;
 }
 
 void UColorProximitySpawner::OnMesh()
 {
+    if (bHide) return;
+
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½\ï¿½ï¿½ & Tick ï¿½ÄŠJ
-    Owner->SetActorHiddenInGame(false);
-    Owner->SetActorTickEnabled(true);
-
-    for (UActorComponent* Comp : Owner->GetComponents())
+    for (UActorComponent* Component : Owner->GetComponents())
     {
-        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        if (Component->ComponentHasTag("HideTarget"))
         {
-            Prim->SetVisibility(true);
-            Prim->SetHiddenInGame(false);
-            Prim->SetCastShadow(true);
-            Prim->SetComponentTickEnabled(true);
-            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            // PrimitiveComponent ‚È‚ç‹Šo‚ÆƒRƒŠƒWƒ‡ƒ“‚ğƒIƒt
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                Primitive->SetVisibility(false, false);
+                Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            }
+
+            // ƒAƒNƒ^[ƒRƒ“ƒ|[ƒlƒ“ƒg‚Å‚ ‚ê‚Î“®ì‚ğ’â~
+            if (Component->IsActive())
+            {
+                Component->Deactivate();
+            }
+
+            // ‚à‚µ Tick ‚à~‚ß‚½‚¢ê‡
+            Component->PrimaryComponentTick.SetTickFunctionEnable(false);
         }
     }
+
+    ActiveEffect();
+
+    bHide = true;
 }
 
 void UColorProximitySpawner::OffMesh()
 {
+    if (!bHide) return;
+
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½ï¿½\ï¿½ï¿½ & Tick ï¿½ï¿½~
-    Owner->SetActorHiddenInGame(true);
-    Owner->SetActorTickEnabled(false);
-
-    // ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ğ’²ï¿½
-    for (UActorComponent* Comp : Owner->GetComponents())
+    for (UActorComponent* Component : Owner->GetComponents())
     {
-        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        if (Component->ComponentHasTag("HideTarget"))
         {
-            Prim->SetVisibility(false);
-            Prim->SetHiddenInGame(true);
-            Prim->SetCastShadow(false);
-            Prim->SetComponentTickEnabled(false);
+            // PrimitiveComponent ‚È‚ç‹Šo‚ÆƒRƒŠƒWƒ‡ƒ“‚ğƒIƒt
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                Primitive->SetVisibility(true, true);
+                Primitive->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            }
 
-            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            // ƒAƒNƒ^[ƒRƒ“ƒ|[ƒlƒ“ƒg‚Å‚ ‚ê‚Î“®ì‚ğ’â~
+            if (Component->IsActive())
+            {
+                Component->Activate(true);
+            }
+
+            // ‚à‚µ Tick ‚à~‚ß‚½‚¢ê‡
+            Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
+
+    bHide = false;
 }
