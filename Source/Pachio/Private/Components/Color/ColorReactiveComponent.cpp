@@ -78,7 +78,7 @@ bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FL
 	FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
 		->GetColorManager()
 		->GetClosestEffectByHue(FilterColor);
-	UE_LOG(LogTemp, Log, TEXT("StrengthRatio: %f"), Match.StrengthRatio);
+
 	bool bMatch;
 	if ((result.ClosestEffect == Effect))
 	{

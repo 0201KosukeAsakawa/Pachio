@@ -18,36 +18,64 @@ FEffectMatchResult UEffectColorMatcher::GetClosestEffectByHue(const FLinearColor
 {
     FEffectMatchResult result;
 
-    float MinDistance = TNumericLimits<float>::Max();
-    float MaxPossibleDistance = FMath::Sqrt(3.0f); // RGB距離の最大値（(1,1,1)と(0,0,0)の距離）
+    // 入力色をHSVに変換
+    FLinearColor InputHSV = InputColor.LinearRGBToHSV();
+    float InputHue = FMath::Fmod(InputHSV.R + 360.0f, 360.0f); // 0～360度に正規化
+    float InputSat = FMath::Clamp(InputHSV.G, 0.0f, 1.0f);
+    float InputVal = FMath::Clamp(InputHSV.B, 0.0f, 1.0f);
 
+    float MinDistance = TNumericLimits<float>::Max();
     EBuffEffect ClosestEffect = EBuffEffect::Red;
+
+    // 重み（Hue, Saturation, Value）
+    const float HueWeight = 1.0f;
+    const float SatWeight = 1.0f;
+    const float ValWeight = 2.0f; // 明度差を強調
 
     for (const auto& Elem : EffectColorMap)
     {
-        float Distance = GetColorDistanceRGB(InputColor, Elem.Value);
+        FLinearColor EffectHSV = Elem.Value.LinearRGBToHSV();
+        float EffectHue = FMath::Fmod(EffectHSV.R + 360.0f, 360.0f);
+        float EffectSat = FMath::Clamp(EffectHSV.G, 0.0f, 1.0f);
+        float EffectVal = FMath::Clamp(EffectHSV.B, 0.0f, 1.0f);
 
-        UE_LOG(LogTemp, Log, TEXT("Comparing with %d: RGB Distance = %.4f"),
-            static_cast<int32>(Elem.Key), Distance);
+        // Hue差を0~180で正規化
+        float HueDiff = FMath::Abs(InputHue - EffectHue);
+        HueDiff = FMath::Min(HueDiff, 360.0f - HueDiff) / 180.0f; // 0~1
+        float SatDiff = FMath::Abs(InputSat - EffectSat);           // 0~1
+        float ValDiff = FMath::Abs(InputVal - EffectVal);           // 0~1
 
-        if (Distance < MinDistance)
+        // 重み付き距離
+        float Distance = (HueDiff * HueWeight + SatDiff * SatWeight + ValDiff * ValWeight) / (HueWeight + SatWeight + ValWeight);
+
+        // 明度差が大きすぎる場合は距離を最大化（線形補正）
+        if (ValDiff > 0.5f)
+        {
+            Distance = FMath::Clamp(Distance + (ValDiff - 0.5f), 0.0f, 1.0f);
+        }
+
+        UE_LOG(LogTemp, Log, TEXT("Comparing %d: HueDiff=%.3f SatDiff=%.3f ValDiff=%.3f WeightedDistance=%.3f"),
+            static_cast<int32>(Elem.Key), HueDiff, SatDiff, ValDiff, Distance);
+
+        // 浮動小数点誤差を考慮して最小距離更新
+        if (Distance + KINDA_SMALL_NUMBER < MinDistance)
         {
             MinDistance = Distance;
             ClosestEffect = Elem.Key;
         }
     }
 
-    // 距離が最大値に近いほど弱く、0に近いほど強い（逆スケール）
-    float StrengthRatio = 1.0f - (MinDistance / MaxPossibleDistance);
-    StrengthRatio = FMath::Clamp(StrengthRatio, 0.0f, 1.0f); // 念のため
-
-    // 結果設定
+    // 距離を StrengthRatio に変換
+    float StrengthRatio = 1.0f - MinDistance;
+    StrengthRatio = FMath::Clamp(StrengthRatio, 0.0f, 1.0f);
+    UE_LOG(LogTemp, Log, TEXT("MinDistance %f"), MinDistance);
     result.ClosestEffect = ClosestEffect;
     result.Distance = MinDistance;
     result.StrengthRatio = StrengthRatio;
 
     return result;
 }
+
 
 float UEffectColorMatcher::GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B)
 {
