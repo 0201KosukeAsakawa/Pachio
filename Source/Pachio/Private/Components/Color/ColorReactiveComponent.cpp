@@ -14,11 +14,17 @@
 UColorReactiveComponent::UColorReactiveComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> NiagaraEffectAsset(TEXT("/Game/Niagara/FireflyBurst.FireflyBurst"));
-	if (NiagaraEffectAsset.Succeeded())
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> FireflyBurst(TEXT("/Game/Niagara/FireflyBurst.FireflyBurst"));
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> Firefly(TEXT("/Game/Niagara/Firefly.Firefly"));
+	if (FireflyBurst.Succeeded())
 	{
-		NiagaraSystem = NiagaraEffectAsset.Object;
+		FireflyBurstNiagaraSystem = FireflyBurst.Object;
 	}
+	if (Firefly.Succeeded())
+	{
+		FireflyNiagaraSystem = Firefly.Object;
+	}
+	
 }
 
 void UColorReactiveComponent::Init(UMeshComponent* mesh)
@@ -297,14 +303,20 @@ bool UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
 
 void UColorReactiveComponent::ActiveEffect()
 {
-	if (!NiagaraSystem)
+	ActiveNiagaraEffect(FireflyBurstNiagaraSystem);
+	ActiveNiagaraEffect(FireflyNiagaraSystem);
+}
+
+void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
+{
+	if (!niagaraSystem)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("NiagaraSystem is null"));
 		return;
 	}
 
 	// アタッチするコンポーネントを取得（例: RootComponent）
-	USkeletalMeshComponent* AttachComponent = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(),TEXT("Mesh"));
+	USkeletalMeshComponent* AttachComponent = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh"));
 	if (!AttachComponent)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AttachComponent is null"));
@@ -313,7 +325,7 @@ void UColorReactiveComponent::ActiveEffect()
 
 	// Niagaraエフェクトをアタッチして再生
 	UNiagaraFunctionLibrary::SpawnSystemAttached(
-		NiagaraSystem,
+		niagaraSystem,
 		AttachComponent,
 		NAME_None,
 		FVector::ZeroVector,
