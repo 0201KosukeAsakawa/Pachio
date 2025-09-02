@@ -8,7 +8,7 @@ UCameraHandlerComponent::UCameraHandlerComponent()
 
     
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-
+    
     InterpSpeed = 3.0f;
 }
 
@@ -16,7 +16,7 @@ void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 {
     if (Camera == nullptr || RootComponent == nullptr)
         return;
-
+    //SetComponentTickEnabled(false);
     SetCameraLocation(CameraViewType);
     SetCameraRotation(CameraViewType);
 }

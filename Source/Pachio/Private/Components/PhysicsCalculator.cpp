@@ -28,7 +28,7 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	AActor* Owner = GetOwner();
 
 	// --- ここで OffMesh 状態を判定 ---
-	if (Owner->IsHidden())
+	if (IsActive())
 	{
 		// オーナーが非表示 or Tick 無効なら処理を止める
 		return;
