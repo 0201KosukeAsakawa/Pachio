@@ -29,6 +29,9 @@ public:
     UFUNCTION(BlueprintCallable)
     void AdjustColor(float Delta);
 
+    UFUNCTION(BlueprintCallable)
+    void SetColor(float value);
+    
     // 現在の色を取得
     UFUNCTION(BlueprintCallable)
     FLinearColor GetCurrentColor() const { return ColorMap[CurrentColorMode]; }

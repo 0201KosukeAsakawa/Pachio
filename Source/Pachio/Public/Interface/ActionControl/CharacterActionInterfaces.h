@@ -112,3 +112,22 @@ class PACHIO_API IStickAction
 public:
 	virtual void OnStickMove(const FInputActionValue& Value);
 };
+
+// This class does not need to be modified.
+UINTERFACE(MinimalAPI)
+class UOptionAction : public UInterface
+{
+	GENERATED_BODY()
+};
+
+/**
+ *
+ */
+class PACHIO_API IOptionAction
+{
+	GENERATED_BODY()
+
+	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+public:
+	virtual void OpenMenu(const FInputActionValue& Value);
+};

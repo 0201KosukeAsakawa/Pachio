@@ -191,8 +191,6 @@ FLinearColor UColorReactiveComponent::GetComplementaryColor(const FLinearColor& 
 
 	Complementary.A = 1.0f;
 	// ログ出力（RGBA各成分を表示）
-	UE_LOG(LogTemp, Log, TEXT("Applying color to material: R=%.3f, G=%.3f, B=%.3f, A=%.3f"),
-		Complementary.R, Complementary.G, Complementary.B, Complementary.A);
 	return Complementary;
 }
 

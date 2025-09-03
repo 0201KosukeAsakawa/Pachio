@@ -39,7 +39,8 @@ UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable,
 	public IControllableMover,
 	public IControllableJumper, public IControllableAbility,
-	public IColorModeController, public IStickAction
+	public IColorModeController, public IStickAction,
+	public IOptionAction
 {
 	GENERATED_BODY()
 
@@ -81,6 +82,7 @@ public:
 	void OnMouseScroll(const FInputActionValue& Value);
 
 	void ChangeColor(float)override;
+	void SetColor(float);
 
 	// カラーモードを1つ右にシフト
 	void ShiftArrayRightColorMode()override;
@@ -90,6 +92,8 @@ public:
 
 	void OnStickMove(const FInputActionValue& Value)override;
 	void CallOnClosestOverlappingActor();
+
+	void OpenMenu(const FInputActionValue& Value)override;
 
 	UFUNCTION(BlueprintCallable)
 	UCameraComponent* GetCamera();

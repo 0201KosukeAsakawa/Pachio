@@ -47,6 +47,24 @@ void UColorControllerComponent::AdjustColor(float Delta)
     OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
 }
 
+void UColorControllerComponent::SetColor(float value)
+{
+    FLinearColor HSV = ColorMap[CurrentColorMode].LinearRGBToHSV();
+
+    float Hue = HSV.R;
+    float Saturation = FMath::Clamp(HSV.G, 0.2f, 0.6f); // 彩度
+    float Value = FMath::Clamp(HSV.B, 0.8f, 1.0f);      // 明度
+
+    Hue = FMath::Fmod(value, 360.0f);
+    if (Hue < 0.f) Hue += 360.f;
+
+    FLinearColor NewColor = FLinearColor(Hue, Saturation, Value).HSVToLinearRGB();
+    ColorMap[CurrentColorMode] = FLinearColor(NewColor.R, NewColor.G, NewColor.B, ColorMap[CurrentColorMode].A);
+
+    OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
+}
+
+
 void UColorControllerComponent::ChangeMode(int Direction)
 {
     Direction = (Direction >= 1) ? 1 : -1;

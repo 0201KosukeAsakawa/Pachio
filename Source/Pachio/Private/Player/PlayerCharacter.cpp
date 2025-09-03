@@ -215,6 +215,14 @@ void APlayerCharacter::ChangeColor(float value)
 	colorController->AdjustColor(value);
 }
 
+void APlayerCharacter::SetColor(float value)
+{
+	if (!colorController)
+		return;
+
+	colorController->SetColor(value);
+}
+
 // カラーモードを右にシフト（次の色モードへ変更）
 void APlayerCharacter::ShiftArrayRightColorMode()
 {
@@ -332,11 +340,14 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 	{
-		const float DeadZone = 0.2f;
+		//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
+
+		const float DeadZone = 0.02f;
 		if (StickInput.SizeSquared() < DeadZone)
 			return;
 
-		FVector2D InputDir = StickInput.GetSafeNormal(); // 正規化
+		// 正規化
+		FVector2D InputDir = StickInput.GetSafeNormal();
 
 		if (!bHasPrevInputDir)
 		{
@@ -345,22 +356,32 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 			return;
 		}
 
-		// 2Dクロス積で回転方向判定（Z成分だけ取る）
-		float CrossZ = InputDir.X * PrevInputDir.Y - InputDir.Y * PrevInputDir.X;
+		// 2Dクロス積で回転方向判定
+		// crossZ = |a||b|sin(θ)
+		float CrossZ = FVector2D::CrossProduct(InputDir, PrevInputDir);
+		//crossZはSinθと考える
+		//いったんDegreeに直してログを出したい
+		float deg = asin(CrossZ) * 180.0f / 3.14f;
 
-		const float epsilon = 0.01f;
-		if (CrossZ > epsilon)
+		//右方向ベクトルを基準としたスティックの現在の角度を作る
+		//float CrossZ2 = FVector2D::CrossProduct(FVector2D::UnitX(), InputDir);
+		//float deg2 = asin(CrossZ2) * 180.0f / 3.14f;
+
+		const float epsilon = 0.001f;
+		
+		if ( abs(deg) > epsilon)
 		{
 			UE_LOG(LogTemp, Log, TEXT("回転方向：左回り（反時計回り）"));
-			ChangeColor(-0.01);
+			ChangeColor(-deg/360.0f);
+			//SetColor(deg);
 			PrevInputDir = InputDir;
 		}
-		else if (CrossZ < -epsilon)
-		{
-			UE_LOG(LogTemp, Log, TEXT("回転方向：右回り（時計回り）"));
-			ChangeColor(0.01);
-			PrevInputDir = InputDir;
-		}
+//		else if (CrossZ < -epsilon)
+//		{
+//			UE_LOG(LogTemp, Log, TEXT("回転方向：右回り（時計回り）"));
+//			ChangeColor(-deg / 360.0f);
+//			PrevInputDir = InputDir;
+//		}
 
 	}
 void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
@@ -403,6 +424,11 @@ void APlayerCharacter::CallOnClosestOverlappingActor()
 		// 呼んだら終わり
 		return;
 	}
+}
+
+void APlayerCharacter::OpenMenu(const FInputActionValue& Value)
+{
+	ALevelManager::GetInstance(GetWorld())->GetUIManager()->ShowWidget(EWidgetCategory::Menu, "Menu");
 }
 
 UCameraComponent* APlayerCharacter::GetCamera()
