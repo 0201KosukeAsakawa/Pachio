@@ -91,6 +91,8 @@ public:
 	void OnStickMove(const FInputActionValue& Value)override;
 	void CallOnClosestOverlappingActor();
 
+	UFUNCTION(BlueprintCallable)
+	UCameraComponent* GetCamera();
 private:
 	// 現在のプレイヤーステート（状態）を取得
 	UPlayerStateComponent* GetPlayerState() const override;

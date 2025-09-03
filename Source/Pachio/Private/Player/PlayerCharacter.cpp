@@ -405,6 +405,14 @@ void APlayerCharacter::CallOnClosestOverlappingActor()
 	}
 }
 
+UCameraComponent* APlayerCharacter::GetCamera()
+{
+	if (CameraComponent == nullptr)
+		return nullptr;
+
+	return CameraComponent->GetCamera();
+}
+
 void APlayerCharacter::UpdateOverlapUI()
 {
 	if (!InteractionBox)
