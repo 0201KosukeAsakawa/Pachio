@@ -16,7 +16,7 @@ void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 {
     if (Camera == nullptr || RootComponent == nullptr)
         return;
-    //SetComponentTickEnabled(false);
+  //  SetComponentTickEnabled(false);
     SetCameraLocation(CameraViewType);
     SetCameraRotation(CameraViewType);
 }

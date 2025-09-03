@@ -15,16 +15,10 @@ UColorReactiveComponent::UColorReactiveComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> FireflyBurst(TEXT("/Game/Niagara/FireflyBurst.FireflyBurst"));
-	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> Firefly(TEXT("/Game/Niagara/Firefly.Firefly"));
 	if (FireflyBurst.Succeeded())
 	{
 		FireflyBurstNiagaraSystem = FireflyBurst.Object;
 	}
-	if (Firefly.Succeeded())
-	{
-		FireflyNiagaraSystem = Firefly.Object;
-	}
-	
 }
 
 void UColorReactiveComponent::Init(UMeshComponent* mesh)
@@ -304,7 +298,6 @@ bool UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
 void UColorReactiveComponent::ActiveEffect()
 {
 	ActiveNiagaraEffect(FireflyBurstNiagaraSystem);
-	ActiveNiagaraEffect(FireflyNiagaraSystem);
 }
 
 void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)

@@ -66,8 +66,6 @@ protected:
 
 	UPROPERTY()
 	UNiagaraSystem* FireflyBurstNiagaraSystem = nullptr;
-	UPROPERTY()
-	UNiagaraSystem* FireflyNiagaraSystem = nullptr;
 
 	bool bSelected = false;
 
