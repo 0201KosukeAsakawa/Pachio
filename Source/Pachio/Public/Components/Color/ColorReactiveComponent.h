@@ -40,6 +40,8 @@ public:
 protected:
 	void ToggleNiagaraActiveState(bool);
 	void ActiveEffect();
+	void ActiveNiagaraEffect(UNiagaraSystem*);
+
 private:
 	UFUNCTION(BlueprintCallable)
 	virtual bool OnColorMatched(const FLinearColor& FilterColor);
@@ -63,7 +65,9 @@ protected:
 	UMaterialInstanceDynamic* DynMesh;
 
 	UPROPERTY()
-	UNiagaraSystem* NiagaraSystem = nullptr;
+	UNiagaraSystem* FireflyBurstNiagaraSystem = nullptr;
+	UPROPERTY()
+	UNiagaraSystem* FireflyNiagaraSystem = nullptr;
 
 	bool bSelected = false;
 
