@@ -56,7 +56,7 @@ void UColorProximitySpawner::OnMesh()
         }
     }
 
-    ActiveEffect();
+    PlayAppearEffect();
 
     bHide = true;
 }
@@ -89,6 +89,6 @@ void UColorProximitySpawner::OffMesh()
             Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
-
+    DeactivateAllEffects();
     bHide = false;
 }

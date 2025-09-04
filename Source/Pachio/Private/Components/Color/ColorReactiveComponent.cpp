@@ -300,14 +300,15 @@ bool UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
 	return false;
 }
 
-void UColorReactiveComponent::ActiveEffect()
+void UColorReactiveComponent::PlayAppearEffect()
 {
 	ActiveNiagaraEffect(FireflyBurstNiagaraSystem);
+	ActiveNiagaraEffect(LightCubeNiagaraSystem);
 }
 
-void UColorReactiveComponent::DeactiveEffect()
+void UColorReactiveComponent::PlayDisappearEffect()
 {
-	ActiveNiagaraEffect(LightCubeNiagaraSystem);
+	//ActiveNiagaraEffect(LightCubeNiagaraSystem);
 }
 
 void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
@@ -327,7 +328,7 @@ void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
 	}
 
 	// Niagaraエフェクトをアタッチして再生
-	UNiagaraFunctionLibrary::SpawnSystemAttached(
+	UNiagaraComponent* targetNiagara = UNiagaraFunctionLibrary::SpawnSystemAttached(
 		niagaraSystem,
 		AttachComponent,
 		NAME_None,
@@ -339,4 +340,22 @@ void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
 		ENCPoolMethod::None,
 		true    // bPreCullCheck
 	);
+
+	if (targetNiagara == nullptr)
+		return;
+
+	ActiveNiagaraComponent.Add(targetNiagara);
+}
+
+void UColorReactiveComponent::DeactivateAllEffects()
+{
+	for (UNiagaraComponent* NiagaraComp : ActiveNiagaraComponent)
+	{
+		if (NiagaraComp && !NiagaraComp->IsBeingDestroyed())
+		{
+			NiagaraComp->Deactivate();
+			NiagaraComp->DestroyComponent();
+		}
+	}
+	ActiveNiagaraComponent.Empty();
 }

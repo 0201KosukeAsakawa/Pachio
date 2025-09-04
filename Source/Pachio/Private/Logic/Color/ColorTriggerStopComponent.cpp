@@ -44,7 +44,7 @@ bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
         }
     }
 
-    ActiveEffect();
+    PlayAppearEffect();
 
     bHide = true;
 
@@ -58,7 +58,7 @@ bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
 
     AActor* Owner = GetOwner();
     if (!Owner) return false;
-
+    DeactivateAllEffects();
     for (UActorComponent* Component : Owner->GetComponents())
     {
         if (Component->ComponentHasTag("HideTarget"))
@@ -80,6 +80,7 @@ bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
             Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
-    DeactiveEffect();
+
+    
    return bHide = false;
 }

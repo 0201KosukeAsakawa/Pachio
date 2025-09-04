@@ -10,6 +10,7 @@
 
 class ANiagaraActor;
 class UNiagaraSystem;
+class UNiagaraComponent;
 
 struct FHSLColor
 {
@@ -39,10 +40,10 @@ public:
 	void SetSelectMode(bool);
 protected:
 	void ToggleNiagaraActiveState(bool);
-	void ActiveEffect();
-	void DeactiveEffect();
+	void PlayAppearEffect();
+	void PlayDisappearEffect();
 	void ActiveNiagaraEffect(UNiagaraSystem*);
-
+	void DeactivateAllEffects();
 private:
 	UFUNCTION(BlueprintCallable)
 	virtual bool OnColorMatched(const FLinearColor& FilterColor);
@@ -73,6 +74,9 @@ protected:
 
 	UPROPERTY()
 	UNiagaraSystem* LightCubeNiagaraSystem = nullptr;
+
+	UPROPERTY()
+	TArray<UNiagaraComponent*> ActiveNiagaraComponent;
 
 	bool bSelected = false;
 
