@@ -40,6 +40,7 @@ public:
 protected:
 	void ToggleNiagaraActiveState(bool);
 	void ActiveEffect();
+	void DeactiveEffect();
 	void ActiveNiagaraEffect(UNiagaraSystem*);
 
 private:
@@ -66,6 +67,12 @@ protected:
 
 	UPROPERTY()
 	UNiagaraSystem* FireflyBurstNiagaraSystem = nullptr;
+
+	UPROPERTY()
+	UNiagaraSystem* ParticlesOfLightNiagaraSystem = nullptr;
+
+	UPROPERTY()
+	UNiagaraSystem* LightCubeNiagaraSystem = nullptr;
 
 	bool bSelected = false;
 

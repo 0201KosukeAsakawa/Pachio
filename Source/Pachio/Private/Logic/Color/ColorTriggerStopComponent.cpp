@@ -80,6 +80,6 @@ bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
             Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
-
+    DeactiveEffect();
    return bHide = false;
 }
