@@ -340,17 +340,34 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 	{
-		//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
+		UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
 
 		const float DeadZone = 0.02f;
 		if (StickInput.SizeSquared() < DeadZone)
+		{
+			UE_LOG(LogTemp, Log, TEXT("StickInput is Neutral"));
+			bHasPrevInputDir = false;
 			return;
+		}
 
 		// 正規化
 		FVector2D InputDir = StickInput.GetSafeNormal();
 
 		if (!bHasPrevInputDir)
 		{
+			// ★ 前回ニュートラルだったので、InputDirと「正面」との角度差分を使う
+			//     → 例えばキャラが常に前を(1, 0)と見なす or 任意の基準ベクトルにして回転させる
+			//     → ここでは (1, 0) を基準とする例にします
+			FVector2D BaseDir = FVector2D(0.0f, 0.0f);
+
+			float CrossZ = FVector2D::CrossProduct(InputDir, BaseDir);
+			float deg = FMath::Asin(CrossZ) * 180.0f / PI;
+
+			// degを使って色変更
+			UE_LOG(LogTemp, Log, TEXT("初回入力方向に即回転 deg=%f"), deg);
+			ChangeColor(-deg / 360.0f);
+
+			// 記録して終了
 			PrevInputDir = InputDir;
 			bHasPrevInputDir = true;
 			return;
@@ -363,26 +380,14 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 		//いったんDegreeに直してログを出したい
 		float deg = asin(CrossZ) * 180.0f / 3.14f;
 
-		//右方向ベクトルを基準としたスティックの現在の角度を作る
-		//float CrossZ2 = FVector2D::CrossProduct(FVector2D::UnitX(), InputDir);
-		//float deg2 = asin(CrossZ2) * 180.0f / 3.14f;
-
 		const float epsilon = 0.001f;
 		
 		if ( abs(deg) > epsilon)
 		{
-			UE_LOG(LogTemp, Log, TEXT("回転方向：左回り（反時計回り）"));
 			ChangeColor(-deg/360.0f);
 			//SetColor(deg);
 			PrevInputDir = InputDir;
 		}
-//		else if (CrossZ < -epsilon)
-//		{
-//			UE_LOG(LogTemp, Log, TEXT("回転方向：右回り（時計回り）"));
-//			ChangeColor(-deg / 360.0f);
-//			PrevInputDir = InputDir;
-//		}
-
 	}
 void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
 {
