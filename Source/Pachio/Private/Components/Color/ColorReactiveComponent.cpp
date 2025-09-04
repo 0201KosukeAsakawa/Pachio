@@ -15,9 +15,21 @@ UColorReactiveComponent::UColorReactiveComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> FireflyBurst(TEXT("/Game/Niagara/FireflyBurst.FireflyBurst"));
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> ParticlesOfLight(TEXT("/Game/Niagara/ParticlesOfLight.ParticlesOfLight"));
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> LightCube(TEXT("/Game/Niagara/ParticleCube.ParticleCube"));
 	if (FireflyBurst.Succeeded())
 	{
 		FireflyBurstNiagaraSystem = FireflyBurst.Object;
+	}
+
+	if (ParticlesOfLight.Succeeded())
+	{
+		ParticlesOfLightNiagaraSystem = ParticlesOfLight.Object;
+	}
+
+	if (LightCube.Succeeded())
+	{
+		LightCubeNiagaraSystem = LightCube.Object;
 	}
 }
 
@@ -291,6 +303,11 @@ bool UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
 void UColorReactiveComponent::ActiveEffect()
 {
 	ActiveNiagaraEffect(FireflyBurstNiagaraSystem);
+}
+
+void UColorReactiveComponent::DeactiveEffect()
+{
+	ActiveNiagaraEffect(LightCubeNiagaraSystem);
 }
 
 void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
