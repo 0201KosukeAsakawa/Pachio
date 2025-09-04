@@ -79,24 +79,19 @@ bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FL
 		CheckColor = GetComplementaryColor(CheckColor);  // 補色を取得して代入
 		UE_LOG(LogTemp, Log, TEXT("CheckColor: %s"), *CheckColor.ToString());
 	}
-	
-	//bool bMatch = IsColorMatch(CheckColor);
-	FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
+
+	float distance = ALevelManager::GetInstance(GetWorld())
 		->GetColorManager()
-		->GetClosestEffectByHue(FilterColor);
-
+		->GetColorDistanceRGB(CurrentColor, FilterColor);
+		UE_LOG(LogTemp, Log, TEXT("Distance: %f"), distance);
+	
 	bool bMatch;
-	if ((result.ClosestEffect == Effect))
+	if (distance <= 30.0f)
 	{
-		//if (bSelected != true)
-		//	bSelected = true;
-
 		bMatch = OnColorMatched(CheckColor);
 	}
 	else
 	{
-		//if (bSelected != false)
-		//	bSelected = false;
 		bMatch = OnColorMismatched(CheckColor);
 	}
 
