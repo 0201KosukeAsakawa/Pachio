@@ -35,7 +35,8 @@ void UColorControllerComponent::AdjustColor(float Delta)
     FLinearColor HSV = ColorMap[CurrentColorMode].LinearRGBToHSV();
 
     float Hue = HSV.R;
-    float Saturation = FMath::Clamp(HSV.G, 0.2f, 0.6f); // 彩度
+    //float Saturation = FMath::Clamp(HSV.G, 0.2f, 0.6f); // 彩度
+    float Saturation = FMath::Clamp(HSV.G, 0.1f, 0.3f); // 彩度
     float Value = FMath::Clamp(HSV.B, 0.8f, 1.0f);      // 明度
 
     Hue = FMath::Fmod(Hue + Delta * 360.0f, 360.0f);
