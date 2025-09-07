@@ -8,14 +8,14 @@
 
 UColorProximitySpawner::UColorProximitySpawner()
 {
-    ToggleNiagaraActiveState(false);
+    ToggleNiagaraActiveState(false);    
+    bHide = true;
     OffMesh();
 }
 
 bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(true);
-    bHide = true;
     OffMesh();
     return false;
 }

@@ -36,9 +36,10 @@ void UColorConfigurator::InitializeColorLogic()
 	ColorReactiveComponent->Activate(true);
 	ColorReactiveComponent->UpdateColorEffectAndNiagara(StartColor, Effect, Niagaras);
 
+
 	if (USkeletalMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh")))
 	{
-		ColorReactiveComponent->Init(Mesh);
+		ColorReactiveComponent->Init(Mesh, bColorVariable);
 	}
 }
 
