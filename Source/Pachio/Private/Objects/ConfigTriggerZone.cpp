@@ -38,6 +38,6 @@ void AConfigTriggerZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 	UCameraHandlerComponent* cameraHandle = player->GetComponentByClass<UCameraHandlerComponent>();
 	if (cameraHandle == nullptr)
 		return;
-
-	cameraHandle->ApplyCameraSettings(GridSize, ZBaffer, CameraViewType);
+	if (!cameraHandle->IsParameterMatch(GridSize, ZBaffer))
+		cameraHandle->ApplyCameraSettings(GridSize, ZBaffer, CameraViewType);
 }

@@ -158,17 +158,17 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	FVector direction = MoveComp->Movement(0, mOwner, Value);
 
 	// ★ 梯子の前後判定 ★
-	FVector LadderForward = Ladder->GetActorForwardVector();
-	FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
-	ToPlayer.Normalize();
+	//FVector LadderForward = Ladder->GetActorForwardVector();
+	//FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
+	//ToPlayer.Normalize();
 
-	float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
+	//float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
 
-	// 後ろ側にいるなら方向を反転
-	if (Dot < 0.f)
-	{
-		direction *= -1.f;
-	}
+	//// 後ろ側にいるなら方向を反転
+	//if (Dot < 0.f)
+	//{
+	//	direction *= -1.f;
+	//}
 
 	FVector NewLocation = mOwner->GetActorLocation() + direction * 10;
 

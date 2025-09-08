@@ -186,3 +186,11 @@ void UCameraHandlerComponent::ApplyCameraSettings(FVector2D newSize, float newBu
     SetCameraLocation(CameraViewType);
     SetCameraRotation(CameraViewType);
 }
+
+bool UCameraHandlerComponent::IsParameterMatch(FVector2D newSize, float newBuffa)
+{
+    if(GridSize != newSize|| Zbaffa != newBuffa)
+    return false;
+
+    return true;
+}
