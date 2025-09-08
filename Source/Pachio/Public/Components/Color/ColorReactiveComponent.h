@@ -9,6 +9,8 @@
 
 
 class ANiagaraActor;
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 struct FHSLColor
 {
@@ -26,7 +28,7 @@ public:
 	UColorReactiveComponent();
 
 public:
-	virtual void Init(UMeshComponent* mesh);
+	virtual void Init(UMeshComponent* mesh, bool);
 	void UpdateColorEffectAndNiagara(const FLinearColor& FilterColor, EBuffEffect, TArray<ANiagaraActor*>);
 	void ApplyColorToMaterial(FLinearColor InColor);
 	bool CheckColorMatch(FEffectMatchResult, const FLinearColor& FilterColor, const bool buseComplementaryColor = false);
@@ -38,6 +40,10 @@ public:
 	void SetSelectMode(bool);
 protected:
 	void ToggleNiagaraActiveState(bool);
+	void PlayAppearEffect();
+	void PlayDisappearEffect();
+	void ActiveNiagaraEffect(UNiagaraSystem*);
+	void DeactivateAllEffects();
 private:
 	UFUNCTION(BlueprintCallable)
 	virtual bool OnColorMatched(const FLinearColor& FilterColor);
@@ -60,5 +66,19 @@ protected:
 	UPROPERTY()
 	UMaterialInstanceDynamic* DynMesh;
 
+	UPROPERTY()
+	UNiagaraSystem* FireflyBurstNiagaraSystem = nullptr;
+
+	UPROPERTY()
+	UNiagaraSystem* ParticlesOfLightNiagaraSystem = nullptr;
+
+	UPROPERTY()
+	UNiagaraSystem* LightCubeNiagaraSystem = nullptr;
+
+	UPROPERTY()
+	TArray<UNiagaraComponent*> ActiveNiagaraComponent;
+
 	bool bSelected = false;
+
+	bool bHide = false;
 };

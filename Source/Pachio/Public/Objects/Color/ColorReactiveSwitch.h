@@ -18,11 +18,12 @@ public:
 	virtual void Init()override;
 private:
 	virtual void ColorAction(const FLinearColor InColor, FEffectMatchResult) override;
-
-	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 private:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* BoxComponent;
+
+	UPROPERTY(EditAnywhere)
+	EBuffEffect Second;
+
+	FLinearColor SecondColor;
 };

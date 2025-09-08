@@ -61,6 +61,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* StickAction;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputAction* Option;
 };
 
 // メンバ関数の存在判定テンプレート群
@@ -79,6 +82,7 @@ DEFINE_HAS_MEMBER_FUNCTION(OnMouseScroll)
 DEFINE_HAS_MEMBER_FUNCTION(ShiftArrayRightColorMode)
 DEFINE_HAS_MEMBER_FUNCTION(ShiftArrayLeftColorMode)
 DEFINE_HAS_MEMBER_FUNCTION(OnStickMove)
+DEFINE_HAS_MEMBER_FUNCTION(OpenMenu)
 
 // BindInput関数（抜粋例）
 template<typename T>
@@ -125,6 +129,11 @@ void UPlayerInputComponent::BindInput(UInputComponent* PlayerInputComponent)
         if constexpr (HasOnStickMove<T>::value)
         {
             EnhancedInputComponent->BindAction(StickAction, ETriggerEvent::Triggered, Owner, &T::OnStickMove);
+        }
+
+        if constexpr (HasOpenMenu<T>::value)
+        {
+            EnhancedInputComponent->BindAction(Option, ETriggerEvent::Triggered, Owner, &T::OpenMenu);
         }
     }
 }

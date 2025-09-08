@@ -13,14 +13,12 @@ AColorReactiveSwitch::AColorReactiveSwitch()
 	// Box Component ��쐬
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
 	BoxComponent->SetupAttachment(RootComponent); // �A�N�^�[�̃��[�g�R���|�[�l���g�ɐݒ�
-
-	// �I�[�o�[���b�v�C�x���g�̃o�C���h
-	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AColorReactiveSwitch::OnOverlapBegin);
 }
 
 void AColorReactiveSwitch::Init()
 {
 	AColorReactiveObject::Init();
+	SecondColor = ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetEffectColor(Second);
 }
 
 void AColorReactiveSwitch::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
@@ -28,9 +26,10 @@ void AColorReactiveSwitch::ColorAction(const FLinearColor InColor, FEffectMatchR
 	if (!ColorConfigurator)
 		return;
 	AColorReactiveObject::ColorAction(InColor, result);
-	ColorConfigurator->SetColor(InColor, result);
-	if (ColorConfigurator->CheckColorMatch(result,InColor))
+
+	if (ColorConfigurator->CheckColorMatch(result, InColor))
 	{
+		ColorConfigurator->ApplyColorToMaterial(InColor);
 		ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
 		if (levelManager == nullptr)
 			return;
@@ -39,24 +38,15 @@ void AColorReactiveSwitch::ColorAction(const FLinearColor InColor, FEffectMatchR
 
 		levelManager->GetColorManager()->ColorEvent(ColorConfigurator->GetColorEventID(), InColor);
 	}
+	else if (ColorConfigurator->IsColorMatch(SecondColor, InColor))
+	{
+		ColorConfigurator->ApplyColorToMaterial(InColor);
+		ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
+		if (levelManager == nullptr)
+			return;
+		if (levelManager->GetColorManager() == nullptr)
+			return;
 
-}
-
-void AColorReactiveSwitch::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (ColorConfigurator == nullptr)
-		return;
-
-	if (!OtherActor)
-		return;
-
-	if (!OtherActor->ActorHasTag("Player"))
-		return;
-	ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
-	if (levelManager == nullptr)
-		return;
-	if (levelManager->GetColorManager() == nullptr)
-		return;
-
-	levelManager->GetColorManager()->ColorEvent(ColorConfigurator->GetColorEventID(), ColorConfigurator->GetCurrentColor());
+		levelManager->GetColorManager()->ColorEvent(ColorConfigurator->GetColorEventID(), InColor);
+	}
 }

@@ -39,7 +39,7 @@ private:
 	TArray<AActor*> Child;
 
 	// ��������p�̃g���K�[
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere)
 	UBoxComponent* FootTrigger;
 
 	// ����Ă���A�N�^�[�Ǘ��p���X�g

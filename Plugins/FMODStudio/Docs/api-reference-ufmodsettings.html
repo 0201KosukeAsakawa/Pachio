@@ -14,11 +14,12 @@
 <li><a href="settings.html">Settings</a></li>
 <li><a href="plugins.html">Plugins</a></li>
 <li><a href="niagara.html">Niagara Integration</a></li>
-<li class="manual-current-chapter manual-inactive-chapter"><a href="api-reference.html">API Reference</a><ul class="subchapters"><li><a href="api-reference-common.html">Common</a></li><li><a href="api-reference-ifmodstudiomodule.html">IFMODStudioModule</a></li><li><a href="api-reference-ufmodblueprintstatics.html">UFMODBlueprintStatics</a></li><li><a href="api-reference-ufmodaudiocomponent.html">UFMODAudioComponent</a></li><li><a href="api-reference-afmodambientsound.html">AFMODAmbientSound</a></li><li><a href="api-reference-ufmodanimnotifyplay.html">UFMODAnimNotifyPlay</a></li><li><a href="api-reference-ufmodbank.html">UFMODBank</a></li><li><a href="api-reference-ufmodbus.html">UFMODBus</a></li><li><a href="api-reference-ufmodvca.html">UFMODVCA</a></li><li><a href="api-reference-ufmodevent.html">UFMODEvent</a></li><li><a href="api-reference-ufmodport.html">UFMODPort</a></li><li><a href="api-reference-ufmodsnapshot.html">UFMODSnapshot</a></li><li><a href="api-reference-ufmodsnapshotreverb.html">UFMODSnapshotReverb</a></li><li><a href="api-reference-ufmodasset.html">UFMODAsset</a></li><li class="manual-current-chapter manual-active-chapter"><a href="api-reference-ufmodsettings.html">UFMODSettings</a></li></ul></li>
+<li class="manual-current-chapter manual-inactive-chapter"><a href="api-reference.html">API Reference</a><ul class="subchapters"><li><a href="api-reference-common.html">Common</a></li><li><a href="api-reference-ifmodstudiomodule.html">IFMODStudioModule</a></li><li><a href="api-reference-ifmodcallbackhandler.html">IFMODCallbackHandler</a></li><li><a href="api-reference-ufmodblueprintstatics.html">UFMODBlueprintStatics</a></li><li><a href="api-reference-ufmodaudiocomponent.html">UFMODAudioComponent</a></li><li><a href="api-reference-afmodambientsound.html">AFMODAmbientSound</a></li><li><a href="api-reference-ufmodanimnotifyplay.html">UFMODAnimNotifyPlay</a></li><li><a href="api-reference-ufmodbank.html">UFMODBank</a></li><li><a href="api-reference-ufmodbus.html">UFMODBus</a></li><li><a href="api-reference-ufmodvca.html">UFMODVCA</a></li><li><a href="api-reference-ufmodevent.html">UFMODEvent</a></li><li><a href="api-reference-ufmodport.html">UFMODPort</a></li><li><a href="api-reference-ufmodsnapshot.html">UFMODSnapshot</a></li><li><a href="api-reference-ufmodsnapshotreverb.html">UFMODSnapshotReverb</a></li><li><a href="api-reference-ufmodasset.html">UFMODAsset</a></li><li class="manual-current-chapter manual-active-chapter"><a href="api-reference-ufmodsettings.html">UFMODSettings</a></li></ul></li>
 <li><a href="blueprint-reference.html">Blueprint Reference</a></li>
 <li><a href="platform-specifics.html">Platform Specifics</a></li>
 <li><a href="troubleshooting.html">Troubleshooting</a></li>
 <li><a href="audiolink.html">AudioLink</a></li>
+<li><a href="game-components.html">Game Components</a></li>
 <li><a href="glossary.html">Glossary</a></li>
 </ul>
 </div>
@@ -76,6 +77,7 @@
 <li><span><a class="apilink" href="api-reference-ufmodsettings.html#ufmodsettings_ambientvolumeparameter" title="Name of the parameter used in Studio to control ambient volume.">UFMODSettings::AmbientVolumeParameter</a> Name of the parameter used in Studio to control ambient volume.</span></li>
 <li><span><a class="apilink" href="api-reference-ufmodsettings.html#ufmodsettings_ambientlpfparameter" title="Name of the parameter used in Studio to control ambient LPF effects.">UFMODSettings::AmbientLPFParameter</a> Name of the parameter used in Studio to control ambient LPF effects.</span></li>
 <li><span><a class="apilink" href="api-reference-ufmodsettings.html#ufmodsettings_platforms" title="Used to specify platform specific settings.">UFMODSettings::Platforms</a> Used to specify platform specific settings.</span></li>
+<li><span><a class="apilink" href="api-reference-ufmodsettings.html#ufmodsettings_callbackhandler" title="Callback handler implementing IFMODCallbackHandler for hooking into the system at specific points in the integration's lifecycle.">UFMODSettings::CallbackHandler</a> Callback handler implementing IFMODCallbackHandler for hooking into the system at specific points in the integration's lifecycle.</span></li>
 </ul>
 <h2 api="defines" id="efmodlogging"><a href="#efmodlogging">EFMODLogging</a></h2>
 <p>FMOD Logging level.</p>
@@ -344,6 +346,7 @@
     <span class="n">TEnumAsByte</span><span class="o">&lt;</span><span class="n">EFMODOutput</span><span class="o">::</span><span class="n">Type</span><span class="o">&gt;</span> <span class="n">OutputType</span><span class="p">;</span>
     <span class="n">int32</span> <span class="n">CustomPoolSize</span><span class="p">;</span>
     <span class="n">TMap</span><span class="o">&lt;</span><span class="n">TEnumAsByte</span><span class="o">&lt;</span><span class="n">EFMODCodec</span><span class="o">::</span><span class="n">Type</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">int32</span><span class="o">&gt;</span> <span class="n">Codecs</span><span class="p">;</span>
+    <span class="n">TSoftClassPtr</span><span class="o">&lt;</span><span class="n">UObject</span><span class="o">&gt;</span> <span class="n">CallbackHandler</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div>
 
@@ -362,6 +365,8 @@ eg. 0, 22050, 24000, 32000, 44100, 48000.</dd>
 FMOD may become unstable if the limit is exceeded!</dd>
 <dt>Codecs</dt>
 <dd>Encoding formats.</dd>
+<dt>CallbackHandler</dt>
+<dd>Callback handler implementing <a class="apilink" href="api-reference-ifmodcallbackhandler.html">IFMODCallbackHandler</a> for hooking into the system at specific points in the integration's lifecycle.</dd>
 </dl>
 <h2 api="property" id="ufmodsettings_bloadallbanks"><a href="#ufmodsettings_bloadallbanks">UFMODSettings::bLoadAllBanks</a></h2>
 <p>Load all banks at startup.</p>
@@ -746,9 +751,21 @@ FMOD may become unstable if the limit is exceeded!</dd>
 </div>
 </p>
 <div class="highlight language-cpp"><pre><span></span><span class="n">TMap</span><span class="o">&lt;</span><span class="n">TEnumAsByte</span><span class="o">&lt;</span><span class="n">EFMODPlatforms</span><span class="o">::</span><span class="n">Type</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">FFMODPlatformSettings</span><span class="o">&gt;</span> <span class="n">Platforms</span><span class="p">;</span>
-</pre></div></div>
+</pre></div>
 
-<p class="manual-footer">Unreal Integration 2.03.08 (2025-06-08). &copy; 2025 Firelight Technologies Pty Ltd.</p>
+<h2 api="property" id="ufmodsettings_callbackhandler"><a href="#ufmodsettings_callbackhandler">UFMODSettings::CallbackHandler</a></h2>
+<p>Callback handler implementing IFMODCallbackHandler for hooking into the system at specific points in the integration's lifecycle.</p>
+<p>
+<div class="language-selector">
+<div class="language-tab" data-language="language-cpp">C++</div>
+</div>
+</p>
+<div class="highlight language-cpp"><pre><span></span><span class="n">TSoftClassPtr</span><span class="o">&lt;</span><span class="n">UObject</span><span class="o">&gt;</span> <span class="n">CallbackHandler</span><span class="p">;</span>
+</pre></div>
+
+<p><strong>See Also:</strong> <a class="apilink" href="api-reference-ifmodcallbackhandler.html">IFMODCallbackHandler</a></p></div>
+
+<p class="manual-footer">Unreal Integration 2.03.09 (2025-08-05). &copy; 2025 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

@@ -67,12 +67,12 @@ void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColo
 
 float UColorManager::GetColorDistanceRGB(const FLinearColor& A)
 {
-    return EffectColorMatcher->GetColorDistanceRGB(A, ColorTargetRegistry->GetPostProcessColor());
+    return EffectColorMatcher->GetHueAngleDistance(A, ColorTargetRegistry->GetPostProcessColor());
 }
 
 float UColorManager::GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B)
 {
-    return EffectColorMatcher->GetColorDistanceRGB(A,B);
+    return EffectColorMatcher->GetHueAngleDistance(A,B);
 }
 
 FEffectMatchResult UColorManager::GetClosestEffectByHue()

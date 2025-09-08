@@ -32,3 +32,7 @@ void IColorModeController::ShiftArrayLeftColorMode()
 void IStickAction::OnStickMove(const FInputActionValue& Value)
 {
 }
+
+void IOptionAction::OpenMenu(const FInputActionValue& Value)
+{
+}

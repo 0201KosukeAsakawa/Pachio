@@ -1,6 +1,7 @@
 #include "Components/Color/ColorConfigurator.h"
 #include "Components/Color/ColorReactiveComponent.h"
 #include "Components/Beat/BeatScalerComponent.h"
+#include "Interface/ColorFilterInterface.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Sound/SoundManager.h"
@@ -35,9 +36,10 @@ void UColorConfigurator::InitializeColorLogic()
 	ColorReactiveComponent->Activate(true);
 	ColorReactiveComponent->UpdateColorEffectAndNiagara(StartColor, Effect, Niagaras);
 
-	if (UStaticMeshComponent* Mesh = GetStaticMesh())
+
+	if (USkeletalMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh")))
 	{
-		ColorReactiveComponent->Init(Mesh);
+		ColorReactiveComponent->Init(Mesh, bColorVariable);
 	}
 }
 
@@ -55,7 +57,7 @@ void UColorConfigurator::SetupMaterial()
 	StartColor = ALevelManager::GetInstance(GetWorld())
 		->GetColorManager()
 		->GetEffectColor(Effect);
-	if (UStaticMeshComponent* Mesh = GetStaticMesh())
+	if (USkeletalMeshComponent* Mesh = GetStaticMesh())
 	{
 		Mesh->SetRenderCustomDepth(true);
 		Mesh->SetCustomDepthStencilValue(10);
@@ -69,6 +71,9 @@ void UColorConfigurator::SetupMaterial()
 
 void UColorConfigurator::PlayBeatAnimation()
 {
+	if (!bIsPlayBeat)
+		return;
+
 	if (BeatScalerComponent)
 	{
 		BeatScalerComponent->PlayBeat();
@@ -178,9 +183,9 @@ void UColorConfigurator::ApplyColorToMaterial(FLinearColor InColor)
 // 補助関数（共通処理）
 // =======================
 
-UStaticMeshComponent* UColorConfigurator::GetStaticMesh() const
+USkeletalMeshComponent* UColorConfigurator::GetStaticMesh() const
 {
-	return UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
+	return UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh"));
 }
 
 ALevelManager* UColorConfigurator::GetLevelManager() const

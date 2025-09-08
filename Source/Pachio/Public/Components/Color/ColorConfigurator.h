@@ -60,7 +60,7 @@ public:
 
 private:
 	// 状態取得
-	UStaticMeshComponent* GetStaticMesh() const;
+	USkeletalMeshComponent* GetStaticMesh() const;
 	ALevelManager* GetLevelManager() const;
 	UColorManager* GetColorManager() const;
 protected:
@@ -114,4 +114,7 @@ protected:
 
 private:
 	bool bIsSelected = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bIsPlayBeat = true;
 };

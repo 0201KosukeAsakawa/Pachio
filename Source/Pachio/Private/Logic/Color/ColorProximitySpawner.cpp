@@ -8,67 +8,87 @@
 
 UColorProximitySpawner::UColorProximitySpawner()
 {
-    ToggleNiagaraActiveState(false);
+    ToggleNiagaraActiveState(false);    
+    bHide = true;
     OffMesh();
 }
 
 bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(true);
-    OnMesh();
-   
+    OffMesh();
     return false;
 }
 
 bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(false);
-    OffMesh();
+    OnMesh();
     return true;
 }
 
 void UColorProximitySpawner::OnMesh()
 {
+    if (bHide) return;
+
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // �A�N�^�[�\�� & Tick �ĊJ
-    Owner->SetActorHiddenInGame(false);
-    Owner->SetActorTickEnabled(true);
-
-    for (UActorComponent* Comp : Owner->GetComponents())
+    for (UActorComponent* Component : Owner->GetComponents())
     {
-        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        if (Component->ComponentHasTag("HideTarget"))
         {
-            Prim->SetVisibility(true);
-            Prim->SetHiddenInGame(false);
-            Prim->SetCastShadow(true);
-            Prim->SetComponentTickEnabled(true);
-            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            // PrimitiveComponent �Ȃ王�o�ƃR���W������I�t
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                Primitive->SetVisibility(false, false);
+                Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            }
+
+            // �A�N�^�[�R���|�[�l���g�ł���Γ�����~
+            if (Component->IsActive())
+            {
+                Component->Deactivate();
+            }
+
+            // ��� Tick ��~�߂����ꍇ
+            Component->PrimaryComponentTick.SetTickFunctionEnable(false);
         }
     }
+
+    PlayAppearEffect();
+
+    bHide = true;
 }
 
 void UColorProximitySpawner::OffMesh()
 {
+    if (!bHide) return;
+
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // �A�N�^�[��\�� & Tick ��~
-    Owner->SetActorHiddenInGame(true);
-    Owner->SetActorTickEnabled(false);
-
-    // �R���|�[�l���g�𒲐�
-    for (UActorComponent* Comp : Owner->GetComponents())
+    for (UActorComponent* Component : Owner->GetComponents())
     {
-        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        if (Component->ComponentHasTag("HideTarget"))
         {
-            Prim->SetVisibility(false);
-            Prim->SetHiddenInGame(true);
-            Prim->SetCastShadow(false);
-            Prim->SetComponentTickEnabled(false);
+            // PrimitiveComponent �Ȃ王�o�ƃR���W������I�t
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                Primitive->SetVisibility(true, true);
+                Primitive->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            }
 
-            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            // �A�N�^�[�R���|�[�l���g�ł���Γ�����~
+            if (Component->IsActive())
+            {
+                Component->Activate(true);
+            }
+
+            // ��� Tick ��~�߂����ꍇ
+            Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
+    DeactivateAllEffects();
+    bHide = false;
 }

@@ -119,7 +119,7 @@ void APlayerCharacter::ResetBuff()
 	 JumpBuff = 1;
 	 GetCharacterMovement()->GroundFriction = 8.0f;
 	 GetCharacterMovement()->BrakingDecelerationWalking = 2048.f;
-	 physics->SetGravityScale();
+	 physics->SetGravityScale(true, DefaultGravityScalse);
 }
 
 void APlayerCharacter::Circle()
@@ -177,10 +177,19 @@ void APlayerCharacter::Action(const FInputActionValue& Value)
 }
 
 
+void APlayerCharacter::SetGravityScale(bool applyGravity)
+{
+	if (physics == nullptr)
+		return;
+
+	physics->SetGravityScale(applyGravity, DefaultGravityScalse);
+}
+
 void APlayerCharacter::SetGravityScale(bool applyGravity, float scale)
 {
 	if (physics == nullptr)
 		return;
+
 	physics->SetGravityScale(applyGravity, scale);
 }
 
@@ -204,6 +213,14 @@ void APlayerCharacter::ChangeColor(float value)
 		return;
 
 	colorController->AdjustColor(value);
+}
+
+void APlayerCharacter::SetColor(float value)
+{
+	if (!colorController)
+		return;
+
+	colorController->SetColor(value);
 }
 
 // カラーモードを右にシフト（次の色モードへ変更）
@@ -251,7 +268,7 @@ void APlayerCharacter::InitPhysicsSettings()
 {
 	physics->RegisterComponent();
 	// 重力を加える（値は任意、固定で10.0fを加算）
-	physics->SetGravityScale(true,10.0f);
+	physics->SetGravityScale(true, DefaultGravityScalse);
 
 	auto* Move = GetCharacterMovement();
 
@@ -323,36 +340,54 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 	{
-		const float DeadZone = 0.2f;
-		if (StickInput.SizeSquared() < DeadZone)
-			return;
+		UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
 
-		FVector2D InputDir = StickInput.GetSafeNormal(); // 正規化
+		const float DeadZone = 0.02f;
+		if (StickInput.SizeSquared() < DeadZone)
+		{
+			UE_LOG(LogTemp, Log, TEXT("StickInput is Neutral"));
+			bHasPrevInputDir = false;
+			return;
+		}
+
+		// 正規化
+		FVector2D InputDir = StickInput.GetSafeNormal();
 
 		if (!bHasPrevInputDir)
 		{
+			// ★ 前回ニュートラルだったので、InputDirと「正面」との角度差分を使う
+			//     → 例えばキャラが常に前を(1, 0)と見なす or 任意の基準ベクトルにして回転させる
+			//     → ここでは (1, 0) を基準とする例にします
+			FVector2D BaseDir = FVector2D(0.0f, 0.0f);
+
+			float CrossZ = FVector2D::CrossProduct(InputDir, BaseDir);
+			float deg = FMath::Asin(CrossZ) * 180.0f / PI;
+
+			// degを使って色変更
+			UE_LOG(LogTemp, Log, TEXT("初回入力方向に即回転 deg=%f"), deg);
+			ChangeColor(-deg / 360.0f);
+
+			// 記録して終了
 			PrevInputDir = InputDir;
 			bHasPrevInputDir = true;
 			return;
 		}
 
-		// 2Dクロス積で回転方向判定（Z成分だけ取る）
-		float CrossZ = InputDir.X * PrevInputDir.Y - InputDir.Y * PrevInputDir.X;
+		// 2Dクロス積で回転方向判定
+		// crossZ = |a||b|sin(θ)
+		float CrossZ = FVector2D::CrossProduct(InputDir, PrevInputDir);
+		//crossZはSinθと考える
+		//いったんDegreeに直してログを出したい
+		float deg = asin(CrossZ) * 180.0f / 3.14f;
 
-		const float epsilon = 0.01f;
-		if (CrossZ > epsilon)
+		const float epsilon = 0.001f;
+		
+		if ( abs(deg) > epsilon)
 		{
-			UE_LOG(LogTemp, Log, TEXT("回転方向：左回り（反時計回り）"));
-			ChangeColor(-0.01);
+			ChangeColor(-deg/360.0f);
+			//SetColor(deg);
 			PrevInputDir = InputDir;
 		}
-		else if (CrossZ < -epsilon)
-		{
-			UE_LOG(LogTemp, Log, TEXT("回転方向：右回り（時計回り）"));
-			ChangeColor(0.01);
-			PrevInputDir = InputDir;
-		}
-
 	}
 void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
 {
@@ -394,6 +429,19 @@ void APlayerCharacter::CallOnClosestOverlappingActor()
 		// 呼んだら終わり
 		return;
 	}
+}
+
+void APlayerCharacter::OpenMenu(const FInputActionValue& Value)
+{
+	ALevelManager::GetInstance(GetWorld())->GetUIManager()->ShowWidget(EWidgetCategory::Menu, "Menu");
+}
+
+UCameraComponent* APlayerCharacter::GetCamera()
+{
+	if (CameraComponent == nullptr)
+		return nullptr;
+
+	return CameraComponent->GetCamera();
 }
 
 void APlayerCharacter::UpdateOverlapUI()
