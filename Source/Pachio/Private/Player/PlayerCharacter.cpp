@@ -166,7 +166,7 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	StateManager->GetCurrentState()->Jump(physics, JumpForce * JumpBuff);
+	StateManager->GetCurrentState()->Jump(JumpForce * JumpBuff);
 }
 
 // ダッシュ・スキル開始処理
