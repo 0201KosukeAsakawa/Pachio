@@ -39,7 +39,8 @@ UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable,
 	public IControllableMover,
 	public IControllableJumper, public IControllableAbility,
-	public IColorModeController, public IStickAction
+	public IColorModeController, public IStickAction,
+	public IOptionAction
 {
 	GENERATED_BODY()
 
@@ -75,11 +76,13 @@ public:
 	// 特殊アクション（スキル発動 or ダッシュ）開始処理
 	void Action(const FInputActionValue& Value)override;
 
-	void SetGravityScale(bool, const float = 9.8f);
+	void SetGravityScale(bool);
+	void SetGravityScale(const bool,const float);
 
 	void OnMouseScroll(const FInputActionValue& Value);
 
 	void ChangeColor(float)override;
+	void SetColor(float);
 
 	// カラーモードを1つ右にシフト
 	void ShiftArrayRightColorMode()override;
@@ -90,6 +93,10 @@ public:
 	void OnStickMove(const FInputActionValue& Value)override;
 	void CallOnClosestOverlappingActor();
 
+	void OpenMenu(const FInputActionValue& Value)override;
+
+	UFUNCTION(BlueprintCallable)
+	UCameraComponent* GetCamera();
 private:
 	// 現在のプレイヤーステート（状態）を取得
 	UPlayerStateComponent* GetPlayerState() const override;
@@ -137,6 +144,9 @@ private:
 
 	float MoveSoundCooldown = 0.f;
 	const float MoveSoundInterval = 0.5f; // 0.5秒に1回まで再生可能
+
+	UPROPERTY(EditAnywhere)
+	float DefaultGravityScalse = 50.0f;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================

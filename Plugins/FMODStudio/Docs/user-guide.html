@@ -40,8 +40,9 @@
 </li>
 <li><a href="#making-sounds">Making sounds</a><ul>
 <li><a href="#ambient-sounds">Ambient Sounds</a></li>
+<li><a href="#fmod-audiocomponent">FMOD AudioComponent</a></li>
 <li><a href="#playing-sounds-from-blueprint">Playing Sounds From Blueprint</a></li>
-<li><a href="#other-avenues">Other avenues</a></li>
+<li><a href="#playing-sounds-from-api">Playing Sounds from API</a></li>
 </ul>
 </li>
 <li><a href="#listener">Listener</a><ul>
@@ -129,6 +130,7 @@
 <li><a href="platform-specifics.html">Platform Specifics</a></li>
 <li><a href="troubleshooting.html">Troubleshooting</a></li>
 <li><a href="audiolink.html">AudioLink</a></li>
+<li><a href="game-components.html">Game Components</a></li>
 <li><a href="glossary.html">Glossary</a></li>
 </ul>
 </div>
@@ -214,19 +216,32 @@ You can either manually copy them or use the 'Validate FMOD' option from the plu
 <h3 id="platform-specific-setup"><a href="#platform-specific-setup">2.2.5 Platform specific setup</a></h3>
 <p>Refer to <a href="platform-specifics.html">Platform Specifics</a> for details of additional platform dependent setup.</p>
 <h2 id="making-sounds"><a href="#making-sounds">2.3 Making sounds</a></h2>
-<p>FMOD For Unreal provides multiple ways in which Studio events can be played.</p>
+<p>FMOD For Unreal provides multiple ways in which Studio <a href="https://fmod.com/docs/2.03/studio/glossary.html#event">Events</a> can be played.</p>
 <h3 id="ambient-sounds"><a href="#ambient-sounds">2.3.1 Ambient Sounds</a></h3>
-<p>The simplest way to play a looping ambience, is to drag and drop an event from the content browser into a scene viewport.</p>
-<p><img alt="Drag sample" src="images/drag-ambient.png" /></p>
-<p>For example, try dragging the <code>Game/FMOD/Events/Ambience/Forest</code> event into a level. This will create an <a href="api-reference-afmodambientsound.html">FMODAmbientSound</a>. Hit Play to begin playing in editor, and you should immediately hear the Forest ambience.</p>
+<p>Dragging an event from the content browser into a scene viewport will create an <a href="game-components.html#fmod-ambient-sound">FMOD AmbientSound</a>.<br />
+<img alt="Drag sample" src="images/drag-ambient.png" /></p>
+<p>For example, try dragging the <code>Game/FMOD/Events/Ambience/Forest</code> event into a level, hit Play to begin playing in editor, and you should immediately hear the Forest ambience.</p>
 <p>Make sure you drag an event into the main viewport. Dragging a bank into main viewport won't do anything.</p>
-<h3 id="playing-sounds-from-blueprint"><a href="#playing-sounds-from-blueprint">2.3.2 Playing Sounds From Blueprint</a></h3>
-<p>Another easy way to trigger a sound is via blueprint. You can use the play event at location function to quickly trigger any given event.</p>
+<h3 id="fmod-audiocomponent"><a href="#fmod-audiocomponent">2.3.2 FMOD AudioComponent</a></h3>
+<p>An <a href="game-components.html#fmod-audio-component">FMOD AudioComponent</a> can be added directly to an object and can be triggered either via <code>Auto Activate</code> or via a blueprint node.</p>
+<h3 id="playing-sounds-from-blueprint"><a href="#playing-sounds-from-blueprint">2.3.3 Playing Sounds From Blueprint</a></h3>
+<p>To trigger a sound via blueprint, you can use the play <a href="blueprint-reference-common.html#play-event-at-location">event at location</a> node to quickly trigger any given event at a specified location.</p>
 <p><img alt="Blueprint Sample" src="images/blueprint-sample.png" /></p>
-<p>In the example shown below, the Single_Explosion event is triggered at the location of the camera, every time the spacebar is pressed.</p>
+<p>In the example shown below, the <code>Single_Explosion</code> event is triggered at the location of the camera, every time the space bar is pressed.</p>
 <p><img alt="Blueprint simple playback" src="images/blueprint-play-simple.png" /></p>
-<h3 id="other-avenues"><a href="#other-avenues">2.3.3 Other avenues</a></h3>
-<p>Keep in mind that more advanced control is also available from blueprints. There are graph functions for playing and stopping events, setting parameters, and loading or unloading banks. You can also add <a href="api-reference-ufmodaudiocomponent.html">FMODAudioComponents</a> to blueprints, allowing you attach audio directly to an object.</p>
+<p>For more information about the blueprint nodes refer to the <a href="blueprint-reference.html">Blueprint Reference</a> section.</p>
+<h3 id="playing-sounds-from-api"><a href="#playing-sounds-from-api">2.3.4 Playing Sounds from API</a></h3>
+<p>An event can be played using its path:</p>
+<div class="highlight language-cpp"><pre><span></span><span class="n">FMOD</span><span class="o">::</span><span class="n">Studio</span><span class="o">::</span><span class="n">EventDescription</span><span class="o">*</span> <span class="n">eventDescription</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+<span class="n">IFMODStudioModule</span><span class="o">::</span><span class="n">Get</span><span class="p">().</span><span class="n">GetStudioSystem</span><span class="p">(</span><span class="n">EFMODSystemContext</span><span class="o">::</span><span class="n">Runtime</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">getEvent</span><span class="p">(</span><span class="s">&quot;event:/Ambience/Forest&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">eventDescription</span><span class="p">);</span>
+<span class="n">FMOD</span><span class="o">::</span><span class="n">Studio</span><span class="o">::</span><span class="n">EventInstance</span><span class="o">*</span> <span class="n">eventInstance</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+<span class="n">eventDescription</span><span class="o">-&gt;</span><span class="n">createInstance</span><span class="p">(</span><span class="o">&amp;</span><span class="n">eventInstance</span><span class="p">);</span>
+
+<span class="n">eventInstance</span><span class="o">-&gt;</span><span class="n">start</span><span class="p">();</span>
+<span class="n">eventInstance</span><span class="o">-&gt;</span><span class="n">release</span><span class="p">();</span>
+</pre></div>
+
+<p>For more information about API references refer to the <a href="api-reference.html">API Reference</a>.</p>
 <h2 id="listener"><a href="#listener">2.4 Listener</a></h2>
 <p>FMOD can support up to 8 listeners in game. The listeners will follow the Unreal listeners which by default is attached to the camera, but we can move them by moving the Unreal listeners.</p>
 <p>This is particularly useful for Third-Person and Top-Down style games.</p>
@@ -729,7 +744,7 @@ AudioMixerModuleName=
 </ul>
 <p>This can be especially useful for build machines that don't normally run the Editor at all, which is what normally triggers the assets to be built, and does not require the generated assets to be checked in to source control.</p></div>
 
-<p class="manual-footer">Unreal Integration 2.03.08 (2025-06-08). &copy; 2025 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">Unreal Integration 2.03.09 (2025-08-05). &copy; 2025 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

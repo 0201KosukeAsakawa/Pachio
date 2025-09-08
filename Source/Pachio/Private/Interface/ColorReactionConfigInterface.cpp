@@ -5,7 +5,7 @@
 
 // Add default functionality here for any IColorReactionConfigInterface functions that are not pure virtual.
 
-bool IColorReactionConfigInterface::IsColorMuch() const
+bool IColorReactionConfigInterface::IsColorMatch() const
 {
 	return false;
 }

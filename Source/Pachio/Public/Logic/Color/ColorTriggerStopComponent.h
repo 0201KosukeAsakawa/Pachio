@@ -11,12 +11,15 @@
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PACHIO_API UColorTriggerStopComponent : public UColorReactiveComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UColorTriggerStopComponent();
-private:
-	bool OnColorMatched(const FLinearColor& FilterColor)override;
-	bool OnColorMismatched(const FLinearColor& FilterColor)override;
+public:
+    UColorTriggerStopComponent();
+
+   // virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+    bool OnColorMatched(const FLinearColor& FilterColor);
+    bool OnColorMismatched(const FLinearColor& FilterColor);
+
+
 };

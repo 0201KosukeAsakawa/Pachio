@@ -30,8 +30,8 @@ private:
 
 
 private:
-	UPROPERTY(EditAnywhere)
-	TArray<FTargetData> TargetArray;
+	//UPROPERTY(EditAnywhere)
+	//TArray<FTargetData> TargetArray;
 
 	UPROPERTY(EditAnywhere)
 	FVector RotationAxis;

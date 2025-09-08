@@ -22,7 +22,7 @@ void AColorReactiveObject::BeginPlay()
 // 色反応オブジェクトの初期化処理
 void AColorReactiveObject::Init()
 {
-	
+
 }
 
 // 色反応ロジックの初期化（UColorReactiveComponentの生成）
@@ -126,7 +126,7 @@ bool AColorReactiveObject::IsColorModifiable() const
 	return ColorConfigurator->IsColorModifiable();
 }
 
-bool AColorReactiveObject::IsColorMuch() const
+bool AColorReactiveObject::IsColorMatch() const
 {
 	return ColorConfigurator && ColorConfigurator->IsColorMatch();
 }

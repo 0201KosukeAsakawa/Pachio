@@ -37,7 +37,7 @@ public:
 	virtual bool IsColorChange()const override;
 	virtual bool IsChangeable()const override;
 	virtual bool IsColorModifiable()const override;
-	virtual bool IsColorMuch() const override;
+	virtual bool IsColorMatch() const override;
 	FName GetColorEventID()const override;
 
 protected:

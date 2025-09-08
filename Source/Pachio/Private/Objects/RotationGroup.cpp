@@ -109,35 +109,35 @@ void ARotationGroup::ColorAction(const FLinearColor InColor, FEffectMatchResult)
 
 void ARotationGroup::UpdateBsRelativeToA(const FRotator& DeltaRotation)
 {
-    if (TargetArray.Num() == 0)
-    {
-        return;
-    }
+    //if (TargetArray.Num() == 0)
+    //{
+    //    return;
+    //}
 
-    FVector Center = GetActorLocation();
+    //FVector Center = GetActorLocation();
 
-    for (const FTargetData& TargetData : TargetArray)
-    {
-        AActor* BActor = TargetData.targetActor;
-        if (!BActor)
-            continue;
+    //for (const FTargetData& TargetData : TargetArray)
+    //{
+    //    AActor* BActor = TargetData.targetActor;
+    //    if (!BActor)
+    //        continue;
 
-        // ���x�𔽉f������]�N�H�[�^�j�I��
-        FRotator ScaledRotation = DeltaRotation * TargetData.rotateSpeed;
-        FQuat DeltaQuat = ScaledRotation.Quaternion();
+    //    // ���x�𔽉f������]�N�H�[�^�j�I��
+    //    FRotator ScaledRotation = DeltaRotation * TargetData.rotateSpeed;
+    //    FQuat DeltaQuat = ScaledRotation.Quaternion();
 
-        // �ʒu���]
-        FVector Relative = BActor->GetActorLocation() - Center;
-        FVector Rotated = DeltaQuat.RotateVector(Relative);
-        BActor->SetActorLocation(Center + Rotated);
+    //    // �ʒu���]
+    //    FVector Relative = BActor->GetActorLocation() - Center;
+    //    FVector Rotated = DeltaQuat.RotateVector(Relative);
+    //    BActor->SetActorLocation(Center + Rotated);
 
-        // ��]�������i�p�x�ύX�j
-        if (bShouldRotate)
-        {
-            FQuat CurrentQuat = BActor->GetActorQuat();
-            FQuat NewQuat = DeltaQuat * CurrentQuat;
-            BActor->SetActorRotation(NewQuat);
-        }
-    }
+    //    // ��]�������i�p�x�ύX�j
+    //    if (bShouldRotate)
+    //    {
+    //        FQuat CurrentQuat = BActor->GetActorQuat();
+    //        FQuat NewQuat = DeltaQuat * CurrentQuat;
+    //        BActor->SetActorRotation(NewQuat);
+    //    }
+    //}
 }
 
