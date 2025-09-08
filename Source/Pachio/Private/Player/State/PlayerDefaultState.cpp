@@ -46,6 +46,14 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
         MoveComp->Init(PlayerLogic);
     }
 
+    if (!Physics)
+    {
+        Physics = GetOwner()->GetComponentByClass<UPhysicsCalculator>();
+    }
+
+    UBoxComponent* BoxComponent = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Box"));;
+    if (BoxComponent)
+        BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UPlayerDefaultState::OnBeginOverlap);
 
     // キャラクターが持つ StaticMeshComponent を取得
     UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
@@ -125,10 +133,6 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
         HoldState->SetUp(Target);
     }
 
-
-
-
-
     return true;
 }
 
@@ -142,24 +146,29 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
     CurrentDirection = direction;
 }
 
-void UPlayerDefaultState::Jump(UPhysicsCalculator* physics,float jumpForce)
+void UPlayerDefaultState::Jump(float jumpForce)
 {
-    if (GetOwner() == nullptr || physics == nullptr)
+    if (GetOwner() == nullptr || Physics == nullptr)
         return;
 
-    if (TryEnterLadderOnJump())
-    {
-        physics->SetGravityScale(false);
-        return;
-    }
+    //if (TryEnterLadderOnJump())
+    //{
+    //    Physics->SetGravityScale(false);
+    //    return;
+    //}
 
-    if (!physics || !physics->OnGround())
+    if (!Physics || !Physics->OnGround())
         return;
 
     // ジャンプ力を掛けて力を加える
-    physics->AddForce(GetOwner()->GetActorUpVector(), jumpForce);
+    Physics->AddForce(GetOwner()->GetActorUpVector(), jumpForce);
     ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
     sound->PlaySound("SE", "Jump");
+}
+
+void UPlayerDefaultState::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    TryEnterLadderOnJump();
 }
 
 bool UPlayerDefaultState::TryEnterLadderOnJump() const

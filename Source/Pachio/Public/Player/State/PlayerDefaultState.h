@@ -19,9 +19,15 @@ public:
 	bool OnExit(ACharacter*)override;
 	bool OnSkill(const FInputActionValue&)override;
 	void Movement(const FInputActionValue& Value)override;
-	void Jump(UPhysicsCalculator* physics, float jumpForce)override;
+	void Jump(float jumpForce)override;
 
 private:
+
+	UFUNCTION()
+	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex,
+		bool bFromSweep, const FHitResult& SweepResult);
+
 	bool TryEnterLadderOnJump() const;
 
 	void UpdateInteractableUI();
@@ -49,4 +55,7 @@ private:
 	FRotator InitialRotation;
 
 	FVector CurrentDirection;
+
+	UPROPERTY()
+	UPhysicsCalculator* Physics;
 };

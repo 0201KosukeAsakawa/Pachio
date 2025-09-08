@@ -38,6 +38,6 @@ void UPlayerStateComponent::Movement(const FInputActionValue& Value)
 {
 }
 
-void UPlayerStateComponent::Jump(UPhysicsCalculator* physics, float jumpForce)
+void UPlayerStateComponent::Jump(float jumpForce)
 {
 }
