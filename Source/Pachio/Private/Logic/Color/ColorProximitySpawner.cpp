@@ -8,14 +8,14 @@
 
 UColorProximitySpawner::UColorProximitySpawner()
 {
-    ToggleNiagaraActiveState(false);
+    ToggleNiagaraActiveState(false);    
+    bHide = true;
     OffMesh();
 }
 
 bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(true);
-   
     OffMesh();
     return false;
 }
@@ -38,20 +38,20 @@ void UColorProximitySpawner::OnMesh()
     {
         if (Component->ComponentHasTag("HideTarget"))
         {
-            // PrimitiveComponent ‚È‚ç‹Šo‚ÆƒRƒŠƒWƒ‡ƒ“‚ğƒIƒt
+            // PrimitiveComponent ï¿½È‚ç‹ï¿½oï¿½ÆƒRï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½t
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
                 Primitive->SetVisibility(false, false);
                 Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
             }
 
-            // ƒAƒNƒ^[ƒRƒ“ƒ|[ƒlƒ“ƒg‚Å‚ ‚ê‚Î“®ì‚ğ’â~
+            // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Å‚ï¿½ï¿½ï¿½Î“ï¿½ï¿½ï¿½ï¿½ï¿½~
             if (Component->IsActive())
             {
                 Component->Deactivate();
             }
 
-            // ‚à‚µ Tick ‚à~‚ß‚½‚¢ê‡
+            // ï¿½ï¿½ï¿½ Tick ï¿½ï¿½~ï¿½ß‚ï¿½ï¿½ï¿½ï¿½ê‡
             Component->PrimaryComponentTick.SetTickFunctionEnable(false);
         }
     }
@@ -72,20 +72,20 @@ void UColorProximitySpawner::OffMesh()
     {
         if (Component->ComponentHasTag("HideTarget"))
         {
-            // PrimitiveComponent ‚È‚ç‹Šo‚ÆƒRƒŠƒWƒ‡ƒ“‚ğƒIƒt
+            // PrimitiveComponent ï¿½È‚ç‹ï¿½oï¿½ÆƒRï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½t
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
                 Primitive->SetVisibility(true, true);
                 Primitive->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
             }
 
-            // ƒAƒNƒ^[ƒRƒ“ƒ|[ƒlƒ“ƒg‚Å‚ ‚ê‚Î“®ì‚ğ’â~
+            // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Å‚ï¿½ï¿½ï¿½Î“ï¿½ï¿½ï¿½ï¿½ï¿½~
             if (Component->IsActive())
             {
                 Component->Activate(true);
             }
 
-            // ‚à‚µ Tick ‚à~‚ß‚½‚¢ê‡
+            // ï¿½ï¿½ï¿½ Tick ï¿½ï¿½~ï¿½ß‚ï¿½ï¿½ï¿½ï¿½ê‡
             Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }

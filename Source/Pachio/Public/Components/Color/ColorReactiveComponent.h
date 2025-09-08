@@ -28,7 +28,7 @@ public:
 	UColorReactiveComponent();
 
 public:
-	virtual void Init(UMeshComponent* mesh);
+	virtual void Init(UMeshComponent* mesh, bool);
 	void UpdateColorEffectAndNiagara(const FLinearColor& FilterColor, EBuffEffect, TArray<ANiagaraActor*>);
 	void ApplyColorToMaterial(FLinearColor InColor);
 	bool CheckColorMatch(FEffectMatchResult, const FLinearColor& FilterColor, const bool buseComplementaryColor = false);

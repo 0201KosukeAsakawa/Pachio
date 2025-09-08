@@ -33,7 +33,7 @@ UColorReactiveComponent::UColorReactiveComponent()
 	}
 }
 
-void UColorReactiveComponent::Init(UMeshComponent* mesh)
+void UColorReactiveComponent::Init(UMeshComponent* mesh, bool Variable)
 {
 	if (!bSetStartColor || !mesh)
 		return;
@@ -58,8 +58,9 @@ void UColorReactiveComponent::Init(UMeshComponent* mesh)
 		->GetColorManager()
 		->GetEffectColor(Effect);
 
-	// マテリアルに色を反映
-	DynMesh->SetVectorParameterValue(FName("BaseColor"), CurrentColor);
+	if (!Variable)
+		// マテリアルに色を反映
+		DynMesh->SetVectorParameterValue(FName("BaseColor"), CurrentColor);
 }
 
 

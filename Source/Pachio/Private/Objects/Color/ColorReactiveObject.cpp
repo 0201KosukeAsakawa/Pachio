@@ -126,7 +126,7 @@ bool AColorReactiveObject::IsColorModifiable() const
 	return ColorConfigurator->IsColorModifiable();
 }
 
-bool AColorReactiveObject::IsColorMuch() const
+bool AColorReactiveObject::IsColorMatch() const
 {
 	return ColorConfigurator && ColorConfigurator->IsColorMatch();
 }
