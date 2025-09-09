@@ -123,7 +123,7 @@ void ALevelManager::HandlePlayerGoalReached()
 	UUserWidget* ResultWidget = UIManager->ShowResultWidget(ClearTime, Rank);
 	SoundManager->StopBGM();
 	SoundManager->PlaySound("SE", "Fanfare");
-	PauseGameAndShowUI(ResultWidget);
+	//PauseGameAndShowUI(ResultWidget);
 }
 
 void ALevelManager::PauseGameAndShowUI(UUserWidget* FocusWidget)

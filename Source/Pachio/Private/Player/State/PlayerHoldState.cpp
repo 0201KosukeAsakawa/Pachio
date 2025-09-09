@@ -2,6 +2,8 @@
 
 
 #include "Player/State/PlayerHoldState.h"
+#include "Manager/LevelManager.h"
+#include "Sound/SoundManager.h"
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
@@ -56,6 +58,7 @@ bool UPlayerHoldState::OnUpdate(float DeltaTime)
 bool UPlayerHoldState::OnExit(ACharacter* owner)
 {
     HoldTarget = nullptr;
+    ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE", "Put");
     return true;
 }
 

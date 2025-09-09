@@ -94,7 +94,19 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 // ステートの毎フレーム更新処理（現時点では何もしない）
 bool UPlayerDefaultState::OnUpdate(float)
 {
-	return true;
+    if (GetWorld() == nullptr || Physics == nullptr)
+        return false;
+
+    if (Physics->HasLanded())
+    {
+        ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+        if (sound)
+        {
+            sound->PlaySound("SE", "Land"); // ←着地音に名称変更
+        }
+    }
+
+    return true;
 }
 
 // ステートを離脱するときの処理（現時点では何もしない）
