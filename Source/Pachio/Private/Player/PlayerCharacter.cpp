@@ -48,6 +48,7 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	X = GetActorLocation().X;
 	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
 	CameraComponent->Init(RootComponent);
 	// ステート管理・攻撃管理初期化
@@ -88,6 +89,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 	Circle();
 
 	StateManager->Update(DeltaTime);
+
+	if (GetActorLocation().X != X)
+		SetActorLocation(FVector(X, GetActorLocation().Y, GetActorLocation().Z));
 }
 
 // プレイヤー入力バインド処理
@@ -166,7 +170,7 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	StateManager->GetCurrentState()->Jump(physics, JumpForce * JumpBuff);
+	StateManager->GetCurrentState()->Jump(JumpForce * JumpBuff);
 }
 
 // ダッシュ・スキル開始処理
@@ -355,17 +359,11 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 		if (!bHasPrevInputDir)
 		{
-			// ★ 前回ニュートラルだったので、InputDirと「正面」との角度差分を使う
-			//     → 例えばキャラが常に前を(1, 0)と見なす or 任意の基準ベクトルにして回転させる
-			//     → ここでは (1, 0) を基準とする例にします
-			FVector2D BaseDir = FVector2D(0.0f, 0.0f);
-
-			float CrossZ = FVector2D::CrossProduct(InputDir, BaseDir);
-			float deg = FMath::Asin(CrossZ) * 180.0f / PI;
+			float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(StickInput.Y, StickInput.X));
 
 			// degを使って色変更
-			UE_LOG(LogTemp, Log, TEXT("初回入力方向に即回転 deg=%f"), deg);
-			ChangeColor(-deg / 360.0f);
+			UE_LOG(LogTemp, Log, TEXT("初回入力方向に即回転 deg=%f"), AngleDegrees);
+			ChangeColor(-AngleDegrees / 360.0f);
 
 			// 記録して終了
 			PrevInputDir = InputDir;

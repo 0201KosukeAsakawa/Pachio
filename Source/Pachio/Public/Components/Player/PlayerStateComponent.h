@@ -36,7 +36,7 @@ public:
 
 	virtual void Movement(const FInputActionValue& Value);
 
-	virtual void Jump(UPhysicsCalculator* physics, float jumpForce);
+	virtual void Jump(float jumpForce);
 	
 	//移動速度
 	inline virtual float GetMoveSpeed()const { return mMoveSpeed; }

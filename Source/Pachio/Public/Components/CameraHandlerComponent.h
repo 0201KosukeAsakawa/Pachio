@@ -30,6 +30,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ApplyCameraSettings(FVector2D, float);
 	void ApplyCameraSettings(FVector2D, float, ECameraViewType);
+	bool IsParameterMatch(FVector2D, float);
 
 	UCameraComponent* GetCamera() { return Camera; }
 private:	

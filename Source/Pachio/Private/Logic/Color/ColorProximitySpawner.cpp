@@ -9,25 +9,25 @@
 UColorProximitySpawner::UColorProximitySpawner()
 {
     ToggleNiagaraActiveState(false);    
-    bHide = true;
+    bHide = false;
     OffMesh();
 }
 
 bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(true);
-    OffMesh();
+    OnMesh();
     return false;
 }
 
 bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(false);
-    OnMesh();
+    OffMesh();
     return true;
 }
 
-void UColorProximitySpawner::OnMesh()
+void UColorProximitySpawner::OffMesh()
 {
     if (bHide) return;
 
@@ -61,7 +61,7 @@ void UColorProximitySpawner::OnMesh()
     bHide = true;
 }
 
-void UColorProximitySpawner::OffMesh()
+void UColorProximitySpawner::OnMesh()
 {
     if (!bHide) return;
 

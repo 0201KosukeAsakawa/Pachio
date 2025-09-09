@@ -90,7 +90,7 @@ void USoundManager::Init()
 
 void USoundManager::Tick(float DeltaTime)
 {
-    float Now = GetWorld()->GetTimeSeconds();
+   /* float Now = GetWorld()->GetTimeSeconds();
     float Elapsed = Now - StartTime;
 
     int32 CurrentBeat = FMath::FloorToInt(Elapsed / BeatInterval);
@@ -98,7 +98,7 @@ void USoundManager::Tick(float DeltaTime)
     {
         LastPredictedBeat = CurrentBeat;
         OnBeatDetected.Broadcast();
-    }
+    }*/
 }
 
 void USoundManager::SetTmp(EColorTargetType Mode, FLinearColor NewColor)
@@ -291,7 +291,7 @@ bool USoundManager::PlayBGM(/*UFMODEvent* EventAsset, float InBPM*/)
 void USoundManager::OnBeatTimerElapsed()
 {
     // ここで通知
-    OnBeatDetected.Broadcast();
+    //OnBeatDetected.Broadcast();
 }
 
 void USoundManager::InitTestSound()

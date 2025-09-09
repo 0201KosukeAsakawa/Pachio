@@ -46,6 +46,17 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
         MoveComp->Init(PlayerLogic);
     }
 
+    if (!Physics)
+    {
+        Physics = GetOwner()->GetComponentByClass<UPhysicsCalculator>();
+    }
+
+   
+    if (!BoxComponent)
+    {
+        BoxComponent = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Box"));
+    }
+      
 
     // キャラクターが持つ StaticMeshComponent を取得
     UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
@@ -83,7 +94,19 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
 // ステートの毎フレーム更新処理（現時点では何もしない）
 bool UPlayerDefaultState::OnUpdate(float)
 {
-	return true;
+    if (GetWorld() == nullptr || Physics == nullptr)
+        return false;
+
+    if (Physics->HasLanded())
+    {
+        ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+        if (sound)
+        {
+            sound->PlaySound("SE", "Land"); // ←着地音に名称変更
+        }
+    }
+
+    return true;
 }
 
 // ステートを離脱するときの処理（現時点では何もしない）
@@ -125,39 +148,36 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
         HoldState->SetUp(Target);
     }
 
-
-
-
-
     return true;
 }
 
 void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 {
-	// 移動方向をMoveCompのロジックから取得
-	FVector direction = MoveComp->Movement(0, mOwner, Value);
-	// 速度は現在のステートが持つ移動速度を使用
-	mOwner->AddMovementInput(direction, MoveSpeed);
-    if(direction != FVector(0,0,0))
-    CurrentDirection = direction;
-}
+    FVector2D MoveInput = Value.Get<FVector2D>();
 
-void UPlayerDefaultState::Jump(UPhysicsCalculator* physics,float jumpForce)
-{
-    if (GetOwner() == nullptr || physics == nullptr)
-        return;
-
-    if (TryEnterLadderOnJump())
+    float DeadZone = 0.2f;
+    if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
     {
-        physics->SetGravityScale(false);
+        Physics->AddForce(FVector(0, 0, 0), 0.f);
+        Physics->SetGravityScale(false);
         return;
     }
 
-    if (!physics || !physics->OnGround())
+    // 移動方向をMoveCompのロジックから取得
+    FVector direction = MoveComp->Movement(0, mOwner, Value);
+    // 速度は現在のステートが持つ移動速度を使用
+    mOwner->AddMovementInput(direction, MoveSpeed);
+    if (direction != FVector(0, 0, 0))
+        CurrentDirection = direction;
+}
+
+void UPlayerDefaultState::Jump(float jumpForce)
+{
+    if (GetOwner() == nullptr || Physics == nullptr || !Physics->OnGround())
         return;
 
     // ジャンプ力を掛けて力を加える
-    physics->AddForce(GetOwner()->GetActorUpVector(), jumpForce);
+    Physics->AddForce(GetOwner()->GetActorUpVector(), jumpForce);
     ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
     sound->PlaySound("SE", "Jump");
 }
@@ -166,40 +186,28 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
 {
     if (mOwner == nullptr)
         return false;
-    ACharacter* owner = Cast<ACharacter>(mOwner);
-    if (owner == nullptr)
+
+    // プレイヤーにアタッチされたBoxComponentを用意している想定
+    // 例えば LadderCheckTrigger として UBoxComponent* を保持している
+    if (BoxComponent == nullptr)
         return false;
 
-    FVector Start = mOwner->GetActorLocation();
-    FVector End = Start + FVector(0, 0, 100.f);
-    FVector BoxHalfExtent = FVector(30.f, 30.f, 100.f);
+    TArray<AActor*> OverlappingActors;
+    BoxComponent->GetOverlappingActors(OverlappingActors, ALadderActor::StaticClass());
 
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(mOwner);
-
-    TArray<FHitResult> Hits;
-    bool bAnyHit = GetWorld()->SweepMultiByChannel(
-        Hits,
-        Start,
-        End,
-        FQuat::Identity,
-        ECC_Visibility, // カスタムチャンネルでも可
-        FCollisionShape::MakeBox(BoxHalfExtent),
-        Params
-    );
-
-    if (!bAnyHit)
+    if (OverlappingActors.Num() == 0)
         return false;
+
     IStateControllable* player = Cast<IStateControllable>(GetOwner());
     if (player == nullptr)
         return false;
 
-    for (const FHitResult& Hit : Hits)
+    for (AActor* Actor : OverlappingActors)
     {
-        if (!Hit.GetActor() || !Hit.GetActor()->ActorHasTag("Ladder"))
+        if (!Actor->ActorHasTag("Ladder"))
             continue;
 
-        ALadderActor* Ladder = Cast<ALadderActor>(Hit.GetActor());
+        ALadderActor* Ladder = Cast<ALadderActor>(Actor);
         if (!Ladder)
             continue;
 
@@ -215,6 +223,7 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
     }
 
     return false;
+
 }
 
 void UPlayerDefaultState::UpdateInteractableUI()

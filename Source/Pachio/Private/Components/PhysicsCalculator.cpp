@@ -228,3 +228,14 @@ FVector UPhysicsCalculator::GetGroundNormal() const
 	// 接地してなければ上向きを返す
 	return FVector::UpVector;
 }
+
+const bool UPhysicsCalculator::HasLanded()
+{
+	bool bIsCurrentlyOnGround = OnGround();
+	bool bHasJustLanded = (!bWasOnGround && bIsCurrentlyOnGround);
+
+	// 次回の比較用に状態を保存
+	bWasOnGround = bIsCurrentlyOnGround;
+
+	return bHasJustLanded;
+}
