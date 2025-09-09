@@ -51,9 +51,12 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
         Physics = GetOwner()->GetComponentByClass<UPhysicsCalculator>();
     }
 
-    UBoxComponent* BoxComponent = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Box"));;
-    if (BoxComponent)
-        BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UPlayerDefaultState::OnBeginOverlap);
+   
+    if (!BoxComponent)
+    {
+        BoxComponent = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Box"));
+    }
+      
 
     // キャラクターが持つ StaticMeshComponent を取得
     UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
@@ -138,26 +141,27 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 
 void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 {
-	// 移動方向をMoveCompのロジックから取得
-	FVector direction = MoveComp->Movement(0, mOwner, Value);
-	// 速度は現在のステートが持つ移動速度を使用
-	mOwner->AddMovementInput(direction, MoveSpeed);
-    if(direction != FVector(0,0,0))
-    CurrentDirection = direction;
+    FVector2D MoveInput = Value.Get<FVector2D>();
+
+    float DeadZone = 0.2f;
+    if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
+    {
+        Physics->AddForce(FVector(0, 0, 0), 0.f);
+        Physics->SetGravityScale(false);
+        return;
+    }
+
+    // 移動方向をMoveCompのロジックから取得
+    FVector direction = MoveComp->Movement(0, mOwner, Value);
+    // 速度は現在のステートが持つ移動速度を使用
+    mOwner->AddMovementInput(direction, MoveSpeed);
+    if (direction != FVector(0, 0, 0))
+        CurrentDirection = direction;
 }
 
 void UPlayerDefaultState::Jump(float jumpForce)
 {
-    if (GetOwner() == nullptr || Physics == nullptr)
-        return;
-
-    //if (TryEnterLadderOnJump())
-    //{
-    //    Physics->SetGravityScale(false);
-    //    return;
-    //}
-
-    if (!Physics || !Physics->OnGround())
+    if (GetOwner() == nullptr || Physics == nullptr || !Physics->OnGround())
         return;
 
     // ジャンプ力を掛けて力を加える
@@ -166,49 +170,32 @@ void UPlayerDefaultState::Jump(float jumpForce)
     sound->PlaySound("SE", "Jump");
 }
 
-void UPlayerDefaultState::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-    TryEnterLadderOnJump();
-}
-
 bool UPlayerDefaultState::TryEnterLadderOnJump() const
 {
     if (mOwner == nullptr)
         return false;
-    ACharacter* owner = Cast<ACharacter>(mOwner);
-    if (owner == nullptr)
+
+    // プレイヤーにアタッチされたBoxComponentを用意している想定
+    // 例えば LadderCheckTrigger として UBoxComponent* を保持している
+    if (BoxComponent == nullptr)
         return false;
 
-    FVector Start = mOwner->GetActorLocation();
-    FVector End = Start + FVector(0, 0, 100.f);
-    FVector BoxHalfExtent = FVector(30.f, 30.f, 100.f);
+    TArray<AActor*> OverlappingActors;
+    BoxComponent->GetOverlappingActors(OverlappingActors, ALadderActor::StaticClass());
 
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(mOwner);
-
-    TArray<FHitResult> Hits;
-    bool bAnyHit = GetWorld()->SweepMultiByChannel(
-        Hits,
-        Start,
-        End,
-        FQuat::Identity,
-        ECC_Visibility, // カスタムチャンネルでも可
-        FCollisionShape::MakeBox(BoxHalfExtent),
-        Params
-    );
-
-    if (!bAnyHit)
+    if (OverlappingActors.Num() == 0)
         return false;
+
     IStateControllable* player = Cast<IStateControllable>(GetOwner());
     if (player == nullptr)
         return false;
 
-    for (const FHitResult& Hit : Hits)
+    for (AActor* Actor : OverlappingActors)
     {
-        if (!Hit.GetActor() || !Hit.GetActor()->ActorHasTag("Ladder"))
+        if (!Actor->ActorHasTag("Ladder"))
             continue;
 
-        ALadderActor* Ladder = Cast<ALadderActor>(Hit.GetActor());
+        ALadderActor* Ladder = Cast<ALadderActor>(Actor);
         if (!Ladder)
             continue;
 
@@ -224,6 +211,7 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
     }
 
     return false;
+
 }
 
 void UPlayerDefaultState::UpdateInteractableUI()

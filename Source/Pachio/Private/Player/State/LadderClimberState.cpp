@@ -121,8 +121,33 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 			// 近くに他の梯子がない → 通常状態へ戻す
 			if (UStateManager* StateManager = mOwner->FindComponentByClass<UStateManager>())
 			{
+				if (PlayerZ > LadderTopZ)
+				{
+					float direction = 1;
+					// ★ 梯子の前後判定 ★
+					FVector LadderForward = Ladder->GetActorForwardVector();
+					FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
+					ToPlayer.Normalize();
+
+					float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
+
+					// 後ろ側にいるなら方向を反転
+					if (Dot < 0.f)
+					{
+						direction *= -1.f;
+					}
+
+					// Y軸でdirection*5の移動
+					FVector NewLocation = mOwner->GetActorLocation();
+					NewLocation.Y += direction * 150.f;  // Y軸で移動
+
+					mOwner->SetActorLocation(NewLocation);
+				}
+
+				// 状態を戻す
 				StateManager->ChangeState("Default");
 			}
+
 		}
 	}
 
@@ -156,19 +181,6 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	if (!mOwner || !Ladder) return;
 
 	FVector direction = MoveComp->Movement(0, mOwner, Value);
-
-	// ★ 梯子の前後判定 ★
-	//FVector LadderForward = Ladder->GetActorForwardVector();
-	//FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
-	//ToPlayer.Normalize();
-
-	//float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
-
-	//// 後ろ側にいるなら方向を反転
-	//if (Dot < 0.f)
-	//{
-	//	direction *= -1.f;
-	//}
 
 	FVector NewLocation = mOwner->GetActorLocation() + direction * 10;
 
