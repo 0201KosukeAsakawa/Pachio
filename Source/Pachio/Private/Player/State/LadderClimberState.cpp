@@ -11,6 +11,7 @@
 #include "Logic/Movement/LadderMoveLogic.h"
 
 
+
 FVector GetLadderCenterXZ(const AActor* Ladder)
 {
 	if (!Ladder) return FVector::ZeroVector;
