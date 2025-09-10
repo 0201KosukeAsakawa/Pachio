@@ -127,16 +127,16 @@ bool UPhysicsCalculator::OnGround() const
 		Params
 	);
 
-#if WITH_EDITOR
-	DrawDebugBox(
-		GetWorld(),
-		StartTrace,
-		BoxExtent,
-		ActorRotation, // ★ここも回転を反映
-		bHit ? FColor::Green : FColor::Red,
-		false, 1.0f
-	);
-#endif
+//#if WITH_EDITOR
+//	DrawDebugBox(
+//		GetWorld(),
+//		StartTrace,
+//		BoxExtent,
+//		ActorRotation, // ★ここも回転を反映
+//		bHit ? FColor::Green : FColor::Red,
+//		false, 1.0f
+//	);
+//#endif
 
 	return bHit;
 }
