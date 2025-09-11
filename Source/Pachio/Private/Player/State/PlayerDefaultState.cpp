@@ -165,21 +165,37 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 
     // 移動方向をMoveCompのロジックから取得
     FVector direction = MoveComp->Movement(0, mOwner, Value);
+    direction.Normalize();
     // 速度は現在のステートが持つ移動速度を使用
     mOwner->AddMovementInput(direction, MoveSpeed);
-    if (direction != FVector(0, 0, 0))
+
+    if (direction != FVector::ZeroVector)
+    {
         CurrentDirection = direction;
+
+        // --- ▼ ここが追加部分 ▼ ---
+        FRotator TargetRotation = direction.Rotation();
+        FRotator CurrentRotation = mOwner->GetActorRotation();
+
+        // Yaw のみを更新（ピッチ・ロールは維持）
+        FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetRotation.Yaw, CurrentRotation.Roll);
+
+        mOwner->SetActorRotation(NewRotation);
+        // --- ▲ ここまで追加 ---
+    }
 }
 
-void UPlayerDefaultState::Jump(float jumpForce)
+
+bool UPlayerDefaultState::Jump(float jumpForce)
 {
     if (GetOwner() == nullptr || Physics == nullptr || !Physics->OnGround())
-        return;
+        return false;
 
     // ジャンプ力を掛けて力を加える
     Physics->AddForce(GetOwner()->GetActorUpVector(), jumpForce);
     ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
     sound->PlaySound("SE", "Jump");
+    return true;
 }
 
 bool UPlayerDefaultState::TryEnterLadderOnJump() const

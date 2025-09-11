@@ -38,6 +38,7 @@ void UPlayerStateComponent::Movement(const FInputActionValue& Value)
 {
 }
 
-void UPlayerStateComponent::Jump(float jumpForce)
+bool UPlayerStateComponent::Jump(float jumpForce)
 {
+	return false;
 }

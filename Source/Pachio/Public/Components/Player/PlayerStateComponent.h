@@ -36,7 +36,7 @@ public:
 
 	virtual void Movement(const FInputActionValue& Value);
 
-	virtual void Jump(float jumpForce);
+	virtual bool Jump(float jumpForce);
 	
 	//移動速度
 	inline virtual float GetMoveSpeed()const { return mMoveSpeed; }
