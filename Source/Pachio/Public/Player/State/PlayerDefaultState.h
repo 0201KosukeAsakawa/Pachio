@@ -19,7 +19,7 @@ public:
 	bool OnExit(ACharacter*)override;
 	bool OnSkill(const FInputActionValue&)override;
 	void Movement(const FInputActionValue& Value)override;
-	void Jump(float jumpForce)override;
+	bool Jump(float jumpForce)override;
 
 private:
 	bool TryEnterLadderOnJump() const;

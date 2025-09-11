@@ -170,7 +170,7 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	StateManager->GetCurrentState()->Jump(JumpForce * JumpBuff);
+	bool Jumping = StateManager->GetCurrentState()->Jump(JumpForce * JumpBuff);
 }
 
 // ダッシュ・スキル開始処理
@@ -344,12 +344,12 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 	{
-		UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
+		//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
 
 		const float DeadZone = 0.02f;
 		if (StickInput.SizeSquared() < DeadZone)
 		{
-			UE_LOG(LogTemp, Log, TEXT("StickInput is Neutral"));
+			//UE_LOG(LogTemp, Log, TEXT("StickInput is Neutral"));
 			bHasPrevInputDir = false;
 			return;
 		}
@@ -360,6 +360,10 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 		if (!bHasPrevInputDir)
 		{
 			float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(StickInput.Y, StickInput.X));
+	/*		if (InputDir.Y < 0)
+			{
+				AngleDegrees -= 360.0f;
+			}*/
 
 			// degを使って色変更
 			UE_LOG(LogTemp, Log, TEXT("初回入力方向に即回転 deg=%f"), AngleDegrees);
