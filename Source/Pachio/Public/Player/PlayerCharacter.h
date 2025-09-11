@@ -147,6 +147,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float DefaultGravityScalse = 50.0f;
+
+	float X = 0;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================

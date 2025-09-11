@@ -127,16 +127,16 @@ bool UPhysicsCalculator::OnGround() const
 		Params
 	);
 
-#if WITH_EDITOR
-	DrawDebugBox(
-		GetWorld(),
-		StartTrace,
-		BoxExtent,
-		ActorRotation, // ★ここも回転を反映
-		bHit ? FColor::Green : FColor::Red,
-		false, 1.0f
-	);
-#endif
+//#if WITH_EDITOR
+//	DrawDebugBox(
+//		GetWorld(),
+//		StartTrace,
+//		BoxExtent,
+//		ActorRotation, // ★ここも回転を反映
+//		bHit ? FColor::Green : FColor::Red,
+//		false, 1.0f
+//	);
+//#endif
 
 	return bHit;
 }
@@ -227,4 +227,15 @@ FVector UPhysicsCalculator::GetGroundNormal() const
 
 	// 接地してなければ上向きを返す
 	return FVector::UpVector;
+}
+
+const bool UPhysicsCalculator::HasLanded()
+{
+	bool bIsCurrentlyOnGround = OnGround();
+	bool bHasJustLanded = (!bWasOnGround && bIsCurrentlyOnGround);
+
+	// 次回の比較用に状態を保存
+	bWasOnGround = bIsCurrentlyOnGround;
+
+	return bHasJustLanded;
 }
