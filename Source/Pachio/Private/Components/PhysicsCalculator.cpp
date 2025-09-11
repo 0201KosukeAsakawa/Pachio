@@ -55,6 +55,7 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			ForceScale = 0;
 			Timer = 0;
 			bIsPhysicsEnabled = true;
+			bFalling = true;
 		}
 
 		PreviousPosition = currentPosition;
@@ -84,6 +85,7 @@ void UPhysicsCalculator::AddGravity()
 	if (OnGround())
 	{
 		bIsPhysicsEnabled = false;
+		bFalling = false;
 		return;
 	}
 
