@@ -31,12 +31,13 @@ public:
 	void AddForce(FVector Direction, float Force, const bool bSweep = true);
 
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
+	UFUNCTION(BlueprintCallable)
 	bool OnGround() const;
 
 	void SetGravityScale(const bool applyGravity = true, float scale = 9.8f , float Modifier = 1.0F);
 
 	FVector GetBlockedAdjustedVector(const FVector& MoveVector);
-
+	UFUNCTION(BlueprintCallable)
 	const bool HasLanded();
 	// 物理計算が有効かどうかを返す
 	bool IsPhysicsEnabled() const { return bIsPhysicsEnabled; }
@@ -80,4 +81,6 @@ private:
 	bool bIsPhysicsEnabled;		
 
 	bool bWasOnGround = false;
+
+	bool bFalling = false;
 };
