@@ -140,7 +140,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 
 					// Y軸でdirection*5の移動
 					FVector NewLocation = mOwner->GetActorLocation();
-					NewLocation.Y += direction * 150.f;  // Y軸で移動
+					NewLocation.Y += direction * 300.f;  // Y軸で移動
 
 					mOwner->SetActorLocation(NewLocation);
 				}
