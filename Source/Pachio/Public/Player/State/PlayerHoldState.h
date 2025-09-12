@@ -13,7 +13,7 @@ class PACHIO_API UPlayerHoldState : public UPlayerStateComponent
 	GENERATED_BODY()
 public:
 	UPlayerHoldState();	
-	void SetUp(AActor*);
+	void SetUp(AActor*,bool);
 private:
 	bool OnEnter(ACharacter* owner, UWorld* world)override;
 
@@ -32,4 +32,5 @@ private:
 	UPROPERTY()
 	UMoveComponent* MoveComp;
 	float InitialHoldDistance;
+	float TargetYaw = 1;
 };

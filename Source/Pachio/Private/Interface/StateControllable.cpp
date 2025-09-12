@@ -5,7 +5,7 @@
 
 // Add default functionality here for any IStateControllable functions that are not pure virtual.
 
-UPlayerStateComponent* IStateControllable::ChangeState(FString Tag)
+UPlayerStateComponent* IStateControllable::ChangeState(EPlayerStateType Tag)
 {
 	return nullptr;
 }

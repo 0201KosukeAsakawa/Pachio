@@ -57,6 +57,6 @@ bool UReadyState::OnSkill(const FInputActionValue& Input)
 	IStateControllable* player = Cast<IStateControllable>(GetOwner());
 	if (player == nullptr)
 		return false;
-	player->ChangeState("Dafault");
+	player->ChangeState(EPlayerStateType::Default);
 	return true;
 }

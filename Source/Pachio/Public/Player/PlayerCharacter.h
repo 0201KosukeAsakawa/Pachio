@@ -6,6 +6,7 @@
 #include "Interface/StateControllable.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ActionControl/CharacterActionInterfaces.h"
+#include "Player/State/StateManager.h"
 #include "PlayerCharacter.generated.h"
 
 // ===========================
@@ -16,7 +17,6 @@ class IMoveLogic;
 class UPlayerDefaultState;
 class UInputMappingContext;
 class UInputAction;
-class UStateManager;
 class UAttackComponent;
 class UAttackController;
 class USpringArmComponent;
@@ -61,6 +61,7 @@ public:
 
 
 public:
+
 	// ======================
 	// ==== 入力アクション ====
 	// ======================
@@ -102,7 +103,7 @@ private:
 	UPlayerStateComponent* GetPlayerState() const override;
 
 	// 状態変更（ステートタグによる遷移）
-	UPlayerStateComponent* ChangeState(FString Tag) override;
+	UPlayerStateComponent* ChangeState(EPlayerStateType Tag) override;
 	void InitState();
 	void UpdateOverlapUI();
 	void HandleMoveSound(float);
@@ -127,8 +128,6 @@ private:
 	void ApplyEffectFromColor(const FLinearColor& Color);
 
 	void OnStickRotate(const FVector2D& StickInput);
-	FVector2D PrevInputDir = FVector2D::ZeroVector;
-	bool bHasPrevInputDir = false;
 
 	void ResetBuff();
 
@@ -182,4 +181,7 @@ private:
 
 	FVector2D PrevMouseDir;
 	bool bHasPrevMouse = false;
+
+	FVector2D PrevInputDir = FVector2D::ZeroVector;
+	bool bHasPrevInputDir = false;
 };

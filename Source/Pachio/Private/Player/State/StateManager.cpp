@@ -19,8 +19,7 @@ void UStateManager::Init(ACharacter* owner, UWorld* world)
 	pWorld = world;
 
 	// 初期状態を "Default" に設定
-	ChangeState("Default");
-	//ChangeState("Preparation");
+	ChangeState(EPlayerStateType::Default);
 }
 
 // 毎フレームの更新処理（Tickなどから呼び出される想定）
@@ -33,7 +32,7 @@ void UStateManager::Update(float deltaTime)
 	}
 }
 
-UPlayerStateComponent* UStateManager::ChangeState(FString NextStateTag)
+UPlayerStateComponent* UStateManager::ChangeState(EPlayerStateType NextStateTag)
 {
 	if (StateClassMap.IsEmpty() || !StateClassMap.Contains(NextStateTag) || !mOwner || !pWorld)
 		return nullptr;
@@ -55,4 +54,16 @@ UPlayerStateComponent* UStateManager::ChangeState(FString NextStateTag)
 
 	CurrentState->OnEnter(mOwner, pWorld);
 	return CurrentState;
+}
+
+bool UStateManager::IsStateMatch(EPlayerStateType StateTag)
+{
+	TSubclassOf<UPlayerStateComponent> StateClass = StateClassMap.FindRef(StateTag);
+
+	if (StateClass == nullptr || CurrentState == nullptr)
+	{
+		return false;
+	}
+
+	return CurrentState->IsA(StateClass);
 }

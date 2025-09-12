@@ -139,13 +139,16 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
     IStateControllable* Player = Cast<IStateControllable>(mOwner);
     if (Player == nullptr)
         return false;
-    UPlayerStateComponent* NewState = Player->ChangeState("Hold");
+    UPlayerStateComponent* NewState = Player->ChangeState(EPlayerStateType::Hold);
     if (NewState == nullptr)
         return false;
 
     if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
     {
-        HoldState->SetUp(Target);
+        if (CurrentDirection.Y > 0)
+            HoldState->SetUp(Target, true);
+        else
+            HoldState->SetUp(Target, false);
     }
 
     return true;
@@ -166,24 +169,41 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
     // 移動方向をMoveCompのロジックから取得
     FVector direction = MoveComp->Movement(0, mOwner, Value);
     direction.Normalize();
-    // 速度は現在のステートが持つ移動速度を使用
-    mOwner->AddMovementInput(direction, MoveSpeed);
 
     if (direction != FVector::ZeroVector)
     {
-        CurrentDirection = direction;
+        
 
-        // --- ▼ ここが追加部分 ▼ ---
-        FRotator TargetRotation = direction.Rotation();
         FRotator CurrentRotation = mOwner->GetActorRotation();
 
-        // Yaw のみを更新（ピッチ・ロールは維持）
-        FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetRotation.Yaw, CurrentRotation.Roll);
+        float TargetYaw;
 
-        mOwner->SetActorRotation(NewRotation);
-        // --- ▲ ここまで追加 ---
+        if (MoveInput.Y > 0)
+        {
+            TargetYaw = 0.f;
+        }
+        else if (MoveInput.Y < 0)
+        {
+            TargetYaw = 180.f;
+            direction *= -1;
+        }
+        else
+        {
+            TargetYaw = direction.Rotation().Yaw;
+        }
+        CurrentDirection = FVector(0, direction.Y, 0);
+        // 既にほぼ同じ向きなら回転処理しない
+        if (!FMath::IsNearlyEqual(CurrentRotation.Yaw, TargetYaw, 1.f))
+        {
+           // float NewYaw = FMath::FInterpTo(CurrentRotation.Yaw, TargetYaw, GetWorld()->GetDeltaSeconds(), 10.f);
+            FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll);
+            mOwner->SetActorRotation(NewRotation);
+        }
     }
+    // 速度は現在のステートが持つ移動速度を使用
+    mOwner->AddMovementInput(direction, MoveSpeed);
 }
+
 
 
 bool UPlayerDefaultState::Jump(float jumpForce)
@@ -228,7 +248,7 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
             continue;
 
         // ステート切り替え
-        if (UPlayerStateComponent* NewState = player->ChangeState("Climb"))
+        if (UPlayerStateComponent* NewState = player->ChangeState(EPlayerStateType::Climb))
         {
             if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
             {
