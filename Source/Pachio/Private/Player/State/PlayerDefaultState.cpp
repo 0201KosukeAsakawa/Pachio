@@ -166,24 +166,41 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
     // 移動方向をMoveCompのロジックから取得
     FVector direction = MoveComp->Movement(0, mOwner, Value);
     direction.Normalize();
-    // 速度は現在のステートが持つ移動速度を使用
-    mOwner->AddMovementInput(direction, MoveSpeed);
 
     if (direction != FVector::ZeroVector)
     {
         CurrentDirection = direction;
 
-        // --- ▼ ここが追加部分 ▼ ---
-        FRotator TargetRotation = direction.Rotation();
         FRotator CurrentRotation = mOwner->GetActorRotation();
 
-        // Yaw のみを更新（ピッチ・ロールは維持）
-        FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetRotation.Yaw, CurrentRotation.Roll);
+        float TargetYaw;
 
-        mOwner->SetActorRotation(NewRotation);
-        // --- ▲ ここまで追加 ---
+        if (MoveInput.Y > 0)
+        {
+            TargetYaw = 0.f;
+        }
+        else if (MoveInput.Y < 0)
+        {
+            TargetYaw = 180.f;
+            direction *= -1;
+        }
+        else
+        {
+            TargetYaw = direction.Rotation().Yaw;
+        }
+
+        // 既にほぼ同じ向きなら回転処理しない
+        if (!FMath::IsNearlyEqual(CurrentRotation.Yaw, TargetYaw, 1.f))
+        {
+           // float NewYaw = FMath::FInterpTo(CurrentRotation.Yaw, TargetYaw, GetWorld()->GetDeltaSeconds(), 10.f);
+            FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll);
+            mOwner->SetActorRotation(NewRotation);
+        }
     }
+    // 速度は現在のステートが持つ移動速度を使用
+    mOwner->AddMovementInput(direction, MoveSpeed);
 }
+
 
 
 bool UPlayerDefaultState::Jump(float jumpForce)

@@ -35,13 +35,10 @@ APlayerCharacter::APlayerCharacter()
 	// 毎フレームTickを実行可能に設定
 	PrimaryActorTick.bCanEverTick = true;
 	// 各種コンポーネントを生成・初期化
-	/*InteractionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("IBox"));*/
 	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
-
-
 }
 
 // ゲーム開始時の初期化処理
@@ -74,6 +71,9 @@ void APlayerCharacter::BeginPlay()
 	{
 		InteractionBox = box;
 	}
+
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	bUseControllerRotationYaw = false;
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
