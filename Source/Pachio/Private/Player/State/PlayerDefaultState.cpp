@@ -145,7 +145,10 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 
     if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
     {
-        HoldState->SetUp(Target);
+        if (CurrentDirection.Y > 0)
+            HoldState->SetUp(Target, true);
+        else
+            HoldState->SetUp(Target, false);
     }
 
     return true;
@@ -169,7 +172,7 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 
     if (direction != FVector::ZeroVector)
     {
-        CurrentDirection = direction;
+        
 
         FRotator CurrentRotation = mOwner->GetActorRotation();
 
@@ -188,7 +191,7 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
         {
             TargetYaw = direction.Rotation().Yaw;
         }
-
+        CurrentDirection = FVector(0, direction.Y, 0);
         // 既にほぼ同じ向きなら回転処理しない
         if (!FMath::IsNearlyEqual(CurrentRotation.Yaw, TargetYaw, 1.f))
         {

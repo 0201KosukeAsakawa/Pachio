@@ -83,7 +83,7 @@ void UPlayerHoldState::Movement(const FInputActionValue& Value)
     FVector direction = MoveComp->Movement(0, mOwner, Value);
     if (direction.IsNearlyZero()) return;
 
-    FVector moveDelta = direction * 700 * GetWorld()->GetDeltaSeconds();
+    FVector moveDelta = direction * 700 * GetWorld()->GetDeltaSeconds() * TargetYaw;
 
     // キャラと箱を同じ移動量で動かす
     mOwner->AddActorWorldOffset(moveDelta, true);
@@ -92,11 +92,21 @@ void UPlayerHoldState::Movement(const FInputActionValue& Value)
 
 
 
-void UPlayerHoldState::SetUp(AActor* target)
+void UPlayerHoldState::SetUp(AActor* target, bool b)
 {
     HoldTarget = target;
+ 
     if (HoldTarget && mOwner)
     {
         InitialHoldDistance = FVector::Dist(mOwner->GetActorLocation(), HoldTarget->GetActorLocation());
+    }
+
+    if (b)
+    {
+        TargetYaw = 1;
+    }
+    else
+    {
+        TargetYaw = -1;
     }
 }
