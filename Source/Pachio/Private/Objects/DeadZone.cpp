@@ -54,6 +54,6 @@ void ADeadZone::OverlapDead(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if (!IS)
 		return;
 
-	IS->ChangeState("Dead");
+	IS->ChangeState(EPlayerStateType::Dead);
 
 }

@@ -139,7 +139,7 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
     IStateControllable* Player = Cast<IStateControllable>(mOwner);
     if (Player == nullptr)
         return false;
-    UPlayerStateComponent* NewState = Player->ChangeState("Hold");
+    UPlayerStateComponent* NewState = Player->ChangeState(EPlayerStateType::Hold);
     if (NewState == nullptr)
         return false;
 
@@ -248,7 +248,7 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
             continue;
 
         // ステート切り替え
-        if (UPlayerStateComponent* NewState = player->ChangeState("Climb"))
+        if (UPlayerStateComponent* NewState = player->ChangeState(EPlayerStateType::Climb))
         {
             if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
             {

@@ -35,7 +35,7 @@ bool UPlayerHoldState::OnUpdate(float DeltaTime)
         // Hold解除して Default に戻す
         if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
         {
-            Player->ChangeState("Default");
+            Player->ChangeState(EPlayerStateType::Default);
         }
         return true;
     }
@@ -49,7 +49,7 @@ bool UPlayerHoldState::OnUpdate(float DeltaTime)
         // Hold解除して Default に戻す
         if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
         {
-            Player->ChangeState("Default");
+            Player->ChangeState(EPlayerStateType::Default);
         }
     }
     return true;
@@ -70,7 +70,7 @@ bool UPlayerHoldState::OnSkill(const FInputActionValue& Value)
         // Default に戻す
         if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
         {
-            Player->ChangeState("Default");
+            Player->ChangeState(EPlayerStateType::Default);
         }
     }
     return true;

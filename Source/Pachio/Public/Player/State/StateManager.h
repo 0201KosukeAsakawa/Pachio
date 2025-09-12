@@ -8,6 +8,16 @@
 class UPlayerStateComponent;
 class ACharacter;
 
+UENUM(BlueprintType)
+enum class EPlayerStateType : uint8
+{
+	Default     UMETA(DisplayName = "Default"),
+	Hold     UMETA(DisplayName = "Hold"),
+	Climb    UMETA(DisplayName = "Climb"),
+	Dead     UMETA(DisplayName = "Dead"),
+	// 他のステートを追加...
+};
+
 /**
  * プレイヤーの状態（ステート）を切り替えて制御するコンポーネント
  */
@@ -27,7 +37,10 @@ public:
 	void Update(float DeltaTime);
 
 	// 状態を切り替える（タグ指定）
-	UPlayerStateComponent* ChangeState(FString NextStateTag);
+	UPlayerStateComponent* ChangeState(EPlayerStateType NextStateTag);
+
+	UFUNCTION(BlueprintCallable)
+	bool IsStateMatch(EPlayerStateType StateTag);
 
 	// 現在のステートを取得
 	inline UPlayerStateComponent* GetCurrentState() const { return CurrentState; }
@@ -35,7 +48,7 @@ public:
 private:
 	// ステート名（文字列）とステートインスタンスのマップ
 	UPROPERTY(EditAnywhere)
-	TMap<FString, TSubclassOf<UPlayerStateComponent>> StateClassMap;
+	TMap<EPlayerStateType, TSubclassOf<UPlayerStateComponent>> StateClassMap;
 
 	// ステートの所有キャラクター
 	UPROPERTY()

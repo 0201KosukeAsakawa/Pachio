@@ -67,7 +67,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 		// Hold解除して Default に戻す
 		if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
 		{
-			Player->ChangeState("Default");
+			Player->ChangeState(EPlayerStateType::Default);
 		}
 		return true;
 	}
@@ -146,7 +146,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 				}
 
 				// 状態を戻す
-				StateManager->ChangeState("Default");
+				StateManager->ChangeState(EPlayerStateType::Default);
 			}
 
 		}
@@ -174,7 +174,7 @@ bool ULadderClimberState::OnSkill(const FInputActionValue& Input)
 	if (owner == nullptr)
 		return false;
 
-	return owner->ChangeState("Default") != nullptr;
+	return owner->ChangeState(EPlayerStateType::Default) != nullptr;
 }
 
 void ULadderClimberState::Movement(const FInputActionValue& Value)
@@ -206,7 +206,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 		{
 			if (IStateControllable* owner = Cast<IStateControllable>(mOwner))
 			{
-				owner->ChangeState("Default");
+				owner->ChangeState(EPlayerStateType::Default);
 				return;
 			}
 		}

@@ -1,6 +1,5 @@
 #include "Player/PlayerCharacter.h"
 #include "Player/State/PlayerDefaultState.h"
-#include "Player/State/StateManager.h"
 #include "Player/InGameController.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
@@ -246,7 +245,7 @@ void APlayerCharacter::ShiftArrayLeftColorMode()
 }
 
 // 状態の変更（ステートタグを指定して遷移）
-UPlayerStateComponent* APlayerCharacter::ChangeState(FString Tag)
+UPlayerStateComponent* APlayerCharacter::ChangeState(EPlayerStateType Tag)
 {
 	UPlayerStateComponent* result = StateManager->ChangeState(Tag);
 	
