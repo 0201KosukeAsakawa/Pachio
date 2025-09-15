@@ -37,9 +37,13 @@ public:
 	virtual void Movement(const FInputActionValue& Value);
 
 	virtual bool Jump(float jumpForce);
+
+	FVector GetAnimVelocity() const;
 	
 	//移動速度
 	inline virtual float GetMoveSpeed()const { return mMoveSpeed; }
+
+	inline float GetYaw()const { return hoge; }
 
 protected:
 	/** このステートがアタッチされているキャラクター */
@@ -56,4 +60,8 @@ protected:
 	/** ステートごとに適用されるマテリアル（ビジュアル変更用） */
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UMaterialInterface> NewMaterial;
+
+	float hoge = 1;
+
+	FVector MoveDelta;
 };

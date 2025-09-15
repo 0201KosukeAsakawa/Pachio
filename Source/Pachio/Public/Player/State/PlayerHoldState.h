@@ -32,5 +32,4 @@ private:
 	UPROPERTY()
 	UMoveComponent* MoveComp;
 	float InitialHoldDistance;
-	float TargetYaw = 1;
 };

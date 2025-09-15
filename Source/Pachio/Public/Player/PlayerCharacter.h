@@ -98,6 +98,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	UCameraComponent* GetCamera();
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetAnimVelocity() const;
+
+	UFUNCTION(BlueprintCallable)
+	float GetYaw()const;
 private:
 	// 現在のプレイヤーステート（状態）を取得
 	UPlayerStateComponent* GetPlayerState() const override;
