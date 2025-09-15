@@ -43,8 +43,21 @@ bool UPlayerStateComponent::Jump(float jumpForce)
 	return false;
 }
 
-FVector UPlayerStateComponent:: GetAnimVelocity() const
+FVector UPlayerStateComponent::GetAnimVelocity() const
 {
 	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
-	return DeltaSeconds > 0 ? MoveDelta / DeltaSeconds : FVector::ZeroVector;
+	FVector Velocity = DeltaSeconds > 0 ? MoveDelta / DeltaSeconds : FVector::ZeroVector;
+
+	UE_LOG(LogTemp, Log, TEXT("AnimVelocity = X:%f, Y:%f, Z:%f | MoveDelta = X:%f, Y:%f, Z:%f | DeltaSeconds = %f"),
+		Velocity.X, Velocity.Y, Velocity.Z,
+		MoveDelta.X, MoveDelta.Y, MoveDelta.Z,
+		DeltaSeconds);
+
+	return Velocity;
+}
+
+
+int32 UPlayerStateComponent::GetYaw() const
+{
+	return MoveDirection;
 }

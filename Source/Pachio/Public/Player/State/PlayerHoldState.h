@@ -32,4 +32,6 @@ private:
 	UPROPERTY()
 	UMoveComponent* MoveComp;
 	float InitialHoldDistance;
+
+	int32 GrabDirection = 1;
 };

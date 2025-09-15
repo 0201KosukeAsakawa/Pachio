@@ -43,7 +43,7 @@ public:
 	//移動速度
 	inline virtual float GetMoveSpeed()const { return mMoveSpeed; }
 
-	inline float GetYaw()const { return hoge; }
+	int32 GetYaw()const;
 
 protected:
 	/** このステートがアタッチされているキャラクター */
@@ -57,11 +57,11 @@ protected:
 	/** 現在の移動速度（ステートごとに設定可能） */
 	float mMoveSpeed;
 
+	int32 MoveDirection = 1;
+
+	FVector MoveDelta;
+
 	/** ステートごとに適用されるマテリアル（ビジュアル変更用） */
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UMaterialInterface> NewMaterial;
-
-	float hoge = 1;
-
-	FVector MoveDelta;
 };

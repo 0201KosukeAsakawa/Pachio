@@ -75,7 +75,6 @@ bool UPlayerHoldState::OnSkill(const FInputActionValue& Value)
     }
     return true;
 }
-
 void UPlayerHoldState::Movement(const FInputActionValue& Value)
 {
     if (!HoldTarget || !MoveComp) return;
@@ -83,34 +82,42 @@ void UPlayerHoldState::Movement(const FInputActionValue& Value)
     FVector direction = MoveComp->Movement(0, mOwner, Value);
     if (direction.IsNearlyZero())
     {
-        MoveDelta = FVector::ZeroVector; // ★ここでリセット
+        MoveDelta = FVector::ZeroVector;
         return;
     }
 
-    MoveDelta = direction * 700 * GetWorld()->GetDeltaSeconds() * hoge;
+    // 移動方向を入力から決定
+    if (direction.Y < 0)
+    {
+        MoveDirection = -1;
+    }
+    else if (direction.Y > 0)
+    {
+        MoveDirection = 1;
+    }
+    else
+    {
+        MoveDirection = 0;
+    }
+
+    // 掴んだ向き (direc) と現在の移動方向 (d) を組み合わせる
+
+    MoveDelta = direction * 700 * GetWorld()->GetDeltaSeconds() * GrabDirection;
 
     // キャラと箱を同じ移動量で動かす
     mOwner->AddActorWorldOffset(MoveDelta, true);
     HoldTarget->AddActorWorldOffset(MoveDelta, true);
 }
 
-
-
 void UPlayerHoldState::SetUp(AActor* target, bool b)
 {
     HoldTarget = target;
- 
+
     if (HoldTarget && mOwner)
     {
         InitialHoldDistance = FVector::Dist(mOwner->GetActorLocation(), HoldTarget->GetActorLocation());
     }
 
-    if (b)
-    {
-        hoge = 1;
-    }
-    else
-    {
-        hoge = -1;
-    }
+    // 掴んだ時の向きを固定値として保持
+    GrabDirection = b ? 1 : -1;
 }

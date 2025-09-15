@@ -200,6 +200,7 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
             mOwner->SetActorRotation(NewRotation);
         }
     }
+    MoveDelta = direction * MoveSpeed * GetWorld()->GetDeltaSeconds();
     // 速度は現在のステートが持つ移動速度を使用
     mOwner->AddMovementInput(direction, MoveSpeed);
 }
