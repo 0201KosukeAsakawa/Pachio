@@ -445,6 +445,24 @@ UCameraComponent* APlayerCharacter::GetCamera()
 	return CameraComponent->GetCamera();
 }
 
+FVector APlayerCharacter::GetAnimVelocity() const
+{
+	if(StateManager == nullptr)
+	return FVector();
+
+	return StateManager->GetCurrentState()->GetAnimVelocity();
+}
+
+float APlayerCharacter::GetYaw() const
+{
+	if (StateManager == nullptr)
+	return 0.0f;
+
+	return StateManager->GetCurrentState()->GetYaw();
+}
+
+
+
 void APlayerCharacter::UpdateOverlapUI()
 {
 	if (!InteractionBox)

@@ -37,9 +37,13 @@ public:
 	virtual void Movement(const FInputActionValue& Value);
 
 	virtual bool Jump(float jumpForce);
+
+	FVector GetAnimVelocity() const;
 	
 	//移動速度
 	inline virtual float GetMoveSpeed()const { return mMoveSpeed; }
+
+	int32 GetYaw()const;
 
 protected:
 	/** このステートがアタッチされているキャラクター */
@@ -52,6 +56,10 @@ protected:
 
 	/** 現在の移動速度（ステートごとに設定可能） */
 	float mMoveSpeed;
+
+	int32 MoveDirection = 1;
+
+	FVector MoveDelta;
 
 	/** ステートごとに適用されるマテリアル（ビジュアル変更用） */
 	UPROPERTY(EditAnywhere)
