@@ -61,9 +61,21 @@ void APlayerCharacter::BeginPlay()
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (PC)
 	{
+		FString CurrentLevelName = GetWorld()->GetMapName();
+		// マップ名はパス込みなので最後の名前だけ取り出す
+		int32 LastSlashIndex;
+		if (CurrentLevelName.FindLastChar('/', LastSlashIndex))
+		{
+			CurrentLevelName = CurrentLevelName.Mid(LastSlashIndex + 1);
+		}
+
+		if (CurrentLevelName != TEXT("UEDPIE_0_Title"))
+		{
+			PC->SetInputMode(FInputModeGameOnly());
+		}
 		PC->bShowMouseCursor = false;
-		PC->SetInputMode(FInputModeGameOnly());
 	}
+
 	GetCharacterMovement()->SetWalkableFloorAngle(60.f);
 	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("Interaction"));
 	if(box)
