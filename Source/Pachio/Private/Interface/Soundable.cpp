@@ -2,7 +2,7 @@
 
 // Add default functionality here for any ISoundable functions that are not pure virtual.
 
-void ISoundable::SetSoundVolume(float BGMvol, float SEVol)
+void ISoundable::SetBGMVolume(float vol)
 {
 }
 

@@ -102,6 +102,7 @@ bool UPlayerDefaultState::OnUpdate(float)
         ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
         if (sound)
         {
+            UE_LOG(LogTemp, Warning, TEXT("HasLanded returned true, entering if-block!"));
             sound->PlaySound("SE", "Land"); // ←着地音に名称変更
         }
     }

@@ -59,7 +59,7 @@ private:
 
     bool PlaySound(FName DataID, FName SoundID) override;
     UFUNCTION(BlueprintCallable)
-    void SetSoundVolume(float BGMvol, float SEVol) override;
+    void SetBGMVolume(float vol) override;
     void StopBGM() override;
     UFUNCTION(BlueprintCallable)
     float GetBGMVolume() const override { return BGMVolume; }
@@ -90,9 +90,9 @@ private:
     float SEVolume;
 
     UPROPERTY()
-    UFMODAudioComponent* TestSound;
+    UFMODAudioComponent* BGM;
     UPROPERTY(EditAnywhere, Category = "FMOD")
-    UFMODEvent* TestEventAsset;
+    UFMODEvent* BGMEventAsset;
     // SoundManager.h に追加
     UPROPERTY(EditAnywhere, Category = "BPM")
     float MusicBPM = 166.0f;  // 任意のBPM
