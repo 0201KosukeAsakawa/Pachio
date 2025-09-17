@@ -15,5 +15,5 @@ class PACHIO_API UDeadPlayerState : public UPlayerStateComponent
 	GENERATED_BODY()
 public:
 	// ステートに入ったときの処理
-	virtual bool OnEnter(ACharacter* Owner, UWorld* World)override;
+	virtual bool OnEnter(APawn* Owner, UWorld* World)override;
 };

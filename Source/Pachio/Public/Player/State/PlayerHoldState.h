@@ -15,11 +15,11 @@ public:
 	UPlayerHoldState();	
 	void SetUp(AActor*,bool);
 private:
-	bool OnEnter(ACharacter* owner, UWorld* world)override;
+	bool OnEnter(APawn* owner, UWorld* world)override;
 
 	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
 	bool OnUpdate(float DeltaTime)override;
-	bool OnExit(ACharacter* owner)override;
+	bool OnExit(APawn* owner)override;
 
 	bool OnSkill(const FInputActionValue& Value)override;
 

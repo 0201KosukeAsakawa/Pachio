@@ -14,7 +14,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "FunctionLibrary.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/FloatingPawnMovement.h"
 #include "InputAction.h"
 #include "Interface/Soundable.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -38,6 +38,10 @@ APlayerCharacter::APlayerCharacter()
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
+	FloatingPawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingPawnMovement"));
+	FloatingPawnMovement->UpdatedComponent = RootComponent;
+	InteractionBox = CreateDefaultSubobject<UBoxComponent>("Collision");
+	RootComponent = InteractionBox;
 }
 
 // ゲーム開始時の初期化処理
@@ -55,12 +59,13 @@ void APlayerCharacter::BeginPlay()
 	InitInput();
 	// 視覚関連設定（アウトラインなど）
 	InitVisualSettings();
-	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
+	FloatingPawnMovement->MaxSpeed = MoveSpeed;
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (PC)
 	{
+		PC->Possess(this);
 		FString CurrentLevelName = GetWorld()->GetMapName();
 		// マップ名はパス込みなので最後の名前だけ取り出す
 		int32 LastSlashIndex;
@@ -76,14 +81,6 @@ void APlayerCharacter::BeginPlay()
 		PC->bShowMouseCursor = false;
 	}
 
-	GetCharacterMovement()->SetWalkableFloorAngle(60.f);
-	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("Interaction"));
-	if(box)
-	{
-		InteractionBox = box;
-	}
-
-	GetCharacterMovement()->bOrientRotationToMovement = false;
 	bUseControllerRotationYaw = false;
 }
 
@@ -132,8 +129,8 @@ void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 void APlayerCharacter::ResetBuff()
 {
 	 JumpBuff = 1;
-	 GetCharacterMovement()->GroundFriction = 8.0f;
-	 GetCharacterMovement()->BrakingDecelerationWalking = 2048.f;
+	 //FloatingPawnMovement->GroundFriction = 8.0f;
+	 //FloatingPawnMovement->BrakingDecelerationWalking = 2048.f;
 	 physics->SetGravityScale(true, DefaultGravityScalse);
 }
 
@@ -285,12 +282,8 @@ void APlayerCharacter::InitPhysicsSettings()
 	// 重力を加える（値は任意、固定で10.0fを加算）
 	physics->SetGravityScale(true, DefaultGravityScalse);
 
-	auto* Move = GetCharacterMovement();
-
 	// 摩擦や重力のパラメータ調整
-	Move->BrakingFrictionFactor = 2.0f;
-	Move->GroundFriction = 8.0f;
-	Move->GravityScale = 0.0f; // 重力は自前のphysicsで制御しているため無効化
+	FloatingPawnMovement->Deceleration = 2048.f; // 適当な値
 }
 
 // 入力関連の初期化（コンポーネントのコントローラ参照を設定）
@@ -331,14 +324,11 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	case EBuffEffect::Green:
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 1000.0f + 400.0f * Match.StrengthRatio;
 		break;
 	}
 
 	case EBuffEffect::Blue:
 	{
-		GetCharacterMovement()->GroundFriction = 0.1f;
-		GetCharacterMovement()->BrakingDecelerationWalking =100; // 通常:2048 → 小さいほど止まりにくい
 
 		break;
 	}

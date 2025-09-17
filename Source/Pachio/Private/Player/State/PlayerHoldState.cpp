@@ -14,7 +14,7 @@ UPlayerHoldState::UPlayerHoldState()
 {
 }
 
-bool UPlayerHoldState::OnEnter(ACharacter* owner, UWorld* world)
+bool UPlayerHoldState::OnEnter(APawn* owner, UWorld* world)
 {
     mOwner = owner;
     if (!MoveComp)
@@ -55,7 +55,7 @@ bool UPlayerHoldState::OnUpdate(float DeltaTime)
     return true;
 }
 
-bool UPlayerHoldState::OnExit(ACharacter* owner)
+bool UPlayerHoldState::OnExit(APawn* owner)
 {
     HoldTarget = nullptr;
     ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE", "Put");

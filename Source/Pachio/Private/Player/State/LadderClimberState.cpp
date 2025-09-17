@@ -31,7 +31,7 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 	Ladder = ladderClimber;
 }
 
-bool ULadderClimberState::OnEnter(ACharacter* Owner, UWorld* World)
+bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 {
 	if (!Owner) return false;
 	if (!mOwner)
@@ -156,7 +156,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 }
 
 
-bool ULadderClimberState::OnExit(ACharacter* Owner)
+bool ULadderClimberState::OnExit(APawn* Owner)
 {
 	if (!Owner) return false;
 

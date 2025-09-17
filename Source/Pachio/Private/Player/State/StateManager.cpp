@@ -9,7 +9,7 @@ UStateManager::UStateManager()
 }
 
 // ステートマネージャの初期化処理
-void UStateManager::Init(ACharacter* owner, UWorld* world)
+void UStateManager::Init(APawn* owner, UWorld* world)
 {
 	// 所有者またはワールドが無効な場合は処理しない
 	if (!owner || !world)

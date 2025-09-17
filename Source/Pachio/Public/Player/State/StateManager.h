@@ -31,7 +31,7 @@ public:
 	UStateManager();
 
 	// ゲーム開始時の初期化処理
-	void Init(ACharacter* Owner, UWorld* World);
+	void Init(APawn* Owner, UWorld* World);
 
 	// 毎フレーム呼び出される更新処理（Tick 相当）
 	void Update(float DeltaTime);
@@ -52,7 +52,7 @@ private:
 
 	// ステートの所有キャラクター
 	UPROPERTY()
-	ACharacter* mOwner;
+	APawn* mOwner;
 
 	// 現在のアクティブなステート
 	UPROPERTY()
