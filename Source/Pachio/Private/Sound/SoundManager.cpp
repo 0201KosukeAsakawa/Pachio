@@ -145,7 +145,7 @@ void USoundManager::SetBGMVolume(float vol)
     const float previousBGMVolume = BGMVolume;
 
     // 音量を0〜1の範囲に制限
-    BGMVolume = FMath::Clamp(vol, 0.0f, 1.0f);
+    BGMVolume = FMath::Clamp(vol, 1.0f, 3.0f);
 
     // 音量をFMODに反映
     if (BGM)
@@ -173,7 +173,7 @@ void USoundManager::SetSEVolume(float vol)
     const float previousBGMVolume = SEVolume;
 
     // 音量を0〜1の範囲に制限
-    SEVolume = FMath::Clamp(vol, 0.0f, 1.0f);
+    SEVolume = FMath::Clamp(vol, 1.0f, 3.0f);
 }
 
 bool USoundManager::PlaySound(FName DataID, FName SoundID,bool SetVolume, float Volume, bool IsSpecifyLocation, FVector place)

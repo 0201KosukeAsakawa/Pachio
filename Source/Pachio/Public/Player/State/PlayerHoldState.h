@@ -7,6 +7,7 @@
 #include "PlayerHoldState.generated.h"
 
 class UMoveComponent;
+class UColorReactiveComponent;
 UCLASS()
 class PACHIO_API UPlayerHoldState : public UPlayerStateComponent
 {
@@ -31,6 +32,8 @@ private:
 	AActor* HoldTarget;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
+	UPROPERTY()
+	UColorReactiveComponent* targetComp;
 	float InitialHoldDistance;
 
 	int32 GrabDirection = 1;
