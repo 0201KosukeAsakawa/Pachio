@@ -25,6 +25,7 @@ public:
 
 	//音量設定
 	virtual void SetBGMVolume(float vol);
+	virtual void SetSEVolume(float vol);
 	//サウンドの再生(フェードイン))
 	virtual void PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volume, float FadeDuration);
 	//BGMの停止(完全停止)

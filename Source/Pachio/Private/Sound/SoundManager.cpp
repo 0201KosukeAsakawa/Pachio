@@ -168,6 +168,14 @@ void USoundManager::SetBGMVolume(float vol)
     }
 }
 
+void USoundManager::SetSEVolume(float vol)
+{
+    const float previousBGMVolume = SEVolume;
+
+    // 音量を0〜1の範囲に制限
+    SEVolume = FMath::Clamp(vol, 0.0f, 1.0f);
+}
+
 bool USoundManager::PlaySound(FName DataID, FName SoundID,bool SetVolume, float Volume, bool IsSpecifyLocation, FVector place)
 {
     float volume = 0;

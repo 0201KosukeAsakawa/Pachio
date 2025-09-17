@@ -6,6 +6,10 @@ void ISoundable::SetBGMVolume(float vol)
 {
 }
 
+void ISoundable::SetSEVolume(float vol)
+{
+}
+
 void ISoundable::PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volume, float FadeDuration)
 {
 }

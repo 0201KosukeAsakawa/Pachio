@@ -59,6 +59,8 @@ private:
 
     UFUNCTION(BlueprintCallable)
     void SetBGMVolume(float vol) override;
+    UFUNCTION(BlueprintCallable)
+    virtual void SetSEVolume(float vol);
     void StopBGM() override;
     UFUNCTION(BlueprintCallable)
     float GetBGMVolume() const override { return BGMVolume; }
