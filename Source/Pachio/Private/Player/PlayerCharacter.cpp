@@ -507,24 +507,24 @@ void APlayerCharacter::UpdateOverlapUI()
 
 void APlayerCharacter::HandleMoveSound(float DeltaTime)
 {
-	FVector Velocity = GetVelocity();
-	bool bIsMoving = Velocity.SizeSquared() > KINDA_SMALL_NUMBER;
+	//FVector Velocity = GetVelocity();
+	//bool bIsMoving = Velocity.SizeSquared() > KINDA_SMALL_NUMBER;
 
-	ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-	if (!sound)
-		return;
+	//ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+	//if (!sound)
+	//	return;
 
-	if (bIsMoving)
-	{
-		MoveSoundCooldown -= DeltaTime;
-		if (MoveSoundCooldown <= 0.f)
-		{
-			sound->PlaySound("SE", "MoveStep");  // ループしないSEをここで再生
-			MoveSoundCooldown = MoveSoundInterval;
-		}
-	}
-	else
-	{
-		MoveSoundCooldown = 0.f; // 移動してない時はリセット
-	}
+	//if (bIsMoving)
+	//{
+	//	MoveSoundCooldown -= DeltaTime;
+	//	if (MoveSoundCooldown <= 0.f)
+	//	{
+	//		sound->PlaySound("SE", "MoveStep");  // ループしないSEをここで再生
+	//		MoveSoundCooldown = MoveSoundInterval;
+	//	}
+	//}
+	//else
+	//{
+	//	MoveSoundCooldown = 0.f; // 移動してない時はリセット
+	//}
 }

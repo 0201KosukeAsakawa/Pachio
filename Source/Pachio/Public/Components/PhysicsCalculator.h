@@ -42,6 +42,7 @@ public:
 	// 物理計算が有効かどうかを返す
 	bool IsPhysicsEnabled() const { return bIsPhysicsEnabled; }
 private:
+	void UpdateGroundState();
 	// オブジェクトに重力を加える
 	void AddGravity();
 	//設置面にあわせて傾ける
@@ -83,4 +84,6 @@ private:
 	bool bWasOnGround = false;
 
 	bool bFalling = false;
+
+	bool bHasJustLanded = false;
 };

@@ -36,6 +36,5 @@ public:
 	//SEの音量取得
 	virtual float GetSEVolume()const;
 	// サウンドを再生
-	virtual bool PlaySound(FName DataID, FName SoundID);
-	virtual bool PlaySound(FName DataID, FName SoundID, float Volume, bool IsSpecifyLocation = false, FVector place = FVector(0, 0, 0));
+	virtual bool PlaySound(FName DataID, FName SoundID,const bool SetVolume = false, float Volume = 0, bool IsSpecifyLocation = false, FVector place = FVector(0, 0, 0));
 };
