@@ -33,11 +33,12 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		// オーナーが非表示 or Tick 無効なら処理を止める
 		return;
 	}
-
 	if (bShouldApplyGravity)
+	{
 		AddGravity();
+		UpdateGroundState();
+	}
 	FVector MoveVector;
-
 	if (!bIsPhysicsEnabled)
 	{
 		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f);
@@ -62,6 +63,16 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 }
 
+void UPhysicsCalculator::UpdateGroundState()
+{
+	bool bIsCurrentlyOnGround = OnGround();
+	bHasJustLanded = (!bWasOnGround && bIsCurrentlyOnGround);
+
+	if (bHasJustLanded)
+		UE_LOG(LogTemp, Log, TEXT("着地"));
+
+	bWasOnGround = bIsCurrentlyOnGround;
+}
 
 void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
 {
@@ -230,14 +241,7 @@ FVector UPhysicsCalculator::GetGroundNormal() const
 	// 接地してなければ上向きを返す
 	return FVector::UpVector;
 }
-
 const bool UPhysicsCalculator::HasLanded()
 {
-	bool bIsCurrentlyOnGround = OnGround();
-	bool bHasJustLanded = (!bWasOnGround && bIsCurrentlyOnGround);
-
-	// 次回の比較用に状態を保存
-	bWasOnGround = bIsCurrentlyOnGround;
-
 	return bHasJustLanded;
 }

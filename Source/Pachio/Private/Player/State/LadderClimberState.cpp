@@ -140,7 +140,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 
 					// Y軸でdirection*5の移動
 					FVector NewLocation = mOwner->GetActorLocation();
-					NewLocation.Y += direction * 150.f;  // Y軸で移動
+					NewLocation.Y += direction * 1000.f;  // Y軸で移動
 
 					mOwner->SetActorLocation(NewLocation);
 				}
@@ -183,6 +183,20 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 
 	FVector direction = MoveComp->Movement(0, mOwner, Value);
 
+	// 移動方向を入力から決定
+	if (direction.Z < 0)
+	{
+		MoveDirection = -1;
+	}
+	else if (direction.Z > 0)
+	{
+		MoveDirection = 1;
+	}
+	else
+	{
+		MoveDirection = 0;
+	}
+
 	FVector NewLocation = mOwner->GetActorLocation() + direction * 10;
 
 	// 下方向の移動なら地面チェック
@@ -211,7 +225,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 			}
 		}
 	}
-
+	MoveDelta = direction * 10;
 	// 通常の移動
 	GetOwner()->AddActorLocalOffset(direction * 10, true);
 }

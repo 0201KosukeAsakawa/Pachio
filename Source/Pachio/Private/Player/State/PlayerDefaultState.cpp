@@ -102,6 +102,7 @@ bool UPlayerDefaultState::OnUpdate(float)
         ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
         if (sound)
         {
+            UE_LOG(LogTemp, Warning, TEXT("HasLanded returned true, entering if-block!"));
             sound->PlaySound("SE", "Land"); // ←着地音に名称変更
         }
     }
@@ -200,6 +201,7 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
             mOwner->SetActorRotation(NewRotation);
         }
     }
+    MoveDelta = direction * MoveSpeed * GetWorld()->GetDeltaSeconds();
     // 速度は現在のステートが持つ移動速度を使用
     mOwner->AddMovementInput(direction, MoveSpeed);
 }

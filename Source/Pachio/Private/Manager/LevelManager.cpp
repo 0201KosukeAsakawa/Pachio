@@ -48,7 +48,7 @@ void ALevelManager::InitializeComponents()
 	if (SoundManager)
 	{
 		SoundManager->Init();
-		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
+		SoundManager->PlaySound("BGM", "Default", true,SoundManager->GetBGMVolume());
 	}
 	if (UIManagerClass)
 		UIManager = NewObject<UUIManager>(this, UIManagerClass);

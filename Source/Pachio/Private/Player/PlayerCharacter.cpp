@@ -61,9 +61,21 @@ void APlayerCharacter::BeginPlay()
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (PC)
 	{
+		FString CurrentLevelName = GetWorld()->GetMapName();
+		// マップ名はパス込みなので最後の名前だけ取り出す
+		int32 LastSlashIndex;
+		if (CurrentLevelName.FindLastChar('/', LastSlashIndex))
+		{
+			CurrentLevelName = CurrentLevelName.Mid(LastSlashIndex + 1);
+		}
+
+		if (CurrentLevelName != TEXT("UEDPIE_0_Title"))
+		{
+			PC->SetInputMode(FInputModeGameOnly());
+		}
 		PC->bShowMouseCursor = false;
-		PC->SetInputMode(FInputModeGameOnly());
 	}
+
 	GetCharacterMovement()->SetWalkableFloorAngle(60.f);
 	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("Interaction"));
 	if(box)
@@ -445,6 +457,24 @@ UCameraComponent* APlayerCharacter::GetCamera()
 	return CameraComponent->GetCamera();
 }
 
+FVector APlayerCharacter::GetAnimVelocity() const
+{
+	if(StateManager == nullptr)
+	return FVector();
+
+	return StateManager->GetCurrentState()->GetAnimVelocity();
+}
+
+float APlayerCharacter::GetYaw() const
+{
+	if (StateManager == nullptr)
+	return 0.0f;
+
+	return StateManager->GetCurrentState()->GetYaw();
+}
+
+
+
 void APlayerCharacter::UpdateOverlapUI()
 {
 	if (!InteractionBox)
@@ -477,24 +507,24 @@ void APlayerCharacter::UpdateOverlapUI()
 
 void APlayerCharacter::HandleMoveSound(float DeltaTime)
 {
-	FVector Velocity = GetVelocity();
-	bool bIsMoving = Velocity.SizeSquared() > KINDA_SMALL_NUMBER;
+	//FVector Velocity = GetVelocity();
+	//bool bIsMoving = Velocity.SizeSquared() > KINDA_SMALL_NUMBER;
 
-	ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-	if (!sound)
-		return;
+	//ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+	//if (!sound)
+	//	return;
 
-	if (bIsMoving)
-	{
-		MoveSoundCooldown -= DeltaTime;
-		if (MoveSoundCooldown <= 0.f)
-		{
-			sound->PlaySound("SE", "MoveStep");  // ループしないSEをここで再生
-			MoveSoundCooldown = MoveSoundInterval;
-		}
-	}
-	else
-	{
-		MoveSoundCooldown = 0.f; // 移動してない時はリセット
-	}
+	//if (bIsMoving)
+	//{
+	//	MoveSoundCooldown -= DeltaTime;
+	//	if (MoveSoundCooldown <= 0.f)
+	//	{
+	//		sound->PlaySound("SE", "MoveStep");  // ループしないSEをここで再生
+	//		MoveSoundCooldown = MoveSoundInterval;
+	//	}
+	//}
+	//else
+	//{
+	//	MoveSoundCooldown = 0.f; // 移動してない時はリセット
+	//}
 }
