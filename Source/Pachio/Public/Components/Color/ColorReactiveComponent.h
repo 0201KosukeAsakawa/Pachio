@@ -38,6 +38,8 @@ public:
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 	void SetSelectMode(bool);
+
+	inline bool IsHidden()const {return bHide; }
 protected:
 	void ToggleNiagaraActiveState(bool);
 	void PlayAppearEffect();

@@ -29,9 +29,16 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 	if (ladderClimber == nullptr)
 		return;
 	Ladder = ladderClimber;
+
+	if (Ladder)
+	{
+		p = Ladder->GetFixedPositionForActor(GetOwner());
+		GetOwner()->SetActorLocation(p);
+	}
+
 }
 
-bool ULadderClimberState::OnEnter(ACharacter* Owner, UWorld* World)
+bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 {
 	if (!Owner) return false;
 	if (!mOwner)
@@ -44,16 +51,6 @@ bool ULadderClimberState::OnEnter(ACharacter* Owner, UWorld* World)
 		ULadderMoveLogic* PlayerLogic = NewObject<ULadderMoveLogic>(this);
 		MoveComp->Init(PlayerLogic);
 	}
-	if (Ladder)
-	{
-		FVector Center = GetLadderCenterXZ(Ladder); // XYの中心座標を返す
-		FVector OwnerLocation = Owner->GetActorLocation();
-
-		// X,Yは梯子の中心、Zはキャラの現在位置のまま
-		FVector NewLocation = FVector(Center.X, Center.Y, OwnerLocation.Z);
-		Owner->SetActorLocation(NewLocation);
-	}
-
 	return true;
 }
 
@@ -61,6 +58,15 @@ bool ULadderClimberState::OnEnter(ACharacter* Owner, UWorld* World)
 bool ULadderClimberState::OnUpdate(float DeltaTime)
 {
 	if (!mOwner || !Ladder) return false;
+
+	if (Ladder)
+	{
+		p = Ladder->GetFixedPositionForActor(GetOwner());
+		FVector OwnerLocation = GetOwner()->GetActorLocation();
+		// X,Yは梯子の中心、Zはキャラの現在位置のまま
+		FVector NewLocation = FVector(p.X, p.Y, OwnerLocation.Z);
+		GetOwner()->SetActorLocation(NewLocation);
+	}
 
 	if (Ladder->IsHidden())
 	{
@@ -156,7 +162,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 }
 
 
-bool ULadderClimberState::OnExit(ACharacter* Owner)
+bool ULadderClimberState::OnExit(APawn* Owner)
 {
 	if (!Owner) return false;
 
@@ -203,7 +209,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	if (direction.Z < 0.f)
 	{
 		FVector Start = NewLocation;
-		FVector End = Start - FVector(0.f, 0.f, 100.f);  // 100cm下方向
+		FVector End = Start - FVector(0.f, 0.f, 300.f);  // 100cm下方向
 
 		FHitResult HitResult;
 		FCollisionQueryParams Params;
@@ -228,4 +234,6 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	MoveDelta = direction * 10;
 	// 通常の移動
 	GetOwner()->AddActorLocalOffset(direction * 10, true);
+	p = Ladder->GetFixedPositionForActor(GetOwner());
+	GetOwner()->SetActorLocation(p);
 }

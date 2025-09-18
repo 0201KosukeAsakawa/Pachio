@@ -55,11 +55,12 @@ public:
 private:
     // サウンドを再生するメソッド
     UFUNCTION(BlueprintCallable)
-    bool PlaySound(FName DataID, FName SoundID, float Volume, bool IsSpecifyLocation = false, FVector place = FVector(0.0f, 0.0f, 0.0f))override;
+    bool PlaySound(FName DataID, FName SoundID,const bool SetVolume = false, float Volume = 1, bool IsSpecifyLocation = false, FVector place = FVector(0.0f, 0.0f, 0.0f))override;
 
-    bool PlaySound(FName DataID, FName SoundID) override;
     UFUNCTION(BlueprintCallable)
     void SetBGMVolume(float vol) override;
+    UFUNCTION(BlueprintCallable)
+    virtual void SetSEVolume(float vol);
     void StopBGM() override;
     UFUNCTION(BlueprintCallable)
     float GetBGMVolume() const override { return BGMVolume; }

@@ -14,7 +14,7 @@ UPlayerStateComponent::UPlayerStateComponent()
 	// ...
 }
 
-bool UPlayerStateComponent::OnEnter(ACharacter*, UWorld*)
+bool UPlayerStateComponent::OnEnter(APawn*, UWorld*)
 {
 	return false;
 }
@@ -24,7 +24,7 @@ bool UPlayerStateComponent::OnUpdate(float)
 	return false;
 }
 
-bool UPlayerStateComponent::OnExit(ACharacter*)
+bool UPlayerStateComponent::OnExit(APawn*)
 {
 	return false;
 }

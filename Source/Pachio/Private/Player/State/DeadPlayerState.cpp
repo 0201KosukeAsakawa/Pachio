@@ -7,7 +7,7 @@
 #include "UI/UIManager.h"
 #include "Kismet/GameplayStatics.h" // �����ǉ�
 
-bool UDeadPlayerState::OnEnter(ACharacter* Owner, UWorld* World)
+bool UDeadPlayerState::OnEnter(APawn* Owner, UWorld* World)
 {
     if (!Owner || !World)
         return false;

@@ -23,13 +23,13 @@ public:
 	UPlayerStateComponent();
 
 	// ステートに入ったときの処理
-	virtual bool OnEnter(ACharacter* Owner, UWorld* World);
+	virtual bool OnEnter(APawn* Owner, UWorld* World);
 
 	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
 	virtual bool OnUpdate(float DeltaTime);
 
 	// ステートから出るときの処理
-	virtual bool OnExit(ACharacter* Owner);
+	virtual bool OnExit(APawn* Owner);
 
 	// スキル入力時の処理
 	virtual bool OnSkill(const FInputActionValue& Input);
@@ -48,7 +48,7 @@ public:
 protected:
 	/** このステートがアタッチされているキャラクター */
 	UPROPERTY()
-	ACharacter* mOwner;
+	APawn* mOwner;
 
 	/** アクセス可能なワールドオブジェクト */
 	UPROPERTY()

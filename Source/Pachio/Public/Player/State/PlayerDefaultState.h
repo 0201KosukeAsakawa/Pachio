@@ -14,9 +14,9 @@ class PACHIO_API UPlayerDefaultState : public UPlayerStateComponent
 public:
 	UPlayerDefaultState();
 public:
-	bool OnEnter(ACharacter*, UWorld*)override;
+	bool OnEnter(APawn*, UWorld*)override;
 	bool OnUpdate(float)override;
-	bool OnExit(ACharacter*)override;
+	bool OnExit(APawn*)override;
 	bool OnSkill(const FInputActionValue&)override;
 	void Movement(const FInputActionValue& Value)override;
 	bool Jump(float jumpForce)override;

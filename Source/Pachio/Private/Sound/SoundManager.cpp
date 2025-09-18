@@ -145,12 +145,12 @@ void USoundManager::SetBGMVolume(float vol)
     const float previousBGMVolume = BGMVolume;
 
     // 音量を0〜1の範囲に制限
-    BGMVolume = FMath::Clamp(vol, 0.0f, 1.0f);
+    BGMVolume = FMath::Clamp(vol, 1.0f, 3.0f);
 
     // 音量をFMODに反映
     if (BGM)
     {
-        BGM->SetVolume(BGMVolume); // ✅ ここが重要！
+        BGM->SetVolume(BGMVolume); 
     }
 
     // 音量が変更された場合のみ処理
@@ -168,8 +168,25 @@ void USoundManager::SetBGMVolume(float vol)
     }
 }
 
-bool USoundManager::PlaySound(FName DataID, FName SoundID, float Volume, bool IsSpecifyLocation, FVector place)
+void USoundManager::SetSEVolume(float vol)
 {
+    const float previousBGMVolume = SEVolume;
+
+    // 音量を0〜1の範囲に制限
+    SEVolume = FMath::Clamp(vol, 1.0f, 3.0f);
+}
+
+bool USoundManager::PlaySound(FName DataID, FName SoundID,bool SetVolume, float Volume, bool IsSpecifyLocation, FVector place)
+{
+    float volume = 0;
+    if (!SetVolume)
+    {
+        if (DataID == "BGM")
+            volume = BGMVolume;
+        else if (DataID == "SE")
+            volume = SEVolume;
+    }
+
     if (DataID == "BGM")
     {
         PlayBGM();
@@ -197,7 +214,7 @@ bool USoundManager::PlaySound(FName DataID, FName SoundID, float Volume, bool Is
     }
 
     // 音量を設定 (0.0が無音、1.0が最大音量)
-    const float volumeToPlay = FMath::Clamp(Volume, 0.0f, 1.0f);
+    const float volumeToPlay = FMath::Clamp(volume, 0.0f, 1.0f);
     AudioComponent->SetVolumeMultiplier(volumeToPlay);
 
     // 位置指定がある場合、音の位置を設定
@@ -215,18 +232,6 @@ bool USoundManager::PlaySound(FName DataID, FName SoundID, float Volume, bool Is
     AudioComponent->Play();
 
     return true;
-}
-
-bool USoundManager::PlaySound(FName DataID, FName SoundID)
-{
-    float volume = 0;
-
-    if (DataID == "BGM")
-        volume = BGMVolume;
-    else if (DataID == "SE")
-        volume = SEVolume;
-
-    return PlaySound(DataID, SoundID, volume);
 }
 
 void USoundManager::StopBGM()

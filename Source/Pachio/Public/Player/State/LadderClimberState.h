@@ -17,13 +17,13 @@ public:
 	void Movement(const FInputActionValue& Value)override;
 private:
 	// ステートに入ったときの処理
-	virtual bool OnEnter(ACharacter* Owner, UWorld* World)override;
+	virtual bool OnEnter(APawn* Owner, UWorld* World)override;
 
 	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
 	virtual bool OnUpdate(float DeltaTime)override;
 
 	// ステートから出るときの処理
-	virtual bool OnExit(ACharacter* Owner)override;
+	virtual bool OnExit(APawn* Owner)override;
 
 	virtual bool OnSkill(const FInputActionValue& Input)override;
 private:
@@ -31,4 +31,6 @@ private:
 	ALadderActor* Ladder;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
+
+	FVector p;
 };

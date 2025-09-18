@@ -26,7 +26,7 @@ UPlayerDefaultState::UPlayerDefaultState()
 }
 
 // ステートに入る際に実行される処理
-bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
+bool UPlayerDefaultState::OnEnter(APawn* owner, UWorld* world)
 {
     // 所有キャラクターまたはワールドが無効な場合は失敗
     if (owner == nullptr || world == nullptr)
@@ -54,7 +54,7 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
    
     if (!BoxComponent)
     {
-        BoxComponent = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Box"));
+        BoxComponent = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
     }
       
 
@@ -65,11 +65,6 @@ bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
     {
         StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
     }
-
-
-    //コリジョンのサイズ変更
-    mOwner->GetCharacterMovement()->Crouch();
-    mOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
 
     APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
     if (!aPlayer)
@@ -111,7 +106,7 @@ bool UPlayerDefaultState::OnUpdate(float)
 }
 
 // ステートを離脱するときの処理（現時点では何もしない）
-bool UPlayerDefaultState::OnExit(ACharacter*)
+bool UPlayerDefaultState::OnExit(APawn*)
 {
 	return true;
 }

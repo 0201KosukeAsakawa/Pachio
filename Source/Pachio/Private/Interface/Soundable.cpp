@@ -6,6 +6,10 @@ void ISoundable::SetBGMVolume(float vol)
 {
 }
 
+void ISoundable::SetSEVolume(float vol)
+{
+}
+
 void ISoundable::PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volume, float FadeDuration)
 {
 }
@@ -28,12 +32,7 @@ float ISoundable::GetSEVolume() const
 	return 0.0f;
 }
 
-bool ISoundable::PlaySound(FName DataID, FName SoundID)
-{
-	return false;
-}
-
-bool ISoundable::PlaySound(FName DataID, FName SoundID, float Volume, bool IsSpecifyLocation, FVector place)
+bool ISoundable::PlaySound(FName DataID, FName SoundID,bool SetVolume ,float Volume, bool IsSpecifyLocation, FVector place)
 {
 	return false;
 }
