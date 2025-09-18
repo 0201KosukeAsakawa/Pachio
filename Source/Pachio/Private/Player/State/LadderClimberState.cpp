@@ -62,6 +62,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 	if (Ladder)
 	{
 		p = Ladder->GetFixedPositionForActor(GetOwner());
+		
 		FVector OwnerLocation = GetOwner()->GetActorLocation();
 		// X,Yは梯子の中心、Zはキャラの現在位置のまま
 		FVector NewLocation = FVector(p.X, p.Y, OwnerLocation.Z);
@@ -143,12 +144,6 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 					{
 						direction *= -1.f;
 					}
-
-					// Y軸でdirection*5の移動
-					FVector NewLocation = mOwner->GetActorLocation();
-					NewLocation.Y += direction * 1000.f;  // Y軸で移動
-
-					mOwner->SetActorLocation(NewLocation);
 				}
 
 				// 状態を戻す
