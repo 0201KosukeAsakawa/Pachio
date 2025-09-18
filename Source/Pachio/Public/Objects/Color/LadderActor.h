@@ -29,6 +29,8 @@ public:
 
 	FVector GetFixedPositionForActor( AActor* OtherActor) const;
 
+	FRotator GetRotationForActorToFaceThis(AActor* OtherActor) const;
+
 
 private:
 	UPROPERTY(EditAnywhere)
