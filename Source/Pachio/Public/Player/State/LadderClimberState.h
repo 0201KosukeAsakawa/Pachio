@@ -31,4 +31,6 @@ private:
 	ALadderActor* Ladder;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
+
+	FVector p;
 };
