@@ -51,6 +51,8 @@ public:
 	bool IsColorMatch(const FLinearColor& FilterColor, float Tolerance = 0.08f) const;
 	bool CheckColorMatch(FEffectMatchResult,const FLinearColor& FilterColor, bool bUseComplementaryColor = false) const;
 	bool IsChangeable()const;
+	bool IsHidden()const;
+
 
 	// Getter	
 	bool IsColorModifiable() const { return bSetColor; }

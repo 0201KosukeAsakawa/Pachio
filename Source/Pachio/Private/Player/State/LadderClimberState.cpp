@@ -6,6 +6,7 @@
 #include "Player/PlayerCharacter.h"
 #include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
+#include "Components/Color/ColorConfigurator.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/OverlapResult.h"
 #include "Logic/Movement/LadderMoveLogic.h"
@@ -33,6 +34,10 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 	if (Ladder)
 	{
 		p = Ladder->GetFixedPositionForActor(GetOwner());
+		UColorConfigurator* comp = Ladder->GetComponentByClass<UColorConfigurator>();
+		if (comp != nullptr)
+			targetComp = comp;
+
 		GetOwner()->SetActorLocation(p);
 	}
 
@@ -60,6 +65,18 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 {
 	if (!mOwner || !Ladder) return false;
 
+
+	if (targetComp && targetComp->IsHidden())
+	{
+		// Hold解除して Default に戻す
+		if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
+		{
+			Player->ChangeState(EPlayerStateType::Default);
+		}
+		return true;
+	}
+	
+
 	if (Ladder)
 	{
 		p = Ladder->GetFixedPositionForActor(GetOwner());
@@ -68,16 +85,6 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 		// X,Yは梯子の中心、Zはキャラの現在位置のまま
 		FVector NewLocation = FVector(p.X, p.Y, OwnerLocation.Z);
 		GetOwner()->SetActorLocation(NewLocation);
-	}
-
-	if (Ladder->IsHidden())
-	{
-		// Hold解除して Default に戻す
-		if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
-		{
-			Player->ChangeState(EPlayerStateType::Default);
-		}
-		return true;
 	}
 
 	const float LadderTopZ = Ladder->GetTopWorldPosition().Z;
