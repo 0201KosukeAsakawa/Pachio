@@ -203,7 +203,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	if (direction.Z < 0.f)
 	{
 		FVector Start = NewLocation;
-		FVector End = Start - FVector(0.f, 0.f, 100.f);  // 100cm下方向
+		FVector End = Start - FVector(0.f, 0.f, 300.f);  // 100cm下方向
 
 		FHitResult HitResult;
 		FCollisionQueryParams Params;
