@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{c097b9d8-785e-4fcf-878a-4aa8ce5b2a2d}">
+		<property name="assetPath">
+			<value>AS_152456_和風のピアノソロ。一寸先の儚さの様を表現.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>248.33333333333334</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{91633f03-2c3b-4b1e-8f5d-ae9bd5c6f2ab}</destination>
+		</relationship>
+	</object>
+</objects>
