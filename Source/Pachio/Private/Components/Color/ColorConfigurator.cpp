@@ -171,6 +171,11 @@ bool UColorConfigurator::IsChangeable()const
 	return bColorChangeable;
 }
 
+bool UColorConfigurator::IsHidden() const
+{
+	return ColorReactiveComponent && ColorReactiveComponent->IsHidden();
+}
+
 void UColorConfigurator::ApplyColorToMaterial(FLinearColor InColor)
 {
 	if (ColorReactiveComponent)

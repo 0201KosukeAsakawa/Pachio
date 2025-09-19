@@ -6,6 +6,7 @@
 #include "Player/PlayerCharacter.h"
 #include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
+#include "Components/Color/ColorConfigurator.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/OverlapResult.h"
 #include "Logic/Movement/LadderMoveLogic.h"
@@ -33,6 +34,10 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 	if (Ladder)
 	{
 		p = Ladder->GetFixedPositionForActor(GetOwner());
+		UColorConfigurator* comp = Ladder->GetComponentByClass<UColorConfigurator>();
+		if (comp != nullptr)
+			targetComp = comp;
+
 		GetOwner()->SetActorLocation(p);
 	}
 
@@ -40,7 +45,8 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 
 bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 {
-	if (!Owner) return false;
+	if (!Owner) 
+		return false;
 	if (!mOwner)
 		mOwner = Owner;
 	if (!pWorld)
@@ -59,6 +65,18 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 {
 	if (!mOwner || !Ladder) return false;
 
+
+	if (targetComp && targetComp->IsHidden())
+	{
+		// Hold解除して Default に戻す
+		if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
+		{
+			Player->ChangeState(EPlayerStateType::Default);
+		}
+		return true;
+	}
+	
+
 	if (Ladder)
 	{
 		p = Ladder->GetFixedPositionForActor(GetOwner());
@@ -67,16 +85,6 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 		// X,Yは梯子の中心、Zはキャラの現在位置のまま
 		FVector NewLocation = FVector(p.X, p.Y, OwnerLocation.Z);
 		GetOwner()->SetActorLocation(NewLocation);
-	}
-
-	if (Ladder->IsHidden())
-	{
-		// Hold解除して Default に戻す
-		if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
-		{
-			Player->ChangeState(EPlayerStateType::Default);
-		}
-		return true;
 	}
 
 	const float LadderTopZ = Ladder->GetTopWorldPosition().Z;
@@ -124,6 +132,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 			}
 		}
 
+
 		if (!bFoundNewLadder)
 		{
 			// 近くに他の梯子がない → 通常状態へ戻す
@@ -131,26 +140,35 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 			{
 				if (PlayerZ > LadderTopZ)
 				{
-					float direction = 1;
+					float direction = 1.f;
+
 					// ★ 梯子の前後判定 ★
 					FVector LadderForward = Ladder->GetActorForwardVector();
 					FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
 					ToPlayer.Normalize();
 
 					float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
-
-					// 後ろ側にいるなら方向を反転
 					if (Dot < 0.f)
 					{
 						direction *= -1.f;
 					}
+
+					// 梯子の上に押し出す位置
+					FVector ExitLocation = Ladder->GetActorLocation();
+					ExitLocation.Z = LadderTopZ + 50.f;                 // 上に少し
+					ExitLocation += LadderForward * direction * 50.f;   // 前に少し
+
+					// 確実にワープ
+					mOwner->SetActorLocation(ExitLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+					// 状態を戻す
+					StateManager->ChangeState(EPlayerStateType::Default);
+
+					return true; // これ以上OnUpdateを実行しない
 				}
-
-				// 状態を戻す
-				StateManager->ChangeState(EPlayerStateType::Default);
 			}
-
 		}
+
 	}
 
 	return true;

@@ -8,6 +8,7 @@
 
 class ALadderActor;
 class UMoveComponent;
+class UColorConfigurator;
 UCLASS()
 class PACHIO_API ULadderClimberState : public UPlayerStateComponent
 {
@@ -31,6 +32,9 @@ private:
 	ALadderActor* Ladder;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
+
+	UPROPERTY()
+	UColorConfigurator* targetComp;
 
 	FVector p;
 };
