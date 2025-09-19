@@ -4,6 +4,7 @@
 #include "Components/AudioComponent.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
+#include "Manager/SaveManager.h"
 
 // FMODの低レベルAPIのヘッダーをインクルードします。
 // F_CALLBACK マクロが正しく定義されるように、FMOD_API_TRUE または FMOD_STUDIO_API_TRUE を定義します。
@@ -54,6 +55,8 @@ USoundManager::USoundManager()
 
 void USoundManager::Init()
 {
+    LoadOrCreateVolumeSave();
+
     for (auto& soundMap : SoundDataMap)
     {
         const FName dataTag = soundMap.Key;
@@ -81,12 +84,28 @@ void USoundManager::Init()
             }
 
             soundData.AudioComponentMap.Add(waveTag, AudioComponent);
-
         }
     }
     ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetColorTargetRegistry()->OnColorApplied.AddDynamic(this, &USoundManager::SetTmp);
     InitTestSound();
 }
+
+void USoundManager::LoadOrCreateVolumeSave()
+{
+    FVolumeSaveData LoadedData = USaveManager::LoadVolumeFromJson();
+
+    BGMVolume = LoadedData.BGMVolume;
+    SEVolume = LoadedData.SEVolume;
+}
+void USoundManager::SetVolume(float NewBGM, float NewSE)
+{
+    BGMVolume = NewBGM;
+    SEVolume = NewSE;
+
+    USaveManager::SetVolume(BGMVolume, SEVolume);
+}
+
+
 
 void USoundManager::Tick(float DeltaTime)
 {
@@ -145,7 +164,7 @@ void USoundManager::SetBGMVolume(float vol)
     const float previousBGMVolume = BGMVolume;
 
     // 音量を0〜1の範囲に制限
-    BGMVolume = FMath::Clamp(vol, 1.0f, 3.0f);
+    BGMVolume = FMath::Clamp(vol, 0, 4.0f);
 
     // 音量をFMODに反映
     if (BGM)
@@ -173,7 +192,7 @@ void USoundManager::SetSEVolume(float vol)
     const float previousBGMVolume = SEVolume;
 
     // 音量を0〜1の範囲に制限
-    SEVolume = FMath::Clamp(vol, 1.0f, 3.0f);
+    SEVolume = FMath::Clamp(vol, 0.0f, 4.0f);
 }
 
 bool USoundManager::PlaySound(FName DataID, FName SoundID,bool SetVolume, float Volume, bool IsSpecifyLocation, FVector place)
