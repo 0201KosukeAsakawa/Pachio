@@ -75,3 +75,32 @@ struct FStageSaveData
         return Data;
     }
 };
+
+
+USTRUCT(BlueprintType)
+struct FVolumeSaveData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadWrite)
+    float BGMVolume = 2;
+
+    UPROPERTY(BlueprintReadWrite)
+    float SEVolume = 2;
+
+    TSharedPtr<FJsonObject> ToJson() const
+    {
+        TSharedPtr<FJsonObject> Obj = MakeShareable(new FJsonObject);
+        Obj->SetNumberField("BGMVolume", BGMVolume);
+        Obj->SetNumberField("SEVolume", SEVolume);
+        return Obj;
+    }
+
+    static FVolumeSaveData FromJson(const TSharedPtr<FJsonObject>& Obj)
+    {
+        FVolumeSaveData Data;
+        Data.BGMVolume = Obj->GetNumberField("BGMVolume");
+        Data.SEVolume = Obj->GetNumberField("SEVolume");
+        return Data;
+    }
+};
