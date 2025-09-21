@@ -48,7 +48,7 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	X = GetActorLocation().X;
+	FixedXLocation = GetActorLocation().X;
 	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
 	CameraComponent->Init(RootComponent);
 	// ステート管理・攻撃管理初期化
@@ -94,8 +94,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	StateManager->Update(DeltaTime);
 	UpdateGlowTarget();
-	if (GetActorLocation().X != X)
-		SetActorLocation(FVector(X, GetActorLocation().Y, GetActorLocation().Z));
+	if (GetActorLocation().X != FixedXLocation)
+		SetActorLocation(FVector(FixedXLocation, GetActorLocation().Y, GetActorLocation().Z));
 }
 
 // プレイヤー入力バインド処理
@@ -512,4 +512,33 @@ void APlayerCharacter::UpdateGlowTarget()
 
 		CurrentGlowTarget = NewGlowTarget;
 	}
+}
+
+
+void APlayerCharacter::Respawn()
+{
+	SetActorLocation(CurrentRespawnPoint);
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (PC->PlayerCameraManager)
+		{
+			PC->PlayerCameraManager->StartCameraFade(
+				1.f,            // FromAlpha
+				0.f,            // ToAlpha
+				1.0f,           // Duration (秒)
+				FLinearColor::Black, // フェードカラー
+				false,          // bShouldFadeAudio
+				true            // bHoldWhenFinished
+			);
+		}
+	}
+
+	// 入力再開
+	EnableInput(Cast<APlayerController>(GetController()));
+}
+
+void APlayerCharacter::UpdateRespawn(FVector newLocation)
+{
+	CurrentRespawnPoint = newLocation;
 }

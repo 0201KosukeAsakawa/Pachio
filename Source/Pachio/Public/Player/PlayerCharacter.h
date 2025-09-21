@@ -106,6 +106,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetYaw()const;
 	void UpdateGlowTarget();
+	void Respawn();
+	UFUNCTION(BlueprintCallable)
+	void UpdateRespawn(FVector newLocation);
 private:
 	// 現在のプレイヤーステート（状態）を取得
 	UPlayerStateComponent* GetPlayerState() const override;
@@ -153,7 +156,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	float DefaultGravityScalse = 50.0f;
 
-	float X = 0;
+	float FixedXLocation = 0;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================
@@ -196,4 +199,7 @@ private:
 
 	UPROPERTY()
 	AActor* CurrentGlowTarget;
+
+	UPROPERTY()
+	FVector CurrentRespawnPoint;
 };

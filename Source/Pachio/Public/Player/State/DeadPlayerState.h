@@ -16,4 +16,13 @@ class PACHIO_API UDeadPlayerState : public UPlayerStateComponent
 public:
 	// ステートに入ったときの処理
 	virtual bool OnEnter(APawn* Owner, UWorld* World)override;
+	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
+	virtual bool OnUpdate(float DeltaTime)override;
+
+	// ステートから出るときの処理
+	virtual bool OnExit(APawn* Owner)override;
+
+private:
+	float ElapsedTime = 0.f;
+	float RespawnDelay = 2.0f; // n秒
 };
