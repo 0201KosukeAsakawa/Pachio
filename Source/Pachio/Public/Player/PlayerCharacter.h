@@ -105,6 +105,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	float GetYaw()const;
+	void UpdateGlowTarget();
 private:
 	// 現在のプレイヤーステート（状態）を取得
 	UPlayerStateComponent* GetPlayerState() const override;
@@ -112,8 +113,6 @@ private:
 	// 状態変更（ステートタグによる遷移）
 	UPlayerStateComponent* ChangeState(EPlayerStateType Tag) override;
 	void InitState();
-	void UpdateOverlapUI();
-	void HandleMoveSound(float);
 	// ===============
 	// ==== 初期化関数 ====
 	// ===============
@@ -194,4 +193,7 @@ private:
 
 	FVector2D PrevInputDir = FVector2D::ZeroVector;
 	bool bHasPrevInputDir = false;
+
+	UPROPERTY()
+	AActor* CurrentGlowTarget;
 };

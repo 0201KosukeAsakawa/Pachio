@@ -291,26 +291,24 @@ void UColorReactiveComponent::TickComponent(float DeltaTime, ELevelTick TickType
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!bSelected || !DynMesh) return;
+	//if (!bSelected || !DynMesh) return;
 
-	// Sine波で点滅（時間ベース）
-	const float Time = GetWorld()->GetTimeSeconds();
-	const float SineValue = (FMath::Sin(Time * 5.0f) + 1.0f) * 0.5f; // 0～1
-	const float EmissiveStrength = 5.0f; // 最大輝度
-	const FLinearColor EmissiveColor = CurrentColor * (SineValue * EmissiveStrength);
+	//// Sine波で点滅（時間ベース）
+	//const float Time = GetWorld()->GetTimeSeconds();
+	//const float SineValue = (FMath::Sin(Time * 5.0f) + 1.0f) * 0.5f; // 0～1
+	//const float EmissiveStrength = 5.0f; // 最大輝度
+	//const FLinearColor EmissiveColor = CurrentColor * (SineValue * EmissiveStrength);
 
-	DynMesh->SetVectorParameterValue(FName("EmissiveColor"), EmissiveColor);
+	//DynMesh->SetVectorParameterValue(FName("EmissiveColor"), EmissiveColor);
 }
 
 bool UColorReactiveComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
-	//ActiveEffect(false);
 	return true;
 }
 
 bool UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
 {
-	//ActiveEffect(true);
 	return false;
 }
 

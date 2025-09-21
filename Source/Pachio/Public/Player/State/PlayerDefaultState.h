@@ -24,12 +24,6 @@ public:
 private:
 	bool TryEnterLadderOnJump() const;
 
-	void UpdateInteractableUI();
-	void CheckHoldableObject();
-	void CheckLadderObject();
-
-	bool CheckObjectByTag(const FVector& Start, const FVector& End, const FCollisionShape& Shape, const FName& Tag, bool& bPrevState, const FName& WidgetName, const FName& AnimName);
-
 private:
 	FTimerHandle CheckHoldableHandle;
 	// プレイヤー移動処理を司るコンポーネント

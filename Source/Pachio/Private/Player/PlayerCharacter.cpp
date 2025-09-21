@@ -90,14 +90,10 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	if (!StateManager)
 		return;
-
-	HandleMoveSound(DeltaTime);
-	UpdateOverlapUI();
-
 	Circle();
 
 	StateManager->Update(DeltaTime);
-
+	UpdateGlowTarget();
 	if (GetActorLocation().X != X)
 		SetActorLocation(FVector(X, GetActorLocation().Y, GetActorLocation().Z));
 }
@@ -463,58 +459,57 @@ float APlayerCharacter::GetYaw() const
 	return StateManager->GetCurrentState()->GetYaw();
 }
 
-
-
-void APlayerCharacter::UpdateOverlapUI()
+void APlayerCharacter::UpdateGlowTarget()
 {
-	if (!InteractionBox)
+
+	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Box");	
+	if (!box)
 		return;
-
+	// オーバーラップ中のActorを取得
 	TArray<AActor*> OverlappingActors;
-	InteractionBox->GetOverlappingActors(OverlappingActors);
+	box->GetOverlappingActors(OverlappingActors);
 
-	AActor* OverlappedActor = nullptr;
+	AActor* NewGlowTarget = nullptr;
+	float MinDistSq = FLT_MAX;
+	FVector MyLocation = GetActorLocation();
+
 	for (AActor* Actor : OverlappingActors)
 	{
-		if (IsValid(Actor) && Actor->IsA(AControllableObjectBase::StaticClass()))
+		if (!IsValid(Actor))
+			continue;
+
+		// Tagで判定
+		if (Actor->ActorHasTag("Holdable"))
 		{
-			OverlappedActor = Actor;
-			break;
+			float DistSq = FVector::DistSquared(MyLocation, Actor->GetActorLocation());
+			if (DistSq < MinDistSq)
+			{
+				MinDistSq = DistSq;
+				NewGlowTarget = Actor;
+			}
 		}
 	}
 
-	if (OverlappedActor)
+	if (NewGlowTarget != CurrentGlowTarget)
 	{
-		ALevelManager::GetInstance(GetWorld())->GetUIManager()
-		->ShowMarker(TEXT("ChageMovemet"), this);
+		// 前のGlowを解除
+		if (CurrentGlowTarget)
+		{
+			if (USkeletalMeshComponent* Mesh = CurrentGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
+			{
+				Mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 0.0f);
+			}
+		}
+
+		// 新しいGlowを適用
+		if (NewGlowTarget)
+		{
+			if (USkeletalMeshComponent* Mesh = NewGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
+			{
+				Mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 1.0f);
+			}
+		}
+
+		CurrentGlowTarget = NewGlowTarget;
 	}
-	else
-	{
-		ALevelManager::GetInstance(GetWorld())->GetUIManager()
-			->HideMarker(TEXT("ChageMovemet"));
-	}
-}
-
-void APlayerCharacter::HandleMoveSound(float DeltaTime)
-{
-	//FVector Velocity = GetVelocity();
-	//bool bIsMoving = Velocity.SizeSquared() > KINDA_SMALL_NUMBER;
-
-	//ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-	//if (!sound)
-	//	return;
-
-	//if (bIsMoving)
-	//{
-	//	MoveSoundCooldown -= DeltaTime;
-	//	if (MoveSoundCooldown <= 0.f)
-	//	{
-	//		sound->PlaySound("SE", "MoveStep");  // ループしないSEをここで再生
-	//		MoveSoundCooldown = MoveSoundInterval;
-	//	}
-	//}
-	//else
-	//{
-	//	MoveSoundCooldown = 0.f; // 移動してない時はリセット
-	//}
 }
