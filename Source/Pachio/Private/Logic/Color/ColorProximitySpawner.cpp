@@ -5,18 +5,24 @@
 #include "FunctionLibrary.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "NiagaraActor.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 UColorProximitySpawner::UColorProximitySpawner()
 {
     ToggleNiagaraActiveState(false);    
     bHide = false;
     OffMesh();
+    
 }
 
 bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(true);
     OnMesh();
+    ActiveEffect(true);
     return false;
 }
 
@@ -24,6 +30,7 @@ bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(false);
     OffMesh();
+    ActiveEffect(false);
     return true;
 }
 

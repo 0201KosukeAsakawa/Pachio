@@ -39,7 +39,7 @@ public:
 	virtual void SetColor(FLinearColor InColor, FEffectMatchResult);
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
 	void SetCurrentColor(FLinearColor InColor);
-	void SetColorMuch(bool bInColorMuch);
+	void SetColorMatch(bool bInColorMuch);
 	void SetSelectMode(bool bIsSelect);
 	void ChangeLock(bool bLock) { bColorVariable = bLock; }
 

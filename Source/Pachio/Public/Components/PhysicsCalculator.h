@@ -28,7 +28,7 @@ public:
 	void ResetForce();
 	// オブジェクトに力を加える
 	UFUNCTION(BlueprintCallable)
-	void AddForce(FVector Direction, float Force, const bool bSweep = true);
+	void AddForce(FVector Direction, float Force, const bool bSweep = true, bool useLocalOffset = true);
 
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
 	UFUNCTION(BlueprintCallable)
@@ -80,6 +80,8 @@ private:
 	// 物理計算が有効かどうかのフラグ
 	UPROPERTY(EditAnywhere)
 	bool bIsPhysicsEnabled;		
+
+	bool bUseLocalOffset = true;
 
 	bool bWasOnGround = false;
 

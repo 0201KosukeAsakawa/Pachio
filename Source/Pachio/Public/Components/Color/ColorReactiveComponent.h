@@ -40,6 +40,8 @@ public:
 	void SetSelectMode(bool);
 
 	inline bool IsHidden()const {return bHide; }
+
+	void ActiveEffect(bool);
 protected:
 	void ToggleNiagaraActiveState(bool);
 	void PlayAppearEffect();

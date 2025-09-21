@@ -95,7 +95,6 @@ bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FL
 	{
 		bMatch = OnColorMismatched(CheckColor);
 	}
-
 	return bMatch;
 }
 
@@ -216,6 +215,18 @@ void UColorReactiveComponent::SetSelectMode(bool bIsNowSelected)
 	// 選択ONのときはTickで動的に処理する
 }
 
+void UColorReactiveComponent::ActiveEffect(bool b)
+{
+	for (ANiagaraActor* Niagara : Niagaras)
+	{
+		if (!Niagara) continue;
+
+		Niagara->SetActorHiddenInGame(b);
+		Niagara->SetActorEnableCollision(b); // 必要なら当たりも制御
+		Niagara->SetActorTickEnabled(b);
+	}
+}
+
 void UColorReactiveComponent::ToggleNiagaraActiveState(bool bVisible)
 {
 	if (GetOwner() == nullptr)
@@ -293,11 +304,13 @@ void UColorReactiveComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 bool UColorReactiveComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
+	//ActiveEffect(false);
 	return true;
 }
 
 bool UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
 {
+	//ActiveEffect(true);
 	return false;
 }
 

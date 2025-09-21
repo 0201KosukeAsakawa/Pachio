@@ -68,6 +68,5 @@ private:
 	bool IsRevers = false;
 
 	UPROPERTY(EditAnywhere)
-	float beatCount = 0;
-	float playBeatCount = 0;
+	bool bUseLocalOffset = false;
 };

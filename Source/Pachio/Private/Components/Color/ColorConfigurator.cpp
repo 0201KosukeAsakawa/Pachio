@@ -122,7 +122,7 @@ void UColorConfigurator::SetCurrentColor(FLinearColor NewColor)
 	CurrentColor = NewColor;
 }
 
-void UColorConfigurator::SetColorMuch(bool bInColorMuch)
+void UColorConfigurator::SetColorMatch(bool bInColorMuch)
 {
 	bColorMuch = bInColorMuch;
 }

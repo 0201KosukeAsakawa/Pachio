@@ -45,7 +45,7 @@ bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
     }
 
     PlayAppearEffect();
-
+    ActiveEffect(true);
     bHide = true;
 
     return bHide;
@@ -80,7 +80,7 @@ bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
             Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
-
+    ActiveEffect(false);
     
    return bHide = false;
 }

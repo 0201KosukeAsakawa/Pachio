@@ -45,7 +45,14 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		MoveVector = ForceDirection * ForceScale;
 
 		FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
-		GetOwner()->AddActorLocalOffset(Adjusted, bIsSweep);
+		if (bUseLocalOffset) // b が true ならローカル座標系で移動
+		{
+			GetOwner()->AddActorLocalOffset(Adjusted, bIsSweep);
+		}
+		else // false ならワールド座標系で移動
+		{
+			GetOwner()->AddActorWorldOffset(Adjusted, bIsSweep);
+		}
 
 		FVector currentPosition = GetOwner()->GetActorLocation();
 		float distanceZ = currentPosition.Z - PreviousPosition.Z;
@@ -74,13 +81,14 @@ void UPhysicsCalculator::UpdateGroundState()
 	bWasOnGround = bIsCurrentlyOnGround;
 }
 
-void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
+void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep , const bool useLocalOffset)
 {
 	ForceDirection = Direction;
 	ForceScale = Force /** ForceModifier*/;
 	Timer = 0;
 	bIsSweep = bSweep;
 	bIsPhysicsEnabled = false;
+	bUseLocalOffset = useLocalOffset;
 }
 
 void UPhysicsCalculator::ResetForce()

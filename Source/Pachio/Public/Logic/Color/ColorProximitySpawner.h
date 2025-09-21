@@ -16,6 +16,7 @@ class PACHIO_API UColorProximitySpawner : public UColorReactiveComponent
 public:
 	UColorProximitySpawner();
 private:
+
 	 bool OnColorMatched(const FLinearColor& FilterColor)override;
 	 bool OnColorMismatched(const FLinearColor& FilterColor)override;
 
