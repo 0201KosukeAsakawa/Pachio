@@ -4,6 +4,8 @@
 #include "Components/Color/ColorReactiveComponent.h"
 #include "NiagaraActor.h"
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "FunctionLibrary.h"
@@ -12,11 +14,28 @@
 UColorReactiveComponent::UColorReactiveComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> FireflyBurst(TEXT("/Game/Niagara/FireflyBurst.FireflyBurst"));
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> ParticlesOfLight(TEXT("/Game/Niagara/ParticlesOfLight.ParticlesOfLight"));
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> LightCube(TEXT("/Game/Niagara/ParticleCube.ParticleCube"));
+	if (FireflyBurst.Succeeded())
+	{
+		FireflyBurstNiagaraSystem = FireflyBurst.Object;
+	}
+
+	if (ParticlesOfLight.Succeeded())
+	{
+		ParticlesOfLightNiagaraSystem = ParticlesOfLight.Object;
+	}
+
+	if (LightCube.Succeeded())
+	{
+		LightCubeNiagaraSystem = LightCube.Object;
+	}
 }
 
-void UColorReactiveComponent::Init(UMeshComponent* mesh)
+void UColorReactiveComponent::Init(bool Variable)
 {
-	if (!bSetStartColor || !mesh)
+	if (!bSetStartColor)
 		return;
 
 	AActor* Owner = GetOwner();
@@ -24,8 +43,8 @@ void UColorReactiveComponent::Init(UMeshComponent* mesh)
 		return;
 
 	// StaticMeshComponent の取得
-	UStaticMeshComponent* MeshComp =
-		UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner, TEXT("StaticMesh"));
+	USkeletalMeshComponent* MeshComp =
+		UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(Owner, TEXT("Mesh"));
 	if (!MeshComp)
 		return;
 
@@ -39,12 +58,13 @@ void UColorReactiveComponent::Init(UMeshComponent* mesh)
 		->GetColorManager()
 		->GetEffectColor(Effect);
 
-	// マテリアルに色を反映
-	DynMesh->SetVectorParameterValue(FName("BaseColor"), CurrentColor);
+	if (!Variable)
+		// マテリアルに色を反映
+		DynMesh->SetVectorParameterValue(FName("BaseColor"), CurrentColor);
 }
 
 
-void UColorReactiveComponent::UpdateColorEffectAndNiagara(const FLinearColor& FilterColor,EBuffEffect newEffect, TArray<ANiagaraActor*>NiagaraComponents)
+void UColorReactiveComponent::InitColorEffectAndNiagara(const FLinearColor& FilterColor,EBuffEffect newEffect, TArray<ANiagaraActor*>NiagaraComponents)
 {
 	CurrentColor = FilterColor;
 	Effect = newEffect;
@@ -60,11 +80,14 @@ bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FL
 		CheckColor = GetComplementaryColor(CheckColor);  // 補色を取得して代入
 		UE_LOG(LogTemp, Log, TEXT("CheckColor: %s"), *CheckColor.ToString());
 	}
-	
-	//bool bMatch = IsColorMatch(CheckColor);
 
+	float distance = ALevelManager::GetInstance(GetWorld())
+		->GetColorManager()
+		->GetColorDistanceRGB(CurrentColor, FilterColor);
+		UE_LOG(LogTemp, Log, TEXT("Distance: %f"), distance);
+	
 	bool bMatch;
-	if ((result.ClosestEffect == Effect))
+	if (distance <= 30.0f)
 	{
 		bMatch = OnColorMatched(CheckColor);
 	}
@@ -72,7 +95,6 @@ bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FL
 	{
 		bMatch = OnColorMismatched(CheckColor);
 	}
-
 	return bMatch;
 }
 
@@ -176,8 +198,6 @@ FLinearColor UColorReactiveComponent::GetComplementaryColor(const FLinearColor& 
 
 	Complementary.A = 1.0f;
 	// ログ出力（RGBA各成分を表示）
-	UE_LOG(LogTemp, Log, TEXT("Applying color to material: R=%.3f, G=%.3f, B=%.3f, A=%.3f"),
-		Complementary.R, Complementary.G, Complementary.B, Complementary.A);
 	return Complementary;
 }
 
@@ -193,6 +213,18 @@ void UColorReactiveComponent::SetSelectMode(bool bIsNowSelected)
 		DynMesh->SetVectorParameterValue(FName("EmissiveColor"), FLinearColor::Black);
 	}
 	// 選択ONのときはTickで動的に処理する
+}
+
+void UColorReactiveComponent::ActiveEffect(bool b)
+{
+	for (ANiagaraActor* Niagara : Niagaras)
+	{
+		if (!Niagara) continue;
+
+		Niagara->SetActorHiddenInGame(b);
+		Niagara->SetActorEnableCollision(b); // 必要なら当たりも制御
+		Niagara->SetActorTickEnabled(b);
+	}
 }
 
 void UColorReactiveComponent::ToggleNiagaraActiveState(bool bVisible)
@@ -222,7 +254,7 @@ void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 	if (!Owner)
 		return;
 
-	UStaticMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(Owner, TEXT("StaticMesh"));
+	USkeletalMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(Owner, TEXT("Mesh"));
 	if (!Mesh) return;
 
 	UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
@@ -259,15 +291,15 @@ void UColorReactiveComponent::TickComponent(float DeltaTime, ELevelTick TickType
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!bSelected || !DynMesh) return;
+	//if (!bSelected || !DynMesh) return;
 
-	// Sine波で点滅（時間ベース）
-	const float Time = GetWorld()->GetTimeSeconds();
-	const float SineValue = (FMath::Sin(Time * 5.0f) + 1.0f) * 0.5f; // 0～1
-	const float EmissiveStrength = 5.0f; // 最大輝度
-	const FLinearColor EmissiveColor = CurrentColor * (SineValue * EmissiveStrength);
+	//// Sine波で点滅（時間ベース）
+	//const float Time = GetWorld()->GetTimeSeconds();
+	//const float SineValue = (FMath::Sin(Time * 5.0f) + 1.0f) * 0.5f; // 0～1
+	//const float EmissiveStrength = 5.0f; // 最大輝度
+	//const FLinearColor EmissiveColor = CurrentColor * (SineValue * EmissiveStrength);
 
-	DynMesh->SetVectorParameterValue(FName("EmissiveColor"), EmissiveColor);
+	//DynMesh->SetVectorParameterValue(FName("EmissiveColor"), EmissiveColor);
 }
 
 bool UColorReactiveComponent::OnColorMatched(const FLinearColor& FilterColor)
@@ -280,4 +312,62 @@ bool UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
 	return false;
 }
 
+void UColorReactiveComponent::PlayAppearEffect()
+{
+	ActiveNiagaraEffect(FireflyBurstNiagaraSystem);
+	ActiveNiagaraEffect(LightCubeNiagaraSystem);
+}
 
+void UColorReactiveComponent::PlayDisappearEffect()
+{
+	//ActiveNiagaraEffect(LightCubeNiagaraSystem);
+}
+
+void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
+{
+	if (!niagaraSystem)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NiagaraSystem is null"));
+		return;
+	}
+
+	// アタッチするコンポーネントを取得（例: RootComponent）
+	USkeletalMeshComponent* AttachComponent = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh"));
+	if (!AttachComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AttachComponent is null"));
+		return;
+	}
+
+	// Niagaraエフェクトをアタッチして再生
+	UNiagaraComponent* targetNiagara = UNiagaraFunctionLibrary::SpawnSystemAttached(
+		niagaraSystem,
+		AttachComponent,
+		NAME_None,
+		FVector::ZeroVector,
+		FRotator::ZeroRotator,
+		EAttachLocation::KeepRelativeOffset,
+		true,   // bAutoDestroy
+		true,   // bAutoActivate
+		ENCPoolMethod::None,
+		true    // bPreCullCheck
+	);
+
+	if (targetNiagara == nullptr)
+		return;
+
+	ActiveNiagaraComponent.Add(targetNiagara);
+}
+
+void UColorReactiveComponent::DeactivateAllEffects()
+{
+	for (UNiagaraComponent* NiagaraComp : ActiveNiagaraComponent)
+	{
+		if (NiagaraComp && !NiagaraComp->IsBeingDestroyed())
+		{
+			NiagaraComp->Deactivate();
+			NiagaraComp->DestroyComponent();
+		}
+	}
+	ActiveNiagaraComponent.Empty();
+}

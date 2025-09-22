@@ -1,6 +1,7 @@
 #include "Components/Color/ColorConfigurator.h"
 #include "Components/Color/ColorReactiveComponent.h"
 #include "Components/Beat/BeatScalerComponent.h"
+#include "Interface/ColorFilterInterface.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Sound/SoundManager.h"
@@ -33,12 +34,9 @@ void UColorConfigurator::InitializeColorLogic()
 
 	ColorReactiveComponent->RegisterComponent();
 	ColorReactiveComponent->Activate(true);
-	ColorReactiveComponent->UpdateColorEffectAndNiagara(StartColor, Effect, Niagaras);
+	ColorReactiveComponent->InitColorEffectAndNiagara(StartColor, Effect, Niagaras);
+	ColorReactiveComponent->Init(bColorVariable);
 
-	if (UStaticMeshComponent* Mesh = GetStaticMesh())
-	{
-		ColorReactiveComponent->Init(Mesh);
-	}
 }
 
 void UColorConfigurator::RegisterToColorManager()
@@ -55,7 +53,7 @@ void UColorConfigurator::SetupMaterial()
 	StartColor = ALevelManager::GetInstance(GetWorld())
 		->GetColorManager()
 		->GetEffectColor(Effect);
-	if (UStaticMeshComponent* Mesh = GetStaticMesh())
+	if (USkeletalMeshComponent* Mesh = GetStaticMesh())
 	{
 		Mesh->SetRenderCustomDepth(true);
 		Mesh->SetCustomDepthStencilValue(10);
@@ -69,6 +67,9 @@ void UColorConfigurator::SetupMaterial()
 
 void UColorConfigurator::PlayBeatAnimation()
 {
+	if (!bIsPlayBeat)
+		return;
+
 	if (BeatScalerComponent)
 	{
 		BeatScalerComponent->PlayBeat();
@@ -98,7 +99,7 @@ void UColorConfigurator::SetColor(FLinearColor NewColor, FEffectMatchResult resu
 
 	if (ColorReactiveComponent)
 	{
-		ColorReactiveComponent->UpdateColorEffectAndNiagara(CurrentColor, result.ClosestEffect , Niagaras);
+		ColorReactiveComponent->InitColorEffectAndNiagara(CurrentColor, result.ClosestEffect , Niagaras);
 	}
 
 	if (const UColorManager* ColorManager = GetColorManager())
@@ -117,7 +118,7 @@ void UColorConfigurator::SetCurrentColor(FLinearColor NewColor)
 	CurrentColor = NewColor;
 }
 
-void UColorConfigurator::SetColorMuch(bool bInColorMuch)
+void UColorConfigurator::SetColorMatch(bool bInColorMuch)
 {
 	bColorMuch = bInColorMuch;
 }
@@ -166,6 +167,11 @@ bool UColorConfigurator::IsChangeable()const
 	return bColorChangeable;
 }
 
+bool UColorConfigurator::IsHidden() const
+{
+	return ColorReactiveComponent && ColorReactiveComponent->IsHidden();
+}
+
 void UColorConfigurator::ApplyColorToMaterial(FLinearColor InColor)
 {
 	if (ColorReactiveComponent)
@@ -178,9 +184,9 @@ void UColorConfigurator::ApplyColorToMaterial(FLinearColor InColor)
 // 補助関数（共通処理）
 // =======================
 
-UStaticMeshComponent* UColorConfigurator::GetStaticMesh() const
+USkeletalMeshComponent* UColorConfigurator::GetStaticMesh() const
 {
-	return UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(GetOwner(), TEXT("StaticMesh"));
+	return UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh"));
 }
 
 ALevelManager* UColorConfigurator::GetLevelManager() const

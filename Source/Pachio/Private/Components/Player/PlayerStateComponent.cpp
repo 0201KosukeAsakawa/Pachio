@@ -14,7 +14,7 @@ UPlayerStateComponent::UPlayerStateComponent()
 	// ...
 }
 
-bool UPlayerStateComponent::OnEnter(ACharacter*, UWorld*)
+bool UPlayerStateComponent::OnEnter(APawn*, UWorld*)
 {
 	return false;
 }
@@ -24,7 +24,7 @@ bool UPlayerStateComponent::OnUpdate(float)
 	return false;
 }
 
-bool UPlayerStateComponent::OnExit(ACharacter*)
+bool UPlayerStateComponent::OnExit(APawn*)
 {
 	return false;
 }
@@ -38,6 +38,21 @@ void UPlayerStateComponent::Movement(const FInputActionValue& Value)
 {
 }
 
-void UPlayerStateComponent::Jump(UPhysicsCalculator* physics, float jumpForce)
+bool UPlayerStateComponent::Jump(float jumpForce)
 {
+	return false;
+}
+
+FVector UPlayerStateComponent::GetAnimVelocity() const
+{
+	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+	FVector Velocity = DeltaSeconds > 0 ? MoveDelta / DeltaSeconds : FVector::ZeroVector;
+
+	return Velocity;
+}
+
+
+int32 UPlayerStateComponent::GetYaw() const
+{
+	return MoveDirection;
 }

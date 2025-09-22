@@ -39,7 +39,7 @@ public:
 	virtual void SetColor(FLinearColor InColor, FEffectMatchResult);
 	virtual void ApplyColorToMaterial(FLinearColor InColor);
 	void SetCurrentColor(FLinearColor InColor);
-	void SetColorMuch(bool bInColorMuch);
+	void SetColorMatch(bool bInColorMuch);
 	void SetSelectMode(bool bIsSelect);
 	void ChangeLock(bool bLock) { bColorVariable = bLock; }
 
@@ -51,6 +51,8 @@ public:
 	bool IsColorMatch(const FLinearColor& FilterColor, float Tolerance = 0.08f) const;
 	bool CheckColorMatch(FEffectMatchResult,const FLinearColor& FilterColor, bool bUseComplementaryColor = false) const;
 	bool IsChangeable()const;
+	bool IsHidden()const;
+
 
 	// Getter	
 	bool IsColorModifiable() const { return bSetColor; }
@@ -60,7 +62,7 @@ public:
 
 private:
 	// 状態取得
-	UStaticMeshComponent* GetStaticMesh() const;
+	USkeletalMeshComponent* GetStaticMesh() const;
 	ALevelManager* GetLevelManager() const;
 	UColorManager* GetColorManager() const;
 protected:
@@ -114,4 +116,7 @@ protected:
 
 private:
 	bool bIsSelected = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bIsPlayBeat = true;
 };

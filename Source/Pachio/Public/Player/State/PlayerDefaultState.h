@@ -14,21 +14,15 @@ class PACHIO_API UPlayerDefaultState : public UPlayerStateComponent
 public:
 	UPlayerDefaultState();
 public:
-	bool OnEnter(ACharacter*, UWorld*)override;
+	bool OnEnter(APawn*, UWorld*)override;
 	bool OnUpdate(float)override;
-	bool OnExit(ACharacter*)override;
+	bool OnExit(APawn*)override;
 	bool OnSkill(const FInputActionValue&)override;
 	void Movement(const FInputActionValue& Value)override;
-	void Jump(UPhysicsCalculator* physics, float jumpForce)override;
+	bool Jump(float jumpForce)override;
 
 private:
 	bool TryEnterLadderOnJump() const;
-
-	void UpdateInteractableUI();
-	void CheckHoldableObject();
-	void CheckLadderObject();
-
-	bool CheckObjectByTag(const FVector& Start, const FVector& End, const FCollisionShape& Shape, const FName& Tag, bool& bPrevState, const FName& WidgetName, const FName& AnimName);
 
 private:
 	FTimerHandle CheckHoldableHandle;
@@ -49,4 +43,10 @@ private:
 	FRotator InitialRotation;
 
 	FVector CurrentDirection;
+
+	UPROPERTY()
+	UPhysicsCalculator* Physics;
+
+	UPROPERTY()
+	UBoxComponent* BoxComponent;
 };

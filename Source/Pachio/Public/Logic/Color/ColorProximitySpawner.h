@@ -15,11 +15,16 @@ class PACHIO_API UColorProximitySpawner : public UColorReactiveComponent
 	GENERATED_BODY()
 public:
 	UColorProximitySpawner();
+
 private:
-	 bool OnColorMatched(const FLinearColor& FilterColor)override;
-	 bool OnColorMismatched(const FLinearColor& FilterColor)override;
+	 void Init(bool) override;
 
 	 void OffMesh();
 	 void OnMesh();
+
+	 bool OnColorMatched(const FLinearColor& FilterColor)override;
+	 bool OnColorMismatched(const FLinearColor& FilterColor)override;
+
+
 
 };

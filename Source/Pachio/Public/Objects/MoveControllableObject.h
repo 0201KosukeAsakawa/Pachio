@@ -39,6 +39,10 @@ private:// オーバーラップイベント
 	void OnBeatDetected();
 
 	virtual void ColorAction(FLinearColor, FEffectMatchResult)override;
+
+	void Movement(float);
+
+	void Check();
 private:
 
 	UPROPERTY()

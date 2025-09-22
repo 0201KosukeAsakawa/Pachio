@@ -8,7 +8,7 @@ UCameraHandlerComponent::UCameraHandlerComponent()
 
     
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-
+    
     InterpSpeed = 3.0f;
 }
 
@@ -16,7 +16,7 @@ void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 {
     if (Camera == nullptr || RootComponent == nullptr)
         return;
-
+  //  SetComponentTickEnabled(false);
     SetCameraLocation(CameraViewType);
     SetCameraRotation(CameraViewType);
 }
@@ -185,4 +185,14 @@ void UCameraHandlerComponent::ApplyCameraSettings(FVector2D newSize, float newBu
     Zbaffa = newBuffa;
     SetCameraLocation(CameraViewType);
     SetCameraRotation(CameraViewType);
+}
+
+bool UCameraHandlerComponent::IsParameterMatch(FVector2D newSize, float newBuffa)
+{
+    //if(GridSize != newSize|| Zbaffa != newBuffa)
+    //return false;
+
+    //return true;
+
+    return !(GridSize != newSize || Zbaffa != newBuffa);
 }

@@ -102,7 +102,10 @@ UUserWidget* UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetNa
     if (!Group.CurrentWidget.IsEmpty())
     {
         if (Group.CurrentWidget.Contains(WidgetName))
+        {
+            Group.CurrentWidget[WidgetName]->AddToViewport();
             return Group.CurrentWidget[WidgetName];
+        }
     }
 
 
@@ -188,7 +191,6 @@ void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
     if (Widget)
     {
         Widget->RemoveFromViewport();
-        Widget = nullptr;
     }
 }
 

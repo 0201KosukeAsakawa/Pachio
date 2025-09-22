@@ -28,6 +28,16 @@ void ALevelManager::BeginPlay()
 	// コンポーネント初期化
 	InitializeComponents();
 
+
+
+
+
+	FSaveData SaveData;
+	SaveData.bCleared = true;
+	SaveData.ClearRank = EStageRank::S;  // 例: ランクS
+	SaveData.difficultyRank = 2;
+	SaveData.Title = TEXT("ステージ1");
+	USaveManager::SaveStageData(TEXT("Stage1"), SaveData);
 }
 
 void ALevelManager::InitializeComponents()
@@ -48,7 +58,7 @@ void ALevelManager::InitializeComponents()
 	if (SoundManager)
 	{
 		SoundManager->Init();
-		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
+		SoundManager->PlaySound("BGM", "Default", true,SoundManager->GetBGMVolume());
 	}
 	if (UIManagerClass)
 		UIManager = NewObject<UUIManager>(this, UIManagerClass);
@@ -123,7 +133,7 @@ void ALevelManager::HandlePlayerGoalReached()
 	UUserWidget* ResultWidget = UIManager->ShowResultWidget(ClearTime, Rank);
 	SoundManager->StopBGM();
 	SoundManager->PlaySound("SE", "Fanfare");
-	PauseGameAndShowUI(ResultWidget);
+	//PauseGameAndShowUI(ResultWidget);
 }
 
 void ALevelManager::PauseGameAndShowUI(UUserWidget* FocusWidget)

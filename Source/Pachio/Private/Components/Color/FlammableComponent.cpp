@@ -55,7 +55,7 @@ void UFlammableComponent::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor*
     if (!IS)
         return;
 
-    IS->ChangeState("Dead");
+    IS->ChangeState(EPlayerStateType::Dead);
 }
 void UFlammableComponent::Ignite()
 {

@@ -7,19 +7,20 @@
 #include "PlayerHoldState.generated.h"
 
 class UMoveComponent;
+class UColorReactiveComponent;
 UCLASS()
 class PACHIO_API UPlayerHoldState : public UPlayerStateComponent
 {
 	GENERATED_BODY()
 public:
 	UPlayerHoldState();	
-	void SetUp(AActor*);
+	void SetUp(AActor*,bool);
 private:
-	bool OnEnter(ACharacter* owner, UWorld* world)override;
+	bool OnEnter(APawn* owner, UWorld* world)override;
 
 	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
 	bool OnUpdate(float DeltaTime)override;
-	bool OnExit(ACharacter* owner)override;
+	bool OnExit(APawn* owner)override;
 
 	bool OnSkill(const FInputActionValue& Value)override;
 
@@ -31,5 +32,9 @@ private:
 	AActor* HoldTarget;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
+	UPROPERTY()
+	UColorReactiveComponent* targetComp;
 	float InitialHoldDistance;
+
+	int32 GrabDirection = 1;
 };

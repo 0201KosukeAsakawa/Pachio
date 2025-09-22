@@ -11,7 +11,7 @@ void UClearResultWidget::SetupClearResult(float InClearTime, EStageRank InScore)
 
 FText UClearResultWidget::GetClearTimeText() const
 {
-    return FText::FromString(FString::Printf(TEXT("%.2f"), CachedClearTime));
+    return FText::FromString(FString::Printf(TEXT("%.1f"), CachedClearTime));
 }
 
 

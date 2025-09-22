@@ -28,23 +28,31 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	AActor* Owner = GetOwner();
 
 	// --- ここで OffMesh 状態を判定 ---
-	if (Owner->IsHidden())
+	if (IsActive())
 	{
 		// オーナーが非表示 or Tick 無効なら処理を止める
 		return;
 	}
-
 	if (bShouldApplyGravity)
+	{
 		AddGravity();
+		UpdateGroundState();
+	}
 	FVector MoveVector;
-
 	if (!bIsPhysicsEnabled)
 	{
 		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f);
 		MoveVector = ForceDirection * ForceScale;
 
 		FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
-		GetOwner()->AddActorLocalOffset(Adjusted, bIsSweep);
+		if (bUseLocalOffset) // b が true ならローカル座標系で移動
+		{
+			GetOwner()->AddActorLocalOffset(Adjusted, bIsSweep);
+		}
+		else // false ならワールド座標系で移動
+		{
+			GetOwner()->AddActorWorldOffset(Adjusted, bIsSweep);
+		}
 
 		FVector currentPosition = GetOwner()->GetActorLocation();
 		float distanceZ = currentPosition.Z - PreviousPosition.Z;
@@ -55,20 +63,32 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			ForceScale = 0;
 			Timer = 0;
 			bIsPhysicsEnabled = true;
+			bFalling = true;
 		}
 
 		PreviousPosition = currentPosition;
 	}
 }
 
+void UPhysicsCalculator::UpdateGroundState()
+{
+	bool bIsCurrentlyOnGround = OnGround();
+	bHasJustLanded = (!bWasOnGround && bIsCurrentlyOnGround);
 
-void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
+	if (bHasJustLanded)
+		UE_LOG(LogTemp, Log, TEXT("着地"));
+
+	bWasOnGround = bIsCurrentlyOnGround;
+}
+
+void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep , const bool useLocalOffset)
 {
 	ForceDirection = Direction;
 	ForceScale = Force /** ForceModifier*/;
 	Timer = 0;
 	bIsSweep = bSweep;
 	bIsPhysicsEnabled = false;
+	bUseLocalOffset = useLocalOffset;
 }
 
 void UPhysicsCalculator::ResetForce()
@@ -84,6 +104,7 @@ void UPhysicsCalculator::AddGravity()
 	if (OnGround())
 	{
 		bIsPhysicsEnabled = false;
+		bFalling = false;
 		return;
 	}
 
@@ -127,16 +148,16 @@ bool UPhysicsCalculator::OnGround() const
 		Params
 	);
 
-#if WITH_EDITOR
-	DrawDebugBox(
-		GetWorld(),
-		StartTrace,
-		BoxExtent,
-		ActorRotation, // ★ここも回転を反映
-		bHit ? FColor::Green : FColor::Red,
-		false, 1.0f
-	);
-#endif
+//#if WITH_EDITOR
+//	DrawDebugBox(
+//		GetWorld(),
+//		StartTrace,
+//		BoxExtent,
+//		ActorRotation, // ★ここも回転を反映
+//		bHit ? FColor::Green : FColor::Red,
+//		false, 1.0f
+//	);
+//#endif
 
 	return bHit;
 }
@@ -227,4 +248,8 @@ FVector UPhysicsCalculator::GetGroundNormal() const
 
 	// 接地してなければ上向きを返す
 	return FVector::UpVector;
+}
+const bool UPhysicsCalculator::HasLanded()
+{
+	return bHasJustLanded;
 }

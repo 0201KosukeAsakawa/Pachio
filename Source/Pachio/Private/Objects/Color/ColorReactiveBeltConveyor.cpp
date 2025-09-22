@@ -41,23 +41,58 @@ void AColorReactiveBeltConveyor::Init()
 // 毎フレーム呼ばれる処理（Tick）
 void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 {
-    if (bPlayBeat)
-        return;
-
-    // コリジョン無効時は処理スキップ
     if (!BoxComponent->IsCollisionEnabled())
     {
-        // 無効なので、force を止める（例: hitObject をリセット）
-        hitObject.Empty(); // 全て削除するならこれが最も明確で安全
+        hitObject.Empty();
         return;
     }
 
-    for (UPhysicsCalculator* target : hitObject)
+    if (bOnlyClosest)
     {
-        if (target)
+        FVector MyLocation = GetActorLocation();
+
+        for (UPhysicsCalculator* target : hitObject)
         {
-            // 力を加える（CurrentDirection 方向に power の強さで）
-            target->AddForce(CurrentDirection, CurrentPower, true);
+            if (target)
+            {
+                AActor* TargetActor = target->GetOwner();
+                if (!TargetActor)
+                    continue;
+
+                FVector TargetLocation = TargetActor->GetActorLocation();
+
+                // 自分と対象の間に遮蔽物があるかどうかラインテスト
+                FHitResult HitResult;
+                FCollisionQueryParams Params;
+                Params.AddIgnoredActor(this);  // 自分自身は無視
+                Params.AddIgnoredActor(TargetActor); // 対象も無視して直接見えるか判定
+
+                bool bHit = GetWorld()->LineTraceSingleByChannel(
+                    HitResult,
+                    MyLocation,
+                    TargetLocation,
+                    ECC_Visibility,
+                    Params
+                );
+
+                if (!bHit)
+                {
+                    // 遮蔽物無し → 力を加える
+                    target->AddForce(CurrentDirection, CurrentPower, true, bUseLocalOffset);
+                }
+                // bHit == true なら遮蔽物があるので加えない
+            }
+        }
+    }
+    else
+    {
+        // これまで通り、全ての対象に力を加える
+        for (UPhysicsCalculator* target : hitObject)
+        {
+            if (target)
+            {
+                target->AddForce(CurrentDirection, CurrentPower, true, bUseLocalOffset);
+            }
         }
     }
 }
@@ -65,15 +100,15 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 // 指定された色に反応する処理
 void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
 {
-    ApplyColorToMaterial(InColor);
-
+    //ApplyColorToMaterial(InColor);
+    
     if (!ColorConfigurator)
         return;
 
     AColorReactiveObject::ColorAction(InColor,result);
 
     // 色の一致状態を設定
-    ColorConfigurator->SetColorMuch(ColorConfigurator->CheckColorMatch(result,InColor));
+    ColorConfigurator->SetColorMatch(ColorConfigurator->CheckColorMatch(result,InColor));
     if (ColorConfigurator->IsColorMatch())
     {
         if (IsRevers)
@@ -132,28 +167,28 @@ void AColorReactiveBeltConveyor::OnOverlapEnd(UPrimitiveComponent* OverlappedCom
 
 void AColorReactiveBeltConveyor::OnBeatDetected()
 {
-    if (beatCount > playBeatCount)
-    {
-        ++playBeatCount;
-        return;
-    }
+    //if (beatCount > playBeatCount)
+    //{
+    //    ++playBeatCount;
+    //    return;
+    //}
 
-    // コリジョン無効時は処理スキップ
-    if (!BoxComponent->IsCollisionEnabled())
-    {
-        // 無効なので、force を止める（例: hitObject をリセット）
-        hitObject.Empty();
-        return;
-    }
+    //// コリジョン無効時は処理スキップ
+    //if (!BoxComponent->IsCollisionEnabled())
+    //{
+    //    // 無効なので、force を止める（例: hitObject をリセット）
+    //    hitObject.Empty();
+    //    return;
+    //}
 
-    for (UPhysicsCalculator* target : hitObject)
-    {
-        if (target)
-        {
-            // 力を加える（CurrentDirection 方向に power の強さで）
-            target->AddForce(CurrentDirection, CurrentPower, true);
-        }
-    }
+    //for (UPhysicsCalculator* target : hitObject)
+    //{
+    //    if (target)
+    //    {
+    //        // 力を加える（CurrentDirection 方向に power の強さで）
+    //        target->AddForce(CurrentDirection, CurrentPower, true);
+    //    }
+    //}
 
-    playBeatCount = 0;
+    //playBeatCount = 0;
 }

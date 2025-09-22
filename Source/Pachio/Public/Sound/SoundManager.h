@@ -45,6 +45,7 @@ public:
 
     // サウンドマネージャーを初期化
     void Init();
+    
     void Tick(float DeltaTim);
     UFUNCTION(Category = "Beat")
     void SetTmp(EColorTargetType Mode, FLinearColor NewColor);
@@ -53,13 +54,18 @@ public:
     FOnBeatDetected OnBeatDetected;
     void OnMarkerBeat(int64 MarkerPositionMs); // マーカーで発火されたとき
 private:
+
+    void LoadOrCreateVolumeSave();
+    UFUNCTION(BlueprintCallable)
+    void SetVolume(float NewBGM, float NewSE);
     // サウンドを再生するメソッド
     UFUNCTION(BlueprintCallable)
-    bool PlaySound(FName DataID, FName SoundID, float Volume, bool IsSpecifyLocation = false, FVector place = FVector(0.0f, 0.0f, 0.0f))override;
+    bool PlaySound(FName DataID, FName SoundID,const bool SetVolume = false, float Volume = 1, bool IsSpecifyLocation = false, FVector place = FVector(0.0f, 0.0f, 0.0f))override;
 
-    bool PlaySound(FName DataID, FName SoundID) override;
     UFUNCTION(BlueprintCallable)
-    void SetSoundVolume(float BGMvol, float SEVol) override;
+    void SetBGMVolume(float vol) override;
+    UFUNCTION(BlueprintCallable)
+    virtual void SetSEVolume(float vol);
     void StopBGM() override;
     UFUNCTION(BlueprintCallable)
     float GetBGMVolume() const override { return BGMVolume; }
@@ -90,9 +96,9 @@ private:
     float SEVolume;
 
     UPROPERTY()
-    UFMODAudioComponent* TestSound;
+    UFMODAudioComponent* BGM;
     UPROPERTY(EditAnywhere, Category = "FMOD")
-    UFMODEvent* TestEventAsset;
+    UFMODEvent* BGMEventAsset;
     // SoundManager.h に追加
     UPROPERTY(EditAnywhere, Category = "BPM")
     float MusicBPM = 166.0f;  // 任意のBPM

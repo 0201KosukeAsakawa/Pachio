@@ -27,6 +27,15 @@ public:
 
 	FVector GetBottomWorldPosition() const;
 
+	FVector GetFixedPositionForActor( AActor* OtherActor) const;
+
+	FRotator GetRotationForActorToFaceThis(AActor* OtherActor) const;
+
+
+private:
+	UPROPERTY(EditAnywhere)
+	float Offset;
+
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* LadderVolume;
 };

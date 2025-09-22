@@ -6,7 +6,7 @@
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
 
-bool UReadyState::OnEnter(ACharacter* Owner, UWorld* World)
+bool UReadyState::OnEnter(APawn* Owner, UWorld* World)
 {
 	if (GetWorld() == nullptr)
 		return false;
@@ -31,7 +31,7 @@ bool UReadyState::OnUpdate(float DeltaTime)
 	return true;
 }
 
-bool UReadyState::OnExit(ACharacter* Owner)
+bool UReadyState::OnExit(APawn* Owner)
 {
 	if (GetWorld() == nullptr)
 		return false;
@@ -57,6 +57,6 @@ bool UReadyState::OnSkill(const FInputActionValue& Input)
 	IStateControllable* player = Cast<IStateControllable>(GetOwner());
 	if (player == nullptr)
 		return false;
-	player->ChangeState("Dafault");
+	player->ChangeState(EPlayerStateType::Default);
 	return true;
 }

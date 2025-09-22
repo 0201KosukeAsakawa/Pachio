@@ -24,7 +24,8 @@ class PACHIO_API ISoundable
 public:
 
 	//音量設定
-	virtual void SetSoundVolume(float BGMvol, float SEVol);
+	virtual void SetBGMVolume(float vol);
+	virtual void SetSEVolume(float vol);
 	//サウンドの再生(フェードイン))
 	virtual void PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volume, float FadeDuration);
 	//BGMの停止(完全停止)
@@ -36,6 +37,5 @@ public:
 	//SEの音量取得
 	virtual float GetSEVolume()const;
 	// サウンドを再生
-	virtual bool PlaySound(FName DataID, FName SoundID);
-	virtual bool PlaySound(FName DataID, FName SoundID, float Volume, bool IsSpecifyLocation = false, FVector place = FVector(0, 0, 0));
+	virtual bool PlaySound(FName DataID, FName SoundID,const bool SetVolume = false, float Volume = 0, bool IsSpecifyLocation = false, FVector place = FVector(0, 0, 0));
 };

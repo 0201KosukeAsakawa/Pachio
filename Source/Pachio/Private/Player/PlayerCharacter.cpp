@@ -1,6 +1,5 @@
 #include "Player/PlayerCharacter.h"
 #include "Player/State/PlayerDefaultState.h"
-#include "Player/State/StateManager.h"
 #include "Player/InGameController.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/StaticMeshComponent.h"
@@ -15,7 +14,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "FunctionLibrary.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/FloatingPawnMovement.h"
 #include "InputAction.h"
 #include "Interface/Soundable.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -35,19 +34,21 @@ APlayerCharacter::APlayerCharacter()
 	// 毎フレームTickを実行可能に設定
 	PrimaryActorTick.bCanEverTick = true;
 	// 各種コンポーネントを生成・初期化
-	/*InteractionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("IBox"));*/
 	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
-
-
+	FloatingPawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingPawnMovement"));
+	FloatingPawnMovement->UpdatedComponent = RootComponent;
+	InteractionBox = CreateDefaultSubobject<UBoxComponent>("Collision");
+	RootComponent = InteractionBox;
 }
 
 // ゲーム開始時の初期化処理
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	FixedXLocation = GetActorLocation().X;
 	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
 	CameraComponent->Init(RootComponent);
 	// ステート管理・攻撃管理初期化
@@ -58,21 +59,29 @@ void APlayerCharacter::BeginPlay()
 	InitInput();
 	// 視覚関連設定（アウトラインなど）
 	InitVisualSettings();
-	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
+	FloatingPawnMovement->MaxSpeed = MoveSpeed;
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (PC)
 	{
+		PC->Possess(this);
+		FString CurrentLevelName = GetWorld()->GetMapName();
+		// マップ名はパス込みなので最後の名前だけ取り出す
+		int32 LastSlashIndex;
+		if (CurrentLevelName.FindLastChar('/', LastSlashIndex))
+		{
+			CurrentLevelName = CurrentLevelName.Mid(LastSlashIndex + 1);
+		}
+
+		if (CurrentLevelName != TEXT("UEDPIE_0_Title"))
+		{
+			PC->SetInputMode(FInputModeGameOnly());
+		}
 		PC->bShowMouseCursor = false;
-		PC->SetInputMode(FInputModeGameOnly());
 	}
-	GetCharacterMovement()->SetWalkableFloorAngle(60.f);
-	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("Interaction"));
-	if(box)
-	{
-		InteractionBox = box;
-	}
+
+	bUseControllerRotationYaw = false;
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -81,13 +90,12 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	if (!StateManager)
 		return;
-
-	HandleMoveSound(DeltaTime);
-	UpdateOverlapUI();
-
 	Circle();
 
 	StateManager->Update(DeltaTime);
+	UpdateGlowTarget();
+	if (GetActorLocation().X != FixedXLocation)
+		SetActorLocation(FVector(FixedXLocation, GetActorLocation().Y, GetActorLocation().Z));
 }
 
 // プレイヤー入力バインド処理
@@ -117,9 +125,9 @@ void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 void APlayerCharacter::ResetBuff()
 {
 	 JumpBuff = 1;
-	 GetCharacterMovement()->GroundFriction = 8.0f;
-	 GetCharacterMovement()->BrakingDecelerationWalking = 2048.f;
-	 physics->SetGravityScale(true,10);
+	 //FloatingPawnMovement->GroundFriction = 8.0f;
+	 //FloatingPawnMovement->BrakingDecelerationWalking = 2048.f;
+	 physics->SetGravityScale(true, DefaultGravityScalse);
 }
 
 void APlayerCharacter::Circle()
@@ -166,7 +174,7 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	StateManager->GetCurrentState()->Jump(physics, JumpForce * JumpBuff);
+	bool Jumping = StateManager->GetCurrentState()->Jump(JumpForce * JumpBuff);
 }
 
 // ダッシュ・スキル開始処理
@@ -177,10 +185,19 @@ void APlayerCharacter::Action(const FInputActionValue& Value)
 }
 
 
+void APlayerCharacter::SetGravityScale(bool applyGravity)
+{
+	if (physics == nullptr)
+		return;
+
+	physics->SetGravityScale(applyGravity, DefaultGravityScalse);
+}
+
 void APlayerCharacter::SetGravityScale(bool applyGravity, float scale)
 {
 	if (physics == nullptr)
 		return;
+
 	physics->SetGravityScale(applyGravity, scale);
 }
 
@@ -206,6 +223,14 @@ void APlayerCharacter::ChangeColor(float value)
 	colorController->AdjustColor(value);
 }
 
+void APlayerCharacter::SetColor(float value)
+{
+	if (!colorController)
+		return;
+
+	colorController->SetColor(value);
+}
+
 // カラーモードを右にシフト（次の色モードへ変更）
 void APlayerCharacter::ShiftArrayRightColorMode()
 {
@@ -225,7 +250,7 @@ void APlayerCharacter::ShiftArrayLeftColorMode()
 }
 
 // 状態の変更（ステートタグを指定して遷移）
-UPlayerStateComponent* APlayerCharacter::ChangeState(FString Tag)
+UPlayerStateComponent* APlayerCharacter::ChangeState(EPlayerStateType Tag)
 {
 	UPlayerStateComponent* result = StateManager->ChangeState(Tag);
 	
@@ -251,14 +276,10 @@ void APlayerCharacter::InitPhysicsSettings()
 {
 	physics->RegisterComponent();
 	// 重力を加える（値は任意、固定で10.0fを加算）
-	physics->SetGravityScale(true,50.0f);
-
-	auto* Move = GetCharacterMovement();
+	physics->SetGravityScale(true, DefaultGravityScalse);
 
 	// 摩擦や重力のパラメータ調整
-	Move->BrakingFrictionFactor = 2.0f;
-	Move->GroundFriction = 8.0f;
-	Move->GravityScale = 0.0f; // 重力は自前のphysicsで制御しているため無効化
+	FloatingPawnMovement->Deceleration = 2048.f; // 適当な値
 }
 
 // 入力関連の初期化（コンポーネントのコントローラ参照を設定）
@@ -299,14 +320,11 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	case EBuffEffect::Green:
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 1000.0f + 400.0f * Match.StrengthRatio;
 		break;
 	}
 
 	case EBuffEffect::Blue:
 	{
-		GetCharacterMovement()->GroundFriction = 0.1f;
-		GetCharacterMovement()->BrakingDecelerationWalking =100; // 通常:2048 → 小さいほど止まりにくい
 
 		break;
 	}
@@ -323,36 +341,52 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 	void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 	{
-		const float DeadZone = 0.2f;
-		if (StickInput.SizeSquared() < DeadZone)
-			return;
+		//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
 
-		FVector2D InputDir = StickInput.GetSafeNormal(); // 正規化
+		const float DeadZone = 0.02f;
+		if (StickInput.SizeSquared() < DeadZone)
+		{
+			//UE_LOG(LogTemp, Log, TEXT("StickInput is Neutral"));
+			bHasPrevInputDir = false;
+			return;
+		}
+
+		// 正規化
+		FVector2D InputDir = StickInput.GetSafeNormal();
 
 		if (!bHasPrevInputDir)
 		{
+			float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(StickInput.Y, StickInput.X));
+	/*		if (InputDir.Y < 0)
+			{
+				AngleDegrees -= 360.0f;
+			}*/
+
+			// degを使って色変更
+			UE_LOG(LogTemp, Log, TEXT("初回入力方向に即回転 deg=%f"), AngleDegrees);
+			ChangeColor(-AngleDegrees / 360.0f);
+
+			// 記録して終了
 			PrevInputDir = InputDir;
 			bHasPrevInputDir = true;
 			return;
 		}
 
-		// 2Dクロス積で回転方向判定（Z成分だけ取る）
-		float CrossZ = InputDir.X * PrevInputDir.Y - InputDir.Y * PrevInputDir.X;
+		// 2Dクロス積で回転方向判定
+		// crossZ = |a||b|sin(θ)
+		float CrossZ = FVector2D::CrossProduct(InputDir, PrevInputDir);
+		//crossZはSinθと考える
+		//いったんDegreeに直してログを出したい
+		float deg = asin(CrossZ) * 180.0f / 3.14f;
 
-		const float epsilon = 0.01f;
-		if (CrossZ > epsilon)
+		const float epsilon = 0.001f;
+		
+		if ( abs(deg) > epsilon)
 		{
-			UE_LOG(LogTemp, Log, TEXT("回転方向：左回り（反時計回り）"));
-			ChangeColor(-0.01);
+			ChangeColor(-deg/360.0f);
+			//SetColor(deg);
 			PrevInputDir = InputDir;
 		}
-		else if (CrossZ < -epsilon)
-		{
-			UE_LOG(LogTemp, Log, TEXT("回転方向：右回り（時計回り）"));
-			ChangeColor(0.01);
-			PrevInputDir = InputDir;
-		}
-
 	}
 void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
 {
@@ -396,56 +430,115 @@ void APlayerCharacter::CallOnClosestOverlappingActor()
 	}
 }
 
-void APlayerCharacter::UpdateOverlapUI()
+void APlayerCharacter::OpenMenu(const FInputActionValue& Value)
 {
-	if (!InteractionBox)
+	ALevelManager::GetInstance(GetWorld())->GetUIManager()->ShowWidget(EWidgetCategory::Menu, "Menu");
+}
+
+UCameraComponent* APlayerCharacter::GetCamera()
+{
+	if (CameraComponent == nullptr)
+		return nullptr;
+
+	return CameraComponent->GetCamera();
+}
+
+FVector APlayerCharacter::GetAnimVelocity() const
+{
+	if(StateManager == nullptr)
+	return FVector();
+
+	return StateManager->GetCurrentState()->GetAnimVelocity();
+}
+
+float APlayerCharacter::GetYaw() const
+{
+	if (StateManager == nullptr)
+	return 0.0f;
+
+	return StateManager->GetCurrentState()->GetYaw();
+}
+
+void APlayerCharacter::UpdateGlowTarget()
+{
+
+	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Box");	
+	if (!box)
 		return;
-
+	// オーバーラップ中のActorを取得
 	TArray<AActor*> OverlappingActors;
-	InteractionBox->GetOverlappingActors(OverlappingActors);
+	box->GetOverlappingActors(OverlappingActors);
 
-	AActor* OverlappedActor = nullptr;
+	AActor* NewGlowTarget = nullptr;
+	float MinDistSq = FLT_MAX;
+	FVector MyLocation = GetActorLocation();
+
 	for (AActor* Actor : OverlappingActors)
 	{
-		if (IsValid(Actor) && Actor->IsA(AControllableObjectBase::StaticClass()))
+		if (!IsValid(Actor))
+			continue;
+
+		// Tagで判定
+		if (Actor->ActorHasTag("Holdable"))
 		{
-			OverlappedActor = Actor;
-			break;
+			float DistSq = FVector::DistSquared(MyLocation, Actor->GetActorLocation());
+			if (DistSq < MinDistSq)
+			{
+				MinDistSq = DistSq;
+				NewGlowTarget = Actor;
+			}
 		}
 	}
 
-	if (OverlappedActor)
+	if (NewGlowTarget != CurrentGlowTarget)
 	{
-		ALevelManager::GetInstance(GetWorld())->GetUIManager()
-		->ShowMarker(TEXT("ChageMovemet"), this);
-	}
-	else
-	{
-		ALevelManager::GetInstance(GetWorld())->GetUIManager()
-			->HideMarker(TEXT("ChageMovemet"));
+		// 前のGlowを解除
+		if (CurrentGlowTarget)
+		{
+			if (USkeletalMeshComponent* Mesh = CurrentGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
+			{
+				Mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 0.0f);
+			}
+		}
+
+		// 新しいGlowを適用
+		if (NewGlowTarget)
+		{
+			if (USkeletalMeshComponent* Mesh = NewGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
+			{
+				Mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 1.0f);
+			}
+		}
+
+		CurrentGlowTarget = NewGlowTarget;
 	}
 }
 
-void APlayerCharacter::HandleMoveSound(float DeltaTime)
+
+void APlayerCharacter::Respawn()
 {
-	FVector Velocity = GetVelocity();
-	bool bIsMoving = Velocity.SizeSquared() > KINDA_SMALL_NUMBER;
+	SetActorLocation(CurrentRespawnPoint);
 
-	ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-	if (!sound)
-		return;
-
-	if (bIsMoving)
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		MoveSoundCooldown -= DeltaTime;
-		if (MoveSoundCooldown <= 0.f)
+		if (PC->PlayerCameraManager)
 		{
-			sound->PlaySound("SE", "MoveStep");  // ループしないSEをここで再生
-			MoveSoundCooldown = MoveSoundInterval;
+			PC->PlayerCameraManager->StartCameraFade(
+				1.f,            // FromAlpha
+				0.f,            // ToAlpha
+				1.0f,           // Duration (秒)
+				FLinearColor::Black, // フェードカラー
+				false,          // bShouldFadeAudio
+				true            // bHoldWhenFinished
+			);
 		}
 	}
-	else
-	{
-		MoveSoundCooldown = 0.f; // 移動してない時はリセット
-	}
+
+	// 入力再開
+	EnableInput(Cast<APlayerController>(GetController()));
+}
+
+void APlayerCharacter::UpdateRespawn(FVector newLocation)
+{
+	CurrentRespawnPoint = newLocation;
 }

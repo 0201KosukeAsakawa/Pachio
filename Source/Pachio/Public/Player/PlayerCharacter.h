@@ -6,6 +6,7 @@
 #include "Interface/StateControllable.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ActionControl/CharacterActionInterfaces.h"
+#include "Player/State/StateManager.h"
 #include "PlayerCharacter.generated.h"
 
 // ===========================
@@ -16,7 +17,6 @@ class IMoveLogic;
 class UPlayerDefaultState;
 class UInputMappingContext;
 class UInputAction;
-class UStateManager;
 class UAttackComponent;
 class UAttackController;
 class USpringArmComponent;
@@ -25,6 +25,7 @@ class UColorControllerComponent;
 class UBoxComponent;
 class UCameraHandlerComponent;
 class UInvincibilityComponent;
+class UFloatingPawnMovement;
 
 class UPhysicsCalculator;
 class UMoveComponent;
@@ -36,10 +37,11 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable,
+class PACHIO_API APlayerCharacter : public APawn, public IStateControllable,
 	public IControllableMover,
 	public IControllableJumper, public IControllableAbility,
-	public IColorModeController, public IStickAction
+	public IColorModeController, public IStickAction,
+	public IOptionAction
 {
 	GENERATED_BODY()
 
@@ -60,6 +62,7 @@ public:
 
 
 public:
+
 	// ======================
 	// ==== 入力アクション ====
 	// ======================
@@ -75,11 +78,13 @@ public:
 	// 特殊アクション（スキル発動 or ダッシュ）開始処理
 	void Action(const FInputActionValue& Value)override;
 
-	void SetGravityScale(bool, const float = 9.8f);
+	void SetGravityScale(bool);
+	void SetGravityScale(const bool,const float);
 
 	void OnMouseScroll(const FInputActionValue& Value);
 
 	void ChangeColor(float)override;
+	void SetColor(float);
 
 	// カラーモードを1つ右にシフト
 	void ShiftArrayRightColorMode()override;
@@ -90,15 +95,27 @@ public:
 	void OnStickMove(const FInputActionValue& Value)override;
 	void CallOnClosestOverlappingActor();
 
+	void OpenMenu(const FInputActionValue& Value)override;
+
+	UFUNCTION(BlueprintCallable)
+	UCameraComponent* GetCamera();
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetAnimVelocity() const;
+
+	UFUNCTION(BlueprintCallable)
+	float GetYaw()const;
+	void UpdateGlowTarget();
+	void Respawn();
+	UFUNCTION(BlueprintCallable)
+	void UpdateRespawn(FVector newLocation);
 private:
 	// 現在のプレイヤーステート（状態）を取得
 	UPlayerStateComponent* GetPlayerState() const override;
 
 	// 状態変更（ステートタグによる遷移）
-	UPlayerStateComponent* ChangeState(FString Tag) override;
+	UPlayerStateComponent* ChangeState(EPlayerStateType Tag) override;
 	void InitState();
-	void UpdateOverlapUI();
-	void HandleMoveSound(float);
 	// ===============
 	// ==== 初期化関数 ====
 	// ===============
@@ -120,8 +137,6 @@ private:
 	void ApplyEffectFromColor(const FLinearColor& Color);
 
 	void OnStickRotate(const FVector2D& StickInput);
-	FVector2D PrevInputDir = FVector2D::ZeroVector;
-	bool bHasPrevInputDir = false;
 
 	void ResetBuff();
 
@@ -137,6 +152,11 @@ private:
 
 	float MoveSoundCooldown = 0.f;
 	const float MoveSoundInterval = 0.5f; // 0.5秒に1回まで再生可能
+
+	UPROPERTY(EditAnywhere)
+	float DefaultGravityScalse = 50.0f;
+
+	float FixedXLocation = 0;
 	// =====================
 	// ==== コンポーネント ====
 	// =====================
@@ -165,9 +185,21 @@ private:
 	UPROPERTY()
 	UColorControllerComponent* colorController;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision", meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* InteractionBox;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FloatingPawnMovement", meta = (AllowPrivateAccess = "true"))
+	UFloatingPawnMovement* FloatingPawnMovement;
 
 	FVector2D PrevMouseDir;
 	bool bHasPrevMouse = false;
+
+	FVector2D PrevInputDir = FVector2D::ZeroVector;
+	bool bHasPrevInputDir = false;
+
+	UPROPERTY()
+	AActor* CurrentGlowTarget;
+
+	UPROPERTY()
+	FVector CurrentRespawnPoint;
 };

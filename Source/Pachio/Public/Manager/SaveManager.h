@@ -24,4 +24,19 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Save")
     static FStageSaveData LoadFromJson();
+    
+    UFUNCTION(BlueprintCallable, Category = "Save")
+    static void SaveVolumeToJson(const FVolumeSaveData& InData);
+
+    UFUNCTION(BlueprintCallable, Category = "Save")
+    static FVolumeSaveData LoadVolumeFromJson();
+
+    UFUNCTION(BlueprintCallable, Category = "Save")
+    static float GetBGMVolume();
+
+    UFUNCTION(BlueprintCallable, Category = "Save")
+    static float GetSEVolume();
+    
+    UFUNCTION(BlueprintCallable, Category = "Save")
+    static void SetVolume(float NewBGM, float NewSE);
 };
