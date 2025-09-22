@@ -69,4 +69,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	bool bUseLocalOffset = false;
+
+	UPROPERTY(EditAnywhere)
+	bool bOnlyClosest = false;
 };
