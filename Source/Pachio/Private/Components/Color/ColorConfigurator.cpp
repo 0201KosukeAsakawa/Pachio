@@ -34,13 +34,9 @@ void UColorConfigurator::InitializeColorLogic()
 
 	ColorReactiveComponent->RegisterComponent();
 	ColorReactiveComponent->Activate(true);
-	ColorReactiveComponent->UpdateColorEffectAndNiagara(StartColor, Effect, Niagaras);
+	ColorReactiveComponent->InitColorEffectAndNiagara(StartColor, Effect, Niagaras);
+	ColorReactiveComponent->Init(bColorVariable);
 
-
-	if (USkeletalMeshComponent* Mesh = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh")))
-	{
-		ColorReactiveComponent->Init(Mesh, bColorVariable);
-	}
 }
 
 void UColorConfigurator::RegisterToColorManager()
@@ -103,7 +99,7 @@ void UColorConfigurator::SetColor(FLinearColor NewColor, FEffectMatchResult resu
 
 	if (ColorReactiveComponent)
 	{
-		ColorReactiveComponent->UpdateColorEffectAndNiagara(CurrentColor, result.ClosestEffect , Niagaras);
+		ColorReactiveComponent->InitColorEffectAndNiagara(CurrentColor, result.ClosestEffect , Niagaras);
 	}
 
 	if (const UColorManager* ColorManager = GetColorManager())

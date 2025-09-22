@@ -33,9 +33,9 @@ UColorReactiveComponent::UColorReactiveComponent()
 	}
 }
 
-void UColorReactiveComponent::Init(UMeshComponent* mesh, bool Variable)
+void UColorReactiveComponent::Init(bool Variable)
 {
-	if (!bSetStartColor || !mesh)
+	if (!bSetStartColor)
 		return;
 
 	AActor* Owner = GetOwner();
@@ -64,7 +64,7 @@ void UColorReactiveComponent::Init(UMeshComponent* mesh, bool Variable)
 }
 
 
-void UColorReactiveComponent::UpdateColorEffectAndNiagara(const FLinearColor& FilterColor,EBuffEffect newEffect, TArray<ANiagaraActor*>NiagaraComponents)
+void UColorReactiveComponent::InitColorEffectAndNiagara(const FLinearColor& FilterColor,EBuffEffect newEffect, TArray<ANiagaraActor*>NiagaraComponents)
 {
 	CurrentColor = FilterColor;
 	Effect = newEffect;
