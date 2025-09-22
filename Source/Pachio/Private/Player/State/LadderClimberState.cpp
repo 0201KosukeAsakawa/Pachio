@@ -155,8 +155,8 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 
 					// 梯子の上に押し出す位置
 					FVector ExitLocation = Ladder->GetActorLocation();
-					ExitLocation.Z = LadderTopZ + 1150.f;                 // 上に少し
-					ExitLocation += LadderForward * direction * 1150.f;   // 前に少し
+					ExitLocation.Z = LadderTopZ + 150.f;                 // 上に少し
+					ExitLocation += LadderForward * direction * 150.f;   // 前に少し
 
 					// 確実にワープ
 					mOwner->SetActorLocation(ExitLocation, false, nullptr, ETeleportType::TeleportPhysics);

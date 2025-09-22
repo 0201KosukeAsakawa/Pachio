@@ -12,17 +12,13 @@
 
 UColorProximitySpawner::UColorProximitySpawner()
 {
-    ToggleNiagaraActiveState(false);    
-    bHide = false;
-    OffMesh();
-    
+
 }
 
 bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(true);
     OnMesh();
-    ActiveEffect(true);
     return false;
 }
 
@@ -30,8 +26,15 @@ bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 {
     ToggleNiagaraActiveState(false);
     OffMesh();
-    ActiveEffect(false);
     return true;
+}
+
+void UColorProximitySpawner::Init(bool bVariable)
+{
+    UColorReactiveComponent::Init(bVariable);
+    ToggleNiagaraActiveState(false);
+    bHide = false;
+    OffMesh();
 }
 
 void UColorProximitySpawner::OffMesh()
