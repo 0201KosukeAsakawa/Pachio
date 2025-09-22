@@ -26,6 +26,7 @@ class UBoxComponent;
 class UCameraHandlerComponent;
 class UInvincibilityComponent;
 class UFloatingPawnMovement;
+class UCharacterMovementComponent;
 
 class UPhysicsCalculator;
 class UMoveComponent;
@@ -37,7 +38,7 @@ struct FInputActionValue;
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
 UCLASS()
-class PACHIO_API APlayerCharacter : public APawn, public IStateControllable,
+class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable,
 	public IControllableMover,
 	public IControllableJumper, public IControllableAbility,
 	public IColorModeController, public IStickAction,
@@ -185,11 +186,8 @@ private:
 	UPROPERTY()
 	UColorControllerComponent* colorController;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* InteractionBox;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FloatingPawnMovement", meta = (AllowPrivateAccess = "true"))
-	UFloatingPawnMovement* FloatingPawnMovement;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision", meta = (AllowPrivateAccess = "true"))
+	//UBoxComponent* InteractionBox;
 
 	FVector2D PrevMouseDir;
 	bool bHasPrevMouse = false;

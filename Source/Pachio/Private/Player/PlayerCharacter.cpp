@@ -15,6 +15,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "FunctionLibrary.h"
 #include "GameFramework/FloatingPawnMovement.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "InputAction.h"
 #include "Interface/Soundable.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -38,10 +39,7 @@ APlayerCharacter::APlayerCharacter()
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
-	FloatingPawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingPawnMovement"));
-	FloatingPawnMovement->UpdatedComponent = RootComponent;
-	InteractionBox = CreateDefaultSubobject<UBoxComponent>("Collision");
-	RootComponent = InteractionBox;
+	//InteractionBox = CreateDefaultSubobject<UBoxComponent>("Collision");
 }
 
 // ゲーム開始時の初期化処理
@@ -59,7 +57,6 @@ void APlayerCharacter::BeginPlay()
 	InitInput();
 	// 視覚関連設定（アウトラインなど）
 	InitVisualSettings();
-	FloatingPawnMovement->MaxSpeed = MoveSpeed;
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
@@ -279,7 +276,7 @@ void APlayerCharacter::InitPhysicsSettings()
 	physics->SetGravityScale(true, DefaultGravityScalse);
 
 	// 摩擦や重力のパラメータ調整
-	FloatingPawnMovement->Deceleration = 2048.f; // 適当な値
+	//FloatingPawnMovement->Deceleration = 2048.f; // 適当な値
 }
 
 // 入力関連の初期化（コンポーネントのコントローラ参照を設定）
@@ -388,38 +385,38 @@ void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
 
 void APlayerCharacter::CallOnClosestOverlappingActor()
 {
-	if (!InteractionBox)
-		return;
+	//if (!InteractionBox)
+	//	return;
 
-	TArray<AActor*> OverlappingActors;
-	InteractionBox->GetOverlappingActors(OverlappingActors);
+	//TArray<AActor*> OverlappingActors;
+	//InteractionBox->GetOverlappingActors(OverlappingActors);
 
-	AControllableObjectBase* ClosestActor = nullptr;
-	float MinDistanceSq = FLT_MAX;
-	FVector MyLocation = GetActorLocation();
+	//AControllableObjectBase* ClosestActor = nullptr;
+	//float MinDistanceSq = FLT_MAX;
+	//FVector MyLocation = GetActorLocation();
 
-	for (AActor* Actor : OverlappingActors)
-	{
-		if (!IsValid(Actor))
-			continue;
+	//for (AActor* Actor : OverlappingActors)
+	//{
+	//	if (!IsValid(Actor))
+	//		continue;
 
-		if (AControllableObjectBase* CastedActor = Cast<AControllableObjectBase>(Actor))
-		{
-			float DistSq = FVector::DistSquared(MyLocation, CastedActor->GetActorLocation());
-			if (DistSq < MinDistanceSq)
-			{
-				MinDistanceSq = DistSq;
-				ClosestActor = CastedActor;
-			}
-		}
-	}
+	//	if (AControllableObjectBase* CastedActor = Cast<AControllableObjectBase>(Actor))
+	//	{
+	//		float DistSq = FVector::DistSquared(MyLocation, CastedActor->GetActorLocation());
+	//		if (DistSq < MinDistanceSq)
+	//		{
+	//			MinDistanceSq = DistSq;
+	//			ClosestActor = CastedActor;
+	//		}
+	//	}
+	//}
 
-	if (ClosestActor)
-	{
-		ClosestActor->SwitchControll(this);
-		// 呼んだら終わり
-		return;
-	}
+	//if (ClosestActor)
+	//{
+	//	ClosestActor->SwitchControll(this);
+	//	// 呼んだら終わり
+	//	return;
+	//}
 }
 
 void APlayerCharacter::OpenMenu(const FInputActionValue& Value)
@@ -454,12 +451,12 @@ float APlayerCharacter::GetYaw() const
 void APlayerCharacter::UpdateGlowTarget()
 {
 
-	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Box");	
-	if (!box)
+	UBoxComponent* InteractionBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("InteractionBox"));
+	if (!InteractionBox)
 		return;
 	// オーバーラップ中のActorを取得
 	TArray<AActor*> OverlappingActors;
-	box->GetOverlappingActors(OverlappingActors);
+	InteractionBox->GetOverlappingActors(OverlappingActors);
 
 	AActor* NewGlowTarget = nullptr;
 	float MinDistSq = FLT_MAX;
@@ -487,18 +484,18 @@ void APlayerCharacter::UpdateGlowTarget()
 		// 前のGlowを解除
 		if (CurrentGlowTarget)
 		{
-			if (USkeletalMeshComponent* Mesh = CurrentGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
+			if (USkeletalMeshComponent* mesh = CurrentGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
 			{
-				Mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 0.0f);
+				mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 0.0f);
 			}
 		}
 
 		// 新しいGlowを適用
 		if (NewGlowTarget)
 		{
-			if (USkeletalMeshComponent* Mesh = NewGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
+			if (USkeletalMeshComponent* mesh = NewGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
 			{
-				Mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 1.0f);
+				mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 1.0f);
 			}
 		}
 
