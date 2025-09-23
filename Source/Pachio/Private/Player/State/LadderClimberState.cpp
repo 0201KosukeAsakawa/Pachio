@@ -263,7 +263,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	}
 	MoveDelta = direction * 10;
 	// 通常の移動
-	GetOwner()->AddActorLocalOffset(direction * 10, true);
+	GetOwner()->AddActorLocalOffset(direction * 10, false);
 	p = Ladder->GetFixedPositionForActor(GetOwner());
 	GetOwner()->SetActorLocation(p);
 }
