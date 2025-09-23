@@ -24,6 +24,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Save")
     static FStageSaveData LoadFromJson();
+
+    UFUNCTION(BlueprintCallable, Category = "Save")
+    EStageRank GetStageRank(const FString& StageKey);
     
     UFUNCTION(BlueprintCallable, Category = "Save")
     static void SaveVolumeToJson(const FVolumeSaveData& InData);

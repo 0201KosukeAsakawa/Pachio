@@ -52,6 +52,13 @@ FStageSaveData USaveManager::LoadFromJson()
     return LoadedData;
 }
 
+EStageRank USaveManager::GetStageRank(const FString& StageKey)
+{
+    FStageSaveData Data = LoadFromJson();
+    return Data.GetStageRank(StageKey);
+}
+
+
 void USaveManager::SaveVolumeToJson(const FVolumeSaveData& InData)
 {
     FString SavePath = FPaths::ProjectSavedDir() + "VolumeSave.json";
@@ -103,3 +110,4 @@ void USaveManager::SetVolume(float NewBGM, float NewSE)
     VolumeData.SEVolume = NewSE;
     SaveVolumeToJson(VolumeData);
 }
+
