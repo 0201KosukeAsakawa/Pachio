@@ -48,5 +48,5 @@ private:
 	UPhysicsCalculator* Physics;
 
 	UPROPERTY()
-	UBoxComponent* BoxComponent;
+	UCapsuleComponent* HitBox;
 };

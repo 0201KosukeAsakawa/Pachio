@@ -8,6 +8,7 @@
 #include "Components/MoveComponent.h"
 #include "Components/Color/ColorConfigurator.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/OverlapResult.h"
 #include "Logic/Movement/LadderMoveLogic.h"
 
@@ -56,6 +57,14 @@ bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 		MoveComp = NewObject<UMoveComponent>(mOwner);
 		ULadderMoveLogic* PlayerLogic = NewObject<ULadderMoveLogic>(this);
 		MoveComp->Init(PlayerLogic);
+	}
+	if (ACharacter* Character = Cast<ACharacter>(mOwner))
+	{
+		if (UCharacterMovementComponent* CharMove = Character->GetCharacterMovement())
+		{
+			CharMove->GravityScale = 0.f;
+			CharMove->SetMovementMode(EMovementMode::MOVE_Flying); // 自由に上下移動できる
+		}
 	}
 	return true;
 }
@@ -184,6 +193,14 @@ bool ULadderClimberState::OnExit(APawn* Owner)
 		return false;
 
 	player->SetGravityScale(true);
+	if (ACharacter* Character = Cast<ACharacter>(Owner))
+	{
+		if (UCharacterMovementComponent* comp = Character->GetCharacterMovement())
+		{
+			comp->GravityScale = 1.f; // 重力無効
+			comp->SetMovementMode(EMovementMode::MOVE_Walking);
+		}
+	}
 	return true;
 }
 
@@ -222,7 +239,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	if (direction.Z < 0.f)
 	{
 		FVector Start = NewLocation;
-		FVector End = Start - FVector(0.f, 0.f, 300.f);  // 100cm下方向
+		FVector End = Start - FVector(0.f, 0.f, 500.f);  // 100cm下方向
 
 		FHitResult HitResult;
 		FCollisionQueryParams Params;
