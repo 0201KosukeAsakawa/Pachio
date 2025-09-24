@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{31e9bfd2-82c9-4d9f-89b4-d7e5f226f136}">
+		<property name="assetPath">
+			<value>AS_158557_ゆったり美しいピアノソロ.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>258.82555555555558</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{91633f03-2c3b-4b1e-8f5d-ae9bd5c6f2ab}</destination>
+		</relationship>
+	</object>
+</objects>
