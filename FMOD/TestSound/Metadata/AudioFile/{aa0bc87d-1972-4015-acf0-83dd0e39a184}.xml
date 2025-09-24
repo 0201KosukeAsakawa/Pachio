@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{aa0bc87d-1972-4015-acf0-83dd0e39a184}">
+		<property name="assetPath">
+			<value>AS_113111_ギターとピアノ、波の音が沈む夕日を見せる.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>155.7562358276644</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{91633f03-2c3b-4b1e-8f5d-ae9bd5c6f2ab}</destination>
+		</relationship>
+	</object>
+</objects>

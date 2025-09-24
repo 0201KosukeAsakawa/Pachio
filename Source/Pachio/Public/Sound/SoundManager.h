@@ -33,7 +33,7 @@ public:
 
 
 UCLASS( ClassGroup=(Custom), Blueprintable, meta=(BlueprintSpawnableComponent) )
-class PACHIO_API USoundManager : public UObject, public ISoundable
+class PACHIO_API USoundManager : public UActorComponent, public ISoundable
 {
 	GENERATED_BODY()
 
@@ -45,8 +45,7 @@ public:
 
     // サウンドマネージャーを初期化
     void Init();
-    
-    void Tick(float DeltaTim);
+
     UFUNCTION(Category = "Beat")
     void SetTmp(EColorTargetType Mode, FLinearColor NewColor);
 
