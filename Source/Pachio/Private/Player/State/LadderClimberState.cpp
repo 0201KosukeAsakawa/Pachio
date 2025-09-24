@@ -7,6 +7,7 @@
 #include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
 #include "Components/Color/ColorConfigurator.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/OverlapResult.h"
@@ -46,7 +47,7 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 
 bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 {
-	if (!Owner) 
+	if (!Owner)
 		return false;
 	if (!mOwner)
 		mOwner = Owner;
@@ -62,13 +63,19 @@ bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 	{
 		if (UCharacterMovementComponent* CharMove = Character->GetCharacterMovement())
 		{
+			// 重力無効化＋フライングモード
 			CharMove->GravityScale = 0.f;
-			CharMove->SetMovementMode(EMovementMode::MOVE_Flying); // 自由に上下移動できる
+			CharMove->SetMovementMode(EMovementMode::MOVE_Flying);
+
+			// ★ コリジョン無効化（梯子中は常に貫通）
+			if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+			{
+				Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			}
 		}
 	}
 	return true;
 }
-
 
 bool ULadderClimberState::OnUpdate(float DeltaTime)
 {
@@ -197,13 +204,18 @@ bool ULadderClimberState::OnExit(APawn* Owner)
 	{
 		if (UCharacterMovementComponent* comp = Character->GetCharacterMovement())
 		{
-			comp->GravityScale = 1.f; // 重力無効
+			comp->GravityScale = 1.f;
 			comp->SetMovementMode(EMovementMode::MOVE_Walking);
+
+			// ★ コリジョンを元に戻す
+			if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+			{
+				Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			}
 		}
 	}
 	return true;
 }
-
 bool ULadderClimberState::OnSkill(const FInputActionValue& Input)
 {
 	IStateControllable* owner = Cast<IStateControllable>(mOwner);
