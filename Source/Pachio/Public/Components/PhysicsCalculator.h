@@ -55,6 +55,9 @@ private:
 	// 力の強さ（スケール）
 	float ForceScale;
 
+	UPROPERTY(EditAnywhere, Category = "Physics")
+	float MaxFallingSpeed = 200.0f;
+
 	// 力を加える方向
 	FVector ForceDirection;
 
