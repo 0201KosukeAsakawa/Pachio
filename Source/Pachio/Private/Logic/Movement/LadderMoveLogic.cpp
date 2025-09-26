@@ -16,7 +16,7 @@ FVector ULadderMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputA
     // オーナーのローカル上方向に入力を乗せる
     FVector UpVector = Owner->GetActorUpVector();
 
-    FVector MoveDir = UpVector * MoveInput.Y;
+    FVector MoveDir = UpVector * MoveInput.X;
 
     MoveDir = MoveDir.GetClampedToMaxSize(1.0f);
 

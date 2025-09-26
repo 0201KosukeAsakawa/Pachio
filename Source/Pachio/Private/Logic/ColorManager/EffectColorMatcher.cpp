@@ -6,9 +6,11 @@
 UEffectColorMatcher::UEffectColorMatcher()
 {
     EffectColorMap = {
-    { EBuffEffect::Green,  FLinearColor::Green },
-    { EBuffEffect::Blue, FLinearColor::Blue},
-    { EBuffEffect::Red,     FLinearColor::Red }
+        { EBuffEffect::Green,  FLinearColor(0.65f, 1.00f, 0.78f, 1.0f) }, // パステルミント
+        { EBuffEffect::Blue,   FLinearColor(0.65f, 0.78f, 1.00f, 1.0f) }, // パステルスカイブルー
+        { EBuffEffect::Red,    FLinearColor(1.00f, 0.75f, 0.65f, 1.0f) }, // パステルサーモン
+        { EBuffEffect::Yellow, FLinearColor(1.00f, 1.00f, 0.65f, 1.0f) }, // パステルイエロー
+         { EBuffEffect::Black,  FLinearColor(0.f, 0.f, 0.f, 1.0f) }, // パステルミント
     };
 }
 
@@ -16,42 +18,68 @@ FEffectMatchResult UEffectColorMatcher::GetClosestEffectByHue(const FLinearColor
 {
     FEffectMatchResult result;
 
+    // 入力色の明度（HSVのV）
+    FLinearColor InputHSV = InputColor.LinearRGBToHSV();
+    float InputVal = FMath::Clamp(InputHSV.B, 0.0f, 1.0f);
     float MinDistance = TNumericLimits<float>::Max();
-    float MaxPossibleDistance = FMath::Sqrt(3.0f); // RGB距離の最大値（(1,1,1)と(0,0,0)の距離）
-
     EBuffEffect ClosestEffect = EBuffEffect::Red;
 
     for (const auto& Elem : EffectColorMap)
     {
-        float Distance = GetColorDistanceRGB(InputColor, Elem.Value);
+        const FLinearColor& EffectColor = Elem.Value;
 
-        UE_LOG(LogTemp, Log, TEXT("Comparing with %d: RGB Distance = %.4f"),
-            static_cast<int32>(Elem.Key), Distance);
+        // 明度取得
+        FLinearColor EffectHSV = EffectColor.LinearRGBToHSV();
+        float EffectVal = FMath::Clamp(EffectHSV.B, 0.0f, 1.0f);
 
-        if (Distance < MinDistance)
+        // 色相角度の差（0〜180度）
+        float HueDistance = GetHueAngleDistance(InputColor, EffectColor);  // 角度で返す
+
+        // 明度差が大きい場合は補正（角度ベースに変換して加算）
+        float ValDiff = FMath::Abs(InputVal - EffectVal);
+        if (ValDiff > 0.5f)
         {
-            MinDistance = Distance;
+            // 例：明度差0.5以上なら最大+30度補正
+            HueDistance += (ValDiff - 0.5f) * 60.0f;  // 0〜30度加算
+        }
+
+        // 最小距離を更新
+        if (HueDistance + KINDA_SMALL_NUMBER < MinDistance)
+        {
+            MinDistance = HueDistance;
             ClosestEffect = Elem.Key;
         }
     }
 
-    // 距離が最大値に近いほど弱く、0に近いほど強い（逆スケール）
-    float StrengthRatio = 1.0f - (MinDistance / MaxPossibleDistance);
-    StrengthRatio = FMath::Clamp(StrengthRatio, 0.0f, 1.0f); // 念のため
-
-    // 結果設定
     result.ClosestEffect = ClosestEffect;
-    result.Distance = MinDistance;
-    result.StrengthRatio = StrengthRatio;
+    result.Distance = MinDistance;  // 単位：度
+    result.StrengthRatio = FMath::Clamp(1.0f - (MinDistance / 180.0f), 0.0f, 1.0f);  // 必要なら
 
     return result;
 }
 
-float UEffectColorMatcher::GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B)
+
+float UEffectColorMatcher::GetHueAngleDistance(const FLinearColor& A, const FLinearColor& B)
 {
-    return FMath::Sqrt(
-        FMath::Square(A.R - B.R) +
-        FMath::Square(A.G - B.G) +
-        FMath::Square(A.B - B.B)
-    );
+    FLinearColor HSV_A = A.LinearRGBToHSV();
+    FLinearColor HSV_B = B.LinearRGBToHSV();
+
+    float HueA = HSV_A.R;
+    float HueB = HSV_B.R;
+
+    float Delta = FMath::Abs(HueA - HueB);
+    float Distance = FMath::Min(Delta, 360.0f - Delta);
+
+    return Distance;
+}
+
+FLinearColor UEffectColorMatcher::GetEffectColor(EBuffEffect effect) const
+{
+    if (const FLinearColor* FoundColor = EffectColorMap.Find(effect))
+    {
+        return *FoundColor; // マップに存在すればその色を返す
+    }
+
+    // 見つからなかった場合はデフォルト値（白など）を返す
+    return FLinearColor::White;
 }

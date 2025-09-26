@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/PlayerStateComponent.h"
+#include "Components/Player/PlayerStateComponent.h"
 #include "DeadPlayerState.generated.h"
 
 /**
@@ -15,5 +15,14 @@ class PACHIO_API UDeadPlayerState : public UPlayerStateComponent
 	GENERATED_BODY()
 public:
 	// ステートに入ったときの処理
-	virtual bool OnEnter(ACharacter* Owner, UWorld* World)override;
+	virtual bool OnEnter(APawn* Owner, UWorld* World)override;
+	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
+	virtual bool OnUpdate(float DeltaTime)override;
+
+	// ステートから出るときの処理
+	virtual bool OnExit(APawn* Owner)override;
+
+private:
+	float ElapsedTime = 0.f;
+	float RespawnDelay = 2.0f; // n秒
 };

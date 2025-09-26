@@ -5,11 +5,11 @@
 
 // Add default functionality here for any IColorFilterInterface functions that are not pure virtual.
 
-void IColorReactiveInterface::ColorAction(FLinearColor)
+void IColorReactiveInterface::ColorAction(FLinearColor, FEffectMatchResult)
 {
 }
 
-void IColorReactiveInterface::SetColor(FLinearColor)
+void IColorReactiveInterface::SetColor(FLinearColor, FEffectMatchResult)
 {
 
 }
@@ -31,7 +31,10 @@ bool IColorReactiveInterface::IsColorModifiable() const
 {
     return false;
 }
-
+bool IColorReactiveInterface::IsChangeable()const
+{
+    return false;
+}
 FName IColorReactiveInterface::GetColorEventID() const
 {
     return FName();

@@ -4,26 +4,27 @@
 #include "Objects/DeadZone.h"
 #include "Interface/StateControllable.h"
 #include "Components/BoxComponent.h"
+#include "Components/RespawnComponent.h"
 #include "GameFramework/Actor.h"
 
 // Sets default values
 ADeadZone::ADeadZone()
 {
-	PrimaryActorTick.bCanEverTick = true; // –ˆƒtƒŒ[ƒ€ Tick ‚ğŒÄ‚Ôİ’è
+	PrimaryActorTick.bCanEverTick = true; // ï¿½ï¿½ï¿½tï¿½ï¿½ï¿½[ï¿½ï¿½ Tick ï¿½ï¿½Ä‚Ôİ’ï¿½
 
-	// ƒS[ƒ‹—p‚Ì BoxComponent ‚ğ¶¬‚µAƒ‹[ƒg‚Æ‚µ‚Äİ’è
+	// ï¿½Sï¿½[ï¿½ï¿½ï¿½pï¿½ï¿½ BoxComponent ï¿½ğ¶ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½[ï¿½gï¿½Æ‚ï¿½ï¿½Äİ’ï¿½
 	DeadArea = CreateDefaultSubobject<UBoxComponent>(TEXT("DeadArea"));
 	RootComponent = DeadArea;
 
-	// ƒRƒŠƒWƒ‡ƒ“İ’èF
-	// E•¨—ˆ—‚Ís‚í‚¸AƒI[ƒo[ƒ‰ƒbƒvŒŸ’m‚Ì‚İs‚¤
+	// ï¿½Rï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½İ’ï¿½F
+	// ï¿½Eï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ísï¿½í‚¸ï¿½Aï¿½Iï¿½[ï¿½oï¿½[ï¿½ï¿½ï¿½bï¿½vï¿½ï¿½ï¿½mï¿½Ì‚İsï¿½ï¿½
 	DeadArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	// E‘S‚Ä‚Ìƒ`ƒƒƒ“ƒlƒ‹‚É‘Î‚µ‚Ä–³‹
+	// ï¿½Eï¿½Sï¿½Ä‚Ìƒ`ï¿½ï¿½ï¿½ï¿½ï¿½lï¿½ï¿½ï¿½É‘Î‚ï¿½ï¿½Ä–ï¿½ï¿½ï¿½
 	DeadArea->SetCollisionResponseToAllChannels(ECR_Ignore);
-	// EPawniƒvƒŒƒCƒ„[j‚Æ‚ÌƒI[ƒo[ƒ‰ƒbƒv‚Ì‚İ—LŒø
+	// ï¿½EPawnï¿½iï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½jï¿½Æ‚ÌƒIï¿½[ï¿½oï¿½[ï¿½ï¿½ï¿½bï¿½vï¿½Ì‚İ—Lï¿½ï¿½
 	DeadArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-	// ƒI[ƒo[ƒ‰ƒbƒvƒCƒxƒ“ƒg“o˜^FƒvƒŒƒCƒ„[‚ª“ü‚Á‚½‚ç OnGoalOverlap ‚ğŒÄ‚Ô
+	// ï¿½Iï¿½[ï¿½oï¿½[ï¿½ï¿½ï¿½bï¿½vï¿½Cï¿½xï¿½ï¿½ï¿½gï¿½oï¿½^ï¿½Fï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ OnGoalOverlap ï¿½ï¿½Ä‚ï¿½
 	DeadArea->OnComponentBeginOverlap.AddDynamic(this, &ADeadZone::OverlapDead);
 
 }
@@ -49,11 +50,17 @@ void ADeadZone::OverlapDead(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if (!OtherActor)
 		return;
 
-	IStateControllable* IS = Cast<IStateControllable>(OtherActor);
-
-	if (!IS)
+	// RespawnComponent ã‚’æŒã£ã¦ã„ã‚‹ã‹ç¢ºèª
+	if (URespawnComponent* RespawnComp = OtherActor->FindComponentByClass<URespawnComponent>())
+	{
+		// RespawnComponentãŒã‚ã‚‹ãªã‚‰ã€ãƒªã‚¹ãƒãƒ¼ãƒ³å‡¦ç†ã‚’å‘¼ã¶
+		RespawnComp->RespawnOwnerAtInitialLocation();
 		return;
+	}
 
-	IS->ChangeState("Dead");
-
+	// ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆãŒç„¡ã‘ã‚Œã°ä»Šã¾ã§é€šã‚Š State ã‚’ Dead ã«ã™ã‚‹
+	if (IStateControllable* IS = Cast<IStateControllable>(OtherActor))
+	{
+		IS->ChangeState(EPlayerStateType::Dead);
+	}
 }

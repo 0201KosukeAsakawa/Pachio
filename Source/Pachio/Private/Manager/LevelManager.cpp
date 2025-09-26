@@ -3,12 +3,11 @@
 #include "Manager/ScoreManager.h"
 #include "Manager/ColorManager.h"
 #include "Manager/SaveManager.h"
+#include "Manager/WeatherEffectManager.h"
 #include "Kismet/GameplayStatics.h" 
 #include "UI/UIManager.h"
 #include "EngineUtils.h"
 #include "Engine/DataTable.h"
-#include "DataContainer/BlockDataContainer.h"
-#include "DataContainer/AttackDataContainer.h"
 #include "Sound/SoundManager.h"
 
 // シングルトン用の静的インスタンス
@@ -29,30 +28,41 @@ void ALevelManager::BeginPlay()
 	// コンポーネント初期化
 	InitializeComponents();
 
+
+
+
+
+	FSaveData SaveData;
+	SaveData.bCleared = true;
+	SaveData.ClearRank = EStageRank::S;  // 例: ランクS
+	SaveData.difficultyRank = 2;
+	SaveData.Title = TEXT("ステージ1");
+	USaveManager::SaveStageData(TEXT("Stage1"), SaveData);
 }
 
 void ALevelManager::InitializeComponents()
 {
 	if (bInitialize)
-		return;
-	if (ScoreManagerClass)
-		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
-	if (ScoreManager)
-		ScoreManager->Init();
-	if (SoundManagerClass)
-		SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
-	if (SoundManager)
-	{
-		SoundManager->Init();
-		SoundManager->PlaySound("BGM", "Default", SoundManager->GetBGMVolume());
-	}
-	if (UIManagerClass)
-		UIManager = NewObject<UUIManager>(this, UIManagerClass);
+		return;	
 	if (ColorManagerClass)
 	{
 		ColorManager = NewObject<UColorManager>(this, ColorManagerClass);
 		ColorManager->Init();
 	}
+	if (ScoreManagerClass)
+		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
+	if (ScoreManager)
+		ScoreManager->Init();
+
+	SoundManager = GetComponentByClass<USoundManager>();
+	if (SoundManager)
+	{
+		SoundManager->Init();
+		SoundManager->PlaySound("BGM", "Default", true,SoundManager->GetBGMVolume());
+	}
+	if (UIManagerClass)
+		UIManager = NewObject<UUIManager>(this, UIManagerClass);
+
 
 	if (UIManager)
 	{
@@ -65,8 +75,7 @@ void ALevelManager::InitializeComponents()
 void ALevelManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (SoundManager)
-		SoundManager->Tick(DeltaTime);
+
 }
 
 // GetInstance関数で、インスタンスが未設定の場合は初期化処理を強制する
@@ -123,7 +132,7 @@ void ALevelManager::HandlePlayerGoalReached()
 	UUserWidget* ResultWidget = UIManager->ShowResultWidget(ClearTime, Rank);
 	SoundManager->StopBGM();
 	SoundManager->PlaySound("SE", "Fanfare");
-	PauseGameAndShowUI(ResultWidget);
+	//PauseGameAndShowUI(ResultWidget);
 }
 
 void ALevelManager::PauseGameAndShowUI(UUserWidget* FocusWidget)

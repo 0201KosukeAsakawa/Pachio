@@ -28,29 +28,35 @@ public:
 	void ResetForce();
 	// オブジェクトに力を加える
 	UFUNCTION(BlueprintCallable)
-	void AddForce(FVector Direction, float Force, const bool bSweep = true);
+	void AddForce(FVector Direction, float Force, const bool bSweep = true, bool useLocalOffset = true);
 
 	// 開始位置と終了位置から、オブジェクトが落下可能かを判断
+	UFUNCTION(BlueprintCallable)
 	bool OnGround() const;
 
-	void SetGravityScale(const bool applyGravity = true, float scale = 9.8f);
+	void SetGravityScale(const bool applyGravity = true, float scale = 9.8f , float Modifier = 1.0F);
 
 	FVector GetBlockedAdjustedVector(const FVector& MoveVector);
-
-
+	UFUNCTION(BlueprintCallable)
+	const bool HasLanded();
 	// 物理計算が有効かどうかを返す
 	bool IsPhysicsEnabled() const { return bIsPhysicsEnabled; }
 private:
+	void UpdateGroundState();
 	// オブジェクトに重力を加える
 	void AddGravity();
 	//設置面にあわせて傾ける
 	FVector GetGroundNormal() const;
+
 private:
 	// 重力のスケールを設定（重力の強さ）
 	float GravityScale = 9.8f;
 
 	// 力の強さ（スケール）
 	float ForceScale;
+
+	UPROPERTY(EditAnywhere, Category = "Physics")
+	float MaxFallingSpeed = 200.0f;
 
 	// 力を加える方向
 	FVector ForceDirection;
@@ -64,6 +70,8 @@ private:
 	// 物理シミュレーションのタイマー（力の適用や時間ベースのロジックに使用）
 	float Timer;
 
+	float ForceModifier = 1;
+
 	// 重力を加えるかどうかのフラグ
 	UPROPERTY(EditAnywhere)
 	bool bShouldApplyGravity = true;
@@ -76,5 +84,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	bool bIsPhysicsEnabled;		
 
+	bool bUseLocalOffset = true;
 
+	bool bWasOnGround = false;
+
+	bool bFalling = false;
+
+	bool bHasJustLanded = false;
 };

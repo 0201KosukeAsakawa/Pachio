@@ -6,7 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/PostProcessVolume.h"
 #include "Interface/ColorFilterInterface.h"
-#include "Components/ColorControllerComponent.h"
+#include "Components/Color/ColorControllerComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Logic/ColorManager/EffectColorMatcher.h"
 #include "Logic/ColorManager/ColorTargetRegistry.h"
@@ -35,16 +35,16 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
 {
     if (!ColorTargetRegistry)
         return;
-
-    ColorTargetRegistry->ApplyColor(NewColor, Mode);
+    FEffectMatchResult result = GetClosestEffectByHue(NewColor);
+    ColorTargetRegistry->ApplyColor(NewColor, Mode, result);
 }
 
-void UColorManager::ColorEvent(FName EventID)
+void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
 {
     if (!ColorTargetRegistry)
         return;
-
-    ColorTargetRegistry->ColorEvent(EventID);
+    FEffectMatchResult result = GetClosestEffectByHue(NewColor);
+    ColorTargetRegistry->ColorEvent(EventID, NewColor, result);
 }
 
 void UColorManager::SetColorTarget(IColorReactiveInterface* target)
@@ -65,6 +65,24 @@ void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColo
     ColorTargetRegistry->RegisterTarget(Mode, Target);
 }
 
+float UColorManager::GetColorDistanceRGB(const FLinearColor& A)
+{
+    return EffectColorMatcher->GetHueAngleDistance(A, ColorTargetRegistry->GetPostProcessColor());
+}
+
+float UColorManager::GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B)
+{
+    return EffectColorMatcher->GetHueAngleDistance(A,B);
+}
+
+FEffectMatchResult UColorManager::GetClosestEffectByHue()
+{
+    if (!EffectColorMatcher)
+        return FEffectMatchResult();
+
+    return EffectColorMatcher->GetClosestEffectByHue(ColorTargetRegistry->GetPostProcessColor());
+}
+
 FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& InputColor)
 {
     if (!EffectColorMatcher)
@@ -76,6 +94,11 @@ FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& Inpu
 FLinearColor UColorManager::GetWorldColor() const
 {
     return ColorTargetRegistry->GetPostProcessColor();
+}
+
+FLinearColor UColorManager::GetEffectColor(EBuffEffect effect) const
+{
+    return EffectColorMatcher->GetEffectColor(effect);
 }
 
 // プレイヤーの色コントローラーとイベント接続

@@ -56,6 +56,7 @@ void AGoal::OnGoalOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		if (LM)
 		{
 			LM->HandlePlayerGoalReached();
+			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
 		}
 	}
 }

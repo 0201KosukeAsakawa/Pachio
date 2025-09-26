@@ -1,0 +1,40 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/Player/PlayerStateComponent.h"
+#include "PlayerHoldState.generated.h"
+
+class UMoveComponent;
+class UColorReactiveComponent;
+UCLASS()
+class PACHIO_API UPlayerHoldState : public UPlayerStateComponent
+{
+	GENERATED_BODY()
+public:
+	UPlayerHoldState();	
+	void SetUp(AActor*,bool);
+private:
+	bool OnEnter(APawn* owner, UWorld* world)override;
+
+	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
+	bool OnUpdate(float DeltaTime)override;
+	bool OnExit(APawn* owner)override;
+
+	bool OnSkill(const FInputActionValue& Value)override;
+
+	void Movement(const FInputActionValue& Value)override;
+
+
+private:
+	UPROPERTY()
+	AActor* HoldTarget;
+	UPROPERTY()
+	UMoveComponent* MoveComp;
+	UPROPERTY()
+	UColorReactiveComponent* targetComp;
+	float InitialHoldDistance;
+
+	int32 GrabDirection = 1;
+};

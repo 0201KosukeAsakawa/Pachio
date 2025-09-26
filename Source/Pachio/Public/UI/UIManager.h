@@ -30,7 +30,7 @@ public:
 
     /** 指定カテゴリの現在のウィジェットを非表示にする */
     UFUNCTION(BlueprintCallable)
-    void HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName);
+   const void HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName);
 
     /** 指定カテゴリの現在のウィジェットが表示中かを取得 */
     UFUNCTION(BlueprintCallable)
@@ -38,6 +38,9 @@ public:
 
     UFUNCTION(BlueprintCallable)
     UUserWidget* GetWidget(EWidgetCategory CategoryName, FName WidgetName);
+
+    UFUNCTION()
+    bool PlayWidgetAnimation(EWidgetCategory CategoryName, FName WidgetName , FName AnimationName);
 
     UFUNCTION()
     UColorLens* GetColorLens() { return ColorLens; }    

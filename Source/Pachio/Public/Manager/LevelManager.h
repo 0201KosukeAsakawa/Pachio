@@ -13,6 +13,7 @@ class UObjectManager;
 class UColorManager;
 class UUIManager;
 
+class UWeatherEffectManager;
 class UDataTable;
 class ISoundable;
 class UBlockDataContainer;
@@ -35,6 +36,9 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	FString GetNextStageName()const { return NextStageName; }
+
 	virtual void Tick(float DeltaTime) override;	
 
 	void HandlePlayerGoalReached();
@@ -47,14 +51,6 @@ public:
 	/** グローバルから取得できるレベルマネージャー（シングルトン） */
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	static ALevelManager* GetInstance(UObject* WorldContext);
-
-	/** アイテムデータ管理コンテナを取得 */
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	inline UItemDataContainer* GetItemContainer() const { return ItemContainer; }
-
-	/** 攻撃データ管理コンテナを取得 */
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	inline UAttackDataContainer* GetAttackDataContainer() const { return AttackContainer; }
 
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
 	inline UScoreManager* GetScoreManager()const { return ScoreManager; }
@@ -78,15 +74,12 @@ private:
 
 	 UPROPERTY(EditAnywhere)
 	 FString StageName;
-
+	 UPROPERTY(EditAnywhere)
+	 FString NextStageName;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UEnemyDataContainer> EnemyContainerClass;
 
 	/** サウンドマネージャークラス（Blueprintで指定） */
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<USoundManager> SoundManagerClass;
-
-
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UScoreManager> ScoreManagerClass;
@@ -104,17 +97,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<USoundManager> SoundManager;
 
-	/** 実行時に生成されたアイテムコンテナ */
-	UPROPERTY()
-	TObjectPtr<UItemDataContainer> ItemContainer;
-
 	/** 実行時に生成されたオブジェクトマネージャー */
 	UPROPERTY()
 	TObjectPtr<UObjectManager> ObjectManager;
-
-	/** 実行時に生成された攻撃データコンテナ */
-	UPROPERTY()
-	TObjectPtr<UAttackDataContainer> AttackContainer;
 
 	UPROPERTY()
 	TObjectPtr<UScoreManager> ScoreManager;

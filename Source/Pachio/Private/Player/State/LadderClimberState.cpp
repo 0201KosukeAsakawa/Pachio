@@ -4,25 +4,26 @@
 #include "Player/State/LadderClimberState.h"
 #include "Player/State/StateManager.h"
 #include "Player/PlayerCharacter.h"
-#include "Objects/LadderActor.h"
+#include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
+#include "Components/Color/ColorConfigurator.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/OverlapResult.h"
 #include "Logic/Movement/LadderMoveLogic.h"
+
 
 
 FVector GetLadderCenterXZ(const AActor* Ladder)
 {
 	if (!Ladder) return FVector::ZeroVector;
 
-	// バウンディングボックスを取得（ワールド空間）
 	FVector Origin;
 	FVector BoxExtent;
 	Ladder->GetActorBounds(true, Origin, BoxExtent);
 
-	// Origin はワールド空間で中心位置
-	// X,Y はそのまま使い、Zは無視（XZ中心だけほしいので）
-
+	// XYの中心位置を返す。Zは呼び出し元で設定する想定
 	return FVector(Origin.X, Origin.Y, 0.f);
 }
 
@@ -31,11 +32,23 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 	if (ladderClimber == nullptr)
 		return;
 	Ladder = ladderClimber;
+
+	if (Ladder)
+	{
+		p = Ladder->GetFixedPositionForActor(GetOwner());
+		UColorConfigurator* comp = Ladder->GetComponentByClass<UColorConfigurator>();
+		if (comp != nullptr)
+			targetComp = comp;
+
+		GetOwner()->SetActorLocation(p);
+	}
+
 }
 
-bool ULadderClimberState::OnEnter(ACharacter* Owner, UWorld* World)
+bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 {
-	if (!Owner) return false;
+	if (!Owner)
+		return false;
 	if (!mOwner)
 		mOwner = Owner;
 	if (!pWorld)
@@ -44,31 +57,51 @@ bool ULadderClimberState::OnEnter(ACharacter* Owner, UWorld* World)
 	{
 		MoveComp = NewObject<UMoveComponent>(mOwner);
 		ULadderMoveLogic* PlayerLogic = NewObject<ULadderMoveLogic>(this);
-		MoveComp->Init(mOwner, PlayerLogic);
+		MoveComp->Init(PlayerLogic);
 	}
-
-	// 梯子の中心に位置補正（必要なら LadderActor を別途持っておく）
-	if (Ladder)
+	if (ACharacter* Character = Cast<ACharacter>(mOwner))
 	{
-		// 位置補正処理
-		FVector Center = GetLadderCenterXZ(Ladder);
-		FVector OwnerLocation = Owner->GetActorLocation();
+		if (UCharacterMovementComponent* CharMove = Character->GetCharacterMovement())
+		{
+			// 重力無効化＋フライングモード
+			CharMove->GravityScale = 0.f;
+			CharMove->SetMovementMode(EMovementMode::MOVE_Flying);
 
-		// 新しい位置は梯子の中心のX,Yを使い、Zはキャラの現在の高さを維持
-		FVector NewLocation = FVector(Center.X, Center.Y, OwnerLocation.Z);
-
-		Owner->SetActorLocation(NewLocation);
+			// ★ コリジョン無効化（梯子中は常に貫通）
+			if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+			{
+				Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			}
+		}
 	}
-
 	return true;
 }
-
 
 bool ULadderClimberState::OnUpdate(float DeltaTime)
 {
 	if (!mOwner || !Ladder) return false;
 
-	float Input = mOwner->GetInputAxisValue("MoveUp");
+
+	if (targetComp && targetComp->IsHidden())
+	{
+		// Hold解除して Default に戻す
+		if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
+		{
+			Player->ChangeState(EPlayerStateType::Default);
+		}
+		return true;
+	}
+	
+
+	if (Ladder)
+	{
+		p = Ladder->GetFixedPositionForActor(GetOwner());
+		
+		FVector OwnerLocation = GetOwner()->GetActorLocation();
+		// X,Yは梯子の中心、Zはキャラの現在位置のまま
+		FVector NewLocation = FVector(p.X, p.Y, OwnerLocation.Z);
+		GetOwner()->SetActorLocation(NewLocation);
+	}
 
 	const float LadderTopZ = Ladder->GetTopWorldPosition().Z;
 	const float LadderBottomZ = Ladder->GetBottomWorldPosition().Z;
@@ -115,21 +148,50 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 			}
 		}
 
+
 		if (!bFoundNewLadder)
 		{
 			// 近くに他の梯子がない → 通常状態へ戻す
 			if (UStateManager* StateManager = mOwner->FindComponentByClass<UStateManager>())
 			{
-				StateManager->ChangeState("Default");
+				if (PlayerZ > LadderTopZ)
+				{
+					float direction = 1.f;
+
+					// ★ 梯子の前後判定 ★
+					FVector LadderForward = Ladder->GetActorForwardVector();
+					FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
+					ToPlayer.Normalize();
+
+					float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
+					if (Dot < 0.f)
+					{
+						direction *= -1.f;
+					}
+
+					// 梯子の上に押し出す位置
+					FVector ExitLocation = Ladder->GetActorLocation();
+					ExitLocation.Z = LadderTopZ + 150.f;                 // 上に少し
+					ExitLocation += LadderForward * direction * 150.f;   // 前に少し
+
+					// 確実にワープ
+					mOwner->SetActorLocation(ExitLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+					// 状態を戻す
+					StateManager->ChangeState(EPlayerStateType::Default);
+
+					return true; // これ以上OnUpdateを実行しない
+				}
 			}
 		}
+
 	}
 
 	return true;
 }
 
 
-bool ULadderClimberState::OnExit(ACharacter* Owner)
+bool ULadderClimberState::OnExit(APawn* Owner)
 {
 	if (!Owner) return false;
 
@@ -138,22 +200,82 @@ bool ULadderClimberState::OnExit(ACharacter* Owner)
 		return false;
 
 	player->SetGravityScale(true);
+	if (ACharacter* Character = Cast<ACharacter>(Owner))
+	{
+		if (UCharacterMovementComponent* comp = Character->GetCharacterMovement())
+		{
+			comp->GravityScale = 1.f;
+			comp->SetMovementMode(EMovementMode::MOVE_Walking);
+
+			// ★ コリジョンを元に戻す
+			if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+			{
+				Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			}
+		}
+	}
 	return true;
 }
-
 bool ULadderClimberState::OnSkill(const FInputActionValue& Input)
 {
 	IStateControllable* owner = Cast<IStateControllable>(mOwner);
 	if (owner == nullptr)
 		return false;
 
-	return owner->ChangeState("Default");
+	return owner->ChangeState(EPlayerStateType::Default) != nullptr;
 }
 
 void ULadderClimberState::Movement(const FInputActionValue& Value)
 {
-	// 移動方向をMoveCompのロジックから取得
+	if (!mOwner || !Ladder) return;
+
 	FVector direction = MoveComp->Movement(0, mOwner, Value);
 
-	GetOwner()->AddActorLocalOffset(direction* 10, true);
+	// 移動方向を入力から決定
+	if (direction.Z < 0)
+	{
+		MoveDirection = -1;
+	}
+	else if (direction.Z > 0)
+	{
+		MoveDirection = 1;
+	}
+	else
+	{
+		MoveDirection = 0;
+	}
+
+	FVector NewLocation = mOwner->GetActorLocation() + direction * 10;
+
+	// 下方向の移動なら地面チェック
+	if (direction.Z < 0.f)
+	{
+		FVector Start = NewLocation;
+		FVector End = Start - FVector(0.f, 0.f, 500.f);  // 100cm下方向
+
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(mOwner);
+
+		UWorld* World = mOwner->GetWorld();
+		bool bHit = false;
+		if (World)
+		{
+			bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+		}
+
+		if (bHit)
+		{
+			if (IStateControllable* owner = Cast<IStateControllable>(mOwner))
+			{
+				owner->ChangeState(EPlayerStateType::Default);
+				return;
+			}
+		}
+	}
+	MoveDelta = direction * 10;
+	// 通常の移動
+	GetOwner()->AddActorLocalOffset(direction * 10, false);
+	p = Ladder->GetFixedPositionForActor(GetOwner());
+	GetOwner()->SetActorLocation(p);
 }

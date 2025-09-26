@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{bbdd2998-98d9-457c-9d12-535e27583170}">
+		<property name="assetPath">
+			<value>AS_1593824_爽やかな清々しい朝の風・バイオリン生演奏.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>204.91704166666668</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{91633f03-2c3b-4b1e-8f5d-ae9bd5c6f2ab}</destination>
+		</relationship>
+	</object>
+</objects>

@@ -4,19 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Components/ColorReactiveComponent.h"
+#include "Components/Color/ColorReactiveComponent.h"
 #include "ColorTriggerStopComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PACHIO_API UColorTriggerStopComponent : public UColorReactiveComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UColorTriggerStopComponent();
-private:
-	void OnColorMatched(const FLinearColor& FilterColor)override;
-	void OnColorMismatched(const FLinearColor& FilterColor)override;
+public:
+    UColorTriggerStopComponent();
+
+   // virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+    bool OnColorMatched(const FLinearColor& FilterColor);
+    bool OnColorMismatched(const FLinearColor& FilterColor);
+
+
 };

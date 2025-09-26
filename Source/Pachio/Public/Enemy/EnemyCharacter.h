@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "Interface/IDamageable.h"
 #include "Enemy/EnemyCategory.h"
 #include "EnemyCharacter.generated.h"
 

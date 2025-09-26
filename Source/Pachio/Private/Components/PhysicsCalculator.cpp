@@ -25,54 +25,70 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (bShouldApplyGravity)
-		AddGravity();
-	FVector MoveVector;
+	AActor* Owner = GetOwner();
 
+	// --- ここで OffMesh 状態を判定 ---
+	if (IsActive())
+	{
+		// オーナーが非表示 or Tick 無効なら処理を止める
+		return;
+	}
+	if (bShouldApplyGravity)
+	{
+		AddGravity();
+		UpdateGroundState();
+	}
+	FVector MoveVector;
 	if (!bIsPhysicsEnabled)
 	{
 		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f);
 		MoveVector = ForceDirection * ForceScale;
 
 		FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
-		GetOwner()->AddActorLocalOffset(Adjusted, bIsSweep);
+		if (bUseLocalOffset) // b が true ならローカル座標系で移動
+		{
+			GetOwner()->AddActorLocalOffset(Adjusted, bIsSweep);
+		}
+		else // false ならワールド座標系で移動
+		{
+			GetOwner()->AddActorWorldOffset(Adjusted, bIsSweep);
+		}
 
 		FVector currentPosition = GetOwner()->GetActorLocation();
 		float distanceZ = currentPosition.Z - PreviousPosition.Z;
 
-		if (distanceZ < 0 && OnGround())
+		if (distanceZ < 0)
 		{
 			ForceDirection.Z = 0;
 			ForceScale = 0;
+			Timer = 0;
 			bIsPhysicsEnabled = true;
-			Velocity = FVector::ZeroVector;
+			bFalling = true;
 		}
+
 		PreviousPosition = currentPosition;
-
-		return;
 	}
-
-	//if (OnGround())
-	//{
-	//	FVector GroundNormal = GetGroundNormal();
-
-	//	// Z軸を接地面法線に合わせて回転
-	//	FRotator NewRotation = FRotationMatrix::MakeFromZX(GroundNormal, GetOwner()->GetActorForwardVector()).Rotator();
-
-	//	// なめらかに傾けたい場合は補間
-	//	FRotator CurrentRotation = GetOwner()->GetActorRotation();
-	//	FRotator SmoothedRotation = FMath::RInterpTo(CurrentRotation, NewRotation, DeltaTime, 5.0f); // 5.0f は回転速度
-	//	GetOwner()->SetActorRotation(SmoothedRotation);
-	//}
 }
 
-void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep)
+void UPhysicsCalculator::UpdateGroundState()
+{
+	bool bIsCurrentlyOnGround = OnGround();
+	bHasJustLanded = (!bWasOnGround && bIsCurrentlyOnGround);
+
+	if (bHasJustLanded)
+		UE_LOG(LogTemp, Log, TEXT("着地"));
+
+	bWasOnGround = bIsCurrentlyOnGround;
+}
+
+void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep , const bool useLocalOffset)
 {
 	ForceDirection = Direction;
-	ForceScale = Force;
+	ForceScale = Force /** ForceModifier*/;
 	Timer = 0;
 	bIsSweep = bSweep;
 	bIsPhysicsEnabled = false;
+	bUseLocalOffset = useLocalOffset;
 }
 
 void UPhysicsCalculator::ResetForce()
@@ -87,13 +103,23 @@ void UPhysicsCalculator::AddGravity()
 {
 	if (OnGround())
 	{
+		bIsPhysicsEnabled = false;
+		bFalling = false;
 		Timer = 0;
 		return;
 	}
 
 	Timer += GetWorld()->DeltaTimeSeconds;
-	GetOwner()->AddActorLocalOffset(FVector(0, 0, -GravityScale) * Timer, true);
+
+	// 落下速度を計算
+	float FallSpeed = (GravityScale * Timer) / ForceModifier;
+
+	// 上限を適用
+	FallSpeed = FMath::Min(FallSpeed, MaxFallingSpeed);
+
+	GetOwner()->AddActorLocalOffset(FVector(0, 0, -FallSpeed), true);
 }
+
 
 bool UPhysicsCalculator::OnGround() const
 {
@@ -102,7 +128,7 @@ bool UPhysicsCalculator::OnGround() const
 
 	FVector ActorLocation = Owner->GetActorLocation();
 	FVector ActorScale = Owner->GetActorScale();
-	FVector BoxExtent(20.0f * ActorScale.X, 20.0f * ActorScale.Y, 2.0f); // 薄い足元のボックス
+	FVector BoxExtent(40.0f * ActorScale.X, 20.0f * ActorScale.Y, 5.0f); // 薄い足元のボックス
 
 	float HalfHeight = Owner->GetSimpleCollisionHalfHeight();
 
@@ -131,25 +157,26 @@ bool UPhysicsCalculator::OnGround() const
 		Params
 	);
 
-#if WITH_EDITOR
-	DrawDebugBox(
-		GetWorld(),
-		StartTrace,
-		BoxExtent,
-		ActorRotation, // ★ここも回転を反映
-		bHit ? FColor::Green : FColor::Red,
-		false, 1.0f
-	);
-#endif
+//#if WITH_EDITOR
+//	DrawDebugBox(
+//		GetWorld(),
+//		StartTrace,
+//		BoxExtent,
+//		ActorRotation, // ★ここも回転を反映
+//		bHit ? FColor::Green : FColor::Red,
+//		false, 1.0f
+//	);
+//#endif
 
 	return bHit;
 }
 
 
-void UPhysicsCalculator::SetGravityScale(bool applyGravity, float scale)
+void UPhysicsCalculator::SetGravityScale(bool applyGravity, float scale,float Modifier)
 {
 	GravityScale = scale;
 	bShouldApplyGravity = applyGravity;
+	ForceModifier = Modifier;
 }
 
 FVector UPhysicsCalculator::GetBlockedAdjustedVector(const FVector& MoveVector)
@@ -230,4 +257,8 @@ FVector UPhysicsCalculator::GetGroundNormal() const
 
 	// 接地してなければ上向きを返す
 	return FVector::UpVector;
+}
+const bool UPhysicsCalculator::HasLanded()
+{
+	return bHasJustLanded;
 }

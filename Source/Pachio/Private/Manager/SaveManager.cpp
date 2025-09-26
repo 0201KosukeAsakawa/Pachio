@@ -51,3 +51,63 @@ FStageSaveData USaveManager::LoadFromJson()
 
     return LoadedData;
 }
+
+EStageRank USaveManager::GetStageRank(const FString& StageKey)
+{
+    FStageSaveData Data = LoadFromJson();
+    return Data.GetStageRank(StageKey);
+}
+
+
+void USaveManager::SaveVolumeToJson(const FVolumeSaveData& InData)
+{
+    FString SavePath = FPaths::ProjectSavedDir() + "VolumeSave.json";
+
+    FString OutputString;
+    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+    FJsonSerializer::Serialize(InData.ToJson().ToSharedRef(), Writer);
+    FFileHelper::SaveStringToFile(OutputString, *SavePath);
+}
+
+FVolumeSaveData USaveManager::LoadVolumeFromJson()
+{
+    FString SavePath = FPaths::ProjectSavedDir() + "VolumeSave.json";
+    FString Input;
+    FVolumeSaveData LoadedData;
+
+    if (FFileHelper::LoadFileToString(Input, *SavePath))
+    {
+        TSharedPtr<FJsonObject> Json;
+        TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Input);
+        if (FJsonSerializer::Deserialize(Reader, Json))
+        {
+            LoadedData = FVolumeSaveData::FromJson(Json);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Volume save file not found, creating new with default values."));
+        SaveVolumeToJson(LoadedData);
+    }
+
+    return LoadedData;
+}
+
+float USaveManager::GetBGMVolume()
+{
+    return LoadVolumeFromJson().BGMVolume;
+}
+
+float USaveManager::GetSEVolume()
+{
+    return LoadVolumeFromJson().SEVolume;
+}
+
+void USaveManager::SetVolume(float NewBGM, float NewSE)
+{
+    FVolumeSaveData VolumeData;
+    VolumeData.BGMVolume = NewBGM;
+    VolumeData.SEVolume = NewSE;
+    SaveVolumeToJson(VolumeData);
+}
+

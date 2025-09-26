@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/PlayerStateComponent.h"
+#include "Components/Player/PlayerStateComponent.h"
 #include "LadderClimberState.generated.h"
 
 class ALadderActor;
 class UMoveComponent;
+class UColorConfigurator;
 UCLASS()
 class PACHIO_API ULadderClimberState : public UPlayerStateComponent
 {
@@ -17,13 +18,13 @@ public:
 	void Movement(const FInputActionValue& Value)override;
 private:
 	// ステートに入ったときの処理
-	virtual bool OnEnter(ACharacter* Owner, UWorld* World)override;
+	virtual bool OnEnter(APawn* Owner, UWorld* World)override;
 
 	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
 	virtual bool OnUpdate(float DeltaTime)override;
 
 	// ステートから出るときの処理
-	virtual bool OnExit(ACharacter* Owner)override;
+	virtual bool OnExit(APawn* Owner)override;
 
 	virtual bool OnSkill(const FInputActionValue& Input)override;
 private:
@@ -31,4 +32,9 @@ private:
 	ALadderActor* Ladder;
 	UPROPERTY()
 	UMoveComponent* MoveComp;
+
+	UPROPERTY()
+	UColorConfigurator* targetComp;
+
+	FVector p;
 };

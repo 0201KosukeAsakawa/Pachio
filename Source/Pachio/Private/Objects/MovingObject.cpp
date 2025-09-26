@@ -2,18 +2,33 @@
 
 
 #include "Objects/MovingObject.h"
+#include "Sound/SoundManager.h"
+#include "Components/BoxComponent.h"
+#include "Components/Color/ColorConfigurator.h"
+#include"Manager/LevelManager.h"
 
 // Sets default values
 AMovingObject::AMovingObject()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = true;
 
+    FootTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("FootTrigger"));
+    RootComponent = FootTrigger;
+
+    FootTrigger->SetGenerateOverlapEvents(true);
+    FootTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    FootTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
+    FootTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+    FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMovingObject::OnFootBeginOverlap);
+    FootTrigger->OnComponentEndOverlap.AddDynamic(this, &AMovingObject::OnFootEndOverlap);
 }
+
 
 void AMovingObject::Init()
 {
     AColorReactiveObject::Init();
+    TargetLocation = OffLocation;
 }
 
 void AMovingObject::Tick(float DeltaTime)
@@ -22,25 +37,82 @@ void AMovingObject::Tick(float DeltaTime)
 
     if (bIsMoving)
     {
-        FVector CurrentLocation = GetActorLocation();
-        FVector Direction = (OffLocation - CurrentLocation).GetSafeNormal();
-        float Speed = 400.f; // ���x
+        ElapsedTime += DeltaTime;
+        float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
 
-        FVector NewLocation = CurrentLocation + Direction * Speed * DeltaTime;
-
-        // �ړI�n�ɏ\���߂���Β�~
-        if (FVector::Dist(NewLocation, OffLocation) < 10.f)
-        {
-            NewLocation = OffLocation;
-            bIsMoving = false;
-        }
+        FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
+        FVector DeltaMove = NewLocation - GetActorLocation();
 
         SetActorLocation(NewLocation);
+        TArray<AActor*> Actors = AttachedActors;
+        // 上に乗っているアクターも追従
+        for (AActor* ActorOnTop : Actors)
+        {
+            if (ActorOnTop)
+            {
+                ActorOnTop->AddActorWorldOffset(DeltaMove,true);
+            }
+        }
+
+        // 子オブジェクトも追従
+        for (AActor* ChildActor : Child)
+        {
+            if (ChildActor)
+            {
+                ChildActor->AddActorWorldOffset(DeltaMove,true);
+            }
+        }
+
+        // 移動完了判定
+        if (Alpha >= 1.0f)
+        {
+            bIsMoving = false;
+        }
     }
 }
 
-void AMovingObject::ColorAction(FLinearColor InColor)
+void AMovingObject::ColorAction(FLinearColor InColor, FEffectMatchResult result)
 {
-    AColorReactiveObject::ColorAction(InColor);
-	bIsMoving = true;
+    AColorReactiveObject::ColorAction(InColor, result);
+
+    StartLocation = GetActorLocation();
+    ElapsedTime = 0.0f; // 経過時間リセット
+
+    if (ColorConfigurator->IsColorMatch())
+    {
+        TargetLocation = OffLocation;
+    }
+    else
+    {
+        TargetLocation = OnLocation;
+    }
+
+    bIsMoving = true;
+}
+
+void AMovingObject::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+    bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))
+        return;
+
+    if (OtherActor && OtherActor != this && !AttachedActors.Contains(OtherActor))
+    {
+        AttachedActors.Add(OtherActor);
+        UE_LOG(LogTemp, Log, TEXT("Added actor on top: %s"), *OtherActor->GetName());
+    }
+}
+
+void AMovingObject::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))
+        return;
+
+    if (OtherActor && AttachedActors.Contains(OtherActor))
+    {
+        AttachedActors.Remove(OtherActor);
+        UE_LOG(LogTemp, Log, TEXT("Removed actor from top: %s"), *OtherActor->GetName());
+    }
 }

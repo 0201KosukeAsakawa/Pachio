@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ColorReactiveComponent.h"
+#include "Components/Color/ColorReactiveComponent.h"
 #include "ColorProximitySpawner.generated.h"
 
 /**
@@ -15,11 +15,16 @@ class PACHIO_API UColorProximitySpawner : public UColorReactiveComponent
 	GENERATED_BODY()
 public:
 	UColorProximitySpawner();
+
 private:
-	 void OnColorMatched(const FLinearColor& FilterColor)override;
-	 void OnColorMismatched(const FLinearColor& FilterColor)override;
+	 void Init(bool) override;
 
 	 void OffMesh();
 	 void OnMesh();
+
+	 bool OnColorMatched(const FLinearColor& FilterColor)override;
+	 bool OnColorMismatched(const FLinearColor& FilterColor)override;
+
+
 
 };

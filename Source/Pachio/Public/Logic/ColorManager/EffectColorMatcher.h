@@ -19,9 +19,8 @@ class PACHIO_API UEffectColorMatcher : public UObject
 public:
 	UEffectColorMatcher();
 	FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
-private:
-	float GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B);
-	
+	float GetHueAngleDistance(const FLinearColor& A, const FLinearColor& B);
+	FLinearColor GetEffectColor(EBuffEffect)const;
 private:
 	TMap<EBuffEffect, FLinearColor> EffectColorMap;
 

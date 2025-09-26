@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/ColorReactiveObject.h"
+#include "Objects/Color/ColorReactiveObject.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveBalanceSystem.generated.h"
 
 class AColorReactiveBalancePlate;
@@ -26,7 +27,7 @@ public:
     AColorReactiveBalancePlate* mRightPlate;
 
     UFUNCTION(BlueprintCallable)
-    virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
+    virtual void ColorAction(const FLinearColor InColor , FEffectMatchResult reuslt) override;
 
 private:
     float GetColorDistance(const FLinearColor& A, const FLinearColor& B) const;

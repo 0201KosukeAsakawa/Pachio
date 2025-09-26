@@ -2,39 +2,85 @@
 
 
 #include "Player/State/DeadPlayerState.h"
+#include "Player/PlayerCharacter.h"
 #include "Interface/StateControllable.h"
 #include "Manager/LevelManager.h"
-#include "UI/UIManager.h"
+#include "Sound/SoundManager.h"
 #include "Kismet/GameplayStatics.h" // �����ǉ�
 
-bool UDeadPlayerState::OnEnter(ACharacter* Owner, UWorld* World)
+bool UDeadPlayerState::OnEnter(APawn* Owner, UWorld* World)
 {
-    if (!Owner || !World)
+    if (!Owner) return false;
+
+    if (APlayerCharacter* Player = Cast<APlayerCharacter>(Owner))
+    {
+        // 入力停止
+        if (APlayerController* PC = Cast<APlayerController>(Player->GetController()))
+        {
+            Player->DisableInput(PC);
+
+            // 暗転開始
+            if (PC->PlayerCameraManager)
+            {
+                PC->PlayerCameraManager->StartCameraFade(
+                    0.f, 1.f, 1.f, FLinearColor::Black, false, true
+                );
+            }
+        }
+
+        // タイマーリセット
+        ElapsedTime = 0.f;
+    }
+
+    ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
+
+    if (levelManager == nullptr)
         return false;
 
-    // UI表示
-    if (ALevelManager* LevelManager = ALevelManager::GetInstance(World))
+    levelManager->GetSoundManager()->PlaySound(TEXT("SE"), TEXT("Dead"));
+
+    return true;
+}
+
+
+bool UDeadPlayerState::OnUpdate(float DeltaTime)
+{
+    ElapsedTime += DeltaTime;
+
+    if (ElapsedTime >= RespawnDelay)
     {
-        if (auto UIManager = LevelManager->GetUIManager())
+        if (APawn* OwnerPawn = Cast<APawn>(GetOwner())) // 自作でOwner取るヘルパーとか
         {
-            UIManager->ShowWidget(EWidgetCategory::Tutorial, TEXT("Dead"));
+            if (IStateControllable* IS = Cast<IStateControllable>(OwnerPawn))
+            {
+                IS->ChangeState(EPlayerStateType::Default);
+            }
         }
     }
 
-    // カーソルを表示＆入力モード切り替え
-    if (APlayerController* PC = Cast<APlayerController>(Owner->GetController()))
-    {
-        PC->bShowMouseCursor = true;
+    return true;
+}
 
-        FInputModeGameAndUI InputMode;
-        InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-        PC->SetInputMode(InputMode);
-    }
-
-    // ゲームをポーズする
-    if (UGameplayStatics::GetPlayerController(World, 0))
+bool UDeadPlayerState::OnExit(APawn* Owner)
+{
+    if (APlayerCharacter* Player = Cast<APlayerCharacter>(Owner))
     {
-        UGameplayStatics::SetGamePaused(World, true);
+        if (APlayerController* PC = Cast<APlayerController>(Player->GetController()))
+        {
+            // 明るく戻す
+            if (PC->PlayerCameraManager)
+            {
+                PC->PlayerCameraManager->StartCameraFade(
+                    1.f, 0.f, 1.f, FLinearColor::Black, false, false
+                );
+            }
+
+            // 入力再開
+            Player->EnableInput(PC);
+        }
+
+        // 実際のリスポーン処理はここで呼ぶ
+        Player->Respawn();
     }
 
     return true;

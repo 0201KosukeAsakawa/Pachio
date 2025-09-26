@@ -10,9 +10,11 @@ class IColorReactiveInterface;
 UENUM(BlueprintType)
 enum class EBuffEffect : uint8
 {
+    Black UMETA(DisplayName = "BLACK"),
     Red   UMETA(DisplayName = "RED"),
     Green  UMETA(DisplayName = "GREEEEN"),
-    Blue      UMETA(DisplayName = "BLUE")
+    Blue      UMETA(DisplayName = "BLUE"),
+    Yellow UMETA(DisplayName = "YELLOW"),
 };
 
 // 色モードの対象を示す列挙型
@@ -53,7 +55,7 @@ struct FEffectMatchResult
     GENERATED_BODY()
 
     // 最も近いバフ効果
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(EditAnywhere,BlueprintReadOnly)
     EBuffEffect ClosestEffect = EBuffEffect::Red;
 
     // 色相距離

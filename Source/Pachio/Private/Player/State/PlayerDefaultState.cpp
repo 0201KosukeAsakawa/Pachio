@@ -1,73 +1,104 @@
 // プロジェクト設定の Description ページに著作権情報を記入
 
 #include "Player/State/PlayerDefaultState.h"
+#include "Player/State/LadderClimberState.h"
+#include "Player/State/PlayerHoldState.h"
 #include "Player/PlayerCharacter.h"
 #include "Player/InGameController.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/MoveComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/PhysicsCalculator.h"
 #include "FunctionLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "InputActionValue.h"
 #include "Interface/StateControllable.h"
+#include "Interface/Soundable.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Logic/Movement/PlayerMoveLogic.h"
+#include "Manager/LevelManager.h"
+#include "UI/UIManager.h"
+#include "Objects/Color/LadderActor.h"
+
+UPlayerDefaultState::UPlayerDefaultState()
+{
+}
 
 // ステートに入る際に実行される処理
-bool UPlayerDefaultState::OnEnter(ACharacter* owner, UWorld* world)
+bool UPlayerDefaultState::OnEnter(APawn* owner, UWorld* world)
 {
-	// 所有キャラクターまたはワールドが無効な場合は失敗
-	if (owner == nullptr || world == nullptr)
-	{
-		return false;
-	}
+    // 所有キャラクターまたはワールドが無効な場合は失敗
+    if (owner == nullptr || world == nullptr)
+    {
+        return false;
+    }
 
-	// 内部に所有者とワールドを保存
-	if(!mOwner)
-	mOwner = owner;
-	if(!pWorld)
-	pWorld = world;
-	if(!MoveComp)
-	{
-		MoveComp = NewObject<UMoveComponent>(mOwner);
-		UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
-		MoveComp->Init(mOwner, PlayerLogic);
-	}
-	// マテリアルの設定（デフォルトステート用）
-	//if (NewMaterial)
-	{
-		// キャラクターが持つ StaticMeshComponent を取得
-		UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
-		UMaterialInterface* N = NewMaterial.LoadSynchronous(); // 非同期ロードに対応
-		if (N != nullptr && StaticMeshComp)
-		{
-			StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
-		}
-	}
+    // 内部に所有者とワールドを保存
+    if (!mOwner)
+        mOwner = owner;
+    if (!pWorld)
+        pWorld = world;
+    if (!MoveComp)
+    {
+        MoveComp = NewObject<UMoveComponent>(mOwner);
+        UPlayerMoveLogic* PlayerLogic = NewObject<UPlayerMoveLogic>(this);
+        MoveComp->Init(PlayerLogic);
+    }
 
-	//コリジョンのサイズ変更
-	mOwner->GetCharacterMovement()->Crouch();
-	mOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(55.0);
+    if (!Physics)
+    {
+        Physics = GetOwner()->GetComponentByClass<UPhysicsCalculator>();
+    }
 
-	APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
-	if (!aPlayer)
-		return false;
+   
+    if (!HitBox)
+    {
+        HitBox = GetOwner()->GetComponentByClass<UCapsuleComponent>();
+    }
+      
+
+    // キャラクターが持つ StaticMeshComponent を取得
+    UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
+    UMaterialInterface* N = NewMaterial.LoadSynchronous(); // 非同期ロードに対応
+    if (N != nullptr && StaticMeshComp)
+    {
+        StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
+    }
+
+    APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
+    if (!aPlayer)
+        return false;
 
 
-	// 移動速度の初期値設定（ステート内で使用）
-	mMoveSpeed = 100.0f;
+    // 移動速度の初期値設定（ステート内で使用）
+    mMoveSpeed = 100.0f;
+    CurrentDirection = mOwner->GetActorForwardVector();
 
-	return true; // ステートの切り替え成功
+    return true; // ステートの切り替え成功
 }
 
 // ステートの毎フレーム更新処理（現時点では何もしない）
 bool UPlayerDefaultState::OnUpdate(float)
 {
-	return true;
+    if (GetWorld() == nullptr || Physics == nullptr)
+        return false;
+
+    if (Physics->HasLanded())
+    {
+        ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+        if (sound)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("HasLanded returned true, entering if-block!"));
+            sound->PlaySound("SE", "Land"); // ←着地音に名称変更
+        }
+    }
+
+    return true;
 }
 
 // ステートを離脱するときの処理（現時点では何もしない）
-bool UPlayerDefaultState::OnExit(ACharacter*)
+bool UPlayerDefaultState::OnExit(APawn*)
 {
 	return true;
 }
@@ -75,54 +106,147 @@ bool UPlayerDefaultState::OnExit(ACharacter*)
 // スキルボタン入力時の処理（現時点では何もしない）
 bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
-	if (Value.Get<bool>()) // 入力が有効な場合（ボタンが押された場合など）
-	{
-		// このPawnを操作しているコントローラーを取得
-		AController* OwningController = mOwner->GetController();
-		if (OwningController)
-		{
-			// AInGameController にキャスト（もし AInGameController がこのPlayerCharacterをPossessしている場合）
-			AInGameController* InGameController = Cast<AInGameController>(OwningController);
-			if (InGameController)
-			{
-				// コントローラーのTogglePossession関数を呼び出す
-				InGameController->TogglePossession(mOwner);
-			}
-		}
-	}
+    if (!Value.Get<bool>())
+        return false;
 
-	return true;
+    // 目の前に持てるオブジェクトがあるか判定
+    FVector Start = mOwner->GetActorLocation();
+    FVector End = Start + CurrentDirection * 200.f; // 2m先まで
+
+    FHitResult Hit;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(mOwner);
+    bool bIsHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+    if (!bIsHit)
+        return false;
+
+    AActor* Target = Hit.GetActor();
+    if (Target == nullptr || !Target->ActorHasTag("Holdable")) // 持てるオブジェクトにタグを付けておく
+        return false;
+
+    IStateControllable* Player = Cast<IStateControllable>(mOwner);
+    if (Player == nullptr)
+        return false;
+    UPlayerStateComponent* NewState = Player->ChangeState(EPlayerStateType::Hold);
+    if (NewState == nullptr)
+        return false;
+
+    if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
+    {
+        if (CurrentDirection.Y > 0)
+            HoldState->SetUp(Target, true);
+        else
+            HoldState->SetUp(Target, false);
+    }
+
+    return true;
 }
 
 void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 {
-	// 移動方向をMoveCompのロジックから取得
-	FVector direction = MoveComp->Movement(0, mOwner, Value);
-	// 速度は現在のステートが持つ移動速度を使用
-	mOwner->AddMovementInput(direction, MoveSpeed);
+    FVector2D MoveInput = Value.Get<FVector2D>();
 
-	//// 移動方向がある場合はキャラクターの向きを滑らかに回転させる
-	//if (!direction.IsNearlyZero())
-	//{
-	//	// 目標の回転角度を計算（キャラクター位置→移動方向のベクトル）
-	//	FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(
-	//		mOwner->GetActorLocation(),
-	//		mOwner->GetActorLocation() + direction
-	//	);
+    float DeadZone = 0.2f;
+    if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
+    {
+        Physics->AddForce(FVector(0, 0, 0), 0.f);
+        Physics->SetGravityScale(false);
+        return;
+    }
 
-	//	// PitchとRollを0に固定（上下の傾きを防止）
-	//	TargetRot.Pitch = 0.0f;
-	//	TargetRot.Roll = 0.0f;
+    // 移動方向をMoveCompのロジックから取得
+    FVector direction = MoveComp->Movement(0, mOwner, Value);
+    direction.Normalize();
 
-	//	// 現在の回転から目標回転へ一定速度で補間（スムーズな回転）
-	//	FRotator SmoothRot = FMath::RInterpTo(
-	//		mOwner->GetActorRotation(),
-	//		TargetRot,
-	//		GetWorld()->GetDeltaSeconds(),
-	//		10.0f
-	//	);
+    if (direction != FVector::ZeroVector)
+    {
+        
 
-	//	// キャラクターの回転を更新
-	//	mOwner->SetActorRotation(SmoothRot);
-	//}
+        FRotator CurrentRotation = mOwner->GetActorRotation();
+
+        float TargetYaw;
+
+        if (MoveInput.Y > 0)
+        {
+            TargetYaw = 0.f;
+        }
+        else if (MoveInput.Y < 0)
+        {
+            TargetYaw = 180.f;
+            direction *= -1;
+        }
+        else
+        {
+            TargetYaw = direction.Rotation().Yaw;
+        }
+        CurrentDirection = FVector(0, direction.Y, 0);
+        // 既にほぼ同じ向きなら回転処理しない
+        if (!FMath::IsNearlyEqual(CurrentRotation.Yaw, TargetYaw, 1.f))
+        {
+           // float NewYaw = FMath::FInterpTo(CurrentRotation.Yaw, TargetYaw, GetWorld()->GetDeltaSeconds(), 10.f);
+            FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll);
+            mOwner->SetActorRotation(NewRotation);
+        }
+    }
+    MoveDelta = direction * MoveSpeed * GetWorld()->GetDeltaSeconds();
+    // 速度は現在のステートが持つ移動速度を使用
+    mOwner->AddMovementInput(direction, MoveSpeed);
+}
+
+
+
+bool UPlayerDefaultState::Jump(float jumpForce)
+{
+    if (GetOwner() == nullptr || Physics == nullptr || !Physics->OnGround())
+        return false;
+
+    // ジャンプ力を掛けて力を加える
+    Physics->AddForce(GetOwner()->GetActorUpVector(), jumpForce);
+    ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+    sound->PlaySound("SE", "Jump");
+    return true;
+}
+
+bool UPlayerDefaultState::TryEnterLadderOnJump() const
+{
+    if (mOwner == nullptr)
+        return false;
+
+    // プレイヤーにアタッチされたBoxComponentを用意している想定
+    // 例えば LadderCheckTrigger として UBoxComponent* を保持している
+    if (HitBox == nullptr)
+        return false;
+
+    TArray<AActor*> OverlappingActors;
+    HitBox->GetOverlappingActors(OverlappingActors, ALadderActor::StaticClass());
+
+    if (OverlappingActors.Num() == 0)
+        return false;
+
+    IStateControllable* player = Cast<IStateControllable>(GetOwner());
+    if (player == nullptr)
+        return false;
+
+    for (AActor* Actor : OverlappingActors)
+    {
+        if (!Actor->ActorHasTag("Ladder"))
+            continue;
+
+        ALadderActor* Ladder = Cast<ALadderActor>(Actor);
+        if (!Ladder)
+            continue;
+
+        // ステート切り替え
+        if (UPlayerStateComponent* NewState = player->ChangeState(EPlayerStateType::Climb))
+        {
+            if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
+            {
+                ClimbState->SetTargetLadder(Ladder);
+                return true;
+            }
+        }
+    }
+
+    return false;
+
 }

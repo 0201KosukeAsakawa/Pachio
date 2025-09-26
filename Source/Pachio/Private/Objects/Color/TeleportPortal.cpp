@@ -3,10 +3,12 @@
 
 #include "Objects/Color/TeleportPortal.h"
 #include "Components/BoxComponent.h"
-#include "Components/ColorReactiveComponent.h"
-#include "Components/ColorConfigurator.h"
+#include "Components/Color/ColorReactiveComponent.h"
+#include "Components/Color/ColorConfigurator.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
+#include "Manager/LevelManager.h"
+#include "Manager/ColorManager.h"
 
 ATeleportPortal::ATeleportPortal()
 {
@@ -27,22 +29,26 @@ void ATeleportPortal::Init()
 {
     AColorReactiveObject::Init();
     CurrentTargetPortal = PrimaryDestination;
+    SecondColor = ALevelManager::GetInstance(GetWorld())
+        ->GetColorManager()
+        ->GetEffectColor(Effect);
 }
 
-void ATeleportPortal::ColorAction(const FLinearColor InColor)
+void ATeleportPortal::ColorAction(const FLinearColor InColor, FEffectMatchResult)
 {
     if (!ColorConfigurator)
         return;
 
-    bool b = ColorConfigurator->IsColorMuch(InColor);
+    bool b = ColorConfigurator->IsColorMatch(InColor, SecondColor);
     if (b)
     {
-        CurrentTargetPortal = AlternatePortal;
+        if (AlternatePortal)
+            CurrentTargetPortal = AlternatePortal;
     }
     else
     {
-        bool c = ColorConfigurator->IsColorMuch(InColor, SecondColor);
-        if (c)
+        /*bool c = ColorConfigurator->IsColorMatch(InColor, SecondColor);
+        if (c)*/
             CurrentTargetPortal = PrimaryDestination;
     }
 }
@@ -54,6 +60,23 @@ void ATeleportPortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
     // 必須チェック
     if (!OtherActor || !CurrentTargetPortal || OtherActor == this)
         return;
+
+    // タグが一致しない場合は処理しない（空なら全許可）
+    if (AllowedTags.Num() > 0)
+    {
+        bool bMatch = false;
+        for (const FName& Tag : AllowedTags)
+        {
+            if (OtherActor->ActorHasTag(Tag))
+            {
+                bMatch = true;
+                break;
+            }
+        }
+
+        if (!bMatch)
+            return;
+    }
 
     UWorld* World = GetWorld();
     if (!World)
@@ -76,5 +99,4 @@ void ATeleportPortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
     CurrentTargetPortal->LastTeleportTime.Add(OtherActor, CurrentTime);
 
     OtherActor->SetActorLocation(TargetLocation);
-
 }

@@ -28,7 +28,7 @@ public:
     void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
 
     UFUNCTION()
-    void ColorEvent(FName EventID);
+    void ColorEvent(FName EventID, FLinearColor NewColor);
 
     void SetColorTarget(IColorReactiveInterface*);
     void ResetColorTarget();
@@ -36,10 +36,15 @@ public:
     // 色付け対象を登録する関数
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);
 
-    FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
+    float GetColorDistanceRGB(const FLinearColor& A);
+    float GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B );
 
+    FEffectMatchResult GetClosestEffectByHue();
+    FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
+    UColorTargetRegistry* GetColorTargetRegistry()const {return ColorTargetRegistry;}
 
     FLinearColor GetWorldColor()const;
+    FLinearColor GetEffectColor(EBuffEffect)const;
 private:
 
     void BindController();

@@ -3,22 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/ColorReactiveObject.h"
+#include "Objects/Color/ColorReactiveObject.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "RotationGroup.generated.h"
 
 class AActor;
-
-//USTRUCT(BlueprintType)
-//struct FTargetData
-//{
-//	GENERATED_BODY()
-//
-//public:
-//	UPROPERTY(EditAnywhere,Category = "TargetData")
-//	AActor* targetActor;
-//	UPROPERTY(EditAnywhere, Category = "TargetData")
-//	float rotateSpeed;
-//};
 
 UCLASS()
 class PACHIO_API ARotationGroup : public AColorReactiveObject
@@ -35,14 +24,14 @@ protected:
 private:
 	virtual void Init()override;
 	virtual void Tick(float)override;
-	virtual void ColorAction(const FLinearColor InColor = FLinearColor::White) override;
+	virtual void ColorAction(const FLinearColor InColor,FEffectMatchResult) override;
 
 	void UpdateBsRelativeToA(const FRotator& NewRotation);
 
 
 private:
-	UPROPERTY(EditAnywhere)
-	TArray<FTargetData> TargetArray;
+	//UPROPERTY(EditAnywhere)
+	//TArray<FTargetData> TargetArray;
 
 	UPROPERTY(EditAnywhere)
 	FVector RotationAxis;

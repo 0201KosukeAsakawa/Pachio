@@ -4,25 +4,20 @@
 
 FVector UPlayerMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value)
 {
-    if (!Owner)
-        return FVector::ZeroVector;
+    if (!Owner) return FVector::ZeroVector;
 
     FVector2D MoveInput = Value.Get<FVector2D>();
     const float DeadZone = 0.2f;
-    if (MoveInput.Size() < DeadZone)
+    if (FMath::Abs(MoveInput.Y) < DeadZone)  // 左右だけを考慮
         return FVector::ZeroVector;
 
-    // オーナーのローカル方向（前と右）に入力をそのまま乗せる
-    FVector Forward = Owner->GetActorForwardVector();
-    FVector Right = Owner->GetActorRightVector();
-
-    FVector MoveDir = Forward * MoveInput.Y + Right * MoveInput.X;
-
-    // Normalize しなくてもいい場合はここは不要（速度スケールによる）
-    MoveDir = MoveDir.GetClampedToMaxSize(1.0f);
+    // Y軸（RightVector）に沿って移動
+    FVector MoveDir = Owner->GetActorRightVector() * MoveInput.Y;
 
     return MoveDir;
 }
+
+
 
 // 移動速度などの初期化関数（未実装）
 void UPlayerMoveLogic::Init(float speed, const FVector)

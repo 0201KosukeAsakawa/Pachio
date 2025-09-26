@@ -43,6 +43,7 @@
 </ul>
 </li>
 <li><a href="#advanced">Advanced</a><ul>
+<li><a href="#callback-handler">Callback Handler</a></li>
 <li><a href="#live-update-port">Live Update Port</a></li>
 <li><a href="#editor-live-update-port">Editor Live Update Port</a></li>
 <li><a href="#reload-banks-delay">Reload Banks Delay</a></li>
@@ -69,6 +70,7 @@
 <li><a href="#output-type_1">Output Type</a></li>
 <li><a href="#memory-pool-size_1">Memory Pool Size</a></li>
 <li><a href="#codecs_1">Codecs</a></li>
+<li><a href="#callback-handler_1">Callback Handler</a></li>
 </ul>
 </li>
 </ul>
@@ -83,6 +85,7 @@
 <li><a href="platform-specifics.html">Platform Specifics</a></li>
 <li><a href="troubleshooting.html">Troubleshooting</a></li>
 <li><a href="audiolink.html">AudioLink</a></li>
+<li><a href="game-components.html">Game Components</a></li>
 <li><a href="glossary.html">Glossary</a></li>
 </ul>
 </div>
@@ -189,64 +192,66 @@ Default: 0
 <h3 id="codecs"><a href="#codecs">3.3.13 Codecs</a></h3>
 <p>Specifying one or more of the codec maximums will help determine the maximum CPU usage of playing FMOD_CREATECOMPRESSEDSAMPLE Sounds of that type as well as the memory requirements.</p>
 <h2 id="advanced"><a href="#advanced">3.4 Advanced</a></h2>
-<h3 id="live-update-port"><a href="#live-update-port">3.4.1 Live Update Port</a></h3>
+<h3 id="callback-handler"><a href="#callback-handler">3.4.1 Callback Handler</a></h3>
+<p>Callback handler implementing <a class="apilink" href="api-reference-ifmodcallbackhandler.html">IFMODCallbackHandler</a> interface for calling into system at specific points in the integration's lifecycle. This can be particularly useful for registering DSP plugins on static platforms. Please refer to the <a href="plugins.html#static-plugins">Static Plugins</a> section of the <a href="plugins.html">Plugins</a> documentation for more information.</p>
+<h3 id="live-update-port"><a href="#live-update-port">3.4.2 Live Update Port</a></h3>
 <p>TCP port to listen on for FMOD Studio Live Update connections when running non-final builds of the game.</p>
 <pre><code>Default: 9264
 </code></pre>
-<h3 id="editor-live-update-port"><a href="#editor-live-update-port">3.4.2 Editor Live Update Port</a></h3>
+<h3 id="editor-live-update-port"><a href="#editor-live-update-port">3.4.3 Editor Live Update Port</a></h3>
 <p>TCP port to listen on for FMOD Studio Live Update connections when running the editor.</p>
 <pre><code>Default: 9265
 </code></pre>
-<h3 id="reload-banks-delay"><a href="#reload-banks-delay">3.4.3 Reload Banks Delay</a></h3>
+<h3 id="reload-banks-delay"><a href="#reload-banks-delay">3.4.4 Reload Banks Delay</a></h3>
 <p>Delay before automatically reloading modified banks from disk. This can be extended if building banks takes a long time and Unreal tries to reload banks before building is completed. Set to 0 to disable automatic bank reloading.</p>
 <pre><code>Units: seconds
 Default: 5
 </code></pre>
-<h3 id="enable-api-error-logging"><a href="#enable-api-error-logging">3.4.4 Enable API Error Logging</a></h3>
+<h3 id="enable-api-error-logging"><a href="#enable-api-error-logging">3.4.5 Enable API Error Logging</a></h3>
 <p>Will log internal API errors when enabled.</p>
 <pre><code>Default: Disabled
 </code></pre>
-<h3 id="enable-memory-tracking"><a href="#enable-memory-tracking">3.4.5 Enable Memory Tracking</a></h3>
+<h3 id="enable-memory-tracking"><a href="#enable-memory-tracking">3.4.6 Enable Memory Tracking</a></h3>
 <p>Enables FMOD's detailed memory tracking for non-final builds. This corresponds to setting the <a href="https://fmod.com/docs/2.03/api/studio-api-system.html#fmod_studio_initflags"><code>FMOD_STUDIO_INIT_MEMORY_TRACKING</code></a> flag into the <code>studioflags</code> when initializing the Studio API.</p>
 <pre><code>Default: Disabled
 </code></pre>
-<h3 id="plugin-files"><a href="#plugin-files">3.4.6 Plugin Files</a></h3>
+<h3 id="plugin-files"><a href="#plugin-files">3.4.7 Plugin Files</a></h3>
 <p>List of FMOD Studio plugins to be loaded when the system starts up. See <a href="plugins.html">Plugins</a> for more information.</p>
-<h3 id="content-browser-prefix"><a href="#content-browser-prefix">3.4.7 Content Browser Prefix</a></h3>
+<h3 id="content-browser-prefix"><a href="#content-browser-prefix">3.4.8 Content Browser Prefix</a></h3>
 <p>Root directory for FMOD assets.</p>
 <pre><code>Default: /Game/FMOD/
 </code></pre>
-<h3 id="force-platform-name"><a href="#force-platform-name">3.4.8 Force Platform Name</a></h3>
+<h3 id="force-platform-name"><a href="#force-platform-name">3.4.9 Force Platform Name</a></h3>
 <p>Override platform name for loading banks at runtime.</p>
 <pre><code>Default: Empty (use default platform name)
 </code></pre>
-<h3 id="master-bank-name"><a href="#master-bank-name">3.4.9 Master Bank Name</a></h3>
+<h3 id="master-bank-name"><a href="#master-bank-name">3.4.10 Master Bank Name</a></h3>
 <p>Name of master bank (without extension). Must match the FMOD Studio project.</p>
 <pre><code>Default: Master
 </code></pre>
-<h3 id="skip-load-bank-name"><a href="#skip-load-bank-name">3.4.10 Skip Load Bank Name</a></h3>
+<h3 id="skip-load-bank-name"><a href="#skip-load-bank-name">3.4.11 Skip Load Bank Name</a></h3>
 <p>String to filter banks loaded when <a class="apilink" href="#load-all-banks">Load All Banks</a> is enabled. If Skip Load Bank Name is not empty then any bank with a name containing the specified string will be skipped by automatic bank loading.</p>
 <pre><code>Default: Empty
 </code></pre>
-<h3 id="encryption-key"><a href="#encryption-key">3.4.11 Encryption Key</a></h3>
+<h3 id="encryption-key"><a href="#encryption-key">3.4.12 Encryption Key</a></h3>
 <p>Key for loading encrypted banks. This corresponds to the <code>encryptionkey</code> member of <a href="https://fmod.com/docs/2.03/api/studio-api-system.html#fmod_studio_advancedsettings"><code>FMOD_STUDIO_ADVANCEDSETTINGS</code></a> in the Studio API.</p>
-<h3 id="wav-writer-path"><a href="#wav-writer-path">3.4.12 Wav Writer Path</a></h3>
+<h3 id="wav-writer-path"><a href="#wav-writer-path">3.4.13 Wav Writer Path</a></h3>
 <p>File name that the wav writer will output to. If this is not empty then the runtime FMOD Studio system will use <a href="https://fmod.com/docs/2.03/api/core-api-system.html#fmod_outputtype"><code>FMOD_OUTPUTTYPE_WAVWRITER</code></a> and the mixed audio produced by FMOD will be sent to the specified file. There will be no audible output when using this setting.</p>
 <pre><code>Default: Empty
 </code></pre>
-<h3 id="logging-level"><a href="#logging-level">3.4.13 Logging Level</a></h3>
+<h3 id="logging-level"><a href="#logging-level">3.4.14 Logging Level</a></h3>
 <p>Logging level for non-final builds. The logging levels correspond to the similarly named <a href="https://fmod.com/docs/2.03/api/core-api-common.html#fmod_debug_flags"><code>FMOD_DEBUG_LEVEL_XXX</code></a> flags used by the <a href="https://fmod.com/docs/2.03/api/core-api-common.html#debug_initialize"><code>FMOD::Debug_Initialize</code></a> function in the Core API.</p>
 <pre><code>Default: LEVEL NONE
 </code></pre>
-<h3 id="occlusion-parameter"><a href="#occlusion-parameter">3.4.14 Occlusion Parameter</a></h3>
+<h3 id="occlusion-parameter"><a href="#occlusion-parameter">3.4.15 Occlusion Parameter</a></h3>
 <p>Name of event parameter to automate using Unreal occlusion ray casts. See <a href="user-guide.html#occlusion">Occlusion Settings</a> for more information.</p>
 <pre><code>Default: Empty
 </code></pre>
-<h3 id="ambient-volume-parameter"><a href="#ambient-volume-parameter">3.4.15 Ambient Volume Parameter</a></h3>
+<h3 id="ambient-volume-parameter"><a href="#ambient-volume-parameter">3.4.16 Ambient Volume Parameter</a></h3>
 <p>Name of event parameter to automate using Unreal ambient zone volume settings. See <a href="user-guide.html#ambient-zone-settings">Ambient Zone Settings</a> for more information.</p>
 <pre><code>Default: Empty
 </code></pre>
-<h3 id="ambient-lpf-parameter"><a href="#ambient-lpf-parameter">3.4.16 Ambient LPF Parameter</a></h3>
+<h3 id="ambient-lpf-parameter"><a href="#ambient-lpf-parameter">3.4.17 Ambient LPF Parameter</a></h3>
 <p>Name of event parameter to automate using Unreal ambient zone LPF settings. See <a href="user-guide.html#ambient-zone-settings">Ambient Zone Settings</a> for more information.</p>
 <pre><code>Default: Empty
 </code></pre>
@@ -277,10 +282,12 @@ Default: 0
 </code></pre>
 <h4 id="codecs_1"><a href="#codecs_1">Codecs</a></h4>
 <p>Specifying one or more of the codec maximums will help determine the maximum CPU usage of playing FMOD_CREATECOMPRESSEDSAMPLE Sounds of that type as well as the memory requirements.</p>
+<h4 id="callback-handler_1"><a href="#callback-handler_1">Callback Handler</a></h4>
+<p>Callback handler implementing <a class="apilink" href="api-reference-ifmodcallbackhandler.html">IFMODCallbackHandler</a> interface for calling into system at specific points in the integration's lifecycle. This can be particularly useful for registering DSP plugins on static platforms. Please refer to the <a href="plugins.html#static-plugins">Static Plugins</a> section of the <a href="plugins.html">Plugins</a> documentation for more information.</p>
 <h2 id="packaging"><a href="#packaging">3.6 Packaging</a></h2>
 <p>As well as settings exposed by FMOD For Unreal you will need to add the directory containing the FMOD bank files to the Additional Non-asset Directory To Copy setting in Unreal's Project - Packaging settings. The FMOD Studio settings UI will prompt you to update this setting if it is not correctly configured. See <a href="user-guide.html#packaging-banks">Packaging banks</a> in the user guide for more information.</p></div>
 
-<p class="manual-footer">Unreal Integration 2.03.08 (2025-06-08). &copy; 2025 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">Unreal Integration 2.03.09 (2025-08-05). &copy; 2025 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

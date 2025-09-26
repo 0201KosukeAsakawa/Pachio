@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Enemy/EnemyCharacter.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorPainter.generated.h"
 
 /**
@@ -12,21 +13,17 @@
 UCLASS()
 class PACHIO_API AColorPainter : public AEnemyCharacter
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 public:
     virtual void Tick(float DeltaTime) override;
     virtual void BeginPlay() override;
     virtual void Init() override;
-
-    // ƒI[ƒo[ƒ‰ƒbƒvƒCƒxƒ“ƒg
-    void Overlap(AActor* OtherActor)override;
 
 private:
     UPROPERTY(EditAnywhere, Category = "Patrol")
     TArray<FVector> PatrolPoints;
 
     int32 CurrentPatrolIndex = 0;
-    float AcceptanceRadius = 50.f; // –Ú“I’n‚É‹ß‚Ã‚¢‚½‚Æ‚İ‚È‚·‹——£
-    UPROPERTY(EditAnywhere)
-    FLinearColor PainterColor;
+    float AcceptanceRadius = 50.f; // åˆ°é”åˆ¤å®šåŠå¾„
 };
+

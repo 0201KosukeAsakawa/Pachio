@@ -10,13 +10,16 @@
 
 class IColorReactiveInterface;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnColorAppliedDelegate, EColorTargetType, Mode, FLinearColor, NewColor);
+
+
 UCLASS(Blueprintable)
 class PACHIO_API UColorTargetRegistry : public UObject
 {
 	GENERATED_BODY()
 public:
-	void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
-	void ColorEvent(FName);
+	void ApplyColor(FLinearColor NewColor, EColorTargetType Mode,FEffectMatchResult effect);
+	void ColorEvent(FName,FLinearColor, FEffectMatchResult);
 	void SetColorTarget(IColorReactiveInterface*);
 	void ResetColorTarget();
     // 色付け対象を登録する関数
@@ -24,8 +27,12 @@ public:
 	void InitializePostEffect();
 
 	FLinearColor GetPostProcessColor() const;
+
+	UPROPERTY(BlueprintAssignable, Category = "Color")
+	FOnColorAppliedDelegate OnColorApplied;
+
 private:
-    void NotifyTargets(EColorTargetType Mode, const FLinearColor& Color);
+    void NotifyTargets(EColorTargetType Mode, const FLinearColor& Color, FEffectMatchResult effect);
 
 private:
 	//色に反応するオブジェクトに現在の色を通知

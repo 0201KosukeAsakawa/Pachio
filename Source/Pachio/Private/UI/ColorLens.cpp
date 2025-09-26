@@ -60,9 +60,13 @@ void UColorLens::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
         bIsAnimating = false;
     }
 
-    FWidgetTransform Transform = FilterColorImage->RenderTransform;
-    Transform.Scale = FVector2D(ScaleFactor, ScaleFactor);
-    FilterColorImage->SetRenderTransform(Transform);
+    FWidgetTransform FilterColorTransform = FilterColorImage->RenderTransform;
+    FilterColorTransform.Scale = FVector2D(ScaleFactor, ScaleFactor);
+    FilterColorImage->SetRenderTransform(FilterColorTransform);
+
+    FWidgetTransform ColorCircleTransform = ColorCircle->RenderTransform;
+    ColorCircleTransform.Scale = FVector2D(ScaleFactor, -ScaleFactor);
+    ColorCircle->SetRenderTransform(ColorCircleTransform);
 }
 
 void UColorLens::Animation(float i)
@@ -129,15 +133,45 @@ FLinearColor AdjustColor(FLinearColor InColor)
     return HSV.HSVToLinearRGB();
 }
 
-void UColorLens::ColorAction(FLinearColor InColor)
+//void UColorLens::ColorAction(FLinearColor InColor, FEffectMatchResult)
+//{
+//    float H, S, V;
+//    ConvertRGBToHSV(InColor, H, S, V);
+//    CurrentColorImage->SetColorAndOpacity(AdjustColor(InColor));
+//    if (FilterColorImage)
+//    {
+//        FWidgetTransform Transform = FilterColorImage->RenderTransform;
+//        Transform.Angle = H;  // 色相に応じて回転
+//        FilterColorImage->SetRenderTransform(Transform);
+//    }
+//}
+
+void UColorLens::ColorAction(FLinearColor InColor, FEffectMatchResult)
 {
     float H, S, V;
     ConvertRGBToHSV(InColor, H, S, V);
-    CurrentColorImage->SetColorAndOpacity(AdjustColor(InColor));
+
+    // メイン画像の色設定
+    FilterColorImage->SetColorAndOpacity(AdjustColor(InColor));
+
     if (FilterColorImage)
     {
-        FWidgetTransform Transform = FilterColorImage->RenderTransform;
-        Transform.Angle = H;  // 色相に応じて回転
+        // H を角度に変換（0~360）
+        float AngleDeg =  H - 90.0f;
+        float AngleRad = FMath::DegreesToRadians(AngleDeg);
+
+        // 半径（中心からの距離）
+        float Radius = 150.0f; // 好きな距離に調整
+
+        // 中心からのオフセット計算（X=cos, Y=sin）
+        FVector2D Offset(
+            FMath::Cos(AngleRad) * Radius,
+            FMath::Sin(AngleRad) * Radius
+        );
+
+        // 画像のTransformを更新
+        FWidgetTransform Transform;
+        Transform.Translation = Offset;
         FilterColorImage->SetRenderTransform(Transform);
     }
 }

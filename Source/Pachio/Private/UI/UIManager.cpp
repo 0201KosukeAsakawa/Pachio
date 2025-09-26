@@ -2,9 +2,10 @@
 #include "UI/ColorLens.h"
 #include "UI/LockonWidget.h"
 #include "UI/ClearResultWidget.h"
+#include "UI/PlayAnimationWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
-#include "Components/ColorControllerComponent.h"
+#include "Components/Color/ColorControllerComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/InGameHUD.h"
@@ -89,24 +90,35 @@ UUserWidget* UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetNa
 {
     UUserWidget* widget = nullptr;
     // 指定カテゴリが存在しない場合は無視
-    if (!WidgetDataMap.Contains(CategoryName)) 
+    if (!WidgetDataMap.Contains(CategoryName))
         return widget;
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
-
+    UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName);
     // 指定名のウィジェットを検索し、ビューポートに表示
-    if (UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName))
-    {
-        Group.CurrentWidget.Add(WidgetName, *FoundWidget);
-        Group.CurrentWidget[WidgetName]->AddToViewport();
+    if (FoundWidget == nullptr)
+        return widget;
 
-        widget = Group.CurrentWidget[WidgetName];
+    if (!Group.CurrentWidget.IsEmpty())
+    {
+        if (Group.CurrentWidget.Contains(WidgetName))
+        {
+            Group.CurrentWidget[WidgetName]->AddToViewport();
+            return Group.CurrentWidget[WidgetName];
+        }
     }
+
+
+    Group.CurrentWidget.Add(WidgetName, *FoundWidget);
+    Group.CurrentWidget[WidgetName]->AddToViewport();
+
+    widget = Group.CurrentWidget[WidgetName];
+
 
     return widget;
 }
 
-void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName)
+const void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName)
 {
     // 指定カテゴリが存在しない場合は無視
     if (!WidgetDataMap.Contains(CategoryName)) 
@@ -115,6 +127,11 @@ void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetNam
     FWidgetData& Group = WidgetDataMap[CategoryName];
     if (!Group.CurrentWidget[WidgetName])
         return;
+
+    if (UPlayAnimationWidget* animWidget = Cast<UPlayAnimationWidget>(Group.CurrentWidget[WidgetName]))
+    {
+        animWidget->StopAllAnimation();
+    }
 
     // 現在のウィジェットを非表示にして nullptr に
     RemoveWidgetFromViewport(Group.CurrentWidget[WidgetName]);
@@ -149,13 +166,31 @@ UUserWidget* UUIManager::GetWidget(EWidgetCategory CategoryName, FName WidgetNam
     return *FoundWidget;
 }
 
+bool UUIManager::PlayWidgetAnimation(EWidgetCategory CategoryName, FName WidgetName, FName AnimationName)
+{
+    if (!WidgetDataMap.Contains(CategoryName))
+        return false;
+
+    FWidgetData& Group = WidgetDataMap[CategoryName];
+    UUserWidget** FoundWidgetPtr = Group.CurrentWidget.Find(WidgetName);
+    if (!FoundWidgetPtr || !*FoundWidgetPtr)
+        return false;
+
+    UPlayAnimationWidget* animWidget = Cast<UPlayAnimationWidget>(*FoundWidgetPtr);
+    if (animWidget == nullptr)
+        return false;
+
+    animWidget->PlayAnimationByName(AnimationName);
+
+    return true;
+}
+
 void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
 {
     // ウィジェットが存在していればビューポートから削除し、ポインタもリセット
     if (Widget)
     {
         Widget->RemoveFromViewport();
-        Widget = nullptr;
     }
 }
 

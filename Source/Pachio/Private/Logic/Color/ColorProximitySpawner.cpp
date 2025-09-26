@@ -5,64 +5,100 @@
 #include "FunctionLibrary.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "NiagaraActor.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 UColorProximitySpawner::UColorProximitySpawner()
 {
-    OffMesh();
+
 }
 
-void UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
+bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
+    ToggleNiagaraActiveState(true);
     OnMesh();
+    return false;
 }
 
-void UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
+bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 {
+    ToggleNiagaraActiveState(false);
     OffMesh();
+    return true;
 }
 
-void UColorProximitySpawner::OnMesh()
+void UColorProximitySpawner::Init(bool bVariable)
 {
-    AActor* Owner = GetOwner();
-    if (!Owner) return;
-
-    // ƒAƒNƒ^[•\Ž¦ & Tick ÄŠJ
-    Owner->SetActorHiddenInGame(false);
-    Owner->SetActorTickEnabled(true);
-
-    for (UActorComponent* Comp : Owner->GetComponents())
-    {
-        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
-        {
-            Prim->SetVisibility(true);
-            Prim->SetHiddenInGame(false);
-            Prim->SetCastShadow(true);
-            Prim->SetComponentTickEnabled(true);
-            Prim->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-        }
-    }
+    UColorReactiveComponent::Init(bVariable);
+    ToggleNiagaraActiveState(false);
+    bHide = false;
+    OffMesh();
 }
 
 void UColorProximitySpawner::OffMesh()
 {
+    if (bHide) return;
+
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // ƒAƒNƒ^[”ñ•\Ž¦ & Tick ’âŽ~
-    Owner->SetActorHiddenInGame(true);
-    Owner->SetActorTickEnabled(false);
-
-    // ƒRƒ“ƒ|[ƒlƒ“ƒg‚ð’²®
-    for (UActorComponent* Comp : Owner->GetComponents())
+    for (UActorComponent* Component : Owner->GetComponents())
     {
-        if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
+        if (Component->ComponentHasTag("HideTarget"))
         {
-            Prim->SetVisibility(false);
-            Prim->SetHiddenInGame(true);
-            Prim->SetCastShadow(false);
-            Prim->SetComponentTickEnabled(false);
+            // PrimitiveComponent ï¿½È‚çŽ‹ï¿½oï¿½ÆƒRï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½t
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                Primitive->SetVisibility(false, false);
+                Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            }
 
-            Prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Å‚ï¿½ï¿½ï¿½Î“ï¿½ï¿½ï¿½ï¿½ï¿½~
+            if (Component->IsActive())
+            {
+                Component->Deactivate();
+            }
+
+            // ï¿½ï¿½ï¿½ Tick ï¿½ï¿½~ï¿½ß‚ï¿½ï¿½ï¿½ï¿½ê‡
+            Component->PrimaryComponentTick.SetTickFunctionEnable(false);
         }
     }
+
+    PlayAppearEffect();
+
+    bHide = true;
+}
+
+void UColorProximitySpawner::OnMesh()
+{
+    if (!bHide) return;
+
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    for (UActorComponent* Component : Owner->GetComponents())
+    {
+        if (Component->ComponentHasTag("HideTarget"))
+        {
+            // PrimitiveComponent ï¿½È‚çŽ‹ï¿½oï¿½ÆƒRï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½t
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
+            {
+                Primitive->SetVisibility(true, true);
+                Primitive->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            }
+
+            // ï¿½Aï¿½Nï¿½^ï¿½[ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½Å‚ï¿½ï¿½ï¿½Î“ï¿½ï¿½ï¿½ï¿½ï¿½~
+            if (Component->IsActive())
+            {
+                Component->Activate(true);
+            }
+
+            // ï¿½ï¿½ï¿½ Tick ï¿½ï¿½~ï¿½ß‚ï¿½ï¿½ï¿½ï¿½ê‡
+            Component->PrimaryComponentTick.SetTickFunctionEnable(true);
+        }
+    }
+    DeactivateAllEffects();
+    bHide = false;
 }
