@@ -18,9 +18,16 @@ void ATitleController::SetupInputComponent()
 {
     Super::SetupInputComponent();
 
-    // 全入力を検知
+    // キーボード
     InputComponent->BindKey(EKeys::AnyKey, IE_Pressed, this, &ATitleController::OnAnyInput);
+
+    // ゲームパッド主要ボタン
+    InputComponent->BindKey(EKeys::Gamepad_FaceButton_Bottom, IE_Pressed, this, &ATitleController::OnAnyInput);
+    InputComponent->BindKey(EKeys::Gamepad_FaceButton_Right, IE_Pressed, this, &ATitleController::OnAnyInput);
+    InputComponent->BindKey(EKeys::Gamepad_FaceButton_Left, IE_Pressed, this, &ATitleController::OnAnyInput);
+    InputComponent->BindKey(EKeys::Gamepad_FaceButton_Top, IE_Pressed, this, &ATitleController::OnAnyInput);
 }
+
 
 void ATitleController::Tick(float DeltaSeconds)
 {
