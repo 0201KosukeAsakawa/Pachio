@@ -8,6 +8,7 @@
 #include "Components/MoveComponent.h"
 #include "Components/Color/ColorConfigurator.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/PhysicsCalculator.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/OverlapResult.h"
@@ -59,21 +60,32 @@ bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 		ULadderMoveLogic* PlayerLogic = NewObject<ULadderMoveLogic>(this);
 		MoveComp->Init(PlayerLogic);
 	}
+
+	UPhysicsCalculator* physics = GetOwner()->GetComponentByClass<UPhysicsCalculator>();
+	if (physics == nullptr)
+		return false;
+
+	physics->AddForce(FVector(0,0,0),0);
+
 	if (ACharacter* Character = Cast<ACharacter>(mOwner))
 	{
 		if (UCharacterMovementComponent* CharMove = Character->GetCharacterMovement())
 		{
+			// 速度をリセット
+			CharMove->Velocity = FVector::ZeroVector;
+
 			// 重力無効化＋フライングモード
 			CharMove->GravityScale = 0.f;
 			CharMove->SetMovementMode(EMovementMode::MOVE_Flying);
 
-			// ★ コリジョン無効化（梯子中は常に貫通）
+			// コリジョン無効化
 			if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
 			{
 				Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			}
 		}
 	}
+
 	return true;
 }
 

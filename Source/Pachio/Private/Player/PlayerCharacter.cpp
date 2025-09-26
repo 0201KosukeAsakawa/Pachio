@@ -89,6 +89,12 @@ void APlayerCharacter::Tick(float DeltaTime)
 		return;
 	Circle();
 
+	if (GetCharacterMovement())
+	{
+		float GravityScale = GetCharacterMovement()->GravityScale;
+		UE_LOG(LogTemp, Log, TEXT("Gravity Scale: %f"), GravityScale);
+	}
+
 	StateManager->Update(DeltaTime);
 	UpdateGlowTarget();
 	if (GetActorLocation().X != FixedXLocation)
