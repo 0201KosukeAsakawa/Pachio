@@ -82,6 +82,19 @@ void ATitleController::OnAnyInput()
         SetIgnoreMoveInput(true);
         SetIgnoreLookInput(true);
         HideMovie();
+
+        ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
+        if (levelManager == nullptr)
+            return;
+        UUIManager* uiManager = ALevelManager::GetInstance(GetWorld())->GetUIManager();
+        if (uiManager == nullptr)
+            return;
+        UUserWidget* widget = ALevelManager::GetInstance(GetWorld())->GetUIManager()->ShowWidget(EWidgetCategory::Menu, "Fade");
+        if (widget == nullptr)
+            return;
+
+        uiManager->ShowWidget(EWidgetCategory::Menu, "Menu");
+
     }
 }
 
@@ -117,6 +130,9 @@ void ATitleController::ShowFade(float Duration, FSimpleDelegate OnFinished)
         fadeWidget->OnFadeFinished = OnFinished;
         fadeWidget->PlayFade(5.f, FSimpleDelegate::CreateUObject(this, &ATitleController::StartMovie));
     }
+
+    uiManager->HideCurrentWidget(EWidgetCategory::Menu, "Menu");
+    uiManager->HideCurrentWidget(EWidgetCategory::Menu, "StageSelect");
 }
 
 
