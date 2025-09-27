@@ -25,6 +25,7 @@ public:
 
 protected:
     virtual void SetupInputComponent() override;
+    void OnAnyAxisInput(float Value);
     virtual void Tick(float DeltaSeconds) override;
 
     void OnAnyInput();

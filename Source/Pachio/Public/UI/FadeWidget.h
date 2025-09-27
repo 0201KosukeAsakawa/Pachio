@@ -4,21 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Delegates/DelegateCombinations.h"
+#include "Delegates/Delegate.h"
 #include "FadeWidget.generated.h"
 
 
 UCLASS()
 class PACHIO_API UFadeWidget : public UUserWidget
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 public:
-	// C++ 側で完了したら呼ぶための Delegate
-	FSimpleDelegate OnFadeFinished;
+    FSimpleDelegate OnFadeFinished;
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Fade")
-	void PlayFade(float Duration );
+    // Blueprint 側には Duration だけ渡す
+    UFUNCTION(BlueprintImplementableEvent, Category = "Fade")
+    void PlayFadeBP(float Duration);
 
-	UFUNCTION(BlueprintCallable, Category = "Fade")
-	void FadeFinished() { OnFadeFinished.ExecuteIfBound(); }
+    // C++ 側から呼ぶラッパー
+    void PlayFade(float Duration, FSimpleDelegate Delegate);
+
+
+    UFUNCTION(BlueprintCallable, Category = "Fade")
+    void FadeFinished();
 };
