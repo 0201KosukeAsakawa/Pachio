@@ -33,7 +33,7 @@ protected:
     void EndMovie();
 
 private:
-    float LastInputTime;
+    float IdleCounter;
     float IdleThreshold;
 
     ETitleState CurrentState;

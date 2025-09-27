@@ -11,8 +11,8 @@
 ATitleController::ATitleController()
 {
     PrimaryActorTick.bCanEverTick = true;
-    LastInputTime = 0.f;
-    IdleThreshold = 5.f; // 30秒無操作でムービーへ
+    IdleCounter = 0.f;
+    IdleThreshold = 10.f; // 例: 30秒無操作でムービーへ
     CurrentState = ETitleState::Title;
 }
 
@@ -60,20 +60,21 @@ void ATitleController::Tick(float DeltaSeconds)
 
     if (CurrentState == ETitleState::Title)
     {
-        float Now = GetWorld()->GetTimeSeconds();
-        if (Now - LastInputTime > IdleThreshold)
+        IdleCounter += DeltaSeconds;
+        if (IdleCounter > IdleThreshold)
         {
             CurrentState = ETitleState::FadingToMovie;
             ShowFade(5.f, FSimpleDelegate::CreateUObject(this, &ATitleController::StartMovie));
             SetIgnoreMoveInput(true);
             SetIgnoreLookInput(true);
+            IdleCounter = 0;
         }
     }
 }
 
 void ATitleController::OnAnyInput()
 {
-    LastInputTime = GetWorld()->GetTimeSeconds();
+    IdleCounter = 0.f; // リセット
 
     if (CurrentState == ETitleState::InMovie)
     {
@@ -133,6 +134,7 @@ void ATitleController::ShowFade(float Duration, FSimpleDelegate OnFinished)
 
     uiManager->HideCurrentWidget(EWidgetCategory::Menu, "Menu");
     uiManager->HideCurrentWidget(EWidgetCategory::Menu, "StageSelect");
+    IdleCounter = 0;
 }
 
 
@@ -162,6 +164,6 @@ void ATitleController::HideMovie()
     UUIManager* uiManager = ALevelManager::GetInstance(GetWorld())->GetUIManager();
     if (uiManager == nullptr)
         return;
-
+    uiManager->HideCurrentWidget(EWidgetCategory::Menu, "Fade");
     uiManager->HideCurrentWidget(EWidgetCategory::Menu, "Demo");
 }
