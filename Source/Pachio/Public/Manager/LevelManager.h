@@ -80,8 +80,6 @@ private:
 	TSubclassOf<UEnemyDataContainer> EnemyContainerClass;
 
 	/** サウンドマネージャークラス（Blueprintで指定） */
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<USoundManager> SoundManagerClass;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UScoreManager> ScoreManagerClass;

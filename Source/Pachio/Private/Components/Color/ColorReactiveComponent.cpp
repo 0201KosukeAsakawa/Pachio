@@ -84,7 +84,6 @@ bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FL
 	float distance = ALevelManager::GetInstance(GetWorld())
 		->GetColorManager()
 		->GetColorDistanceRGB(CurrentColor, FilterColor);
-		UE_LOG(LogTemp, Log, TEXT("Distance: %f"), distance);
 	
 	bool bMatch;
 	if (distance <= 30.0f)

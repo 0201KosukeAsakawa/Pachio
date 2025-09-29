@@ -52,9 +52,9 @@ bool UPlayerDefaultState::OnEnter(APawn* owner, UWorld* world)
     }
 
    
-    if (!BoxComponent)
+    if (!HitBox)
     {
-        BoxComponent = UFunctionLibrary::FindComponentByName<UBoxComponent>(GetOwner(), TEXT("Collision"));
+        HitBox = GetOwner()->GetComponentByClass<UCapsuleComponent>();
     }
       
 
@@ -214,11 +214,11 @@ bool UPlayerDefaultState::TryEnterLadderOnJump() const
 
     // プレイヤーにアタッチされたBoxComponentを用意している想定
     // 例えば LadderCheckTrigger として UBoxComponent* を保持している
-    if (BoxComponent == nullptr)
+    if (HitBox == nullptr)
         return false;
 
     TArray<AActor*> OverlappingActors;
-    BoxComponent->GetOverlappingActors(OverlappingActors, ALadderActor::StaticClass());
+    HitBox->GetOverlappingActors(OverlappingActors, ALadderActor::StaticClass());
 
     if (OverlappingActors.Num() == 0)
         return false;

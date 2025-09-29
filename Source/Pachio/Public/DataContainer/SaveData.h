@@ -74,6 +74,15 @@ struct FStageSaveData
 
         return Data;
     }
+
+    EStageRank GetStageRank(const FString& StageName) const
+    {
+        if (const FSaveData* FoundData = Stages.Find(StageName))
+        {
+            return FoundData->ClearRank;
+        }
+        return EStageRank::None;
+    }
 };
 
 

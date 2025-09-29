@@ -105,21 +105,6 @@ void USoundManager::SetVolume(float NewBGM, float NewSE)
     USaveManager::SetVolume(BGMVolume, SEVolume);
 }
 
-
-
-void USoundManager::Tick(float DeltaTime)
-{
-   /* float Now = GetWorld()->GetTimeSeconds();
-    float Elapsed = Now - StartTime;
-
-    int32 CurrentBeat = FMath::FloorToInt(Elapsed / BeatInterval);
-    if (CurrentBeat > LastPredictedBeat)
-    {
-        LastPredictedBeat = CurrentBeat;
-        OnBeatDetected.Broadcast();
-    }*/
-}
-
 void USoundManager::SetTmp(EColorTargetType Mode, FLinearColor NewColor)
 {
     ALevelManager* level = ALevelManager::GetInstance(GetWorld());

@@ -120,17 +120,20 @@ UUserWidget* UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetNa
 
 const void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName)
 {
-    // 指定カテゴリが存在しない場合は無視
-    if (!WidgetDataMap.Contains(CategoryName)) 
+    if (!WidgetDataMap.Contains(CategoryName))
         return;
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
-    if (!Group.CurrentWidget[WidgetName])
+
+    if (!Group.CurrentWidget.Contains(WidgetName))
         return;
 
-    if (UPlayAnimationWidget* animWidget = Cast<UPlayAnimationWidget>(Group.CurrentWidget[WidgetName]))
+    if (UUserWidget* widget = Group.CurrentWidget[WidgetName])
     {
-        animWidget->StopAllAnimation();
+        if (UPlayAnimationWidget* animWidget = Cast<UPlayAnimationWidget>(widget))
+        {
+            animWidget->StopAllAnimation();
+        }
     }
 
     // 現在のウィジェットを非表示にして nullptr に

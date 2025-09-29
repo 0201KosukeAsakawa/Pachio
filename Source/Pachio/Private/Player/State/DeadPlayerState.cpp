@@ -49,10 +49,12 @@ bool UDeadPlayerState::OnUpdate(float DeltaTime)
 
     if (ElapsedTime >= RespawnDelay)
     {
-        if (APawn* OwnerPawn = Cast<APawn>(GetOwner())) // 自作でOwner取るヘルパーとか
+        if (APlayerCharacter* Player = Cast<APlayerCharacter>(GetOwner())) // 自作でOwner取るヘルパーとか
         {
-            if (IStateControllable* IS = Cast<IStateControllable>(OwnerPawn))
+            if (IStateControllable* IS = Cast<IStateControllable>(Player))
             {
+                // 実際のリスポーン処理はここで呼ぶ
+                Player->Respawn();
                 IS->ChangeState(EPlayerStateType::Default);
             }
         }
@@ -79,8 +81,7 @@ bool UDeadPlayerState::OnExit(APawn* Owner)
             Player->EnableInput(PC);
         }
 
-        // 実際のリスポーン処理はここで呼ぶ
-        Player->Respawn();
+
     }
 
     return true;

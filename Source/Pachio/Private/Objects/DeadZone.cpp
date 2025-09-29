@@ -4,6 +4,7 @@
 #include "Objects/DeadZone.h"
 #include "Interface/StateControllable.h"
 #include "Components/BoxComponent.h"
+#include "Components/RespawnComponent.h"
 #include "GameFramework/Actor.h"
 
 // Sets default values
@@ -49,11 +50,17 @@ void ADeadZone::OverlapDead(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if (!OtherActor)
 		return;
 
-	IStateControllable* IS = Cast<IStateControllable>(OtherActor);
-
-	if (!IS)
+	// RespawnComponent を持っているか確認
+	if (URespawnComponent* RespawnComp = OtherActor->FindComponentByClass<URespawnComponent>())
+	{
+		// RespawnComponentがあるなら、リスポーン処理を呼ぶ
+		RespawnComp->RespawnOwnerAtInitialLocation();
 		return;
+	}
 
-	IS->ChangeState(EPlayerStateType::Dead);
-
+	// コンポーネントが無ければ今まで通り State を Dead にする
+	if (IStateControllable* IS = Cast<IStateControllable>(OtherActor))
+	{
+		IS->ChangeState(EPlayerStateType::Dead);
+	}
 }

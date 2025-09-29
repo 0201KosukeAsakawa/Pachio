@@ -15,6 +15,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "FunctionLibrary.h"
 #include "GameFramework/FloatingPawnMovement.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "InputAction.h"
 #include "Interface/Soundable.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -38,10 +39,7 @@ APlayerCharacter::APlayerCharacter()
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
-	FloatingPawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingPawnMovement"));
-	FloatingPawnMovement->UpdatedComponent = RootComponent;
-	InteractionBox = CreateDefaultSubobject<UBoxComponent>("Collision");
-	RootComponent = InteractionBox;
+	//InteractionBox = CreateDefaultSubobject<UBoxComponent>("Collision");
 }
 
 // ゲーム開始時の初期化処理
@@ -59,7 +57,6 @@ void APlayerCharacter::BeginPlay()
 	InitInput();
 	// 視覚関連設定（アウトラインなど）
 	InitVisualSettings();
-	FloatingPawnMovement->MaxSpeed = MoveSpeed;
 	// ColorManager に登録
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
@@ -91,6 +88,12 @@ void APlayerCharacter::Tick(float DeltaTime)
 	if (!StateManager)
 		return;
 	Circle();
+
+	if (GetCharacterMovement())
+	{
+		float GravityScale = GetCharacterMovement()->GravityScale;
+		UE_LOG(LogTemp, Log, TEXT("Gravity Scale: %f"), GravityScale);
+	}
 
 	StateManager->Update(DeltaTime);
 	UpdateGlowTarget();
@@ -279,7 +282,7 @@ void APlayerCharacter::InitPhysicsSettings()
 	physics->SetGravityScale(true, DefaultGravityScalse);
 
 	// 摩擦や重力のパラメータ調整
-	FloatingPawnMovement->Deceleration = 2048.f; // 適当な値
+	//FloatingPawnMovement->Deceleration = 2048.f; // 適当な値
 }
 
 // 入力関連の初期化（コンポーネントのコントローラ参照を設定）
@@ -339,55 +342,47 @@ void APlayerCharacter::ApplyEffectFromColor(const FLinearColor& Color)
 
 
 
-	void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
+void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
+{
+	//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
+
+	const float DeadZone = 0.02f;
+	if (StickInput.SizeSquared() < DeadZone)
 	{
-		//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
-
-		const float DeadZone = 0.02f;
-		if (StickInput.SizeSquared() < DeadZone)
-		{
-			//UE_LOG(LogTemp, Log, TEXT("StickInput is Neutral"));
-			bHasPrevInputDir = false;
-			return;
-		}
-
-		// 正規化
-		FVector2D InputDir = StickInput.GetSafeNormal();
-
-		if (!bHasPrevInputDir)
-		{
-			float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(StickInput.Y, StickInput.X));
-	/*		if (InputDir.Y < 0)
-			{
-				AngleDegrees -= 360.0f;
-			}*/
-
-			// degを使って色変更
-			UE_LOG(LogTemp, Log, TEXT("初回入力方向に即回転 deg=%f"), AngleDegrees);
-			ChangeColor(-AngleDegrees / 360.0f);
-
-			// 記録して終了
-			PrevInputDir = InputDir;
-			bHasPrevInputDir = true;
-			return;
-		}
-
-		// 2Dクロス積で回転方向判定
-		// crossZ = |a||b|sin(θ)
-		float CrossZ = FVector2D::CrossProduct(InputDir, PrevInputDir);
-		//crossZはSinθと考える
-		//いったんDegreeに直してログを出したい
-		float deg = asin(CrossZ) * 180.0f / 3.14f;
-
-		const float epsilon = 0.001f;
-		
-		if ( abs(deg) > epsilon)
-		{
-			ChangeColor(-deg/360.0f);
-			//SetColor(deg);
-			PrevInputDir = InputDir;
-		}
+		//UE_LOG(LogTemp, Log, TEXT("StickInput is Neutral"));
+		bHasPrevInputDir = false;
+		return;
 	}
+
+	// 正規化
+	FVector2D InputDir = StickInput.GetSafeNormal();
+
+	if (!bHasPrevInputDir)
+	{
+		float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(StickInput.Y, StickInput.X));
+
+		// -180 ~ +180 を 0 ~ 360 に正規化
+		if (AngleDegrees < 0)
+		{
+			AngleDegrees += 360.0f;
+		}
+
+		// 基準をX+からY+にしたいなら -90°
+		AngleDegrees += 90.0f;
+
+		// 再度0~360に正規化（マイナスになった場合）
+		if (AngleDegrees < 0)
+		{
+			AngleDegrees += 360.0f;
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("初回入力方向に即回転 deg=%f"), AngleDegrees);
+		SetColor(AngleDegrees);
+
+		return;
+	}
+}
+
 void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
 {
 	FVector2D StickInput = Value.Get<FVector2D>();
@@ -396,38 +391,38 @@ void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
 
 void APlayerCharacter::CallOnClosestOverlappingActor()
 {
-	if (!InteractionBox)
-		return;
+	//if (!InteractionBox)
+	//	return;
 
-	TArray<AActor*> OverlappingActors;
-	InteractionBox->GetOverlappingActors(OverlappingActors);
+	//TArray<AActor*> OverlappingActors;
+	//InteractionBox->GetOverlappingActors(OverlappingActors);
 
-	AControllableObjectBase* ClosestActor = nullptr;
-	float MinDistanceSq = FLT_MAX;
-	FVector MyLocation = GetActorLocation();
+	//AControllableObjectBase* ClosestActor = nullptr;
+	//float MinDistanceSq = FLT_MAX;
+	//FVector MyLocation = GetActorLocation();
 
-	for (AActor* Actor : OverlappingActors)
-	{
-		if (!IsValid(Actor))
-			continue;
+	//for (AActor* Actor : OverlappingActors)
+	//{
+	//	if (!IsValid(Actor))
+	//		continue;
 
-		if (AControllableObjectBase* CastedActor = Cast<AControllableObjectBase>(Actor))
-		{
-			float DistSq = FVector::DistSquared(MyLocation, CastedActor->GetActorLocation());
-			if (DistSq < MinDistanceSq)
-			{
-				MinDistanceSq = DistSq;
-				ClosestActor = CastedActor;
-			}
-		}
-	}
+	//	if (AControllableObjectBase* CastedActor = Cast<AControllableObjectBase>(Actor))
+	//	{
+	//		float DistSq = FVector::DistSquared(MyLocation, CastedActor->GetActorLocation());
+	//		if (DistSq < MinDistanceSq)
+	//		{
+	//			MinDistanceSq = DistSq;
+	//			ClosestActor = CastedActor;
+	//		}
+	//	}
+	//}
 
-	if (ClosestActor)
-	{
-		ClosestActor->SwitchControll(this);
-		// 呼んだら終わり
-		return;
-	}
+	//if (ClosestActor)
+	//{
+	//	ClosestActor->SwitchControll(this);
+	//	// 呼んだら終わり
+	//	return;
+	//}
 }
 
 void APlayerCharacter::OpenMenu(const FInputActionValue& Value)
@@ -462,12 +457,12 @@ float APlayerCharacter::GetYaw() const
 void APlayerCharacter::UpdateGlowTarget()
 {
 
-	UBoxComponent* box = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, "Box");	
-	if (!box)
+	UBoxComponent* InteractionBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("InteractionBox"));
+	if (!InteractionBox)
 		return;
 	// オーバーラップ中のActorを取得
 	TArray<AActor*> OverlappingActors;
-	box->GetOverlappingActors(OverlappingActors);
+	InteractionBox->GetOverlappingActors(OverlappingActors);
 
 	AActor* NewGlowTarget = nullptr;
 	float MinDistSq = FLT_MAX;
@@ -495,18 +490,18 @@ void APlayerCharacter::UpdateGlowTarget()
 		// 前のGlowを解除
 		if (CurrentGlowTarget)
 		{
-			if (USkeletalMeshComponent* Mesh = CurrentGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
+			if (USkeletalMeshComponent* mesh = CurrentGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
 			{
-				Mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 0.0f);
+				mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 0.0f);
 			}
 		}
 
 		// 新しいGlowを適用
 		if (NewGlowTarget)
 		{
-			if (USkeletalMeshComponent* Mesh = NewGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
+			if (USkeletalMeshComponent* mesh = NewGlowTarget->FindComponentByClass<USkeletalMeshComponent>())
 			{
-				Mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 1.0f);
+				mesh->SetScalarParameterValueOnMaterials(TEXT("GlowIntensity"), 1.0f);
 			}
 		}
 

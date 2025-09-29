@@ -7,7 +7,10 @@
 #include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
 #include "Components/Color/ColorConfigurator.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/PhysicsCalculator.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/OverlapResult.h"
 #include "Logic/Movement/LadderMoveLogic.h"
 
@@ -45,7 +48,7 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 
 bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 {
-	if (!Owner) 
+	if (!Owner)
 		return false;
 	if (!mOwner)
 		mOwner = Owner;
@@ -57,9 +60,34 @@ bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
 		ULadderMoveLogic* PlayerLogic = NewObject<ULadderMoveLogic>(this);
 		MoveComp->Init(PlayerLogic);
 	}
+
+	UPhysicsCalculator* physics = GetOwner()->GetComponentByClass<UPhysicsCalculator>();
+	if (physics == nullptr)
+		return false;
+
+	physics->AddForce(FVector(0,0,0),0);
+
+	if (ACharacter* Character = Cast<ACharacter>(mOwner))
+	{
+		if (UCharacterMovementComponent* CharMove = Character->GetCharacterMovement())
+		{
+			// 速度をリセット
+			CharMove->Velocity = FVector::ZeroVector;
+
+			// 重力無効化＋フライングモード
+			CharMove->GravityScale = 0.f;
+			CharMove->SetMovementMode(EMovementMode::MOVE_Flying);
+
+			// コリジョン無効化
+			if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+			{
+				Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			}
+		}
+	}
+
 	return true;
 }
-
 
 bool ULadderClimberState::OnUpdate(float DeltaTime)
 {
@@ -155,7 +183,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 
 					// 梯子の上に押し出す位置
 					FVector ExitLocation = Ladder->GetActorLocation();
-					ExitLocation.Z = LadderTopZ + 150.f;                 // 上に少し
+					ExitLocation.Z = LadderTopZ + 300.f;                 // 上に少し
 					ExitLocation += LadderForward * direction * 150.f;   // 前に少し
 
 					// 確実にワープ
@@ -184,9 +212,22 @@ bool ULadderClimberState::OnExit(APawn* Owner)
 		return false;
 
 	player->SetGravityScale(true);
+	if (ACharacter* Character = Cast<ACharacter>(Owner))
+	{
+		if (UCharacterMovementComponent* comp = Character->GetCharacterMovement())
+		{
+			comp->GravityScale = 1.f;
+			comp->SetMovementMode(EMovementMode::MOVE_Walking);
+
+			// ★ コリジョンを元に戻す
+			if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+			{
+				Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			}
+		}
+	}
 	return true;
 }
-
 bool ULadderClimberState::OnSkill(const FInputActionValue& Input)
 {
 	IStateControllable* owner = Cast<IStateControllable>(mOwner);
@@ -222,7 +263,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	if (direction.Z < 0.f)
 	{
 		FVector Start = NewLocation;
-		FVector End = Start - FVector(0.f, 0.f, 300.f);  // 100cm下方向
+		FVector End = Start - FVector(0.f, 0.f, 500.f);  // 100cm下方向
 
 		FHitResult HitResult;
 		FCollisionQueryParams Params;
@@ -246,7 +287,7 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	}
 	MoveDelta = direction * 10;
 	// 通常の移動
-	GetOwner()->AddActorLocalOffset(direction * 10, true);
+	GetOwner()->AddActorLocalOffset(direction * 10, false);
 	p = Ladder->GetFixedPositionForActor(GetOwner());
 	GetOwner()->SetActorLocation(p);
 }

@@ -105,12 +105,21 @@ void UPhysicsCalculator::AddGravity()
 	{
 		bIsPhysicsEnabled = false;
 		bFalling = false;
+		Timer = 0;
 		return;
 	}
 
 	Timer += GetWorld()->DeltaTimeSeconds;
-	GetOwner()->AddActorLocalOffset((FVector(0, 0, -GravityScale) * Timer)/ ForceModifier, true);
+
+	// 落下速度を計算
+	float FallSpeed = (GravityScale * Timer) / ForceModifier;
+
+	// 上限を適用
+	FallSpeed = FMath::Min(FallSpeed, MaxFallingSpeed);
+
+	GetOwner()->AddActorLocalOffset(FVector(0, 0, -FallSpeed), true);
 }
+
 
 bool UPhysicsCalculator::OnGround() const
 {

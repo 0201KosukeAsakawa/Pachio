@@ -53,8 +53,8 @@ void ALevelManager::InitializeComponents()
 		ScoreManager = NewObject<UScoreManager>(this, ScoreManagerClass);
 	if (ScoreManager)
 		ScoreManager->Init();
-	if (SoundManagerClass)
-		SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
+
+	SoundManager = GetComponentByClass<USoundManager>();
 	if (SoundManager)
 	{
 		SoundManager->Init();
@@ -75,8 +75,7 @@ void ALevelManager::InitializeComponents()
 void ALevelManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (SoundManager)
-		SoundManager->Tick(DeltaTime);
+
 }
 
 // GetInstance関数で、インスタンスが未設定の場合は初期化処理を強制する
