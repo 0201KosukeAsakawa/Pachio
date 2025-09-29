@@ -6,9 +6,7 @@
 #include "Components/Player/PlayerStateComponent.h"
 #include "DeadPlayerState.generated.h"
 
-/**
- * 
- */
+class APlayerCharacter;
 UCLASS()
 class PACHIO_API UDeadPlayerState : public UPlayerStateComponent
 {
@@ -25,4 +23,9 @@ public:
 private:
 	float ElapsedTime = 0.f;
 	float RespawnDelay = 2.0f; // n秒
+
+	bool bIsRespawn = false;
+
+	UPROPERTY()
+	APlayerCharacter* Player;
 };

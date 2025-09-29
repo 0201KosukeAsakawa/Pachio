@@ -128,7 +128,7 @@ bool UPhysicsCalculator::OnGround() const
 
 	FVector ActorLocation = Owner->GetActorLocation();
 	FVector ActorScale = Owner->GetActorScale();
-	FVector BoxExtent(40.0f * ActorScale.X, 20.0f * ActorScale.Y, 5.0f); // 薄い足元のボックス
+	FVector BoxExtent(40.0f * ActorScale.X, 20.0f * ActorScale.Y, 15.0f); // 薄い足元のボックス
 
 	float HalfHeight = Owner->GetSimpleCollisionHalfHeight();
 
