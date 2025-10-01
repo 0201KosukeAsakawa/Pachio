@@ -362,15 +362,15 @@ void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
 		// Scale only the largest component by 100.0f
 		if (CurrentColor.R == maxRGB)
 		{
-			targetColor.R *= 100.f;
+			targetColor.R *= 50.f;
 		}
 		else if (CurrentColor.G == maxRGB)
 		{
-			targetColor.G *= 100.f;
+			targetColor.G *= 50.f;
 		}
 		else // B must be the maximum (or equal to the others)
 		{
-			targetColor.B *= 100.f;
+			targetColor.B *= 50.f;
 		}
 
 		// Alpha (A) remains unchanged as it wasn't scaled in the original or this version.
