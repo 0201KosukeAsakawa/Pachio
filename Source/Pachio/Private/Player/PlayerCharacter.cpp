@@ -513,24 +513,6 @@ void APlayerCharacter::UpdateGlowTarget()
 void APlayerCharacter::Respawn()
 {
 	SetActorLocation(CurrentRespawnPoint);
-
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
-	{
-		if (PC->PlayerCameraManager)
-		{
-			PC->PlayerCameraManager->StartCameraFade(
-				1.f,            // FromAlpha
-				0.f,            // ToAlpha
-				1.0f,           // Duration (秒)
-				FLinearColor::Black, // フェードカラー
-				false,          // bShouldFadeAudio
-				true            // bHoldWhenFinished
-			);
-		}
-	}
-
-	// 入力再開
-	EnableInput(Cast<APlayerController>(GetController()));
 }
 
 void APlayerCharacter::UpdateRespawn(FVector newLocation)
