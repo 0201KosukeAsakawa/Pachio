@@ -237,19 +237,19 @@ void APlayerCharacter::SetColor(float value)
 // カラーモードを右にシフト（次の色モードへ変更）
 void APlayerCharacter::ShiftArrayRightColorMode()
 {
-	if (colorController == nullptr)
+	if (CameraComponent == nullptr)
 		return;
 
-	colorController->ChangeMode(1);
+	CameraComponent->ChangeViewMode(ECameraViewType::CharacterView);
 }
 
 // カラーモードを左にシフト（前の色モードへ変更）
 void APlayerCharacter::ShiftArrayLeftColorMode()
 {
-	if (colorController == nullptr)
+	if (CameraComponent == nullptr)
 		return;
 
-	colorController->ChangeMode(-1);
+	CameraComponent->ChangeViewMode(ECameraViewType::GridView);
 }
 
 // 状態の変更（ステートタグを指定して遷移）

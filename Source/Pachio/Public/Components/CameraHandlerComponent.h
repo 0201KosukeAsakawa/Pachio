@@ -12,8 +12,8 @@ class UCameraComponent;
 UENUM(BlueprintType)
 enum class ECameraViewType : uint8
 {
-	SideView  UMETA(DisplayName = "Side View"),
-	TopView   UMETA(DisplayName = "Top View")
+	GridView  UMETA(DisplayName = "Side View"),
+	CharacterView   UMETA(DisplayName = "Top View")
 };
 
 
@@ -30,6 +30,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ApplyCameraSettings(FVector2D, float);
 	void ApplyCameraSettings(FVector2D, float, ECameraViewType);
+	void ChangeViewMode(ECameraViewType newMode) { CameraViewType = newMode; }
 	bool IsParameterMatch(FVector2D, float);
 
 	UCameraComponent* GetCamera() { return Camera; }
@@ -39,7 +40,7 @@ private:
 	void SetCameraLocation(ECameraViewType);
 private:
 	UPROPERTY(EditAnywhere, Category = "Grid")
-	ECameraViewType CameraViewType = ECameraViewType::SideView;
+	ECameraViewType CameraViewType = ECameraViewType::CharacterView;
 
 	// グリッドサイズ（1部屋のサイズ）
 	UPROPERTY(EditAnywhere, Category = "Grid")
