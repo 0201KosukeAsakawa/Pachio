@@ -29,7 +29,7 @@ private:
     UPROPERTY(VisibleAnywhere)
     class UBoxComponent* CollisionBox;
     UPROPERTY(EditAnywhere, Category = "Grid")
-    ECameraViewType CameraViewType = ECameraViewType::SideView;
+    ECameraViewType CameraViewType = ECameraViewType::GridView;
     UPROPERTY(EditAnywhere, Category = "Grid")
     FVector2D GridSize;
     UPROPERTY(EditAnywhere, Category = "Grid")
