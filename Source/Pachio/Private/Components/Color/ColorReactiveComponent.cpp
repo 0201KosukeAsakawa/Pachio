@@ -59,8 +59,10 @@ void UColorReactiveComponent::Init(bool Variable)
 		->GetEffectColor(Effect);
 
 	if (!Variable)
+	{
 		// マテリアルに色を反映
 		DynMesh->SetVectorParameterValue(FName("BaseColor"), CurrentColor);
+	}
 }
 
 
@@ -71,11 +73,11 @@ void UColorReactiveComponent::InitColorEffectAndNiagara(const FLinearColor& Filt
 	Niagaras = NiagaraComponents;
 }
 
-bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FLinearColor& FilterColor, const bool buseComplementaryColor)
+bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FLinearColor& FilterColor, const bool bUseComplementaryColor)
 {
 	FLinearColor CheckColor = FilterColor;  // コピーして変更可能に
 
-	if (buseComplementaryColor)
+	if (bUseComplementaryColor)
 	{
 		CheckColor = GetComplementaryColor(CheckColor);  // 補色を取得して代入
 		UE_LOG(LogTemp, Log, TEXT("CheckColor: %s"), *CheckColor.ToString());
@@ -86,7 +88,7 @@ bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result,const FL
 		->GetColorDistanceRGB(CurrentColor, FilterColor);
 	
 	bool bMatch;
-	if (distance <= 30.0f)
+	if (distance <= 30.0f) 
 	{
 		bMatch = OnColorMatched(CheckColor);
 	}
@@ -330,7 +332,6 @@ void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
 		return;
 	}
 
-	// アタッチするコンポーネントを取得（例: RootComponent）
 	USkeletalMeshComponent* AttachComponent = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh"));
 	if (!AttachComponent)
 	{
@@ -338,7 +339,6 @@ void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
 		return;
 	}
 
-	// Niagaraエフェクトをアタッチして再生
 	UNiagaraComponent* targetNiagara = UNiagaraFunctionLibrary::SpawnSystemAttached(
 		niagaraSystem,
 		AttachComponent,
@@ -346,16 +346,40 @@ void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
 		FVector::ZeroVector,
 		FRotator::ZeroRotator,
 		EAttachLocation::KeepRelativeOffset,
-		true,   // bAutoDestroy
-		true,   // bAutoActivate
+		true,
+		true,
 		ENCPoolMethod::None,
-		true    // bPreCullCheck
+		true
 	);
 
-	if (targetNiagara == nullptr)
-		return;
+	if (targetNiagara)
+	{
+		// Find the maximum value among R, G, and B.
+		float maxRGB = FMath::Max3(CurrentColor.R, CurrentColor.G, CurrentColor.B);
 
-	ActiveNiagaraComponent.Add(targetNiagara);
+		FLinearColor targetColor = CurrentColor; // Start with the original color
+
+		// Scale only the largest component by 100.0f
+		if (CurrentColor.R == maxRGB)
+		{
+			targetColor.R *= 50.f;
+		}
+		else if (CurrentColor.G == maxRGB)
+		{
+			targetColor.G *= 50.f;
+		}
+		else // B must be the maximum (or equal to the others)
+		{
+			targetColor.B *= 50.f;
+		}
+
+		// Alpha (A) remains unchanged as it wasn't scaled in the original or this version.
+
+		// ここでカラーセット（例: targetColorをセット）
+		targetNiagara->SetVariableLinearColor(FName("User_Color"), targetColor);
+
+		ActiveNiagaraComponent.Add(targetNiagara);
+	}
 }
 
 void UColorReactiveComponent::DeactivateAllEffects()

@@ -148,30 +148,32 @@ FLinearColor AdjustColor(FLinearColor InColor)
 
 void UColorLens::ColorAction(FLinearColor InColor, FEffectMatchResult)
 {
+    if (FilterColorImage == nullptr)
+        return;
+
     float H, S, V;
     ConvertRGBToHSV(InColor, H, S, V);
 
     // メイン画像の色設定
     FilterColorImage->SetColorAndOpacity(AdjustColor(InColor));
 
-    if (FilterColorImage)
-    {
-        // H を角度に変換（0~360）
-        float AngleDeg =  H - 90.0f;
-        float AngleRad = FMath::DegreesToRadians(AngleDeg);
 
-        // 半径（中心からの距離）
-        float Radius = 150.0f; // 好きな距離に調整
+    // H を角度に変換（0~360）
+    float AngleDeg = H - 90.0f;
+    float AngleRad = FMath::DegreesToRadians(AngleDeg);
 
-        // 中心からのオフセット計算（X=cos, Y=sin）
-        FVector2D Offset(
-            FMath::Cos(AngleRad) * Radius,
-            FMath::Sin(AngleRad) * Radius
-        );
+    // 半径（中心からの距離）
+    float Radius = 150.0f; // 好きな距離に調整
 
-        // 画像のTransformを更新
-        FWidgetTransform Transform;
-        Transform.Translation = Offset;
-        FilterColorImage->SetRenderTransform(Transform);
-    }
+    // 中心からのオフセット計算（X=cos, Y=sin）
+    FVector2D Offset(
+        FMath::Cos(AngleRad) * Radius,
+        FMath::Sin(AngleRad) * Radius
+    );
+
+    // 画像のTransformを更新
+    FWidgetTransform Transform;
+    Transform.Translation = Offset;
+    FilterColorImage->SetRenderTransform(Transform);
+
 }

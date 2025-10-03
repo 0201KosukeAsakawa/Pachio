@@ -12,22 +12,22 @@ bool UDeadPlayerState::OnEnter(APawn* Owner, UWorld* World)
 {
     if (!Owner) return false;
 
-    if (APlayerCharacter* Player = Cast<APlayerCharacter>(Owner))
-    {
-        // 入力停止
-        if (APlayerController* PC = Cast<APlayerController>(Player->GetController()))
-        {
-            Player->DisableInput(PC);
+    Player = Cast<APlayerCharacter>(Owner);
 
-            // 暗転開始
-            if (PC->PlayerCameraManager)
-            {
-                PC->PlayerCameraManager->StartCameraFade(
-                    0.f, 1.f, 1.f, FLinearColor::Black, false, true
-                );
-            }
+    // 入力停止
+    if (APlayerController* PC = Cast<APlayerController>(Player->GetController()))
+    {
+        Player->DisableInput(PC);
+
+        // 暗転開始
+        if (PC->PlayerCameraManager)
+        {
+            PC->PlayerCameraManager->StartCameraFade(
+                0.f, 1.f, 1.f, FLinearColor::Black, false, true
+            );
         }
 
+        bIsRespawn = false;
         // タイマーリセット
         ElapsedTime = 0.f;
     }
@@ -45,26 +45,36 @@ bool UDeadPlayerState::OnEnter(APawn* Owner, UWorld* World)
 
 bool UDeadPlayerState::OnUpdate(float DeltaTime)
 {
+    if (Player == nullptr)
+        return false;
+
     ElapsedTime += DeltaTime;
+
+    if (ElapsedTime >= 1.5f && !bIsRespawn)
+    {
+        // 実際のリスポーン処理はここで呼ぶ
+        Player->Respawn();
+        bIsRespawn = true;
+    }
+
 
     if (ElapsedTime >= RespawnDelay)
     {
-        if (APawn* OwnerPawn = Cast<APawn>(GetOwner())) // 自作でOwner取るヘルパーとか
+        // 自作でOwner取るヘルパーとか
+
+        if (IStateControllable* IS = Cast<IStateControllable>(Player))
         {
-            if (IStateControllable* IS = Cast<IStateControllable>(OwnerPawn))
-            {
-                IS->ChangeState(EPlayerStateType::Default);
-            }
+
+            IS->ChangeState(EPlayerStateType::Default);
         }
     }
+
 
     return true;
 }
 
 bool UDeadPlayerState::OnExit(APawn* Owner)
 {
-    if (APlayerCharacter* Player = Cast<APlayerCharacter>(Owner))
-    {
         if (APlayerController* PC = Cast<APlayerController>(Player->GetController()))
         {
             // 明るく戻す
@@ -77,10 +87,6 @@ bool UDeadPlayerState::OnExit(APawn* Owner)
 
             // 入力再開
             Player->EnableInput(PC);
-        }
-
-        // 実際のリスポーン処理はここで呼ぶ
-        Player->Respawn();
     }
 
     return true;
