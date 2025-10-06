@@ -79,10 +79,8 @@ void ATitleController::OnAnyInput()
     if (CurrentState == ETitleState::InMovie)
     {
         CurrentState = ETitleState::FadingToTitle;
-        ShowFade(2.f, FSimpleDelegate::CreateUObject(this, &ATitleController::EndMovie));
-        SetIgnoreMoveInput(true);
-        SetIgnoreLookInput(true);
-        HideMovie();
+        //ShowFade(2.f, FSimpleDelegate::CreateUObject(this, &ATitleController::EndMovie));
+        EndMovie();
 
         ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
         if (levelManager == nullptr)
@@ -90,9 +88,7 @@ void ATitleController::OnAnyInput()
         UUIManager* uiManager = ALevelManager::GetInstance(GetWorld())->GetUIManager();
         if (uiManager == nullptr)
             return;
-        UUserWidget* widget = ALevelManager::GetInstance(GetWorld())->GetUIManager()->ShowWidget(EWidgetCategory::Menu, "Fade");
-        if (widget == nullptr)
-            return;
+        //UUserWidget* widget = ALevelManager::GetInstance(GetWorld())->GetUIManager()->ShowWidget(EWidgetCategory::Menu, "Fade");
 
         uiManager->ShowWidget(EWidgetCategory::Menu, "Menu");
 
@@ -111,8 +107,8 @@ void ATitleController::EndMovie()
 {
     HideMovie();
     CurrentState = ETitleState::Title;
-    SetIgnoreMoveInput(false);
-    SetIgnoreLookInput(false);
+    SetIgnoreMoveInput(true);
+    SetIgnoreLookInput(true);
 }
 
 void ATitleController::ShowFade(float Duration, FSimpleDelegate OnFinished)

@@ -37,6 +37,8 @@ struct FInputActionValue;
  * プレイヤーキャラクターの基底クラス。
  * 入力処理、ステート遷移、カメラ制御、攻撃衝突判定などの主要機能を実装。
  */
+
+
 UCLASS()
 class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable,
 	public IControllableMover,
@@ -94,7 +96,6 @@ public:
 	void ShiftArrayLeftColorMode()override;
 
 	void OnStickMove(const FInputActionValue& Value)override;
-	void CallOnClosestOverlappingActor();
 
 	void OpenMenu(const FInputActionValue& Value)override;
 
@@ -134,8 +135,6 @@ private:
 	// ==== 状態・ステート処理 ====
 	// ===============
 
-	// 現在の色に応じた効果適用
-	void ApplyEffectFromColor(const FLinearColor& Color);
 
 	void OnStickRotate(const FVector2D& StickInput);
 
@@ -186,9 +185,6 @@ private:
 	UPROPERTY()
 	UColorControllerComponent* colorController;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision", meta = (AllowPrivateAccess = "true"))
-	//UBoxComponent* InteractionBox;
-
 	FVector2D PrevMouseDir;
 	bool bHasPrevMouse = false;
 
@@ -200,4 +196,16 @@ private:
 
 	UPROPERTY()
 	FVector CurrentRespawnPoint;
+
+
+	private:		
+		static constexpr int32 OUTLINE_STENCIL_VALUE = 10;
+		static constexpr float MOUSE_COLOR_CHANGE_RATE = 0.01f;
+		static constexpr float SCROLL_COLOR_CHANGE_RATE = 0.1f;
+		static constexpr float STICK_DEADZONE = 0.02f;
+
+		static constexpr float MOVE_SOUND_INTERVAL = 0.5f;
+		static constexpr float MOUSE_DELTA_THRESHOLD = 4.0f;
+		static constexpr float GLOW_INTENSITY_ON = 1.0f;
+		static constexpr float GLOW_INTENSITY_OFF = 0.0f;
 };

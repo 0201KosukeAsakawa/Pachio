@@ -191,14 +191,10 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 
 					// 状態を戻す
 					StateManager->ChangeState(EPlayerStateType::Default);
-
-					return true; // これ以上OnUpdateを実行しない
 				}
 			}
 		}
-
 	}
-
 	return true;
 }
 

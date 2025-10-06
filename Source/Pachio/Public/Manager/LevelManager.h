@@ -76,8 +76,6 @@ private:
 	 FString StageName;
 	 UPROPERTY(EditAnywhere)
 	 FString NextStageName;
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UEnemyDataContainer> EnemyContainerClass;
 
 	/** サウンドマネージャークラス（Blueprintで指定） */
 

@@ -69,7 +69,12 @@ bool UPlayerDefaultState::OnEnter(APawn* owner, UWorld* world)
     APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
     if (!aPlayer)
         return false;
-
+    APlayerController* PC = GetWorld()->GetFirstPlayerController();
+    if (PC)
+    {
+        PC->SetInputMode(FInputModeGameOnly());
+        PC->bShowMouseCursor = false;  // 必要に応じてマウスカーソルを非表示に
+    }
 
     // 移動速度の初期値設定（ステート内で使用）
     mMoveSpeed = 100.0f;

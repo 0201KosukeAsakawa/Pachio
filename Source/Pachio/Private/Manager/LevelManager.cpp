@@ -27,17 +27,6 @@ void ALevelManager::BeginPlay()
 
 	// コンポーネント初期化
 	InitializeComponents();
-
-
-
-
-
-	FSaveData SaveData;
-	SaveData.bCleared = true;
-	SaveData.ClearRank = EStageRank::S;  // 例: ランクS
-	SaveData.difficultyRank = 2;
-	SaveData.Title = TEXT("ステージ1");
-	USaveManager::SaveStageData(TEXT("Stage1"), SaveData);
 }
 
 void ALevelManager::InitializeComponents()
