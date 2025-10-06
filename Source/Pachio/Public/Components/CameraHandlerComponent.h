@@ -36,7 +36,6 @@ public:
 	UCameraComponent* GetCamera() { return Camera; }
 private:	
 	void UpdateCameraPosition(float DeltaTime);
-	void SetCameraRotation(ECameraViewType);
 	void SetCameraLocation(ECameraViewType);
 private:
 	UPROPERTY(EditAnywhere, Category = "Grid")
