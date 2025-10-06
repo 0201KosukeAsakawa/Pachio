@@ -2,58 +2,80 @@
 #include "Math/UnrealMathUtility.h"
 #include "DrawDebugHelpers.h"
 
+// =======================
+// コンストラクタ
+// =======================
+
 // コンストラクタでデフォルト値を設定
 UPhysicsCalculator::UPhysicsCalculator()
-	: ForceScale(0)
-	, ForceDirection(FVector::ZeroVector)
-	, PreviousPosition(FVector::ZeroVector)
-	, Timer(0)
-	, bShouldApplyGravity(true)
-	, bIsSweep(false)
-	, bIsPhysicsEnabled(false)
+	: ForceScale(0)                          // 移動ベクトルのスケール
+	, ForceDirection(FVector::ZeroVector)    // 移動方向
+	, PreviousPosition(FVector::ZeroVector)  // 前フレーム位置
+	, Timer(0)                               // 経過時間（重力計算用）
+	, bShouldApplyGravity(true)              // 重力適用フラグ
+	, bIsSweep(false)                        // 移動時に Sweep を行うか
+	, bIsPhysicsEnabled(false)               // 物理挙動が有効かどうか
 {
+	// Tick を有効化
 	PrimaryComponentTick.bCanEverTick = true;
 }
+
+// =======================
+// 初期化処理
+// =======================
 
 void UPhysicsCalculator::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
+// =======================
 // 毎フレーム更新処理
+// =======================
+
 void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	AActor* Owner = GetOwner();
 
-	// --- ここで OffMesh 状態を判定 ---
+	// --- OffMesh 状態を判定（IsActive が false なら停止） ---
 	if (IsActive())
 	{
 		// オーナーが非表示 or Tick 無効なら処理を止める
 		return;
 	}
+
+	// 重力を適用
 	if (bShouldApplyGravity)
 	{
 		AddGravity();
 		UpdateGroundState();
 	}
-	FVector MoveVector;
+
+	// 物理が無効なときのみ手動移動を行う
 	if (!bIsPhysicsEnabled)
 	{
+		// 時間経過で力を減衰
 		ForceScale = FMath::Max(ForceScale - DeltaTime * 10.0f, 0.0f);
-		MoveVector = ForceDirection * ForceScale;
 
+		// 移動ベクトル計算
+		FVector MoveVector = ForceDirection * ForceScale;
+
+		// 障害物との衝突調整
 		FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
-		if (bUseLocalOffset) // b が true ならローカル座標系で移動
+
+		// ローカル座標 or ワールド座標で移動
+		if (bUseLocalOffset)
 		{
 			GetOwner()->AddActorLocalOffset(Adjusted, bIsSweep);
 		}
-		else // false ならワールド座標系で移動
+		else
 		{
 			GetOwner()->AddActorWorldOffset(Adjusted, bIsSweep);
 		}
 
+		// 高さの変化で「落下開始」を検出
 		FVector currentPosition = GetOwner()->GetActorLocation();
 		float distanceZ = currentPosition.Z - PreviousPosition.Z;
 
@@ -70,9 +92,16 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 }
 
+// =======================
+// 接地状態更新
+// =======================
+
 void UPhysicsCalculator::UpdateGroundState()
 {
+	// 現在の接地状態を判定
 	bool bIsCurrentlyOnGround = OnGround();
+
+	// 前フレームは接地してなかったのに、今回接地していたら「着地」
 	bHasJustLanded = (!bWasOnGround && bIsCurrentlyOnGround);
 
 	if (bHasJustLanded)
@@ -81,15 +110,23 @@ void UPhysicsCalculator::UpdateGroundState()
 	bWasOnGround = bIsCurrentlyOnGround;
 }
 
-void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep , const bool useLocalOffset)
+// =======================
+// 外部からの力を加える
+// =======================
+
+void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep, const bool useLocalOffset)
 {
-	ForceDirection = Direction;
-	ForceScale = Force /** ForceModifier*/;
-	Timer = 0;
-	bIsSweep = bSweep;
-	bIsPhysicsEnabled = false;
+	ForceDirection = Direction;  // 力の方向
+	ForceScale = Force;          // 力の大きさ
+	Timer = 0;                   // 重力タイマーリセット
+	bIsSweep = bSweep;           // Sweep 使用有無
+	bIsPhysicsEnabled = false;   // 手動移動モードへ
 	bUseLocalOffset = useLocalOffset;
 }
+
+// =======================
+// 外部からの力をリセット
+// =======================
 
 void UPhysicsCalculator::ResetForce()
 {
@@ -99,8 +136,13 @@ void UPhysicsCalculator::ResetForce()
 	bIsPhysicsEnabled = true;
 }
 
+// =======================
+// 重力計算
+// =======================
+
 void UPhysicsCalculator::AddGravity()
 {
+	// 接地中なら落下処理を停止
 	if (OnGround())
 	{
 		bIsPhysicsEnabled = false;
@@ -109,93 +151,103 @@ void UPhysicsCalculator::AddGravity()
 		return;
 	}
 
+	// 経過時間を加算
 	Timer += GetWorld()->DeltaTimeSeconds;
 
-	// 落下速度を計算
+	// 落下速度 = 重力スケール × 経過時間 / 修正係数
 	float FallSpeed = (GravityScale * Timer) / ForceModifier;
 
-	// 上限を適用
+	// 最大落下速度を制限
 	FallSpeed = FMath::Min(FallSpeed, MaxFallingSpeed);
 
+	// Z方向に移動（ローカル座標、Sweep有効）
 	GetOwner()->AddActorLocalOffset(FVector(0, 0, -FallSpeed), true);
 }
 
+// =======================
+// 接地判定
+// =======================
 
 bool UPhysicsCalculator::OnGround() const
 {
 	AActor* Owner = GetOwner();
 	if (!Owner) return false;
 
+	// 位置・スケール取得
 	FVector ActorLocation = Owner->GetActorLocation();
 	FVector ActorScale = Owner->GetActorScale();
-	FVector BoxExtent(40.0f * ActorScale.X, 20.0f * ActorScale.Y, 15.0f); // 薄い足元のボックス
+
+	// 足元に薄い BoxExtent を作成して接地判定
+	FVector BoxExtent(40.0f * ActorScale.X, 20.0f * ActorScale.Y, 15.0f);
 
 	float HalfHeight = Owner->GetSimpleCollisionHalfHeight();
 
-	// オーナーの回転を取得
+	// 回転を考慮した下方向ベクトル
 	const FQuat ActorRotation = Owner->GetActorQuat();
-
-	// 回転を考慮して足元の位置を計算
 	FVector DownVector = ActorRotation.GetUpVector() * -1.f;
+
+	// 足元の位置を算出
 	FVector FootLocation = ActorLocation + DownVector * HalfHeight;
 
+	// 足元 5cm 下へトレース
 	FVector StartTrace = FootLocation;
-	FVector EndTrace = FootLocation + DownVector * 5.0f; // 足元の下方向へ5cmトレース
+	FVector EndTrace = FootLocation + DownVector * 5.0f;
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Owner);
 
 	FHitResult Hit;
 
+	// Sweep で地面と接触しているかを判定
 	bool bHit = GetWorld()->SweepSingleByChannel(
 		Hit,
 		StartTrace,
 		EndTrace,
-		ActorRotation, // ★回転を考慮したボックスの方向
+		ActorRotation,
 		ECC_Visibility,
 		FCollisionShape::MakeBox(BoxExtent),
 		Params
 	);
 
-//#if WITH_EDITOR
-//	DrawDebugBox(
-//		GetWorld(),
-//		StartTrace,
-//		BoxExtent,
-//		ActorRotation, // ★ここも回転を反映
-//		bHit ? FColor::Green : FColor::Red,
-//		false, 1.0f
-//	);
-//#endif
-
 	return bHit;
 }
 
+// =======================
+// 重力スケールの設定
+// =======================
 
-void UPhysicsCalculator::SetGravityScale(bool applyGravity, float scale,float Modifier)
+void UPhysicsCalculator::SetGravityScale(bool applyGravity, float scale, float Modifier)
 {
 	GravityScale = scale;
 	bShouldApplyGravity = applyGravity;
 	ForceModifier = Modifier;
 }
 
+// =======================
+// 移動方向の衝突補正
+// =======================
+
 FVector UPhysicsCalculator::GetBlockedAdjustedVector(const FVector& MoveVector)
 {
 	AActor* Owner = GetOwner();
 	if (!Owner || MoveVector.IsNearlyZero()) return MoveVector;
 
+	// 位置・スケール取得
 	FVector ActorLocation = Owner->GetActorLocation();
 	FVector ActorScale = Owner->GetActorScale();
 
-	// スケールを元にした固定サイズ（基準20cm）で BoxExtent を計算
+	// 固定サイズの BoxExtent（20cm 基準）
 	FVector BoxExtent(
-		20.0f * ActorScale.X,  // 横幅
-		20.0f * ActorScale.Y,  // 奥行き（前後）
-		20.0f * ActorScale.Z   // 高さ
+		20.0f * ActorScale.X,
+		20.0f * ActorScale.Y,
+		20.0f * ActorScale.Z
 	);
 
+	// 移動方向を正規化
 	FVector Direction = MoveVector.GetSafeNormal();
 	const float BackstepDistance = 1.0f;
+
+	// 開始・終了位置
 	FVector Start = ActorLocation - Direction * BackstepDistance;
 	FVector End = Start + MoveVector;
 
@@ -203,6 +255,7 @@ FVector UPhysicsCalculator::GetBlockedAdjustedVector(const FVector& MoveVector)
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Owner);
 
+	// Sweep で移動先に障害物があるかを判定
 	bool bHit = GetWorld()->SweepSingleByChannel(
 		Hit,
 		Start,
@@ -213,6 +266,7 @@ FVector UPhysicsCalculator::GetBlockedAdjustedVector(const FVector& MoveVector)
 		Params
 	);
 
+	// 衝突時は移動距離を補正
 	if (bHit)
 	{
 		const float AdjustMargin = 0.1f;
@@ -220,19 +274,30 @@ FVector UPhysicsCalculator::GetBlockedAdjustedVector(const FVector& MoveVector)
 		return Direction * Distance;
 	}
 
+	// 衝突なしならそのまま
 	return MoveVector;
 }
+
+// =======================
+// 接地面の法線取得
+// =======================
+
 FVector UPhysicsCalculator::GetGroundNormal() const
 {
 	AActor* Owner = GetOwner();
 	if (!Owner) return FVector::UpVector;
 
+	// 位置・スケール取得
 	FVector ActorLocation = Owner->GetActorLocation();
 	FVector ActorScale = Owner->GetActorScale();
+
+	// 足元に薄い BoxExtent を作成
 	FVector BoxExtent(20.0f * ActorScale.X, 20.0f * ActorScale.Y, 2.0f);
 
 	float HalfHeight = Owner->GetSimpleCollisionHalfHeight();
 	FVector FootLocation = ActorLocation - FVector(0, 0, HalfHeight);
+
+	// 足元 5cm 下をトレース
 	FVector StartTrace = FootLocation;
 	FVector EndTrace = FootLocation - FVector(0, 0, 5.0f);
 
@@ -240,6 +305,7 @@ FVector UPhysicsCalculator::GetGroundNormal() const
 	Params.AddIgnoredActor(Owner);
 	FHitResult Hit;
 
+	// Sweep で接地判定
 	bool bHit = GetWorld()->SweepSingleByChannel(
 		Hit,
 		StartTrace,
@@ -252,13 +318,20 @@ FVector UPhysicsCalculator::GetGroundNormal() const
 
 	if (bHit)
 	{
+		// 接地していれば法線を返す
 		return Hit.Normal;
 	}
 
-	// 接地してなければ上向きを返す
+	// 非接地時は上方向を返す
 	return FVector::UpVector;
 }
+
+// =======================
+// 着地判定
+// =======================
+
 const bool UPhysicsCalculator::HasLanded()
 {
+	// 直前のフレームで接地状態に変わったかを返す
 	return bHasJustLanded;
 }

@@ -24,7 +24,6 @@ class UCameraComponent;
 class UColorControllerComponent;
 class UBoxComponent;
 class UCameraHandlerComponent;
-class UInvincibilityComponent;
 class UFloatingPawnMovement;
 class UCharacterMovementComponent;
 
@@ -164,10 +163,6 @@ private:
 	// カメラ制御コンポーネント
 	UPROPERTY(EditAnywhere)
 	UCameraHandlerComponent* CameraComponent;
-
-	// 無敵状態制御コンポーネント
-	UPROPERTY()
-	UInvincibilityComponent* InvincibilityComponent;
 
 	// プレイヤーのステートクラス（Blueprintから設定）
 	UPROPERTY(EditAnywhere, Category = "State")

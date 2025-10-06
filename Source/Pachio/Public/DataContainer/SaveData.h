@@ -6,16 +6,28 @@
 #include "DataContainer/StageInfo.h"
 #include "SaveData.generated.h"
 
+// =======================
+// ステージごとのセーブデータ
+// =======================
+
 USTRUCT(BlueprintType)
 struct FSaveData
 {
     GENERATED_BODY()
 
+    // ステージクリア済みかどうか
     bool bCleared = false;
+
+    // クリアランク（例：S, A, B…）
     EStageRank ClearRank;
+
+    // 難易度ランク（数値）
     int32 difficultyRank = 0;
+
+    // ステージタイトル
     FString Title;
 
+    // JSON 形式に変換
     TSharedPtr<FJsonObject> ToJson() const
     {
         TSharedPtr<FJsonObject> Obj = MakeShareable(new FJsonObject);
@@ -26,6 +38,7 @@ struct FSaveData
         return Obj;
     }
 
+    // JSON から構造体に復元
     static FSaveData FromJson(TSharedPtr<FJsonObject> Obj)
     {
         FSaveData Data;
@@ -37,18 +50,25 @@ struct FSaveData
     }
 };
 
+// =======================
+// 全ステージのセーブデータ
+// =======================
+
 USTRUCT(BlueprintType)
 struct FStageSaveData
 {
-
     GENERATED_BODY()
+
+    // ステージ名をキーにしたセーブデータのマップ
     TMap<FString, FSaveData> Stages;
 
+    // JSON に変換
     TSharedPtr<FJsonObject> ToJson() const
     {
         TSharedPtr<FJsonObject> Root = MakeShareable(new FJsonObject);
         TSharedPtr<FJsonObject> StageObject = MakeShareable(new FJsonObject);
 
+        // 各ステージのデータを JSON に追加
         for (const auto& Elem : Stages)
         {
             StageObject->SetObjectField(Elem.Key, Elem.Value.ToJson());
@@ -58,6 +78,7 @@ struct FStageSaveData
         return Root;
     }
 
+    // JSON から全ステージデータを復元
     static FStageSaveData FromJson(TSharedPtr<FJsonObject> Root)
     {
         FStageSaveData Data;
@@ -75,6 +96,7 @@ struct FStageSaveData
         return Data;
     }
 
+    // 指定ステージのランクを取得（存在しない場合は None）
     EStageRank GetStageRank(const FString& StageName) const
     {
         if (const FSaveData* FoundData = Stages.Find(StageName))
@@ -85,18 +107,24 @@ struct FStageSaveData
     }
 };
 
+// =======================
+// 音量設定のセーブデータ
+// =======================
 
 USTRUCT(BlueprintType)
 struct FVolumeSaveData
 {
     GENERATED_BODY()
 
+    // BGM 音量
     UPROPERTY(BlueprintReadWrite)
     float BGMVolume = 2;
 
+    // 効果音(SE) 音量
     UPROPERTY(BlueprintReadWrite)
     float SEVolume = 2;
 
+    // JSON に変換
     TSharedPtr<FJsonObject> ToJson() const
     {
         TSharedPtr<FJsonObject> Obj = MakeShareable(new FJsonObject);
@@ -105,6 +133,7 @@ struct FVolumeSaveData
         return Obj;
     }
 
+    // JSON から復元
     static FVolumeSaveData FromJson(const TSharedPtr<FJsonObject>& Obj)
     {
         FVolumeSaveData Data;

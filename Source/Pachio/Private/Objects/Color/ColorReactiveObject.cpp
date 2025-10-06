@@ -1,6 +1,5 @@
 #include "Objects/Color/ColorReactiveObject.h"
 #include "Components/Color/ColorConfigurator.h"
-#include "Components/Color/FlammableComponent.h"
 #include "Manager/ColorManager.h"
 #include "Manager/LevelManager.h"
 

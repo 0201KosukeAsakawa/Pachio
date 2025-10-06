@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "DataContainer/EffectMatchResult.h"
-#include "DataContainer/ColorTargetType.h"
 #include "ColorTargetRegistry.generated.h"
 
 class IColorReactiveInterface;

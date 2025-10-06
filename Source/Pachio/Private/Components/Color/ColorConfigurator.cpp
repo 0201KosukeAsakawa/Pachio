@@ -9,15 +9,18 @@
 
 UColorConfigurator::UColorConfigurator()
 {
-	BeatScalerComponent = CreateDefaultSubobject<UBeatScalerComponent>(TEXT("BeatScalerComponent"));
+	// ビート演出用コンポーネントを生成
+	BeatScaler = CreateDefaultSubobject<UBeatScalerComponent>(TEXT("BeatScaler"));
 }
 
 void UColorConfigurator::Init()
 {
+	// 各種初期化処理
 	InitializeColorLogic();
 	RegisterToColorManager();
 	SetupMaterial();
 
+	// サウンドマネージャを取得し、ビートイベントに登録
 	const TObjectPtr<USoundManager> SoundManager = Cast<USoundManager>(GetLevelManager()->GetSoundManager().GetObject());
 	if (!SoundManager) return;
 
@@ -28,31 +31,41 @@ void UColorConfigurator::InitializeColorLogic()
 {
 	if (!ReactiveComponentClass) return;
 
+	// 現在色を初期色に設定
 	CurrentColor = StartColor;
-	ColorReactiveComponent = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
-	if (!ColorReactiveComponent) return;
 
-	ColorReactiveComponent->RegisterComponent();
-	ColorReactiveComponent->Activate(true);
-	ColorReactiveComponent->InitColorEffectAndNiagara(StartColor, Effect, Niagaras);
-	ColorReactiveComponent->Init(bColorVariable);
+	// 色リアクティブコンポーネントを生成
+	ColorReactive = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
+	if (!ColorReactive) return;
 
+	// 登録 & 有効化
+	ColorReactive->RegisterComponent();
+	ColorReactive->Activate(true);
+
+	// 色エフェクトとナイアガラを初期化
+	ColorReactive->InitColorEffectAndNiagara(StartColor, EffectType, NiagaraActors);
+	ColorReactive->Init(bIsColorVariable);
 }
 
 void UColorConfigurator::RegisterToColorManager()
 {
+	// カラーマネージャに自身を登録
 	if (UColorManager* ColorManager = GetColorManager())
 	{
-		ColorManager->RegisterTarget(ColorTargetType, GetOwner());
+		ColorManager->RegisterTarget(TargetType, GetOwner());
 	}
 }
 
 void UColorConfigurator::SetupMaterial()
 {
 	if (!bSetColor) return;
+
+	// 初期色をカラーマネージャから取得
 	StartColor = ALevelManager::GetInstance(GetWorld())
 		->GetColorManager()
-		->GetEffectColor(Effect);
+		->GetEffectColor(EffectType);
+
+	// メッシュを取得して色を適用
 	if (USkeletalMeshComponent* Mesh = GetStaticMesh())
 	{
 		Mesh->SetRenderCustomDepth(true);
@@ -67,116 +80,138 @@ void UColorConfigurator::SetupMaterial()
 
 void UColorConfigurator::PlayBeatAnimation()
 {
-	if (!bIsPlayBeat)
-		return;
+	// ビート演出が無効なら何もしない
+	if (!bPlayBeatEffect) return;
 
-	if (BeatScalerComponent)
+	// ビート演出を実行
+	if (BeatScaler)
 	{
-		BeatScalerComponent->PlayBeat();
+		BeatScaler->PlayBeat();
 	}
 }
 
-void UColorConfigurator::ColorAction(FLinearColor NewColor, FEffectMatchResult result)
+void UColorConfigurator::ColorAction(FLinearColor NewColor, FEffectMatchResult MatchResult)
 {
-	if (!bPlayColorAction || !ColorReactiveComponent) return;
+	if (!bEnableColorAction || !ColorReactive) return;
 
-	if (bColorVariable)
+	// 色変数扱いなら材質に反映
+	if (bIsColorVariable)
 	{
 		ApplyColorToMaterial(NewColor);
 	}
 
-	bColorMuch = ColorReactiveComponent->CheckColorMatch(result,NewColor, bUseComplementaryColor);
+	// 色一致判定を更新
+	bIsColorMatch = ColorReactive->CheckColorMatch(MatchResult, NewColor, bUseComplementaryColor);
 }
 
-void UColorConfigurator::SetColor(FLinearColor NewColor, FEffectMatchResult result)
+void UColorConfigurator::SetColor(FLinearColor NewColor, FEffectMatchResult MatchResult)
 {
+	// 現在色を更新
 	CurrentColor = NewColor;
 
+	// 設定可能なら材質へ反映
 	if (bSetColor)
 	{
 		ApplyColorToMaterial(CurrentColor);
 	}
 
-	if (ColorReactiveComponent)
+	// リアクティブコンポーネントへ色適用
+	if (ColorReactive)
 	{
-		ColorReactiveComponent->InitColorEffectAndNiagara(CurrentColor, result.ClosestEffect , Niagaras);
+		ColorReactive->InitColorEffectAndNiagara(CurrentColor, MatchResult.ClosestEffect, NiagaraActors);
 	}
 
+	// カラーマネージャが存在するならアクション実行
 	if (const UColorManager* ColorManager = GetColorManager())
 	{
-		ColorAction(ColorManager->GetWorldColor(), result);
+		ColorAction(ColorManager->GetWorldColor(), MatchResult);
 	}
 }
 
-void UColorConfigurator::ResetColor(FEffectMatchResult result)
+void UColorConfigurator::ResetColor(FEffectMatchResult MatchResult)
 {
-	SetColor(StartColor, result);
+	// 初期色にリセット
+	SetColor(StartColor, MatchResult);
 }
 
 void UColorConfigurator::SetCurrentColor(FLinearColor NewColor)
 {
+	// 内部的に色だけ更新
 	CurrentColor = NewColor;
 }
 
-void UColorConfigurator::SetColorMatch(bool bInColorMuch)
+void UColorConfigurator::SetColorMatch(bool bInColorMatch)
 {
-	bColorMuch = bInColorMuch;
+	// 色一致フラグを更新
+	bIsColorMatch = bInColorMatch;
 }
 
 void UColorConfigurator::SetSelectMode(bool bInIsSelected)
 {
+	// 選択状態を更新
 	bIsSelected = bInIsSelected;
-	if (ColorReactiveComponent)
+
+	// リアクティブ側にも伝える
+	if (ColorReactive)
 	{
-		ColorReactiveComponent->SetSelectMode(bIsSelected);
+		ColorReactive->SetSelectMode(bIsSelected);
 	}
 }
 
 bool UColorConfigurator::IsColorChange() const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->IsColorMatch(StartColor);
+	// 初期色と一致しているかを確認
+	return ColorReactive && ColorReactive->IsColorMatch(StartColor);
 }
 
 bool UColorConfigurator::IsColorChange(FLinearColor Color) const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->IsColorMatch(Color);
+	// 指定色と一致しているかを確認
+	return ColorReactive && ColorReactive->IsColorMatch(Color);
 }
 
-bool UColorConfigurator::CheckColorMatch(FEffectMatchResult result,const FLinearColor& FilterColor, bool buseComplementaryColor) const
+bool UColorConfigurator::CheckColorMatch(FEffectMatchResult MatchResult, const FLinearColor& FilterColor, bool bUseComplementary) const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->CheckColorMatch(result,FilterColor, buseComplementaryColor);
+	// マッチ判定を実行
+	return ColorReactive && ColorReactive->CheckColorMatch(MatchResult, FilterColor, bUseComplementary);
 }
 
 bool UColorConfigurator::IsColorMatch() const
 {
-	return bColorMuch;
+	// 内部フラグによる一致判定
+	return bIsColorMatch;
 }
 
 bool UColorConfigurator::IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance) const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->IsColorMatch(FilterColor, TargetColor, Tolerance);
+	// 2色間の一致確認
+	return ColorReactive && ColorReactive->IsColorMatch(FilterColor, TargetColor, Tolerance);
 }
 
 bool UColorConfigurator::IsColorMatch(const FLinearColor& FilterColor, float Tolerance) const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->IsColorMatch(FilterColor, Tolerance);
+	// 色と現在の色の一致確認
+	return ColorReactive && ColorReactive->IsColorMatch(FilterColor, Tolerance);
 }
 
-bool UColorConfigurator::IsChangeable()const
+bool UColorConfigurator::IsChangeable() const
 {
+	// 色変更可能フラグを返す
 	return bColorChangeable;
 }
 
 bool UColorConfigurator::IsHidden() const
 {
-	return ColorReactiveComponent && ColorReactiveComponent->IsHidden();
+	// 非表示判定
+	return ColorReactive && ColorReactive->IsHidden();
 }
 
 void UColorConfigurator::ApplyColorToMaterial(FLinearColor InColor)
 {
-	if (ColorReactiveComponent)
+	// 材質に色を適用
+	if (ColorReactive)
 	{
-		ColorReactiveComponent->ApplyColorToMaterial(InColor);
+		ColorReactive->ApplyColorToMaterial(InColor);
 	}
 }
 
@@ -186,16 +221,19 @@ void UColorConfigurator::ApplyColorToMaterial(FLinearColor InColor)
 
 USkeletalMeshComponent* UColorConfigurator::GetStaticMesh() const
 {
+	// "Mesh" という名前の SkeletalMeshComponent を探す
 	return UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh"));
 }
 
 ALevelManager* UColorConfigurator::GetLevelManager() const
 {
+	// レベルマネージャ取得
 	return ALevelManager::GetInstance(GetWorld());
 }
 
 UColorManager* UColorConfigurator::GetColorManager() const
 {
+	// カラーマネージャ取得
 	const ALevelManager* LevelManager = GetLevelManager();
 	return LevelManager ? LevelManager->GetColorManager() : nullptr;
 }

@@ -2,7 +2,7 @@
 
 
 #include "UI/ClearResultWidget.h"
-#include "DataContainer/ClearScoreType.h"
+
 void UClearResultWidget::SetupClearResult(float InClearTime, EStageRank InScore)
 {
     CachedClearTime = InClearTime;

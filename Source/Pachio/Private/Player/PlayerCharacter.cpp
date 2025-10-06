@@ -9,7 +9,6 @@
 #include "Components/Color/ColorControllerComponent.h"
 #include "Components/Player/PlayerInputComponent.h"
 #include "Components/CameraHandlerComponent.h"
-#include "Components/InvincibilityComponent.h"
 #include "DataContainer/EffectMatchResult.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -38,7 +37,6 @@ APlayerCharacter::APlayerCharacter()
 	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
-	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
 }
 
 // ゲーム開始時の初期化処理
@@ -107,8 +105,6 @@ void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 void APlayerCharacter::ResetBuff()
 {
 	 JumpBuff = 1;
-	 //FloatingPawnMovement->GroundFriction = 8.0f;
-	 //FloatingPawnMovement->BrakingDecelerationWalking = 2048.f;
 	 physics->SetGravityScale(true, DefaultGravityScalse);
 }
 
@@ -287,8 +283,6 @@ void APlayerCharacter::InitPhysicsSettings()
 	// 重力を加える（値は任意、固定でOUTLINE_STENCIL_VALUEを加算）
 	physics->SetGravityScale(true, DefaultGravityScalse);
 
-	// 摩擦や重力のパラメータ調整
-	//FloatingPawnMovement->Deceleration = 2048.f; // 適当な値
 }
 
 // 入力関連の初期化（コンポーネントのコントローラ参照を設定）
