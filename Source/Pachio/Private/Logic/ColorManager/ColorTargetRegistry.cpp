@@ -7,25 +7,28 @@
 #include "Kismet/GameplayStatics.h"
 
 
+// =======================
+// 色の適用処理
+// =======================
+
 void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mode, FEffectMatchResult effect)
 {
-
     switch (Mode)
     {
     case EColorTargetType::WorldColor:
         if (PostProcessMID)
         {
-            // ポストプロセスマテリアルに色を適用
+            // ポストプロセスマテリアルに色を適用（画面全体のカラー演出）
             PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
         }
         // 指定されたモードのターゲットに通知
         NotifyTargets(Mode, NewColor, effect);
-        // 常時反応するターゲット（例：UIなど）に通知
+        // 常時反応するターゲット（例：UIなど Responders）にも通知
         NotifyTargets(EColorTargetType::Responders, NewColor, effect);
         break;
 
     case EColorTargetType::ObjectColor:
-        // 指定されたモードのターゲットに通知
+        // 特定オブジェクトに色を適用
         if (!TargetObject)
             return;
         TargetObject->ColorAction(NewColor, effect);
@@ -35,22 +38,27 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
         break;
     }
 
+    // 色適用イベントをブロードキャスト
     OnColorApplied.Broadcast(Mode, NewColor);
 }
 
-void UColorTargetRegistry::ColorEvent(FName EventID,FLinearColor NewColor, FEffectMatchResult effect)
+// =======================
+// イベント用の色適用処理
+// =======================
+
+void UColorTargetRegistry::ColorEvent(FName EventID, FLinearColor NewColor, FEffectMatchResult effect)
 {
+    // Event ターゲットが存在しなければ終了
     if (!ColorResponseTargets.Contains(EColorTargetType::Event))
     {
-        // EColorTargetType::Eventのキーが存在しなければ処理終了
         return;
     }
 
     auto& Instances = ColorResponseTargets[EColorTargetType::Event].Instances;
-
     if (Instances.Num() == 0)
         return;
 
+    // EventID が一致するターゲットにのみ通知
     for (auto& TargetInstance : Instances)
     {
         if (TargetInstance->GetColorEventID() != EventID)
@@ -60,21 +68,32 @@ void UColorTargetRegistry::ColorEvent(FName EventID,FLinearColor NewColor, FEffe
     }
 }
 
+// =======================
+// ターゲットの選択・リセット
+// =======================
+
+// 特定のオブジェクトを現在の色ターゲットとして設定
 void UColorTargetRegistry::SetColorTarget(IColorReactiveInterface* InInterface)
 {
     TargetObject.SetObject(Cast<UObject>(InInterface));
     TargetObject.SetInterface(InInterface);
-    InInterface->SetSelectMode(true);
+    InInterface->SetSelectMode(true); // 選択状態を付与
 }
 
+// 選択中のターゲットをリセット
 void UColorTargetRegistry::ResetColorTarget()
-{   
+{
     TargetObject->SetSelectMode(false);
 }
 
+// =======================
+// ターゲット登録処理
+// =======================
+
+// 指定モードに新しいターゲットを登録
 void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
 {
-    if (!Target) 
+    if (!Target)
         return;
 
     FColorTargetInstanceArray& TargetArray = ColorResponseTargets.FindOrAdd(Mode);
@@ -84,6 +103,11 @@ void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterfac
     }
 }
 
+// =======================
+// ターゲット通知処理
+// =======================
+
+// 指定モードの全ターゲットに色を通知
 void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearColor& Color, FEffectMatchResult effect)
 {
     if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(Mode))
@@ -99,8 +123,13 @@ void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearCol
     }
 }
 
+// =======================
+// ポストプロセスの初期化
+// =======================
+
 void UColorTargetRegistry::InitializePostEffect()
 {
+    // シーン内の PostProcessVolume を検索
     TArray<AActor*> FoundVolumes;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), APostProcessVolume::StaticClass(), FoundVolumes);
 
@@ -111,15 +140,20 @@ void UColorTargetRegistry::InitializePostEffect()
 
     if (PostProcessVolume && PostProcessMaterial)
     {
-        // マテリアルインスタンスを作成しポストプロセスに適用
+        // 動的マテリアルを作成して PostProcessVolume に適用
         PostProcessMID = UMaterialInstanceDynamic::Create(PostProcessMaterial, this);
         PostProcessVolume->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, PostProcessMID));
     }
 }
 
+// =======================
+// ポストプロセスカラー取得
+// =======================
+
 FLinearColor UColorTargetRegistry::GetPostProcessColor() const
 {
-    if (!PostProcessMID) return FLinearColor::Black;  // あるいはデフォルト色
+    if (!PostProcessMID)
+        return FLinearColor::Black;  // 初期値がなければ黒を返す
 
     FLinearColor CurrentColor;
     if (PostProcessMID->GetVectorParameterValue(FName("FilterColor"), CurrentColor))
@@ -128,7 +162,8 @@ FLinearColor UColorTargetRegistry::GetPostProcessColor() const
     }
     else
     {
-        // パラメータがなければ黒とか適当な色を返す
+        // パラメータが存在しない場合は黒を返す
         return FLinearColor::Black;
     }
 }
+

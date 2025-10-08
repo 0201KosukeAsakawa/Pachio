@@ -6,41 +6,60 @@
 #include "Player/InGameController.h"
 
 
+// =======================
+// コンストラクタ
+// =======================
+
 AControllableObjectBase::AControllableObjectBase()
 {
+    // 特に初期化処理なし
 }
 
+// =======================
+// 操作権切り替え
+// =======================
+
+// 指定されたプレイヤー(Pawn)のコントローラーをこのオブジェクトに切り替える
 void AControllableObjectBase::SwitchControll(APawn* player)
 {
-	// このPawnを操作しているコントローラーを取得
-	AController* OwningController = player->GetController();
-	if (OwningController)
-	{
-		// AInGameController にキャスト（もし AInGameController がこのPlayerCharacterをPossessしている場合）
-		AInGameController* InGameController = Cast<AInGameController>(OwningController);
-		if (InGameController)
-		{
-			// コントローラーのTogglePossession関数を呼び出す
-			InGameController->TogglePossession(this);
-		}
-	}
+    // この Pawn を操作しているコントローラーを取得
+    AController* OwningController = player->GetController();
+    if (OwningController)
+    {
+        // AInGameController にキャスト
+        // （このコントローラーがプレイヤーキャラクターを Possess している場合）
+        AInGameController* InGameController = Cast<AInGameController>(OwningController);
+        if (InGameController)
+        {
+            // コントローラーの Possession を切り替える
+            // → プレイヤーの操作対象をこのオブジェクトに移す
+            InGameController->TogglePossession(this);
+        }
+    }
 }
 
+// =======================
+// アクション入力処理
+// =======================
+
+// このオブジェクトを操作中にアクションが押されたら元のプレイヤーに戻る
 void AControllableObjectBase::Action(const FInputActionValue& Value)
 {
-	if (Value.Get<bool>()) // ���͂��L���ȏꍇ�i�{�^���������ꂽ�ꍇ�Ȃǁj
-	{
-		// ����Pawn�𑀍삵�Ă���R���g���[���[��擾
-		AController* OwningController = GetController();
-		if (OwningController)
-		{
-			// AInGameController �ɃL���X�g�i��� AInGameController ������PlayerCharacter��Possess���Ă���ꍇ�j
-			AInGameController* InGameController = Cast<AInGameController>(OwningController);
-			if (InGameController)
-			{
-				// �R���g���[���[��TogglePossession�֐���Ăяo��
-				InGameController->ReturnToOriginalPlayer();
-			}
-		}
-	}
+    // 入力が有効（ボタンが押されたなど）の場合のみ処理
+    if (Value.Get<bool>())
+    {
+        // このオブジェクトを操作しているコントローラーを取得
+        AController* OwningController = GetController();
+        if (OwningController)
+        {
+            // AInGameController にキャスト
+            // （現在このオブジェクトを Possess している場合）
+            AInGameController* InGameController = Cast<AInGameController>(OwningController);
+            if (InGameController)
+            {
+                // 元のプレイヤーキャラクターに操作権を戻す
+                InGameController->ReturnToOriginalPlayer();
+            }
+        }
+    }
 }

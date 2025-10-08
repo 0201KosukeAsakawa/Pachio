@@ -133,19 +133,6 @@ FLinearColor AdjustColor(FLinearColor InColor)
     return HSV.HSVToLinearRGB();
 }
 
-//void UColorLens::ColorAction(FLinearColor InColor, FEffectMatchResult)
-//{
-//    float H, S, V;
-//    ConvertRGBToHSV(InColor, H, S, V);
-//    CurrentColorImage->SetColorAndOpacity(AdjustColor(InColor));
-//    if (FilterColorImage)
-//    {
-//        FWidgetTransform Transform = FilterColorImage->RenderTransform;
-//        Transform.Angle = H;  // 色相に応じて回転
-//        FilterColorImage->SetRenderTransform(Transform);
-//    }
-//}
-
 void UColorLens::ColorAction(FLinearColor InColor, FEffectMatchResult)
 {
     if (FilterColorImage == nullptr)

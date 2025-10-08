@@ -47,9 +47,7 @@ void ATeleportPortal::ColorAction(const FLinearColor InColor, FEffectMatchResult
     }
     else
     {
-        /*bool c = ColorConfigurator->IsColorMatch(InColor, SecondColor);
-        if (c)*/
-            CurrentTargetPortal = PrimaryDestination;
+        CurrentTargetPortal = PrimaryDestination;
     }
 }
 
