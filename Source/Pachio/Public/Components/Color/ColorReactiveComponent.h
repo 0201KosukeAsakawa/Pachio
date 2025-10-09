@@ -31,7 +31,7 @@ public:
 	virtual void Init(bool);
 	void InitColorEffectAndNiagara(const FLinearColor& FilterColor, EBuffEffect, TArray<ANiagaraActor*>);
 	void ApplyColorToMaterial(FLinearColor InColor);
-	bool CheckColorMatch(FEffectMatchResult, const FLinearColor& FilterColor, const bool buseComplementaryColor = false);
+	bool IsRGBDistancewithinThreshold(FEffectMatchResult, const FLinearColor& FilterColor, const bool buseComplementaryColor = false);
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
 	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;

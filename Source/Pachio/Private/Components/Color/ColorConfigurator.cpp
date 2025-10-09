@@ -101,7 +101,7 @@ void UColorConfigurator::ColorAction(FLinearColor NewColor, FEffectMatchResult M
 	}
 
 	// 色一致判定を更新
-	bIsColorMatch = ColorReactive->CheckColorMatch(MatchResult, NewColor, bUseComplementaryColor);
+	bIsColorMatch = ColorReactive->IsRGBDistancewithinThreshold(MatchResult, NewColor, bUseComplementaryColor);
 }
 
 void UColorConfigurator::SetColor(FLinearColor NewColor, FEffectMatchResult MatchResult)
@@ -173,7 +173,7 @@ bool UColorConfigurator::IsColorChange(FLinearColor Color) const
 bool UColorConfigurator::CheckColorMatch(FEffectMatchResult MatchResult, const FLinearColor& FilterColor, bool bUseComplementary) const
 {
 	// マッチ判定を実行
-	return ColorReactive && ColorReactive->CheckColorMatch(MatchResult, FilterColor, bUseComplementary);
+	return ColorReactive && ColorReactive->IsRGBDistancewithinThreshold(MatchResult, FilterColor, bUseComplementary);
 }
 
 bool UColorConfigurator::IsColorMatch() const
