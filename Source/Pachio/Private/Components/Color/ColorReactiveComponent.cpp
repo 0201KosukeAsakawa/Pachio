@@ -82,7 +82,7 @@ void UColorReactiveComponent::InitColorEffectAndNiagara(const FLinearColor& Filt
 	Niagaras = NiagaraComponents;
 }
 
-bool UColorReactiveComponent::CheckColorMatch(FEffectMatchResult result, const FLinearColor& FilterColor, const bool bUseComplementaryColor)
+bool UColorReactiveComponent::IsRGBDistancewithinThreshold(FEffectMatchResult result, const FLinearColor& FilterColor, const bool bUseComplementaryColor)
 {
 	// 比較用の色を設定（補色を使用する場合は補色を計算）
 	FLinearColor CheckColor = FilterColor;
