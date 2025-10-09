@@ -436,14 +436,3 @@ void APlayerCharacter::UpdateGlowTarget()
 		CurrentGlowTarget = NewGlowTarget;
 	}
 }
-
-
-void APlayerCharacter::Respawn()
-{
-	SetActorLocation(CurrentRespawnPoint);
-}
-
-void APlayerCharacter::UpdateRespawn(FVector newLocation)
-{
-	CurrentRespawnPoint = newLocation;
-}
