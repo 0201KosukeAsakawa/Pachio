@@ -340,7 +340,7 @@ void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
 	DynMaterial->SetVectorParameterValue(FName("BaseColor"), InColor);
 }
 
-bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const float Tolerance) const
+bool UColorReactiveComponent::IsColorDegreeDistanceWithinThreshold(const FLinearColor& FilterColor, const float Tolerance) const
 {
 	// RGB差分を計算
 	float dR = CurrentColor.R - FilterColor.R;
@@ -358,7 +358,7 @@ bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, cons
 	return ColorDifference <= Tolerance * Tolerance;
 }
 
-bool UColorReactiveComponent::IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance) const
+bool UColorReactiveComponent::IsColorDegreeDistanceWithinThreshold(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance) const
 {
 	// RGB差分を計算
 	float dR = TargetColor.R - FilterColor.R;
@@ -400,11 +400,6 @@ void UColorReactiveComponent::PlayAppearEffect()
 	// 出現時のエフェクトを再生
 	ActiveNiagaraEffect(FireflyBurstNiagaraSystem);
 	ActiveNiagaraEffect(LightCubeNiagaraSystem);
-}
-
-void UColorReactiveComponent::PlayDisappearEffect()
-{
-	// 消滅時のエフェクトを再生（必要に応じて実装）
 }
 
 void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
