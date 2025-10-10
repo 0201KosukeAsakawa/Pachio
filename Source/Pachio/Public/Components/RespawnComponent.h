@@ -24,11 +24,14 @@ public:
 
 	/** 現在のOwnerを初期位置にリセットする関数 */
 	UFUNCTION(BlueprintCallable, Category = "Respawn")
-	void RespawnOwnerAtInitialLocation();
+	void RespawnOwner();
+
+	UFUNCTION(BlueprintCallable, Category = "Respawn")
+	void UpdateRespawnPosition(FVector newPosition);
 
 private:
 
 	/** 最初の位置を記録する */
-	FVector InitialLocation;
+	FVector respawnPosition;
 };
 

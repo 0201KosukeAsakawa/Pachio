@@ -65,16 +65,18 @@ void ADeadZone::OverlapDead(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if (!OtherActor)
 		return;
 
-	// RespawnComponent を持っている場合はリスポーン処理を実行
-	if (URespawnComponent* RespawnComp = OtherActor->FindComponentByClass<URespawnComponent>())
-	{
-		RespawnComp->RespawnOwnerAtInitialLocation();
-		return;
-	}
 
 	// RespawnComponent が無い場合は State を Dead に変更
 	if (IStateControllable* IS = Cast<IStateControllable>(OtherActor))
 	{
 		IS->ChangeState(EPlayerStateType::Dead);
 	}
+	// RespawnComponent を持っている場合はリスポーン処理を実行
+	if (URespawnComponent* RespawnComp = OtherActor->FindComponentByClass<URespawnComponent>())
+	{
+		RespawnComp->RespawnOwner();
+		return;
+	}
+
+
 }

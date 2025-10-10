@@ -161,13 +161,13 @@ void UColorConfigurator::SetSelectMode(bool bInIsSelected)
 bool UColorConfigurator::IsColorChange() const
 {
 	// 初期色と一致しているかを確認
-	return ColorReactive && ColorReactive->IsColorMatch(StartColor);
+	return ColorReactive && ColorReactive->IsColorDegreeDistanceWithinThreshold(StartColor);
 }
 
 bool UColorConfigurator::IsColorChange(FLinearColor Color) const
 {
 	// 指定色と一致しているかを確認
-	return ColorReactive && ColorReactive->IsColorMatch(Color);
+	return ColorReactive && ColorReactive->IsColorDegreeDistanceWithinThreshold(Color);
 }
 
 bool UColorConfigurator::CheckColorMatch(FEffectMatchResult MatchResult, const FLinearColor& FilterColor, bool bUseComplementary) const
@@ -185,13 +185,13 @@ bool UColorConfigurator::IsColorMatch() const
 bool UColorConfigurator::IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, float Tolerance) const
 {
 	// 2色間の一致確認
-	return ColorReactive && ColorReactive->IsColorMatch(FilterColor, TargetColor, Tolerance);
+	return ColorReactive && ColorReactive->IsColorDegreeDistanceWithinThreshold(FilterColor, TargetColor, Tolerance);
 }
 
 bool UColorConfigurator::IsColorMatch(const FLinearColor& FilterColor, float Tolerance) const
 {
 	// 色と現在の色の一致確認
-	return ColorReactive && ColorReactive->IsColorMatch(FilterColor, Tolerance);
+	return ColorReactive && ColorReactive->IsColorDegreeDistanceWithinThreshold(FilterColor, Tolerance);
 }
 
 bool UColorConfigurator::IsChangeable() const

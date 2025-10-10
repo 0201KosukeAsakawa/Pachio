@@ -6,18 +6,24 @@
 #include "Interface/StateControllable.h"
 #include "Manager/LevelManager.h"
 #include "Sound/SoundManager.h"
-#include "Kismet/GameplayStatics.h" // �����ǉ�
+#include "Kismet/GameplayStatics.h"
+#include "Components/RespawnComponent.h"
 
 bool UDeadPlayerState::OnEnter(APawn* Owner, UWorld* World)
 {
     if (!Owner) return false;
 
-    Player = Cast<APlayerCharacter>(Owner);
+    PlayerCharacter = Cast<APlayerCharacter>(Owner);
+
+    if (RespawnComponent == nullptr)
+    {
+        RespawnComponent = Owner->GetComponentByClass<URespawnComponent>();
+    }
 
     // 入力停止
-    if (APlayerController* PC = Cast<APlayerController>(Player->GetController()))
+    if (APlayerController* PC = Cast<APlayerController>(PlayerCharacter->GetController()))
     {
-        Player->DisableInput(PC);
+        PlayerCharacter->DisableInput(PC);
 
         // 暗転開始
         if (PC->PlayerCameraManager)
@@ -27,7 +33,7 @@ bool UDeadPlayerState::OnEnter(APawn* Owner, UWorld* World)
             );
         }
 
-        bIsRespawn = false;
+        bIsRespawned = false;
         // タイマーリセット
         ElapsedTime = 0.f;
     }
@@ -45,16 +51,16 @@ bool UDeadPlayerState::OnEnter(APawn* Owner, UWorld* World)
 
 bool UDeadPlayerState::OnUpdate(float DeltaTime)
 {
-    if (Player == nullptr)
+    if (PlayerCharacter == nullptr)
         return false;
 
     ElapsedTime += DeltaTime;
 
-    if (ElapsedTime >= 1.5f && !bIsRespawn)
+    if (ElapsedTime >= 1.5f && !bIsRespawned)
     {
         // 実際のリスポーン処理はここで呼ぶ
-        Player->Respawn();
-        bIsRespawn = true;
+        RespawnComponent->RespawnOwner();
+        bIsRespawned = true;
     }
 
 
@@ -62,7 +68,7 @@ bool UDeadPlayerState::OnUpdate(float DeltaTime)
     {
         // 自作でOwner取るヘルパーとか
 
-        if (IStateControllable* IS = Cast<IStateControllable>(Player))
+        if (IStateControllable* IS = Cast<IStateControllable>(PlayerCharacter))
         {
 
             IS->ChangeState(EPlayerStateType::Default);
@@ -75,7 +81,7 @@ bool UDeadPlayerState::OnUpdate(float DeltaTime)
 
 bool UDeadPlayerState::OnExit(APawn* Owner)
 {
-        if (APlayerController* PC = Cast<APlayerController>(Player->GetController()))
+        if (APlayerController* PC = Cast<APlayerController>(PlayerCharacter->GetController()))
         {
             // 明るく戻す
             if (PC->PlayerCameraManager)
@@ -86,7 +92,7 @@ bool UDeadPlayerState::OnExit(APawn* Owner)
             }
 
             // 入力再開
-            Player->EnableInput(PC);
+            PlayerCharacter->EnableInput(PC);
     }
 
     return true;
