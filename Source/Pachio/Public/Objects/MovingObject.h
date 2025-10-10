@@ -18,10 +18,10 @@ public:
 	// Sets default values for this actor's properties
 	AMovingObject();
 
-	virtual void Init()override;
+	virtual void Initialize()override;
 	virtual void Tick(float)override;
 private:
-	virtual void ColorAction(const FLinearColor InColor , FEffectMatchResult) override;
+	virtual void ApplyColorWithMatching(const FLinearColor& InColor ,const FEffectMatchResult&) override;
 
 	UFUNCTION()
 	void OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

@@ -12,11 +12,6 @@ ALadderActor::ALadderActor()
 	LadderVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComonent"));
 }
 
-void ALadderActor::Init()
-{
-	AColorReactiveObject::Init(); // 親の Init を呼ぶ
-}
-
 // Called every frame
 void ALadderActor::Tick(float DeltaTime)
 {

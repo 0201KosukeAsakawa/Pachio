@@ -28,7 +28,7 @@ public:
     void PlayBeatAnimation();
 
 private:
-    void ColorAction(FLinearColor InColor , FEffectMatchResult) override;
+    void ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult) override;
 
     UPROPERTY(meta = (BindWidget))
     UImage* FilterColorImage;

@@ -53,10 +53,10 @@ bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 // 初期化処理
 // =======================
 
-void UColorProximitySpawner::Init(bool bVariable)
+void UColorProximitySpawner::Initialize(bool bVariable)
 {
     // 親クラスの初期化呼び出し
-    UColorReactiveComponent::Init(bVariable);
+    UColorReactiveComponent::Initialize(bVariable);
 
     // 初期状態はエフェクト停止 & 非表示
     ToggleNiagaraActiveState(false);

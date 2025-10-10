@@ -9,46 +9,93 @@
 
 class UColorReactiveComponent;
 class UBeatScalerComponent;
-class UColorConfigurator;
+class UObjectColorComponent;
 
 /**
- * 色に反応するアクター（指定色でアクションを起こす）
+ * 色に反応するオブジェクトの基底クラス
+ * UObjectColorComponentを使用して色管理を行う
  */
 UCLASS()
-class PACHIO_API AColorReactiveObject : public AActor, public IColorReactiveInterface, public IColorReactionConfigInterface
+class PACHIO_API AColorReactiveObject : public AActor, public IColorReactiveInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	AColorReactiveObject();
-
+    AColorReactiveObject();
+    
 protected:
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
+
+    /** オブジェクト固有の初期化処理（派生クラスでオーバーライド可能） */
+    virtual void Initialize();
 
 public:
-	UFUNCTION()
-	virtual void PlayBeatAnimation();
-	// インターフェース実装
-	virtual void ColorAction(FLinearColor InColor, FEffectMatchResult) override;
-	virtual void SetColor(FLinearColor, FEffectMatchResult result)override;
-	virtual void ResetColor()override;
-	virtual void SetSelectMode(bool)override;
-	virtual void ChangeLock(bool b) override;	
-	virtual bool IsColorChange()const override;
-	virtual bool IsChangeable()const override;
-	virtual bool IsColorModifiable()const override;
-	virtual bool IsColorMatch() const override;
-	FName GetColorEventID()const override;
+    // =======================
+    // IColorReactiveInterface の実装
+    // =======================
+
+    /** 色を設定 */
+    virtual void ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult) override;
+
+    /** 色をリセット */
+    virtual void ResetColor(const FEffectMatchResult& MatchResult) override;
+
+    /** 選択状態を設定 */
+    virtual void SetSelected(bool bIsSelected) override;
+
+    /** 色が変更されているかを確認 */
+    virtual bool HasColorChanged() const override;
+
+    /** 色変更が可能かを確認 */
+    virtual bool IsChangeable() const override;
+
+    /** 色が一致しているかを確認 */
+    virtual bool IsColorMatched() const override;
+
+    /** 色イベントIDを取得 */
+    virtual FName GetColorEventID() const override;
+
+    // =======================
+    // エフェクトとアニメーション
+    // =======================
+
+    // =======================
+    // 状態管理
+    // =======================
+
+    /** ロック状態を変更 */
+    void SetLocked(bool bLocked);
+
+    /** 色変更が可能かを確認（修飾可能） */
+    bool IsColorModifiable() const;
+
+    /** 現在の色を取得 */
+    FLinearColor GetCurrentColor() const;
+
+    /** 初期色を取得 */
+    FLinearColor GetInitialColor() const;
 
 protected:
-	virtual void Init();
-	virtual void InitializeColorLogic();
-	virtual void RegisterToColorManager();
-	virtual void SetupMaterial();
-	virtual void ApplyColorToMaterial(FLinearColor InColor);
-protected:
-	UPROPERTY(EditAnywhere)
-	UColorConfigurator* ColorConfigurator;
-	UPROPERTY(EditAnywhere, Category = "Beat")
-	bool bPlayBeat = true;
+    // =======================
+    // 色処理の委譲メソッド
+    // =======================
+
+    /** 色のマッチング処理を実行 */
+    void ProcessColorMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult);
+
+    // =======================
+    // コンポーネント
+    // =======================
+
+    /** オブジェクトの色管理コンポーネント */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UObjectColorComponent> ObjectColorComponent;
+
+    // =======================
+    // 設定
+    // =======================
+
+    /** ビートアニメーションを有効化 */
+    UPROPERTY(EditAnywhere, Category = "Effects")
+    bool bEnableBeatAnimation;
 };

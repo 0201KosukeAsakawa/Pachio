@@ -4,7 +4,7 @@
 #include "Objects/Color/LowGravityZone.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 
@@ -30,7 +30,7 @@ ALowGravityZone::ALowGravityZone()
 // 初期化処理
 // =======================
 
-void ALowGravityZone::Init()
+void ALowGravityZone::Initialize()
 {
     // オーバーラップ開始/終了イベント登録
     ZoneBox->OnComponentBeginOverlap.AddDynamic(this, &ALowGravityZone::OnOverlapBegin);
@@ -57,16 +57,16 @@ void ALowGravityZone::Init()
 // 色反応処理
 // =======================
 
-void ALowGravityZone::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
+void ALowGravityZone::ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult& result)
 {
-    if (!ColorConfigurator || !ZoneBox)
+    if (!ObjectColorComponent || !ZoneBox)
         return;
 
     // 親クラス処理呼び出し
-    AColorReactiveObject::ColorAction(InColor, result);
+    AColorReactiveObject::ApplyColorWithMatching(InColor, result);
 
     // 色が一致しなければ「重力を元に戻す」
-    if (!ColorConfigurator->IsColorMatch(InColor))
+    if (!ObjectColorComponent->IsSimilarColor(InColor))
     {
         for (AActor* Actor : OverlappingActors)
         {

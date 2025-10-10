@@ -4,7 +4,7 @@
 #include "Objects/MovingObject.h"
 #include "Sound/SoundManager.h"
 #include "Components/BoxComponent.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include"Manager/LevelManager.h"
 
 // Sets default values
@@ -25,9 +25,9 @@ AMovingObject::AMovingObject()
 }
 
 
-void AMovingObject::Init()
+void AMovingObject::Initialize()
 {
-    AColorReactiveObject::Init();
+    AColorReactiveObject::Initialize();
     TargetLocation = OffLocation;
 }
 
@@ -71,14 +71,14 @@ void AMovingObject::Tick(float DeltaTime)
     }
 }
 
-void AMovingObject::ColorAction(FLinearColor InColor, FEffectMatchResult result)
+void AMovingObject::ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult& result)
 {
-    AColorReactiveObject::ColorAction(InColor, result);
+    AColorReactiveObject::ApplyColorWithMatching(InColor, result);
 
     StartLocation = GetActorLocation();
     ElapsedTime = 0.0f; // 経過時間リセット
 
-    if (ColorConfigurator->IsColorMatch())
+    if (ObjectColorComponent->HasColorChanged())
     {
         TargetLocation = OffLocation;
     }

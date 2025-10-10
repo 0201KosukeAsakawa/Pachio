@@ -15,9 +15,9 @@ class PACHIO_API AColorReactiveSwitch : public AColorReactiveObject
 	GENERATED_BODY()
 public:
 	AColorReactiveSwitch();
-	virtual void Init()override;
+	virtual void Initialize()override;
 private:
-	virtual void ColorAction(const FLinearColor InColor, FEffectMatchResult) override;
+	virtual void ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult&) override;
 private:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* BoxComponent;

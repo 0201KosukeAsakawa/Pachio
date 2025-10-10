@@ -1,5 +1,5 @@
 #include "Objects/Color/ColorReactiveBeltConveyor.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
 #include "DataContainer/EffectMatchResult.h"
@@ -23,19 +23,21 @@ AColorReactiveBeltConveyor::AColorReactiveBeltConveyor()
 }
 
 // ベルトコンベア初期化（親クラスの初期化も呼び出し）
-void AColorReactiveBeltConveyor::Init()
+void AColorReactiveBeltConveyor::Initialize()
 {
-    AColorReactiveObject::Init(); // 親の Init を呼ぶ
+    AColorReactiveObject::Initialize(); // 親の Init を呼ぶ
     CurrentDirection = direction; // 初期方向を設定
     CurrentPower = DefaultPower;
 
-    if (!bPlayBeat)
+
+    //音との連携をしなくなったためコメントアウト
+    /*if (!bPlayBeat)
         return;
 
     const TObjectPtr<USoundManager> SoundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject());
     if (!SoundManager) return;
 
-    SoundManager->OnBeatDetected.AddDynamic(this, &AColorReactiveBeltConveyor::OnBeatDetected);
+    SoundManager->OnBeatDetected.AddDynamic(this, &AColorReactiveBeltConveyor::OnBeatDetected);*/
 }
 
 // 毎フレーム呼ばれる処理（Tick）
@@ -98,18 +100,18 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 }
 
 // 指定された色に反応する処理
-void AColorReactiveBeltConveyor::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
+void AColorReactiveBeltConveyor::ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult& result)
 {
     //ApplyColorToMaterial(InColor);
     
-    if (!ColorConfigurator)
+    if (!ObjectColorComponent)
         return;
 
-    AColorReactiveObject::ColorAction(InColor,result);
+    AColorReactiveObject::ApplyColorWithMatching(InColor,result);
 
     // 色の一致状態を設定
-    ColorConfigurator->SetColorMatch(ColorConfigurator->CheckColorMatch(result,InColor));
-    if (ColorConfigurator->IsColorMatch())
+    ObjectColorComponent->SetColorMatched(ObjectColorComponent->MatchesColorByRGB(result,InColor));
+    if (ObjectColorComponent->IsColorMatched())
     {
         if (IsRevers)
         {

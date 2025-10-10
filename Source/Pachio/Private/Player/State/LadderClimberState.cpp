@@ -6,7 +6,7 @@
 #include "Player/PlayerCharacter.h"
 #include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PhysicsCalculator.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -37,7 +37,7 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 	if (Ladder)
 	{
 		p = Ladder->GetFixedPositionForActor(GetOwner());
-		UColorConfigurator* comp = Ladder->GetComponentByClass<UColorConfigurator>();
+		UObjectColorComponent* comp = Ladder->GetComponentByClass<UObjectColorComponent>();
 		if (comp != nullptr)
 			targetComp = comp;
 

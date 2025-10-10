@@ -32,7 +32,7 @@ public:
 	// --- void 関数 ---
 
 	// 初期化。bSetStartColorがfalseなら無効化
-	virtual void Init(bool bImmediate);
+	virtual void Initialize(bool bImmediate);
 
 	// 色効果とNiagaraエフェクトを初期設定
 	void InitColorEffectAndNiagara(const FLinearColor& FilterColor, EBuffEffect NewEffect, TArray<ANiagaraActor*> NiagaraActors);

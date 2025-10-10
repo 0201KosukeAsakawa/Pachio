@@ -23,14 +23,14 @@ public:
 	AColorReactiveBeltConveyor();
 
 	// 初期化処理（親クラスも初期化）
-	virtual void Init() override;
+	virtual void Initialize() override;
 
 	// 毎フレーム呼ばれる処理：ベルト上の物体に力を加える
 	virtual void Tick(float) override;
 
 private:
 	// 色反応処理：色一致で進行方向、補色一致で逆方向へ変更
-	virtual void ColorAction(const FLinearColor InColor, FEffectMatchResult) override;
+	virtual void ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult) override;
 
 	// オーバーラップ開始処理：対象をベルト上として登録
 	UFUNCTION()

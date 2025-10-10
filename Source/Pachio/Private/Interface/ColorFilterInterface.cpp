@@ -3,39 +3,45 @@
 
 #include "Interface/ColorFilterInterface.h"
 
-// Add default functionality here for any IColorFilterInterface functions that are not pure virtual.
 
-void IColorReactiveInterface::ColorAction(FLinearColor, FEffectMatchResult)
-{
-}
-
-void IColorReactiveInterface::SetColor(FLinearColor, FEffectMatchResult)
+/** 色を設定 */
+void IColorReactiveInterface::ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult)
 {
 
 }
 
-void IColorReactiveInterface::ResetColor()
+/** 色をリセット */
+void IColorReactiveInterface::ResetColor(const FEffectMatchResult& MatchResult)
 {
+
 }
 
-void IColorReactiveInterface::SetSelectMode(bool)
+/** 選択状態を設定 */
+void IColorReactiveInterface::SetSelected(bool bIsSelected)
 {
+
 }
 
-bool IColorReactiveInterface::IsColorChange() const
+/** 色が変更されているかを確認 */
+bool IColorReactiveInterface::HasColorChanged()const
 {
-    return true;
+	return false;
 }
 
-bool IColorReactiveInterface::IsColorModifiable() const
+/** 色変更が可能かを確認 */
+bool IColorReactiveInterface::IsChangeable() const
 {
-    return false;
+	return false;
 }
-bool IColorReactiveInterface::IsChangeable()const
+
+/** 色が一致しているかを確認 */
+bool IColorReactiveInterface::IsColorMatched() const
 {
-    return false;
+	return false;
 }
+
+/** 色イベントIDを取得 */
 FName IColorReactiveInterface::GetColorEventID() const
 {
-    return FName();
+	return FName();
 }

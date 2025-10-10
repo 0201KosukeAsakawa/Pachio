@@ -23,12 +23,24 @@ class PACHIO_API IColorReactiveInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void ColorAction(const FLinearColor , FEffectMatchResult effect);
-	virtual void SetColor(FLinearColor, FEffectMatchResult);
-	virtual void ResetColor();
-	virtual void SetSelectMode(bool);
-	virtual bool IsColorChange()const;
-	virtual bool IsColorModifiable()const;
-	virtual bool IsChangeable()const;
-	virtual FName GetColorEventID()const;
+    /** 色を設定 */
+    virtual void ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult);
+
+    /** 色をリセット */
+    virtual void ResetColor(const FEffectMatchResult& MatchResult);
+
+    /** 選択状態を設定 */
+    virtual void SetSelected(bool bIsSelected);
+
+    /** 色が変更されているかを確認 */
+    virtual bool HasColorChanged() const;
+
+    /** 色変更が可能かを確認 */
+    virtual bool IsChangeable() const;
+
+    /** 色が一致しているかを確認 */
+    virtual bool IsColorMatched() const;
+
+    /** 色イベントIDを取得 */
+    virtual FName GetColorEventID() const;
 };

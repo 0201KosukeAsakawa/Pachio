@@ -17,8 +17,6 @@ public:
 	// Sets default values for this actor's properties
 	ALadderActor();
 
-protected:
-	virtual void Init()override;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

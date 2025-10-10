@@ -9,7 +9,7 @@
 
 
 class UBoxComponent;
-class UColorConfigurator;
+class UObjectColorComponent;
 class UCameraHandlerComponent;
 UCLASS()
 class PACHIO_API AMoveControllableObject : public AColorReactiveObject
@@ -20,7 +20,7 @@ public:
 	AMoveControllableObject();
 
 protected:
-	virtual void Init() override;
+	virtual void Initialize() override;
 
 public:
 	virtual void Tick(float DeltaTime) override;
@@ -38,7 +38,7 @@ private:// オーバーラップイベント
 	UFUNCTION()
 	void OnBeatDetected();
 
-	virtual void ColorAction(FLinearColor, FEffectMatchResult)override;
+	virtual void ApplyColorWithMatching(const FLinearColor&, const FEffectMatchResult&)override;
 
 	void Movement(float);
 

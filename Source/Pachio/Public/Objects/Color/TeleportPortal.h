@@ -18,8 +18,8 @@ public:
 protected:
     virtual void BeginPlay() override;
     // 初期化処理（親クラスも初期化）
-    virtual void Init() override;
-    virtual void ColorAction(const FLinearColor InColor,FEffectMatchResult) override;
+    virtual void Initialize() override;
+    virtual void ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult&) override;
     UFUNCTION()
     void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,

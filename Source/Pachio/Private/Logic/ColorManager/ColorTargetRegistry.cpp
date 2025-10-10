@@ -31,7 +31,7 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
         // 特定オブジェクトに色を適用
         if (!TargetObject)
             return;
-        TargetObject->ColorAction(NewColor, effect);
+        TargetObject->ApplyColorWithMatching(NewColor, effect);
         break;
 
     default:
@@ -64,7 +64,7 @@ void UColorTargetRegistry::ColorEvent(FName EventID, FLinearColor NewColor, FEff
         if (TargetInstance->GetColorEventID() != EventID)
             continue;
 
-        TargetInstance->ColorAction(NewColor, effect);
+        TargetInstance->ApplyColorWithMatching(NewColor, effect);
     }
 }
 
@@ -77,13 +77,13 @@ void UColorTargetRegistry::SetColorTarget(IColorReactiveInterface* InInterface)
 {
     TargetObject.SetObject(Cast<UObject>(InInterface));
     TargetObject.SetInterface(InInterface);
-    InInterface->SetSelectMode(true); // 選択状態を付与
+    InInterface->SetSelected(true); // 選択状態を付与
 }
 
 // 選択中のターゲットをリセット
 void UColorTargetRegistry::ResetColorTarget()
 {
-    TargetObject->SetSelectMode(false);
+    TargetObject->SetSelected(false);
 }
 
 // =======================
@@ -117,7 +117,7 @@ void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearCol
             if (Target)
             {
                 // ターゲットの反応関数を呼び出す
-                Target->ColorAction(Color, effect);
+                Target->ApplyColorWithMatching(Color, effect);
             }
         }
     }

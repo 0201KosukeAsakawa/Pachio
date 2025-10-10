@@ -6,7 +6,7 @@
 #include "Components/Player/PlayerInputComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CameraHandlerComponent.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "Sound/SoundManager.h"
 #include "Manager/LevelManager.h"
 
@@ -32,9 +32,9 @@ AMoveControllableObject::AMoveControllableObject()
 	MoveStepSize = 100.0f;
 }
 
-void AMoveControllableObject::Init()
+void AMoveControllableObject::Initialize()
 {
-	AColorReactiveObject::Init();
+	AColorReactiveObject::Initialize();
 
 	const TObjectPtr<USoundManager> SoundManager =
 		Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject());
@@ -46,14 +46,6 @@ void AMoveControllableObject::Init()
 void AMoveControllableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-
-	if (bPlayBeat)
-	{
-		if (!bIsMoving)
-			return;
-	}
-
 	if (bCanMove)
 	{
 		Movement(DeltaTime);
@@ -111,11 +103,11 @@ void AMoveControllableObject::OnBeatDetected()
 	PlayCount = 0;
 }
 
-void AMoveControllableObject::ColorAction(FLinearColor color, FEffectMatchResult result)
+void AMoveControllableObject::ApplyColorWithMatching(const FLinearColor& color,const FEffectMatchResult& result)
 {
-	AColorReactiveObject::ColorAction(color,result);
+	AColorReactiveObject::ApplyColorWithMatching(color,result);
 	
-	ColorConfigurator->IsColorMatch(color, FLinearColor(1, 0.7, 0.8, 1)) ? bCanMove = false : bCanMove = true;
+	ObjectColorComponent->IsSimilarColor(color, FLinearColor(1, 0.7, 0.8, 1)) ? bCanMove = false : bCanMove = true;
 }
 
 void AMoveControllableObject::Movement(float DeltaTime)

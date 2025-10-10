@@ -21,7 +21,7 @@ public:
 	ALowGravityZone();
 
 	// �����������i�e�N���X��������j
-	virtual void Init() override;
+	virtual void Initialize() override;
 
 private:
 	void SetPostProcessEffectEnabled(bool bEnable);
@@ -35,7 +35,7 @@ private:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	// �F���������F�F��v�Ői�s�����A��F��v�ŋt�����֕ύX
-	virtual void ColorAction(const FLinearColor InColor , FEffectMatchResult) override;
+	virtual void ApplyColorWithMatching(const FLinearColor& InColor ,const FEffectMatchResult&) override;
 private:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* ZoneBox;

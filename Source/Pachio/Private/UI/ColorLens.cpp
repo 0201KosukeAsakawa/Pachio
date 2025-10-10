@@ -133,16 +133,16 @@ FLinearColor AdjustColor(FLinearColor InColor)
     return HSV.HSVToLinearRGB();
 }
 
-void UColorLens::ColorAction(FLinearColor InColor, FEffectMatchResult)
+void UColorLens::ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult)
 {
     if (FilterColorImage == nullptr)
         return;
 
     float H, S, V;
-    ConvertRGBToHSV(InColor, H, S, V);
+    ConvertRGBToHSV(NewColor, H, S, V);
 
     // メイン画像の色設定
-    FilterColorImage->SetColorAndOpacity(AdjustColor(InColor));
+    FilterColorImage->SetColorAndOpacity(AdjustColor(NewColor));
 
 
     // H を角度に変換（0~360）

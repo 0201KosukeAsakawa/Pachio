@@ -17,7 +17,7 @@ public:
 	UColorProximitySpawner();
 
 private:
-	 void Init(bool) override;
+	 void Initialize(bool) override;
 
 	 void OffMesh();
 	 void OnMesh();
