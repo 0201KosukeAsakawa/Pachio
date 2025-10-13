@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "ColorUtilityLibrary.h"
 #include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveComponent.generated.h"
 
@@ -12,127 +13,171 @@ class ANiagaraActor;
 class UNiagaraSystem;
 class UNiagaraComponent;
 
-// HSL色表現用の構造体
-struct FHSLColor
-{
-	float H; // Hue (0.0〜1.0)
-	float S; // Saturation (0.0〜1.0)
-	float L; // Lightness (0.0〜1.0)
-};
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UColorReactiveComponent : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// コンストラクタ
-	UColorReactiveComponent();
+    UColorReactiveComponent();
 
-	// --- void 関数 ---
+    // =======================
+    // 初期化
+    // =======================
 
-	// 初期化。bSetStartColorがfalseなら無効化
-	virtual void Initialize(bool bImmediate);
+    /**
+     * 色とマテリアルの初期化
+     * @param InitialColor 初期色
+     * @param bVariable 色を変数として扱うか（動的変更可能）
+     * @param Owner オーナーアクター（nullptrの場合はGetOwner()を使用）
+     */
+    virtual void Initialize(const FLinearColor& InitialColor, bool bVariable, AActor* Owner = nullptr);
 
-	// 色効果とNiagaraエフェクトを初期設定
-	void InitColorEffectAndNiagara(const FLinearColor& FilterColor, EBuffEffect NewEffect, TArray<ANiagaraActor*> NiagaraActors);
+    /** Niagaraアクターの設定 */
+    void SetupNiagaraActors(const TArray<ANiagaraActor*>& InNiagaraActors);
 
-	// マテリアルに色を適用
-	void ApplyColorToMaterial(FLinearColor InColor);
+    /** エフェクトタイプの設定 */
+    void SetEffectType(EBuffEffect NewEffect);
 
-	// 毎フレームの処理
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+    // =======================
+    // 色の適用
+    // =======================
 
-	// 選択状態のセット
-	void SetSelectMode(bool bIsNowSelected);
+    /** マテリアルに色を適用 */
+    void ApplyColorToMaterial(const FLinearColor& InColor);
 
-	// Niagaraエフェクトの有効/無効切り替え
-	void ActiveEffect(bool bActive);
+    /** 現在の色を取得 */
+    FORCEINLINE FLinearColor GetCurrentColor() const { return CurrentColor; }
 
-	// --- bool 関数 ---
+    // =======================
+    // 色判定ロジック（UColorUtilityLibraryへの委譲）
+    // =======================
 
-	// 色の距離をRGB空間で判定。補色使用可
-	bool IsRGBDistancewithinThreshold(FEffectMatchResult Result, const FLinearColor& FilterColor, const bool bUseComplementaryColor = false);
+    /** RGB空間での距離判定 */
+    FORCEINLINE bool IsRGBDistanceWithinThreshold(
+        const FLinearColor& ColorA,
+        const FLinearColor& ColorB,
+        float Threshold) const
+    {
+        return UColorUtilityLibrary::IsRGBDistanceWithinThreshold(ColorA, ColorB, Threshold);
+    }
 
-	// 色の距離を「色相の角度(degree)」で判定（Blueprint呼び出し可）
-	UFUNCTION(BlueprintCallable)
-	virtual bool IsColorDegreeDistanceWithinThreshold(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
+    /** 人間の視覚特性に基づいた色差判定 */
+    FORCEINLINE bool IsColorDegreeDistanceWithinThreshold(
+        const FLinearColor& ColorA,
+        const FLinearColor& ColorB,
+        float Tolerance) const
+    {
+        return UColorUtilityLibrary::IsPerceptualDistanceWithinThreshold(ColorA, ColorB, Tolerance);
+    }
 
-	// 上記のオーバーロード（対象色を指定）
-	bool IsColorDegreeDistanceWithinThreshold(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
+    /** 2色間を角度でのみ比較 */
+    FORCEINLINE float GetHueAngleDistance(const FLinearColor& ColorA, const FLinearColor& ColorB) const
+    {
+        return UColorUtilityLibrary::GetHueAngleDistance(ColorA, ColorB);
+    }
 
-	// 表示状態の取得
-	inline bool IsHidden() const { return bHide; }
+    /** 色が変更されたかを判定 */
+    FORCEINLINE bool HasColorChanged(
+        const FLinearColor& currentColor,
+        const FLinearColor& CompareColor) const
+    {
+        return UColorUtilityLibrary::HasColorChanged(currentColor, CompareColor);
+    }
 
+    // =======================
+    // 色変換（UColorUtilityLibraryへの委譲）
+    // =======================
+
+    /** 補色を計算 */
+    FORCEINLINE FLinearColor GetComplementaryColor(const FLinearColor& InColor) const
+    {
+        return UColorUtilityLibrary::GetComplementaryColor(InColor);
+    }
+
+    // =======================
+    // 状態管理
+    // =======================
+
+    /** 選択モードの設定 */
+    void SetSelectMode(bool bIsNowSelected);
+
+    /** 非表示状態の取得 */
+    FORCEINLINE bool IsHidden() const { return bHide; }
+
+    /** 非表示状態の設定 */
+    void SetHidden(bool bInHide);
+
+    // =======================
+    // エフェクト制御
+    // =======================
+
+    /** Niagaraの表示/非表示を切り替え */
+    void ToggleNiagaraActiveState(bool bVisible);
+
+    /** 出現エフェクトを再生 */
+    void PlayAppearEffect();
+
+    /** 全エフェクトを無効化 */
+    void DeactivateAllEffects();
+   /** 色がマッチした時のコールバック */
+    virtual bool OnColorMatched(const FLinearColor& FilterColor);
+
+    /** 色がミスマッチした時のコールバック */
+    virtual bool OnColorMismatched(const FLinearColor& FilterColor);
 protected:
-	// --- void 関数 ---
+    // =======================
+    // 内部処理（派生クラスで拡張可能）
+    // =======================
 
-	// Niagaraアクターの表示切り替え処理
-	void ToggleNiagaraActiveState(bool bVisible);
+ 
 
-	// 出現時エフェクトの再生
-	void PlayAppearEffect();
+    /** Niagaraエフェクトを起動 */
+    void ActivateNiagaraEffect(UNiagaraSystem* NiagaraSystem);
 
-	// 指定Niagaraシステムをアタッチしてアクティブ化
-	void ActiveNiagaraEffect(UNiagaraSystem* NiagaraSystem);
+    // =======================
+    // プロパティ
+    // =======================
 
-	// 全エフェクトの非アクティブ化
-	void DeactivateAllEffects();
+    /** ダイナミックマテリアル */
+    UPROPERTY()
+    TObjectPtr<UMaterialInstanceDynamic> DynMesh;
 
-	// --- bool 関数 ---
+    /** 現在の色 */
+    UPROPERTY()
+    FLinearColor CurrentColor;
 
-	// 色が一致したときの処理（派生クラスでオーバーライド可能）
-	UFUNCTION(BlueprintCallable)
-	virtual bool OnColorMatched(const FLinearColor& FilterColor);
+    /** エフェクトタイプ */
+    UPROPERTY()
+    EBuffEffect Effect;
 
-	// 色が不一致だったときの処理（派生クラスでオーバーライド可能）
-	virtual bool OnColorMismatched(const FLinearColor& FilterColor);
+    /** 選択状態 */
+    UPROPERTY()
+    bool bSelected;
 
-	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
+    /** オブジェクト自体は非表示にならないため、boolで管理 */
+    UPROPERTY()
+    bool bHide;
 
-protected:
-	// --- メンバ変数 ---
+    /** Niagaraアクター配列 */
+    UPROPERTY()
+    TArray<TObjectPtr<ANiagaraActor>> Niagaras;
 
-	// 初期色設定フラグ
-	UPROPERTY(EditAnywhere)
-	bool bSetStartColor = true;
+    /** アクティブなNiagaraコンポーネント */
+    UPROPERTY()
+    TArray<TObjectPtr<UNiagaraComponent>> ActiveNiagaraComponents;
 
-	// 現在の効果種別
-	EBuffEffect Effect;
+    // =======================
+    // Niagaraシステムアセット
+    // =======================
 
-	// 現在の色
-	UPROPERTY(EditAnywhere)
-	FLinearColor CurrentColor;
+    UPROPERTY()
+    TObjectPtr<UNiagaraSystem> FireflyBurstNiagaraSystem;
 
-	// 関連するNiagaraアクター群
-	UPROPERTY()
-	TArray<ANiagaraActor*> Niagaras;
+    UPROPERTY()
+    TObjectPtr<UNiagaraSystem> ParticlesOfLightNiagaraSystem;
 
-	// Dynamic Material Instance（メッシュ用）
-	UPROPERTY()
-	UMaterialInstanceDynamic* DynMesh = nullptr;
-
-	// Dynamic Material Instance（別途？）
-	UPROPERTY()
-	UMaterialInstanceDynamic* DynamicMaterialInstance = nullptr;
-
-	// 使用するNiagaraシステム群
-	UPROPERTY()
-	UNiagaraSystem* FireflyBurstNiagaraSystem = nullptr;
-
-	UPROPERTY()
-	UNiagaraSystem* ParticlesOfLightNiagaraSystem = nullptr;
-
-	UPROPERTY()
-	UNiagaraSystem* LightCubeNiagaraSystem = nullptr;
-
-	// アクティブなNiagaraコンポーネントの管理用配列
-	UPROPERTY()
-	TArray<UNiagaraComponent*> ActiveNiagaraComponent;
-
-	// 選択状態
-	bool bSelected = false;
-
-	// 非表示フラグ
-	bool bHide = false;
+    UPROPERTY()
+    TObjectPtr<UNiagaraSystem> LightCubeNiagaraSystem;
 };

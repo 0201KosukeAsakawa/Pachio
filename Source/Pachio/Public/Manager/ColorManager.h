@@ -8,7 +8,7 @@
 #include "ColorManager.generated.h"
 
 class IColorReactiveInterface;
-class UEffectColorMatcher;
+class UEffectColorRegistry;
 class UColorTargetRegistry;
 
 
@@ -19,6 +19,7 @@ class UColorManager : public UObject
     GENERATED_BODY()
 
 public:
+    UColorManager();
     // 色付け対象の初期化処理（クラスからインスタンス化など）
     void Init();
 
@@ -51,7 +52,7 @@ private:
 
 private:
     UPROPERTY()
-    UEffectColorMatcher* EffectColorMatcher;
+    UEffectColorRegistry* EffectColorRegistry;
     UPROPERTY()
     UColorTargetRegistry* ColorTargetRegistry;
 

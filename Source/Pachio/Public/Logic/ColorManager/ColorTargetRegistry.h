@@ -12,8 +12,8 @@ class IColorReactiveInterface;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnColorAppliedDelegate, EColorTargetType, Mode, FLinearColor, NewColor);
 
 
-UCLASS(Blueprintable)
-class PACHIO_API UColorTargetRegistry : public UObject
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class PACHIO_API UColorTargetRegistry : public UActorComponent
 {
 	GENERATED_BODY()
 public:

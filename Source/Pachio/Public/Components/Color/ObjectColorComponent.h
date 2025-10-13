@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "ColorUtilityLibrary.h"
 #include "DataContainer/EffectMatchResult.h"
 #include "ObjectColorComponent.generated.h"
 
@@ -102,6 +103,8 @@ public:
     bool IsSimilarColor(const FLinearColor& FilterColor,
         float Tolerance = 0.01f) const;
 
+    bool GetHueAngleDistance(const FLinearColor& ColorA, const FLinearColor& ColorB, float Tolerance = 30.f);
+
     // =======================
     // エフェクト処理
     // =======================
@@ -171,7 +174,6 @@ protected:
     FLinearColor CurrentColor;
 
     /** 初期色 */
-    UPROPERTY(EditAnywhere, Category = "Color|Setup")
     FLinearColor InitialColor;
 
     // =======================

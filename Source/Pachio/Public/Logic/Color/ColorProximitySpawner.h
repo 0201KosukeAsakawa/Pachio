@@ -17,14 +17,11 @@ public:
 	UColorProximitySpawner();
 
 private:
-	 void Initialize(bool) override;
+	void Initialize(const FLinearColor& InitialColor, bool bVariable , AActor* owner)override;
 
-	 void OffMesh();
-	 void OnMesh();
+	void OffMesh();
+	void OnMesh();
 
-	 bool OnColorMatched(const FLinearColor& FilterColor)override;
-	 bool OnColorMismatched(const FLinearColor& FilterColor)override;
-
-
-
+	bool OnColorMatched(const FLinearColor& FilterColor)override;
+	bool OnColorMismatched(const FLinearColor& FilterColor)override;
 };

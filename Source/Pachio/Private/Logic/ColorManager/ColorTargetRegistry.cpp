@@ -2,7 +2,7 @@
 
 
 #include "Logic/ColorManager/ColorTargetRegistry.h"
-#include "Logic/ColorManager/EffectColorMatcher.h"
+#include "Logic/ColorManager/EffectColorRegistry.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Kismet/GameplayStatics.h"
 

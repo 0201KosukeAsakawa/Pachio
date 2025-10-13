@@ -11,50 +11,76 @@
 #include "FunctionLibrary.h"
 
 // ====================================================================
-// UColorReactiveComponent - 色処理・エフェクト実行層
-// 管理者(UObjectColorComponent)からの指示のみで動作する
+// UColorReactiveComponent - 色処理のコアロジック層
+// 色の計算・判定・エフェクト実行のみを担当
+// マネージャーとの連携は一切行わない
 // ====================================================================
 
 UColorReactiveComponent::UColorReactiveComponent()
+    : CurrentColor(FLinearColor::White)
+    , Effect(EBuffEffect::Red)
+    , bSelected(false)
+    , bHide(false)
 {
-    PrimaryComponentTick.bCanEverTick = true;
+    PrimaryComponentTick.bCanEverTick = false;  // Tickは不要
 
     // Niagaraシステムのアセット参照を取得
-    static ConstructorHelpers::FObjectFinder<UNiagaraSystem> FireflyBurst(TEXT("/Game/Niagara/FireflyBurst.FireflyBurst"));
-    static ConstructorHelpers::FObjectFinder<UNiagaraSystem> ParticlesOfLight(TEXT("/Game/Niagara/ParticlesOfLight.ParticlesOfLight"));
-    static ConstructorHelpers::FObjectFinder<UNiagaraSystem> LightCube(TEXT("/Game/Niagara/ParticleCube.ParticleCube"));
+    static ConstructorHelpers::FObjectFinder<UNiagaraSystem> FireflyBurst(
+        TEXT("/Game/Niagara/FireflyBurst.FireflyBurst"));
+    static ConstructorHelpers::FObjectFinder<UNiagaraSystem> ParticlesOfLight(
+        TEXT("/Game/Niagara/ParticlesOfLight.ParticlesOfLight"));
+    static ConstructorHelpers::FObjectFinder<UNiagaraSystem> LightCube(
+        TEXT("/Game/Niagara/ParticleCube.ParticleCube"));
 
-    if (FireflyBurst.Succeeded()) FireflyBurstNiagaraSystem = FireflyBurst.Object;
-    if (ParticlesOfLight.Succeeded()) ParticlesOfLightNiagaraSystem = ParticlesOfLight.Object;
-    if (LightCube.Succeeded()) LightCubeNiagaraSystem = LightCube.Object;
+    if (FireflyBurst.Succeeded())
+        FireflyBurstNiagaraSystem = FireflyBurst.Object;
+    if (ParticlesOfLight.Succeeded())
+        ParticlesOfLightNiagaraSystem = ParticlesOfLight.Object;
+    if (LightCube.Succeeded())
+        LightCubeNiagaraSystem = LightCube.Object;
 }
 
 // =======================
-// 初期化 (最小限)
+// 初期化
 // =======================
 
-void UColorReactiveComponent::Initialize(FLinearColor InitialColor)
+void UColorReactiveComponent::Initialize(const FLinearColor& InitialColor, bool bVariable, AActor* Owner)
 {
-    if (!bSetStartColor) return;
+    AActor* TargetOwner = Owner ? Owner : GetOwner();
+    if (!TargetOwner)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: Owner is null in Initialize"));
+        return;
+    }
 
-    AActor* Owner = GetOwner();
-    if (!Owner) return;
+    USkeletalMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(
+        TargetOwner, TEXT("Mesh"));
+    if (!MeshComp)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: Mesh component not found on %s"),
+            *TargetOwner->GetName());
+        return;
+    }
 
-    USkeletalMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(Owner, TEXT("Mesh"));
-    if (!MeshComp) return;
-
-    // ダイナミックマテリアルを生成（色適用用）
+    // ダイナミックマテリアルを生成
     constexpr int32 MaterialSlotIndex = 0;
     DynMesh = MeshComp->CreateAndSetMaterialInstanceDynamic(MaterialSlotIndex);
 
+    if (!DynMesh)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ColorReactiveComponent: Failed to create dynamic material on %s"),
+            *TargetOwner->GetName());
+        return;
+    }
+
     CurrentColor = InitialColor;
+    DynMesh->SetVectorParameterValue(FName("BaseColor"), InitialColor);
+
+    UE_LOG(LogTemp, Log, TEXT("ColorReactiveComponent initialized on %s with color (R:%.2f, G:%.2f, B:%.2f)"),
+        *TargetOwner->GetName(), InitialColor.R, InitialColor.G, InitialColor.B);
 }
 
-// =======================
-// エフェクト・Niagara設定
-// =======================
-
-void UColorReactiveComponent::SetupNiagaraActors(TArray<ANiagaraActor*> InNiagaraActors)
+void UColorReactiveComponent::SetupNiagaraActors(const TArray<ANiagaraActor*>& InNiagaraActors)
 {
     Niagaras = InNiagaraActors;
 }
@@ -68,102 +94,20 @@ void UColorReactiveComponent::SetEffectType(EBuffEffect NewEffect)
 // 色の適用
 // =======================
 
-void UColorReactiveComponent::ApplyColorToMaterial(FLinearColor InColor)
+void UColorReactiveComponent::ApplyColorToMaterial(const FLinearColor& InColor)
 {
-    if (!DynMesh) return;
+    if (!DynMesh)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: DynMesh is null in ApplyColorToMaterial"));
+        return;
+    }
 
     CurrentColor = InColor;
     DynMesh->SetVectorParameterValue(FName("BaseColor"), InColor);
 }
 
 // =======================
-// 色判定 (Pure Logic)
-// =======================
-
-bool UColorReactiveComponent::IsRGBDistanceWithinThreshold(
-    const FLinearColor& ColorA,
-    const FLinearColor& ColorB,
-    float Threshold) const
-{
-    // RGB空間での距離計算
-    float dR = ColorA.R - ColorB.R;
-    float dG = ColorA.G - ColorB.G;
-    float dB = ColorA.B - ColorB.B;
-
-    float distance = FMath::Sqrt(dR * dR + dG * dG + dB * dB);
-    return distance <= Threshold;
-}
-
-bool UColorReactiveComponent::IsColorDegreeDistanceWithinThreshold(
-    const FLinearColor& ColorA,
-    const FLinearColor& ColorB,
-    float Tolerance) const
-{
-    // 人間の視覚特性に基づいた重み付き色差（ITU-R BT.601係数）
-    float dR = ColorA.R - ColorB.R;
-    float dG = ColorA.G - ColorB.G;
-    float dB = ColorA.B - ColorB.B;
-
-    constexpr float RedWeight = 0.299f;
-    constexpr float GreenWeight = 0.587f;
-    constexpr float BlueWeight = 0.114f;
-
-    float ColorDifference = RedWeight * dR * dR + GreenWeight * dG * dG + BlueWeight * dB * dB;
-    return ColorDifference <= Tolerance * Tolerance;
-}
-
-bool UColorReactiveComponent::IsColorDegreeDistanceWithinThreshold(
-    const FLinearColor& FilterColor,
-    float Tolerance) const
-{
-    return IsColorDegreeDistanceWithinThreshold(CurrentColor, FilterColor, Tolerance);
-}
-
-// =======================
-// 補色計算
-// =======================
-
-FLinearColor UColorReactiveComponent::GetComplementaryColor(const FLinearColor& InColor)
-{
-    FHSLColor HSL = RGBToHSL(InColor);
-
-    // 色相を180度反転
-    constexpr float ComplementaryHueOffset = 0.5f;
-    HSL.H += ComplementaryHueOffset;
-    if (HSL.H > 1.0f) HSL.H -= 1.0f;
-
-    // パステル調に調整
-    constexpr float PastelSaturation = 0.3f;
-    constexpr float MinPastelLightness = 0.8f;
-    constexpr float MaxPastelLightness = 1.0f;
-
-    HSL.S = PastelSaturation;
-    HSL.L = FMath::Clamp(HSL.L, MinPastelLightness, MaxPastelLightness);
-
-    FLinearColor Complementary = HSLToRGB(HSL);
-
-    // 最大成分を1.0に強制
-    float MaxComponent = FMath::Max3(Complementary.R, Complementary.G, Complementary.B);
-    constexpr float MaxComponentValue = 1.0f;
-    constexpr float MinComponentValue = 0.8f;
-
-    if (Complementary.R == MaxComponent) Complementary.R = MaxComponentValue;
-    if (Complementary.G == MaxComponent) Complementary.G = MaxComponentValue;
-    if (Complementary.B == MaxComponent) Complementary.B = MaxComponentValue;
-
-    if (Complementary.R != MaxComponentValue)
-        Complementary.R = FMath::Clamp(Complementary.R, MinComponentValue, MaxComponentValue);
-    if (Complementary.G != MaxComponentValue)
-        Complementary.G = FMath::Clamp(Complementary.G, MinComponentValue, MaxComponentValue);
-    if (Complementary.B != MaxComponentValue)
-        Complementary.B = FMath::Clamp(Complementary.B, MinComponentValue, MaxComponentValue);
-
-    Complementary.A = 1.0f;
-    return Complementary;
-}
-
-// =======================
-// 選択モード
+// 状態管理
 // =======================
 
 void UColorReactiveComponent::SetSelectMode(bool bIsNowSelected)
@@ -172,10 +116,24 @@ void UColorReactiveComponent::SetSelectMode(bool bIsNowSelected)
 
     if (!DynMesh) return;
 
-    if (!bSelected)
+    if (bSelected)
     {
+        // 選択時のエミッシブ効果（例: 白い発光）
+        DynMesh->SetVectorParameterValue(FName("EmissiveColor"), FLinearColor::White * 0.5f);
+    }
+    else
+    {
+        // 選択解除時はエミッシブをオフ
         DynMesh->SetVectorParameterValue(FName("EmissiveColor"), FLinearColor::Black);
     }
+}
+
+void UColorReactiveComponent::SetHidden(bool bInHide)
+{
+    bHide = bInHide;
+
+    // Niagaraエフェクトも連動して非表示
+    ToggleNiagaraActiveState(!bHide);
 }
 
 // =======================
@@ -184,8 +142,6 @@ void UColorReactiveComponent::SetSelectMode(bool bIsNowSelected)
 
 void UColorReactiveComponent::ToggleNiagaraActiveState(bool bVisible)
 {
-    if (!GetOwner()) return;
-
     for (ANiagaraActor* NiagaraActor : Niagaras)
     {
         if (!NiagaraActor) continue;
@@ -204,27 +160,35 @@ void UColorReactiveComponent::ToggleNiagaraActiveState(bool bVisible)
 
 void UColorReactiveComponent::PlayAppearEffect()
 {
-    ActiveNiagaraEffect(FireflyBurstNiagaraSystem);
-    ActiveNiagaraEffect(LightCubeNiagaraSystem);
+    ActivateNiagaraEffect(FireflyBurstNiagaraSystem);
+    ActivateNiagaraEffect(LightCubeNiagaraSystem);
 }
 
-void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
+void UColorReactiveComponent::ActivateNiagaraEffect(UNiagaraSystem* NiagaraSystem)
 {
-    if (!niagaraSystem)
+    if (!NiagaraSystem)
     {
-        UE_LOG(LogTemp, Warning, TEXT("NiagaraSystem is null"));
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: NiagaraSystem is null"));
         return;
     }
 
-    USkeletalMeshComponent* AttachComponent = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh"));
+    AActor* Owner = GetOwner();
+    if (!Owner)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: Owner is null in ActivateNiagaraEffect"));
+        return;
+    }
+
+    USkeletalMeshComponent* AttachComponent = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(
+        Owner, TEXT("Mesh"));
     if (!AttachComponent)
     {
-        UE_LOG(LogTemp, Warning, TEXT("AttachComponent is null"));
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: Attach component not found"));
         return;
     }
 
-    UNiagaraComponent* targetNiagara = UNiagaraFunctionLibrary::SpawnSystemAttached(
-        niagaraSystem,
+    UNiagaraComponent* TargetNiagara = UNiagaraFunctionLibrary::SpawnSystemAttached(
+        NiagaraSystem,
         AttachComponent,
         NAME_None,
         FVector::ZeroVector,
@@ -235,25 +199,22 @@ void UColorReactiveComponent::ActiveNiagaraEffect(UNiagaraSystem* niagaraSystem)
         true
     );
 
-    if (targetNiagara)
+    if (TargetNiagara)
     {
-        // エフェクト用の色を強調
-        float maxRGB = FMath::Max3(CurrentColor.R, CurrentColor.G, CurrentColor.B);
-        FLinearColor targetColor = CurrentColor;
-        constexpr float EmissiveMultiplier = 50.0f;
+        // エフェクト用の色を強調（UColorUtilityLibraryを使用）
+        const FLinearColor EnhancedColor = UColorUtilityLibrary::EnhanceMaxComponent(
+            CurrentColor,
+            50.0f
+        );
 
-        if (CurrentColor.R == maxRGB) targetColor.R *= EmissiveMultiplier;
-        else if (CurrentColor.G == maxRGB) targetColor.G *= EmissiveMultiplier;
-        else targetColor.B *= EmissiveMultiplier;
-
-        targetNiagara->SetVariableLinearColor(FName("User_Color"), targetColor);
-        ActiveNiagaraComponent.Add(targetNiagara);
+        TargetNiagara->SetVariableLinearColor(FName("User_Color"), EnhancedColor);
+        ActiveNiagaraComponents.Add(TargetNiagara);
     }
 }
 
 void UColorReactiveComponent::DeactivateAllEffects()
 {
-    for (UNiagaraComponent* NiagaraComp : ActiveNiagaraComponent)
+    for (UNiagaraComponent* NiagaraComp : ActiveNiagaraComponents)
     {
         if (NiagaraComp && !NiagaraComp->IsBeingDestroyed())
         {
@@ -261,79 +222,23 @@ void UColorReactiveComponent::DeactivateAllEffects()
             NiagaraComp->DestroyComponent();
         }
     }
-    ActiveNiagaraComponent.Empty();
+    ActiveNiagaraComponents.Empty();
 }
 
 // =======================
-// Tick処理
+// 色マッチングコールバック（派生クラスで拡張可能）
 // =======================
 
-void UColorReactiveComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+bool UColorReactiveComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
-    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-    // 選択時の発光エフェクトなど、必要に応じて実装
+    // デフォルト実装: 何もしない
+    // 派生クラスでオーバーライドして独自の処理を実装可能
+    return true;
 }
 
-// =======================
-// RGB ⇔ HSL 変換 (ユーティリティ)
-// =======================
-
-FHSLColor RGBToHSL(const FLinearColor& Color)
+bool UColorReactiveComponent::OnColorMismatched(const FLinearColor& FilterColor)
 {
-    float R = Color.R, G = Color.G, B = Color.B;
-    float Max = FMath::Max3(R, G, B);
-    float Min = FMath::Min3(R, G, B);
-    float Delta = Max - Min;
-
-    FHSLColor HSL;
-    HSL.L = (Max + Min) * 0.5f;
-
-    if (Delta == 0)
-    {
-        HSL.H = 0.0f;
-        HSL.S = 0.0f;
-    }
-    else
-    {
-        HSL.S = (HSL.L < 0.5f) ? (Delta / (Max + Min)) : (Delta / (2.0f - Max - Min));
-
-        if (Max == R) HSL.H = (G - B) / Delta + (G < B ? 6.0f : 0.0f);
-        else if (Max == G) HSL.H = (B - R) / Delta + 2.0f;
-        else HSL.H = (R - G) / Delta + 4.0f;
-
-        HSL.H /= 6.0f;
-    }
-    return HSL;
-}
-
-FLinearColor HSLToRGB(const FHSLColor& HSL)
-{
-    float R, G, B;
-
-    if (HSL.S == 0)
-    {
-        R = G = B = HSL.L;
-    }
-    else
-    {
-        auto HueToRGB = [](float p, float q, float t) -> float
-            {
-                if (t < 0.0f) t += 1.0f;
-                if (t > 1.0f) t -= 1.0f;
-
-                if (t < 1.0f / 6.0f) return p + (q - p) * 6.0f * t;
-                if (t < 0.5f) return q;
-                if (t < 2.0f / 3.0f) return p + (q - p) * (2.0f / 3.0f - t) * 6.0f;
-                return p;
-            };
-
-        float q = (HSL.L < 0.5f) ? (HSL.L * (1 + HSL.S)) : (HSL.L + HSL.S - HSL.L * HSL.S);
-        float p = 2.0f * HSL.L - q;
-
-        R = HueToRGB(p, q, HSL.H + 1.0f / 3.0f);
-        G = HueToRGB(p, q, HSL.H);
-        B = HueToRGB(p, q, HSL.H - 1.0f / 3.0f);
-    }
-
-    return FLinearColor(R, G, B, 1.0f);
+    // デフォルト実装: 何もしない
+    // 派生クラスでオーバーライドして独自の処理を実装可能
+    return true;
 }

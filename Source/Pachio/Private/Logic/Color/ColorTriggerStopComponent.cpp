@@ -27,9 +27,8 @@ bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
     // すでに非表示なら処理不要
     if (bHide) return false;
-
     AActor* Owner = GetOwner();
-    if (!Owner) return false;
+    if (Owner == nullptr) return false;
 
     // オーナーが持つ全コンポーネントを走査
     for (UActorComponent* Component : Owner->GetComponents())
@@ -59,7 +58,7 @@ bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
     PlayAppearEffect();
 
     // 追加の効果を有効化
-    ActiveEffect(true);
+    //ActiveEffect(true);
 
     // 非表示状態に更新
     bHide = true;
@@ -75,9 +74,8 @@ bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
 {
     // すでに表示状態なら処理不要
     if (!bHide) return false;
-
     AActor* Owner = GetOwner();
-    if (!Owner) return false;
+    if (Owner == nullptr) return false;
 
     // エフェクト停止
     DeactivateAllEffects();
@@ -106,7 +104,7 @@ bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
     }
 
     // 効果を無効化
-    ActiveEffect(false);
+    //ActiveEffect(false);
 
     // 表示状態に更新
     return bHide = false;
