@@ -7,56 +7,78 @@
 #include "Sound/SoundManager.h"
 #include "FunctionLibrary.h"
 
-
 // ====================================================================
-// UObjectColorComponent - 高レベルAPI層
-// 初期化、マネージャー連携、イベント処理を担当
+// オブジェクトの色管理を担当するコンポーネント
+// - カラーマネージャーとの連携
+// - 色の適用とマッチング判定
 // ====================================================================
 
+// =======================
+// コンストラクタ
+// =======================
 
 UObjectColorComponent::UObjectColorComponent()
-    : CurrentColor(FLinearColor::White)
-    , InitialColor(FLinearColor::White)
-    , bApplyColorToMaterial(true)
-    , bEnableColorAction(true)
-    , bEnableBeatEffect(true)
-    , bTreatAsColorVariable(false)
-    , bUseComplementaryColor(false)
-    , bColorMatched(false)
-    , bSelected(false)
-    , bColorChangeable(true)
-    , bLocked(false)
+    : CurrentColor(FLinearColor::White)      // 現在の色（初期値: 白）
+    , InitialColor(FLinearColor::White)      // 初期色（リセット時に使用）
+    , bApplyColorToMaterial(true)            // マテリアルに色を適用するか
+    , bEnableColorAction(true)               // 色変更アクションを有効化
+    , bEnableBeatEffect(true)                // ビート演出を有効化
+    , bTreatAsColorVariable(false)           // 色を変数として扱う（動的変更可能）
+    , bUseComplementaryColor(false)          // 補色を使用するか
+    , bColorMatched(false)                   // 色が一致しているか
+    , bSelected(false)                       // 選択されているか
+    , bColorChangeable(true)                 // 色変更が可能か
+    , bLocked(false)                         // ロックされているか
 {
+    // ビート演出用のスケーラーコンポーネントを生成
     BeatScaler = CreateDefaultSubobject<UBeatScalerComponent>(TEXT("BeatScaler"));
-    ColorReactive = CreateDefaultSubobject<UColorReactiveComponent>(TEXT("ColorReactiveComponent"));
 }
 
 // =======================
 // 初期化フロー
 // =======================
 
+/**
+ * コンポーネント全体の初期化
+ * 各種マネージャーへの登録とイベントバインドを行う
+ */
 void UObjectColorComponent::Initialize()
 {
-    InitializeColorLogic();
-    RegisterToColorManager();
-    SetupMaterial();
-    BindSoundEvents();
+    InitializeColorLogic();      // 色ロジックの初期化
+    RegisterToColorManager();    // カラーマネージャーへの登録
+    SetupMaterial();             // マテリアルの初期設定
+    BindSoundEvents();           // サウンドイベントのバインド
 }
 
+/**
+ * 色ロジックの初期化
+ * ColorReactiveComponentを生成し、初期色を設定する
+ */
 void UObjectColorComponent::InitializeColorLogic()
 {
+    // ReactiveComponentClassが設定されていない場合は警告
     if (!ReactiveComponentClass)
     {
         UE_LOG(LogTemp, Warning, TEXT("ReactiveComponentClass is not set in %s"),
             *GetOwner()->GetName());
         return;
     }
+
+    // ColorReactiveコンポーネントを動的に生成
     ColorReactive = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
-    InitialColor = ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetEffectColor(EffectType);
+
+    // カラーマネージャーから初期色を取得
+    if (ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld()))
+    {
+        if (UColorManager* ColorManager = LevelManager->GetColorManager())
+        {
+            InitialColor = ColorManager->GetEffectColor(EffectType);
+        }
+    }
 
     CurrentColor = InitialColor;
 
-    // ColorReactiveコンポーネントを生成・登録
+    // ColorReactiveの生成確認
     if (!ColorReactive)
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to create ColorReactive component in %s"),
@@ -64,16 +86,26 @@ void UObjectColorComponent::InitializeColorLogic()
         return;
     }
 
-    //ColorReactive->RegisterComponent();
+    // コンポーネントとして登録・有効化
+    ColorReactive->RegisterComponent();
+    ColorReactive->Activate(true);
 
-    //ColorReactive->Activate(true);
-
-    // 初期化（色、エフェクト、Niagara設定）
-    ColorReactive->Initialize(InitialColor,true,GetOwner());
+    // ColorReactiveの初期化
+    // 引数: 初期色, 色を変数として扱うか, オーナーアクター
+    ColorReactive->Initialize(InitialColor, true, GetOwner());
     ColorReactive->SetEffectType(EffectType);
     ColorReactive->SetupNiagaraActors(NiagaraActors);
+
+    UE_LOG(LogTemp, Log, TEXT("ColorLogic initialized for %s (Effect: %d, Color: R=%.2f G=%.2f B=%.2f)"),
+        *GetOwner()->GetName(),
+        static_cast<int32>(EffectType),
+        InitialColor.R, InitialColor.G, InitialColor.B);
 }
 
+/**
+ * カラーマネージャーへの登録
+ * このオブジェクトを色管理対象として登録する
+ */
 void UObjectColorComponent::RegisterToColorManager()
 {
     UColorManager* ColorManager = GetColorManager();
@@ -84,41 +116,55 @@ void UObjectColorComponent::RegisterToColorManager()
         return;
     }
 
+    // ターゲットタイプを指定して登録
     ColorManager->RegisterTarget(TargetType, GetOwner());
 }
 
+/**
+ * マテリアルの初期設定
+ * カスタムデプスレンダリングとダイナミックマテリアルを設定
+ */
 void UObjectColorComponent::SetupMaterial()
 {
+    // マテリアル適用が無効な場合はスキップ
     if (!bApplyColorToMaterial)
     {
         return;
     }
 
-    // カラーマネージャから初期色を取得
+    // カラーマネージャから初期色を再取得（二重チェック）
     const UColorManager* ColorManager = GetColorManager();
     if (ColorManager)
     {
         InitialColor = ColorManager->GetEffectColor(EffectType);
     }
 
+    // メッシュコンポーネントを取得
     USkeletalMeshComponent* Mesh = GetMeshComponent();
     if (!Mesh)
     {
+        UE_LOG(LogTemp, Warning, TEXT("Mesh component not found for %s"),
+            *GetOwner()->GetName());
         return;
     }
 
-    // カスタムデプスレンダリング設定
+    // カスタムデプスレンダリングを有効化（アウトライン表示などに使用）
     Mesh->SetRenderCustomDepth(true);
     Mesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_STENCIL_VALUE);
 
-    // ダイナミックマテリアル作成と色適用
+    // ダイナミックマテリアルインスタンスを作成
     UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(MATERIAL_SLOT_INDEX);
     if (DynMaterial)
     {
+        // BaseColorパラメータに初期色を設定
         DynMaterial->SetVectorParameterValue(FName("BaseColor"), InitialColor);
     }
 }
 
+/**
+ * サウンドイベントのバインド
+ * ビート検出イベントを購読する
+ */
 void UObjectColorComponent::BindSoundEvents()
 {
     const ALevelManager* LevelManager = GetLevelManager();
@@ -127,6 +173,7 @@ void UObjectColorComponent::BindSoundEvents()
         return;
     }
 
+    // サウンドマネージャーを取得
     USoundManager* SoundManager = Cast<USoundManager>(
         LevelManager->GetSoundManager().GetObject()
     );
@@ -138,6 +185,7 @@ void UObjectColorComponent::BindSoundEvents()
         return;
     }
 
+    // ビート検出イベントにコールバックを登録
     SoundManager->OnBeatDetected.AddDynamic(this, &UObjectColorComponent::PlayBeatAnimation);
 }
 
@@ -145,13 +193,19 @@ void UObjectColorComponent::BindSoundEvents()
 // イベント処理
 // =======================
 
+/**
+ * ビート演出を再生
+ * 音楽のビートに合わせてスケールアニメーションを実行
+ */
 void UObjectColorComponent::PlayBeatAnimation()
 {
+    // ビート演出が無効、またはBeatScalerが無効な場合はスキップ
     if (!bEnableBeatEffect || !BeatScaler)
     {
         return;
     }
 
+    // ビートアニメーションを再生
     BeatScaler->PlayBeat();
 }
 
@@ -159,75 +213,118 @@ void UObjectColorComponent::PlayBeatAnimation()
 // 色操作API
 // =======================
 
+/**
+ * 色を設定し、マテリアルとエフェクトに反映
+ *
+ * @param NewColor 新しい色
+ * @param MatchResult エフェクトマッチング結果（最適なエフェクトタイプを含む）
+ */
 void UObjectColorComponent::SetColor(const FLinearColor& NewColor,
     const FEffectMatchResult& MatchResult)
 {
     CurrentColor = NewColor;
 
+    // ColorReactiveが無効な場合は早期リターン
     if (ColorReactive == nullptr)
     {
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactive is null in SetColor for %s"),
+            *GetOwner()->GetName());
         return;
     }
 
-    // マテリアルへ反映
+    // マテリアルへ色を反映
     if (bApplyColorToMaterial)
     {
         ColorReactive->ApplyColorToMaterial(CurrentColor);
     }
 
-    // エフェクトタイプ更新
+    // エフェクトタイプを更新（最適なエフェクトに切り替え）
     ColorReactive->SetEffectType(MatchResult.ClosestEffect);
 
-
-    // カラーマッチング処理
+    // カラーマッチング処理を実行
     ProcessColorMatching(NewColor, MatchResult);
 }
 
+/**
+ * 色を初期状態にリセット
+ *
+ * @param MatchResult エフェクトマッチング結果
+ */
 void UObjectColorComponent::ResetColor(const FEffectMatchResult& MatchResult)
 {
+    // 初期色で SetColor を呼び出し
     SetColor(InitialColor, MatchResult);
 }
 
+/**
+ * 内部的に現在の色のみを更新
+ * マテリアルやエフェクトには反映しない（軽量な更新用）
+ *
+ * @param NewColor 新しい色
+ */
 void UObjectColorComponent::SetCurrentColorOnly(const FLinearColor& NewColor)
 {
     CurrentColor = NewColor;
 }
 
+/**
+ * 色マッチング処理を実行
+ * ワールド色と現在色を比較し、一致判定を行う
+ *
+ * @param NewColor 新しく設定された色
+ * @param MatchResult エフェクトマッチング結果
+ */
 void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor,
     const FEffectMatchResult& MatchResult)
 {
+    // 色アクションが無効、またはColorReactiveが無効な場合はスキップ
     if (!bEnableColorAction || !ColorReactive)
     {
         return;
     }
 
+    // カラーマネージャーを取得
     const UColorManager* ColorManager = GetColorManager();
     if (!ColorManager)
     {
+        UE_LOG(LogTemp, Warning, TEXT("ColorManager not found in ProcessColorMatching for %s"),
+            *GetOwner()->GetName());
         return;
     }
 
-    FLinearColor WorldColor = ColorManager->GetWorldColor();
+    // ワールド色（フィルター色）を取得
+    const FLinearColor WorldColor = ColorManager->GetWorldColor();
 
-    // 色変数として扱う場合はマテリアルに反映
+    // 色変数モード: ワールド色を直接マテリアルに適用
+    // このモードでは、オブジェクトの色がワールド色に追従する
     if (bTreatAsColorVariable)
     {
         ColorReactive->ApplyColorToMaterial(WorldColor);
+        CurrentColor = WorldColor;  // 内部状態も更新
     }
 
-    // 色一致判定を更新
-    bColorMatched = GetHueAngleDistance(InitialColor, WorldColor);
+    // 色一致判定を実行（色相角度ベース）
+    bColorMatched = IsHueAngleWithinThreshold(InitialColor, WorldColor);
 
+    // 判定結果に応じてColorReactiveにコールバック
     if (!bColorMatched)
     {
+        // 色が不一致の場合
         ColorReactive->OnColorMismatched(WorldColor);
     }
     else
     {
+        // 色が一致した場合
         ColorReactive->OnColorMatched(WorldColor);
     }
 }
 
+/**
+ * マテリアルに色を適用
+ * ColorReactiveを通じて実際のマテリアル更新を行う
+ *
+ * @param Color 適用する色
+ */
 void UObjectColorComponent::ApplyColorToMaterial(const FLinearColor& Color)
 {
     if (ColorReactive)
@@ -240,105 +337,224 @@ void UObjectColorComponent::ApplyColorToMaterial(const FLinearColor& Color)
 // 状態の取得と設定
 // =======================
 
+/**
+ * 色の一致状態を設定
+ *
+ * @param bMatched 一致しているか
+ */
 void UObjectColorComponent::SetColorMatched(bool bMatched)
 {
     bColorMatched = bMatched;
 }
 
+/**
+ * 選択状態を設定
+ * 選択時はエミッシブ効果などが適用される
+ *
+ * @param bInSelected 選択されているか
+ */
 void UObjectColorComponent::SetSelected(bool bInSelected)
 {
     bSelected = bInSelected;
 
+    // ColorReactiveにも選択状態を通知
     if (ColorReactive)
     {
         ColorReactive->SetSelectMode(bSelected);
     }
 }
 
+/**
+ * ロック状態を設定
+ * ロック時は色変更が禁止される
+ *
+ * @param bInLocked ロックするか
+ */
 void UObjectColorComponent::SetLocked(bool bInLocked)
 {
     bLocked = bInLocked;
 }
 
+/**
+ * 非表示状態かを取得
+ *
+ * @return 非表示状態の場合true
+ */
 bool UObjectColorComponent::IsHidden() const
 {
     return ColorReactive && ColorReactive->IsHidden();
 }
 
 // =======================
-// 色判定API（ColorReactiveに委譲）
+// 色判定API（UColorUtilityLibraryに委譲）
 // =======================
 
+/**
+ * 初期色から変更されているかを判定
+ *
+ * @return 変更されている場合true
+ */
 bool UObjectColorComponent::HasColorChanged() const
 {
-    return ColorReactive &&
-        ColorReactive->HasColorChanged(CurrentColor, InitialColor);
-}
-
-bool UObjectColorComponent::HasColorChanged(const FLinearColor& CompareColor) const
-{
-    return ColorReactive &&
-        ColorReactive->HasColorChanged(CurrentColor, CompareColor);
-}
-
-bool UObjectColorComponent::MatchesColorByRGB(const FEffectMatchResult& MatchResult,
-    const FLinearColor& FilterColor,
-    bool bUseComplementary) const
-{
+    // ColorReactiveが無効な場合はfalse
     if (!ColorReactive)
     {
         return false;
     }
 
+    // 現在色と初期色を比較
+    return ColorReactive->HasColorChanged(CurrentColor, InitialColor);
+}
+
+/**
+ * 指定色と現在の色が変更されているかを判定
+ *
+ * @param CompareColor 比較する色
+ * @return 変更されている場合true
+ */
+bool UObjectColorComponent::HasColorChanged(const FLinearColor& CompareColor) const
+{
+    // ColorReactiveが無効な場合はfalse
+    if (!ColorReactive)
+    {
+        return false;
+    }
+
+    // 現在色と指定色を比較
+    return ColorReactive->HasColorChanged(CurrentColor, CompareColor);
+}
+
+/**
+ * RGB距離ベースでの色マッチング判定
+ *
+ * @param MatchResult エフェクトマッチング結果
+ * @param FilterColor フィルター色
+ * @param bUseComplementary 補色を使用するか
+ * @return 一致している場合true
+ */
+bool UObjectColorComponent::MatchesColorByRGB(const FEffectMatchResult& MatchResult,
+    const FLinearColor& FilterColor,
+    bool bUseComplementary) const
+{
+    // ColorReactiveが無効な場合はfalse
+    if (!ColorReactive)
+    {
+        return false;
+    }
+
+    // 補色を使用する場合は変換
     FLinearColor CompareColor = bUseComplementary ?
         ColorReactive->GetComplementaryColor(FilterColor) : FilterColor;
 
+    // RGB距離が閾値内かを判定
     return ColorReactive->IsRGBDistanceWithinThreshold(
         CurrentColor,
         CompareColor,
-        0.3
+        0.3f  // 閾値: 0.3
     );
 }
 
+/**
+ * 2色間の類似性を判定（知覚的色差）
+ *
+ * @param ColorA 色A
+ * @param ColorB 色B
+ * @param Tolerance 許容誤差
+ * @return 類似している場合true
+ */
 bool UObjectColorComponent::IsSimilarColor(const FLinearColor& ColorA,
     const FLinearColor& ColorB,
     float Tolerance) const
 {
-    return ColorReactive &&
-        ColorReactive->IsColorDegreeDistanceWithinThreshold(ColorA, ColorB, Tolerance);
+    // ColorReactiveが無効な場合はfalse
+    if (!ColorReactive)
+    {
+        return false;
+    }
+
+    // 知覚的色差で判定
+    return ColorReactive->IsColorDegreeDistanceWithinThreshold(ColorA, ColorB, Tolerance);
 }
 
+/**
+ * 現在色との類似性を判定（知覚的色差）
+ *
+ * @param FilterColor フィルター色
+ * @param Tolerance 許容誤差
+ * @return 類似している場合true
+ */
 bool UObjectColorComponent::IsSimilarColor(const FLinearColor& FilterColor,
     float Tolerance) const
 {
-    return ColorReactive &&
-        ColorReactive->IsColorDegreeDistanceWithinThreshold(CurrentColor, FilterColor, Tolerance);
+    // ColorReactiveが無効な場合はfalse
+    if (!ColorReactive)
+    {
+        return false;
+    }
+
+    // 現在色とフィルター色を比較
+    return ColorReactive->IsColorDegreeDistanceWithinThreshold(CurrentColor, FilterColor, Tolerance);
 }
 
-bool UObjectColorComponent::GetHueAngleDistance(const FLinearColor& ColorA, const FLinearColor& ColorB, float Tolerance)
+/**
+ * 色相角度が閾値内かを判定
+ *
+ * @param ColorA 色A
+ * @param ColorB 色B
+ * @param Tolerance 閾値（度数）デフォルト: 30度
+ * @return 閾値以内の場合true
+ */
+bool UObjectColorComponent::IsHueAngleWithinThreshold(const FLinearColor& ColorA,
+    const FLinearColor& ColorB,
+    float Tolerance)
 {
+    // ColorReactiveが無効な場合はfalse
     if (!ColorReactive)
+    {
         return false;
+    }
 
-   float deg = ColorReactive->GetHueAngleDistance(ColorA, ColorB);
+    // 色相角度の差を計算（0〜180度）
+    const float AngleDistance = ColorReactive->GetHueAngleDistance(ColorA, ColorB);
 
-   return deg >= Tolerance;
+    // 閾値以下ならtrue（一致とみなす）
+    return AngleDistance <= Tolerance;
 }
 
 // =======================
 // ヘルパー関数
 // =======================
 
+/**
+ * SkeletalMeshComponentを取得
+ * オーナーアクターから"Mesh"という名前のコンポーネントを検索
+ *
+ * @return SkeletalMeshComponent（見つからない場合はnullptr）
+ */
 USkeletalMeshComponent* UObjectColorComponent::GetMeshComponent() const
 {
-    return UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(GetOwner(), TEXT("Mesh"));
+    return UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(
+        GetOwner(),
+        TEXT("Mesh")
+    );
 }
 
+/**
+ * レベルマネージャーを取得
+ *
+ * @return ALevelManager（見つからない場合はnullptr）
+ */
 ALevelManager* UObjectColorComponent::GetLevelManager() const
 {
     return ALevelManager::GetInstance(GetWorld());
 }
 
+/**
+ * カラーマネージャーを取得
+ * レベルマネージャーを経由して取得
+ *
+ * @return UColorManager（見つからない場合はnullptr）
+ */
 UColorManager* UObjectColorComponent::GetColorManager() const
 {
     const ALevelManager* LevelManager = GetLevelManager();

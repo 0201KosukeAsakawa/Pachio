@@ -118,7 +118,7 @@ void UColorReactiveComponent::SetSelectMode(bool bIsNowSelected)
 
     if (bSelected)
     {
-        // 選択時のエミッシブ効果（例: 白い発光）
+        // 選択時のエミッシブ効果
         DynMesh->SetVectorParameterValue(FName("EmissiveColor"), FLinearColor::White * 0.5f);
     }
     else

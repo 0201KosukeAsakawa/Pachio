@@ -103,7 +103,7 @@ public:
     bool IsSimilarColor(const FLinearColor& FilterColor,
         float Tolerance = 0.01f) const;
 
-    bool GetHueAngleDistance(const FLinearColor& ColorA, const FLinearColor& ColorB, float Tolerance = 30.f);
+    bool IsHueAngleWithinThreshold(const FLinearColor& ColorA, const FLinearColor& ColorB, float Tolerance = 30.f);
 
     // =======================
     // エフェクト処理

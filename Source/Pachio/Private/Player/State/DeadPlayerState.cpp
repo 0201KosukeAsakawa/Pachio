@@ -9,11 +9,17 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/RespawnComponent.h"
 
+UDeadPlayerState::UDeadPlayerState()
+{
+   
+}
+
 bool UDeadPlayerState::OnEnter(APawn* Owner, UWorld* World)
 {
     if (!Owner) return false;
 
     PlayerCharacter = Cast<APlayerCharacter>(Owner);
+
 
     if (RespawnComponent == nullptr)
     {
@@ -58,6 +64,9 @@ bool UDeadPlayerState::OnUpdate(float DeltaTime)
 
     if (ElapsedTime >= 1.5f && !bIsRespawned)
     {
+        if (RespawnComponent == nullptr)
+            return false;
+
         // 実際のリスポーン処理はここで呼ぶ
         RespawnComponent->RespawnOwner();
         bIsRespawned = true;

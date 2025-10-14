@@ -161,7 +161,7 @@ protected:
     bool bHide;
 
     /** Niagaraアクター配列 */
-    UPROPERTY()
+    UPROPERTY(EditAnywhere)
     TArray<TObjectPtr<ANiagaraActor>> Niagaras;
 
     /** アクティブなNiagaraコンポーネント */
