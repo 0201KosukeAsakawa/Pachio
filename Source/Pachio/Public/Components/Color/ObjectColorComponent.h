@@ -84,26 +84,10 @@ public:
     // =======================
 
     /** 初期色から変更されているかを判定 */
-    bool HasColorChanged() const;
+    bool HasColorChanged(const  float Tolerance = 30.f) const;
 
     /** 指定色と現在の色が一致しているかを判定 */
-    bool HasColorChanged(const FLinearColor& CompareColor) const;
-
-    /** RGB空間での色マッチング判定（エフェクトシステム用） */
-    bool MatchesColorByRGB(const FEffectMatchResult& MatchResult,
-        const FLinearColor& FilterColor,
-        bool bUseComplementary = false) const;
-
-    /** 色相ベースで2色間の類似性を判定（許容誤差付き） */
-    bool IsSimilarColor(const FLinearColor& ColorA,
-        const FLinearColor& ColorB,
-        float Tolerance = 0.01f) const;
-
-    /** 色相ベースでフィルター色と現在の色の類似性を判定 */
-    bool IsSimilarColor(const FLinearColor& FilterColor,
-        float Tolerance = 0.01f) const;
-
-    bool IsHueAngleWithinThreshold(const FLinearColor& ColorA, const FLinearColor& ColorB, float Tolerance = 30.f);
+    bool HasColorChanged(const FLinearColor& CompareColor, float Tolerance = 30.f) const;
 
     // =======================
     // エフェクト処理

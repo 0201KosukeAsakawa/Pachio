@@ -2,6 +2,7 @@
 #include "Components/Color/ObjectColorComponent.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
+#include "ColorUtilityLibrary.h"
 #include "DataContainer/EffectMatchResult.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
@@ -110,7 +111,7 @@ void AColorReactiveBeltConveyor::ApplyColorWithMatching(const FLinearColor& InCo
     AColorReactiveObject::ApplyColorWithMatching(InColor,result);
 
     // 色の一致状態を設定
-    ObjectColorComponent->SetColorMatched(ObjectColorComponent->MatchesColorByRGB(result,InColor));
+    ObjectColorComponent->SetColorMatched(UColorUtilityLibrary::IsHueSimilar(GetCurrentColor(), InColor));
     if (ObjectColorComponent->IsColorMatched())
     {
         if (IsRevers)

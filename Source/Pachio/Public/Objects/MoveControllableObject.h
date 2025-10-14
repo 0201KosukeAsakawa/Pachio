@@ -38,8 +38,6 @@ private:// オーバーラップイベント
 	UFUNCTION()
 	void OnBeatDetected();
 
-	virtual void ApplyColorWithMatching(const FLinearColor&, const FEffectMatchResult&)override;
-
 	void Movement(float);
 
 	void Check();

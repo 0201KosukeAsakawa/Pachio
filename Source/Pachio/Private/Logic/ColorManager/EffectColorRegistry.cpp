@@ -108,7 +108,7 @@ FEffectMatchResult UEffectColorRegistry::GetClosestEffectByRGB(const FLinearColo
         const FLinearColor& EffectColor = Elem.Value;
 
         // RGB距離を計算
-        const float Distance = UColorUtilityLibrary::GetRGBDistance(InputColor, EffectColor);
+        const float Distance = UColorUtilityLibrary::IsHueSimilar(InputColor, EffectColor);
 
         if (Distance < MinDistance)
         {

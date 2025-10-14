@@ -27,86 +27,162 @@ struct FHSLColor
  * 色計算の共通ユーティリティライブラリ
  * 静的関数として提供し、どこからでも使用可能
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS()
 class PACHIO_API UColorUtilityLibrary : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 
 public:
     // =======================
-    // 色空間変換
+    // 基本: 色相角度の取得と操作
     // =======================
 
-    /** RGB → HSL 変換 */
-    UFUNCTION(BlueprintPure, Category = "Color|Conversion")
-    static FHSLColor RGBToHSL(const FLinearColor& Color);
+    /**
+     * 色から色相角度を取得（0〜360度）
+     *
+     * @param Color 対象色
+     * @return 色相角度（0=赤, 120=緑, 240=青）
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Hue")
+    static float GetHue(const FLinearColor& Color);
 
-    /** HSL → RGB 変換 */
-    UFUNCTION(BlueprintPure, Category = "Color|Conversion")
-    static FLinearColor HSLToRGB(const FHSLColor& HSL);
+    /**
+     * 色相角度から色を生成（彩度・明度は最大）
+     *
+     * @param HueDegrees 色相角度（0〜360度）
+     * @return 生成された色
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Hue")
+    static FLinearColor FromHue(float HueDegrees);
 
-    /** 補色を計算（パステル調整付き） */
+    // =======================
+    // 色相角度の差（距離）
+    // =======================
+
+    /**
+     * 2色間の色相角度差を計算（0〜180度）
+     * 色相環の最短距離を返す
+     *
+     * 例: 赤(0度) と 青(240度) → 120度（360-240=120の方が近い）
+     *
+     * @param ColorA 色A
+     * @param ColorB 色B
+     * @return 色相角度差（0〜180度）
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
+    static float GetHueAngleDistance(const FLinearColor& ColorA,
+        const FLinearColor& ColorB);
+
+    /**
+     * 特定色からの色相角度差を計算
+     *
+     * 例: 「赤からどれくらい離れているか」を判定
+     *
+     * @param Color 対象色
+     * @param ReferenceHue 基準となる色相角度（0=赤, 120=緑, 240=青）
+     * @return 色相角度差（0〜180度）
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
+    static float GetHueDistanceFromAngle(const FLinearColor& Color,
+        float ReferenceHue);
+
+    // =======================
+    // 色相判定
+    // =======================
+
+    /**
+     * 色相が類似しているかを判定
+     *
+     * @param ColorA 色A
+     * @param ColorB 色B
+     * @param ThresholdDegrees 閾値（度）デフォルト: 30度
+     * @return 類似している場合true
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
+    static bool IsHueSimilar(const FLinearColor& ColorA,
+        const FLinearColor& ColorB,
+        float ThresholdDegrees = 30.0f);
+
+    /**
+     * 特定の色相範囲内にあるかを判定
+     *
+     * 例: 「赤系統の色か？」を判定
+     *
+     * @param Color 対象色
+     * @param CenterHue 中心となる色相角度
+     * @param RangeDegrees 許容範囲（±N度）
+     * @return 範囲内の場合true
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
+    static bool IsHueInRange(const FLinearColor& Color,
+        float CenterHue,
+        float RangeDegrees = 30.0f);
+
+    // =======================
+    // 色相操作
+    // =======================
+
+    /**
+     * 補色を計算（色相を180度回転）
+     *
+     * 例: 赤(0度) → シアン(180度)
+     *     緑(120度) → マゼンタ(300度)
+     *
+     * @param InColor 入力色
+     * @return 補色
+     */
     UFUNCTION(BlueprintPure, Category = "Color|Conversion")
     static FLinearColor GetComplementaryColor(const FLinearColor& InColor);
 
-    // =======================
-    // 色差計算
-    // =======================
+    /**
+     * 色相を回転
+     *
+     * @param InColor 入力色
+     * @param RotationDegrees 回転角度（正で時計回り）
+     * @return 回転後の色
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Conversion")
+    static FLinearColor RotateHue(const FLinearColor& InColor,
+        float RotationDegrees);
 
-    /** 色相角度の差を計算（HSV空間、0〜180度） */
-    UFUNCTION(BlueprintPure, Category = "Color|Distance")
-    static float GetHueAngleDistance(const FLinearColor& ColorA, const FLinearColor& ColorB);
-
-    /** RGB空間でのユークリッド距離 */
-    UFUNCTION(BlueprintPure, Category = "Color|Distance")
-    static float GetRGBDistance(const FLinearColor& ColorA, const FLinearColor& ColorB);
-
-    /** 人間の視覚特性に基づいた重み付き色差（ITU-R BT.601係数） */
-    UFUNCTION(BlueprintPure, Category = "Color|Distance")
-    static float GetPerceptualColorDistance(const FLinearColor& ColorA, const FLinearColor& ColorB);
-
-    // =======================
-    // 色判定
-    // =======================
-
-    /** RGB距離が閾値内かを判定 */
-    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
-    static bool IsRGBDistanceWithinThreshold(
-        const FLinearColor& ColorA,
-        const FLinearColor& ColorB,
-        float Threshold);
-
-    /** 知覚的色差が閾値内かを判定 */
-    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
-    static bool IsPerceptualDistanceWithinThreshold(
-        const FLinearColor& ColorA,
-        const FLinearColor& ColorB,
-        float Tolerance);
-
-    /** 色が変更されたかを判定（デフォルト許容値使用） */
-    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
-    static bool HasColorChanged(
-        const FLinearColor& CurrentColor,
-        const FLinearColor& CompareColor,
-        float Tolerance = 0.1f);
+    /**
+     * 類似色を生成
+     *
+     * @param BaseColor 基準色
+     * @param VariationDegrees 色相のバリエーション（±N度）
+     * @return 類似色の配列
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Generation")
+    static TArray<FLinearColor> GenerateSimilarColors(const FLinearColor& BaseColor,
+        float VariationDegrees = 15.0f,
+        int32 Count = 3);
 
     // =======================
-    // 色調整
+    // エフェクト用ヘルパー
     // =======================
 
-    /** 最大RGB成分を強調（エフェクト用） */
-    UFUNCTION(BlueprintPure, Category = "Color|Adjustment")
-    static FLinearColor EnhanceMaxComponent(
-        const FLinearColor& Color,
+    /**
+     * 最大RGB成分を強調（エフェクト用）
+     * 色相は保持したまま、明るさを増幅
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Effects")
+    static FLinearColor EnhanceMaxComponent(const FLinearColor& Color,
         float Multiplier = 50.0f);
 
-private:
     // =======================
-    // 定数
+    // 定義済み色相角度（定数）
     // =======================
 
-    // ITU-R BT.601 係数（人間の視覚特性）
-    static constexpr float RedWeight = 0.299f;
-    static constexpr float GreenWeight = 0.587f;
-    static constexpr float BlueWeight = 0.114f;
+    static constexpr float HUE_RED = 0.0f;
+    static constexpr float HUE_ORANGE = 30.0f;
+    static constexpr float HUE_YELLOW = 60.0f;
+    static constexpr float HUE_CHARTREUSE = 90.0f;
+    static constexpr float HUE_GREEN = 120.0f;
+    static constexpr float HUE_SPRING_GREEN = 150.0f;
+    static constexpr float HUE_CYAN = 180.0f;
+    static constexpr float HUE_AZURE = 210.0f;
+    static constexpr float HUE_BLUE = 240.0f;
+    static constexpr float HUE_VIOLET = 270.0f;
+    static constexpr float HUE_MAGENTA = 300.0f;
+    static constexpr float HUE_ROSE = 330.0f;
 };

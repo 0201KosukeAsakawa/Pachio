@@ -66,7 +66,7 @@ void ALowGravityZone::ApplyColorWithMatching(const FLinearColor& InColor,const F
     AColorReactiveObject::ApplyColorWithMatching(InColor, result);
 
     // 色が一致しなければ「重力を元に戻す」
-    if (!ObjectColorComponent->IsSimilarColor(InColor))
+    if (!UColorUtilityLibrary::IsHueSimilar(InColor,GetCurrentColor()))
     {
         for (AActor* Actor : OverlappingActors)
         {

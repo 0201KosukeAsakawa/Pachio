@@ -39,7 +39,7 @@ void ATeleportPortal::ApplyColorWithMatching(const FLinearColor& InColor,const F
     if (!ObjectColorComponent)
         return;
 
-    bool b = ObjectColorComponent->IsSimilarColor(InColor, SecondColor);
+    bool b = UColorUtilityLibrary::IsHueSimilar(InColor, SecondColor);
     if (b)
     {
         if (AlternatePortal)

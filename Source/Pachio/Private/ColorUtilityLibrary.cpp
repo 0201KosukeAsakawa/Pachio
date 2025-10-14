@@ -7,174 +7,119 @@
 // 色空間変換
 // =======================
 
-FHSLColor UColorUtilityLibrary::RGBToHSL(const FLinearColor& Color)
+float UColorUtilityLibrary::GetHue(const FLinearColor& Color)
 {
-    const float R = Color.R, G = Color.G, B = Color.B;
-    const float Max = FMath::Max3(R, G, B);
-    const float Min = FMath::Min3(R, G, B);
-    const float Delta = Max - Min;
-
-    FHSLColor HSL;
-    HSL.L = (Max + Min) * 0.5f;
-
-    if (Delta == 0.0f)
-    {
-        HSL.H = 0.0f;
-        HSL.S = 0.0f;
-    }
-    else
-    {
-        HSL.S = (HSL.L < 0.5f) ? (Delta / (Max + Min)) : (Delta / (2.0f - Max - Min));
-
-        if (Max == R)
-            HSL.H = (G - B) / Delta + (G < B ? 6.0f : 0.0f);
-        else if (Max == G)
-            HSL.H = (B - R) / Delta + 2.0f;
-        else
-            HSL.H = (R - G) / Delta + 4.0f;
-
-        HSL.H /= 6.0f;
-    }
-    return HSL;
+    // UEの組み込み関数を使用（HSVのR成分が色相）
+    const FLinearColor HSV = Color.LinearRGBToHSV();
+    return HSV.R;  // 0〜360度
 }
 
-FLinearColor UColorUtilityLibrary::HSLToRGB(const FHSLColor& HSL)
+FLinearColor UColorUtilityLibrary::FromHue(float HueDegrees)
 {
-    float R, G, B;
+    // 色相のみから色を生成（彩度=1.0, 明度=1.0）
+    FLinearColor HSV;
+    HSV.R = FMath::Fmod(HueDegrees, 360.0f);  // 色相（0〜360）
+    HSV.G = 1.0f;  // 彩度（最大）
+    HSV.B = 1.0f;  // 明度（最大）
+    HSV.A = 1.0f;  // アルファ
 
-    if (HSL.S == 0.0f)
-    {
-        R = G = B = HSL.L;
-    }
-    else
-    {
-        auto HueToRGB = [](float p, float q, float t) -> float
-            {
-                if (t < 0.0f) t += 1.0f;
-                if (t > 1.0f) t -= 1.0f;
-
-                if (t < 1.0f / 6.0f) return p + (q - p) * 6.0f * t;
-                if (t < 0.5f) return q;
-                if (t < 2.0f / 3.0f) return p + (q - p) * (2.0f / 3.0f - t) * 6.0f;
-                return p;
-            };
-
-        const float q = (HSL.L < 0.5f) ? (HSL.L * (1.0f + HSL.S)) : (HSL.L + HSL.S - HSL.L * HSL.S);
-        const float p = 2.0f * HSL.L - q;
-
-        R = HueToRGB(p, q, HSL.H + 1.0f / 3.0f);
-        G = HueToRGB(p, q, HSL.H);
-        B = HueToRGB(p, q, HSL.H - 1.0f / 3.0f);
-    }
-
-    return FLinearColor(R, G, B, 1.0f);
+    return HSV.HSVToLinearRGB();
 }
+
+// =======================
+// 色相角度の差（距離）
+// =======================
+
+float UColorUtilityLibrary::GetHueAngleDistance(const FLinearColor& ColorA,
+    const FLinearColor& ColorB)
+{
+    const float HueA = GetHue(ColorA);
+    const float HueB = GetHue(ColorB);
+
+    // 色相環での最短距離を計算
+    const float Delta = FMath::Abs(HueA - HueB);
+    return FMath::Min(Delta, 360.0f - Delta);
+}
+
+float UColorUtilityLibrary::GetHueDistanceFromAngle(const FLinearColor& Color,
+    float ReferenceHue)
+{
+    const float Hue = GetHue(Color);
+
+    // 基準角度からの最短距離
+    const float Delta = FMath::Abs(Hue - ReferenceHue);
+    return FMath::Min(Delta, 360.0f - Delta);
+}
+
+// =======================
+// 色相判定
+// =======================
+
+bool UColorUtilityLibrary::IsHueSimilar(const FLinearColor& ColorA,
+    const FLinearColor& ColorB,
+    float ThresholdDegrees)
+{
+    const float Distance = GetHueAngleDistance(ColorA, ColorB);
+    return Distance <= ThresholdDegrees;
+}
+
+bool UColorUtilityLibrary::IsHueInRange(const FLinearColor& Color,
+    float CenterHue,
+    float RangeDegrees)
+{
+    const float Distance = GetHueDistanceFromAngle(Color, CenterHue);
+    return Distance <= RangeDegrees;
+}
+
+// =======================
+// 色相操作
+// =======================
 
 FLinearColor UColorUtilityLibrary::GetComplementaryColor(const FLinearColor& InColor)
 {
-    FHSLColor HSL = RGBToHSL(InColor);
+    // 単純に色相を180度回転するだけ
+    return RotateHue(InColor, 180.0f);
+}
 
-    // 色相を180度反転
-    constexpr float ComplementaryHueOffset = 0.5f;
-    HSL.H += ComplementaryHueOffset;
-    if (HSL.H > 1.0f) HSL.H -= 1.0f;
+FLinearColor UColorUtilityLibrary::RotateHue(const FLinearColor& InColor,
+    float RotationDegrees)
+{
+    // HSVに変換
+    FLinearColor HSV = InColor.LinearRGBToHSV();
 
-    // パステル調に調整
-    constexpr float PastelSaturation = 0.3f;
-    constexpr float MinPastelLightness = 0.8f;
-    constexpr float MaxPastelLightness = 1.0f;
+    // 色相を回転
+    HSV.R = FMath::Fmod(HSV.R + RotationDegrees, 360.0f);
+    if (HSV.R < 0.0f) HSV.R += 360.0f;
 
-    HSL.S = PastelSaturation;
-    HSL.L = FMath::Clamp(HSL.L, MinPastelLightness, MaxPastelLightness);
+    // RGBに戻す
+    return HSV.HSVToLinearRGB();
+}
 
-    FLinearColor Complementary = HSLToRGB(HSL);
+TArray<FLinearColor> UColorUtilityLibrary::GenerateSimilarColors(
+    const FLinearColor& BaseColor,
+    float VariationDegrees,
+    int32 Count)
+{
+    TArray<FLinearColor> SimilarColors;
+    SimilarColors.Reserve(Count);
 
-    // 最大成分を1.0に強制
-    const float MaxComponent = FMath::Max3(Complementary.R, Complementary.G, Complementary.B);
-    constexpr float MaxComponentValue = 1.0f;
-    constexpr float MinComponentValue = 0.8f;
+    const float Step = (VariationDegrees * 2.0f) / FMath::Max(Count - 1, 1);
 
-    if (Complementary.R == MaxComponent) Complementary.R = MaxComponentValue;
-    if (Complementary.G == MaxComponent) Complementary.G = MaxComponentValue;
-    if (Complementary.B == MaxComponent) Complementary.B = MaxComponentValue;
+    for (int32 i = 0; i < Count; ++i)
+    {
+        const float Offset = -VariationDegrees + (Step * i);
+        SimilarColors.Add(RotateHue(BaseColor, Offset));
+    }
 
-    if (Complementary.R != MaxComponentValue)
-        Complementary.R = FMath::Clamp(Complementary.R, MinComponentValue, MaxComponentValue);
-    if (Complementary.G != MaxComponentValue)
-        Complementary.G = FMath::Clamp(Complementary.G, MinComponentValue, MaxComponentValue);
-    if (Complementary.B != MaxComponentValue)
-        Complementary.B = FMath::Clamp(Complementary.B, MinComponentValue, MaxComponentValue);
-
-    Complementary.A = 1.0f;
-    return Complementary;
+    return SimilarColors;
 }
 
 // =======================
-// 色差計算
+// エフェクト用ヘルパー
 // =======================
 
-float UColorUtilityLibrary::GetHueAngleDistance(const FLinearColor& ColorA, const FLinearColor& ColorB)
-{
-    const FLinearColor HSV_A = ColorA.LinearRGBToHSV();
-    const FLinearColor HSV_B = ColorB.LinearRGBToHSV();
-    const float HueA = HSV_A.R;
-    const float HueB = HSV_B.R;
-    const float Delta = FMath::Abs(HueA - HueB);
-    const float Distance = FMath::Min(Delta, 360.0f - Delta);
-    return Distance;
-}
-
-float UColorUtilityLibrary::GetRGBDistance(const FLinearColor& ColorA, const FLinearColor& ColorB)
-{
-    const float dR = ColorA.R - ColorB.R;
-    const float dG = ColorA.G - ColorB.G;
-    const float dB = ColorA.B - ColorB.B;
-    return FMath::Sqrt(dR * dR + dG * dG + dB * dB);
-}
-
-float UColorUtilityLibrary::GetPerceptualColorDistance(const FLinearColor& ColorA, const FLinearColor& ColorB)
-{
-    const float dR = ColorA.R - ColorB.R;
-    const float dG = ColorA.G - ColorB.G;
-    const float dB = ColorA.B - ColorB.B;
-
-    return RedWeight * dR * dR + GreenWeight * dG * dG + BlueWeight * dB * dB;
-}
-
-// =======================
-// 色判定
-// =======================
-
-bool UColorUtilityLibrary::IsRGBDistanceWithinThreshold(
-    const FLinearColor& ColorA,
-    const FLinearColor& ColorB,
-    float Threshold)
-{
-    return GetRGBDistance(ColorA, ColorB) <= Threshold;
-}
-
-bool UColorUtilityLibrary::IsPerceptualDistanceWithinThreshold(
-    const FLinearColor& ColorA,
-    const FLinearColor& ColorB,
-    float Tolerance)
-{
-    const float Distance = GetPerceptualColorDistance(ColorA, ColorB);
-    return Distance <= Tolerance * Tolerance;
-}
-
-bool UColorUtilityLibrary::HasColorChanged(
-    const FLinearColor& CurrentColor,
-    const FLinearColor& CompareColor,
-    float Tolerance)
-{
-    return !IsPerceptualDistanceWithinThreshold(CurrentColor, CompareColor, Tolerance);
-}
-
-// =======================
-// 色調整
-// =======================
-
-FLinearColor UColorUtilityLibrary::EnhanceMaxComponent(const FLinearColor& Color, float Multiplier)
+FLinearColor UColorUtilityLibrary::EnhanceMaxComponent(const FLinearColor& Color,
+    float Multiplier)
 {
     const float MaxRGB = FMath::Max3(Color.R, Color.G, Color.B);
     FLinearColor Enhanced = Color;

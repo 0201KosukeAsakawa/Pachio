@@ -54,37 +54,7 @@ public:
     // 色判定ロジック（UColorUtilityLibraryへの委譲）
     // =======================
 
-    /** RGB空間での距離判定 */
-    FORCEINLINE bool IsRGBDistanceWithinThreshold(
-        const FLinearColor& ColorA,
-        const FLinearColor& ColorB,
-        float Threshold) const
-    {
-        return UColorUtilityLibrary::IsRGBDistanceWithinThreshold(ColorA, ColorB, Threshold);
-    }
-
-    /** 人間の視覚特性に基づいた色差判定 */
-    FORCEINLINE bool IsColorDegreeDistanceWithinThreshold(
-        const FLinearColor& ColorA,
-        const FLinearColor& ColorB,
-        float Tolerance) const
-    {
-        return UColorUtilityLibrary::IsPerceptualDistanceWithinThreshold(ColorA, ColorB, Tolerance);
-    }
-
-    /** 2色間を角度でのみ比較 */
-    FORCEINLINE float GetHueAngleDistance(const FLinearColor& ColorA, const FLinearColor& ColorB) const
-    {
-        return UColorUtilityLibrary::GetHueAngleDistance(ColorA, ColorB);
-    }
-
-    /** 色が変更されたかを判定 */
-    FORCEINLINE bool HasColorChanged(
-        const FLinearColor& currentColor,
-        const FLinearColor& CompareColor) const
-    {
-        return UColorUtilityLibrary::HasColorChanged(currentColor, CompareColor);
-    }
+    //別クラスに全て委託
 
     // =======================
     // 色変換（UColorUtilityLibraryへの委譲）

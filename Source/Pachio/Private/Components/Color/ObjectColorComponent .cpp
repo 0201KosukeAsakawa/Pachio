@@ -27,7 +27,7 @@ UObjectColorComponent::UObjectColorComponent()
     , bUseComplementaryColor(false)          // 補色を使用するか
     , bColorMatched(false)                   // 色が一致しているか
     , bSelected(false)                       // 選択されているか
-    , bColorChangeable(true)                 // 色変更が可能か
+    , bColorChangeable(false)                 // 色変更が可能か
     , bLocked(false)                         // ロックされているか
 {
     // ビート演出用のスケーラーコンポーネントを生成
@@ -235,7 +235,7 @@ void UObjectColorComponent::SetColor(const FLinearColor& NewColor,
     // マテリアルへ色を反映
     if (bApplyColorToMaterial)
     {
-        ColorReactive->ApplyColorToMaterial(CurrentColor);
+        ApplyColorToMaterial(CurrentColor);
     }
 
     // エフェクトタイプを更新（最適なエフェクトに切り替え）
@@ -304,7 +304,7 @@ void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor,
     }
 
     // 色一致判定を実行（色相角度ベース）
-    bColorMatched = IsHueAngleWithinThreshold(InitialColor, WorldColor);
+    bColorMatched = UColorUtilityLibrary::IsHueSimilar(InitialColor, WorldColor);
 
     // 判定結果に応じてColorReactiveにコールバック
     if (!bColorMatched)
@@ -327,7 +327,7 @@ void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor,
  */
 void UObjectColorComponent::ApplyColorToMaterial(const FLinearColor& Color)
 {
-    if (ColorReactive)
+    if (ColorReactive && bColorChangeable)
     {
         ColorReactive->ApplyColorToMaterial(Color);
     }
@@ -394,16 +394,10 @@ bool UObjectColorComponent::IsHidden() const
  *
  * @return 変更されている場合true
  */
-bool UObjectColorComponent::HasColorChanged() const
+bool UObjectColorComponent::HasColorChanged(const float Tolerance) const
 {
-    // ColorReactiveが無効な場合はfalse
-    if (!ColorReactive)
-    {
-        return false;
-    }
-
     // 現在色と初期色を比較
-    return ColorReactive->HasColorChanged(CurrentColor, InitialColor);
+    return HasColorChanged(InitialColor,Tolerance);
 }
 
 /**
@@ -412,113 +406,9 @@ bool UObjectColorComponent::HasColorChanged() const
  * @param CompareColor 比較する色
  * @return 変更されている場合true
  */
-bool UObjectColorComponent::HasColorChanged(const FLinearColor& CompareColor) const
+bool UObjectColorComponent::HasColorChanged(const FLinearColor& CompareColor, float Tolerance) const
 {
-    // ColorReactiveが無効な場合はfalse
-    if (!ColorReactive)
-    {
-        return false;
-    }
-
-    // 現在色と指定色を比較
-    return ColorReactive->HasColorChanged(CurrentColor, CompareColor);
-}
-
-/**
- * RGB距離ベースでの色マッチング判定
- *
- * @param MatchResult エフェクトマッチング結果
- * @param FilterColor フィルター色
- * @param bUseComplementary 補色を使用するか
- * @return 一致している場合true
- */
-bool UObjectColorComponent::MatchesColorByRGB(const FEffectMatchResult& MatchResult,
-    const FLinearColor& FilterColor,
-    bool bUseComplementary) const
-{
-    // ColorReactiveが無効な場合はfalse
-    if (!ColorReactive)
-    {
-        return false;
-    }
-
-    // 補色を使用する場合は変換
-    FLinearColor CompareColor = bUseComplementary ?
-        ColorReactive->GetComplementaryColor(FilterColor) : FilterColor;
-
-    // RGB距離が閾値内かを判定
-    return ColorReactive->IsRGBDistanceWithinThreshold(
-        CurrentColor,
-        CompareColor,
-        0.3f  // 閾値: 0.3
-    );
-}
-
-/**
- * 2色間の類似性を判定（知覚的色差）
- *
- * @param ColorA 色A
- * @param ColorB 色B
- * @param Tolerance 許容誤差
- * @return 類似している場合true
- */
-bool UObjectColorComponent::IsSimilarColor(const FLinearColor& ColorA,
-    const FLinearColor& ColorB,
-    float Tolerance) const
-{
-    // ColorReactiveが無効な場合はfalse
-    if (!ColorReactive)
-    {
-        return false;
-    }
-
-    // 知覚的色差で判定
-    return ColorReactive->IsColorDegreeDistanceWithinThreshold(ColorA, ColorB, Tolerance);
-}
-
-/**
- * 現在色との類似性を判定（知覚的色差）
- *
- * @param FilterColor フィルター色
- * @param Tolerance 許容誤差
- * @return 類似している場合true
- */
-bool UObjectColorComponent::IsSimilarColor(const FLinearColor& FilterColor,
-    float Tolerance) const
-{
-    // ColorReactiveが無効な場合はfalse
-    if (!ColorReactive)
-    {
-        return false;
-    }
-
-    // 現在色とフィルター色を比較
-    return ColorReactive->IsColorDegreeDistanceWithinThreshold(CurrentColor, FilterColor, Tolerance);
-}
-
-/**
- * 色相角度が閾値内かを判定
- *
- * @param ColorA 色A
- * @param ColorB 色B
- * @param Tolerance 閾値（度数）デフォルト: 30度
- * @return 閾値以内の場合true
- */
-bool UObjectColorComponent::IsHueAngleWithinThreshold(const FLinearColor& ColorA,
-    const FLinearColor& ColorB,
-    float Tolerance)
-{
-    // ColorReactiveが無効な場合はfalse
-    if (!ColorReactive)
-    {
-        return false;
-    }
-
-    // 色相角度の差を計算（0〜180度）
-    const float AngleDistance = ColorReactive->GetHueAngleDistance(ColorA, ColorB);
-
-    // 閾値以下ならtrue（一致とみなす）
-    return AngleDistance <= Tolerance;
+    return UColorUtilityLibrary::GetHueAngleDistance(CurrentColor, CompareColor) <= Tolerance;
 }
 
 // =======================

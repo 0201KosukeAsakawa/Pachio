@@ -50,10 +50,10 @@ void AColorReactiveSwitch::ApplyColorWithMatching(const FLinearColor& InColor,co
 	// -----------------------
 	// 第一色との一致チェック
 	// -----------------------
-	if (ObjectColorComponent->MatchesColorByRGB(result, InColor))
+	if (UColorUtilityLibrary::GetHueAngleDistance(GetCurrentColor(), InColor))
 	{
 		// 一致した色をマテリアルに反映
-		ObjectColorComponent->IsSimilarColor(InColor);
+		ObjectColorComponent->ApplyColorToMaterial(InColor);
 
 		// LevelManager を取得
 		ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
@@ -66,7 +66,7 @@ void AColorReactiveSwitch::ApplyColorWithMatching(const FLinearColor& InColor,co
 	// -----------------------
 	// 第二色との一致チェック
 	// -----------------------
-	else if (ObjectColorComponent->IsSimilarColor(SecondColor, InColor))
+	else if (UColorUtilityLibrary::IsHueSimilar(SecondColor, InColor))
 	{
 		// 一致した色をマテリアルに反映
 		ObjectColorComponent->ApplyColorToMaterial(InColor);

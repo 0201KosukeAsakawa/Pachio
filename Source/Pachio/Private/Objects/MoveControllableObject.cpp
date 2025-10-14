@@ -103,13 +103,6 @@ void AMoveControllableObject::OnBeatDetected()
 	PlayCount = 0;
 }
 
-void AMoveControllableObject::ApplyColorWithMatching(const FLinearColor& color,const FEffectMatchResult& result)
-{
-	AColorReactiveObject::ApplyColorWithMatching(color,result);
-	
-	ObjectColorComponent->IsSimilarColor(color, FLinearColor(1, 0.7, 0.8, 1)) ? bCanMove = false : bCanMove = true;
-}
-
 void AMoveControllableObject::Movement(float DeltaTime)
 {
 	FVector PreviousLocation = GetActorLocation();
