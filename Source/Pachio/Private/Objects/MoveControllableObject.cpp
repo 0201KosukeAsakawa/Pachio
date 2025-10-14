@@ -32,16 +32,6 @@ AMoveControllableObject::AMoveControllableObject()
 	MoveStepSize = 100.0f;
 }
 
-void AMoveControllableObject::Initialize()
-{
-	AColorReactiveObject::Initialize();
-
-	const TObjectPtr<USoundManager> SoundManager =
-		Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject());
-	if (!SoundManager) return;
-
-	SoundManager->OnBeatDetected.AddDynamic(this, &AMoveControllableObject::OnBeatDetected);
-}
 
 void AMoveControllableObject::Tick(float DeltaTime)
 {

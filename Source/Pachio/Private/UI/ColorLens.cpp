@@ -23,13 +23,6 @@ void UColorLens::NativeConstruct()
     // ColorManager に対して、背景色変更の対象としてこのクラスを登録
     // 登録することで色変更イベントを受け取るようになる
     Owner->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
-
-    // 初期化時（BeginPlayなど）
-        // 初期化時（BeginPlayなど）
-    if (USoundManager* soundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject()))
-    {
-        soundManager->OnBeatDetected.AddDynamic(this, &UColorLens::PlayBeatAnimation);
-    }
 }
 
 void UColorLens::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

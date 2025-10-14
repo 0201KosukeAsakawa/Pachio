@@ -61,23 +61,10 @@ void UColorReactiveComponent::Initialize(const FLinearColor& InitialColor, bool 
             *TargetOwner->GetName());
         return;
     }
-
+    CurrentColor = InitialColor;
     // ダイナミックマテリアルを生成
     constexpr int32 MaterialSlotIndex = 0;
     DynMesh = MeshComp->CreateAndSetMaterialInstanceDynamic(MaterialSlotIndex);
-
-    if (!DynMesh)
-    {
-        UE_LOG(LogTemp, Error, TEXT("ColorReactiveComponent: Failed to create dynamic material on %s"),
-            *TargetOwner->GetName());
-        return;
-    }
-
-    CurrentColor = InitialColor;
-    DynMesh->SetVectorParameterValue(FName("BaseColor"), InitialColor);
-
-    UE_LOG(LogTemp, Log, TEXT("ColorReactiveComponent initialized on %s with color (R:%.2f, G:%.2f, B:%.2f)"),
-        *TargetOwner->GetName(), InitialColor.R, InitialColor.G, InitialColor.B);
 }
 
 void UColorReactiveComponent::SetupNiagaraActors(const TArray<ANiagaraActor*>& InNiagaraActors)
@@ -199,17 +186,18 @@ void UColorReactiveComponent::ActivateNiagaraEffect(UNiagaraSystem* NiagaraSyste
         true
     );
 
-    if (TargetNiagara)
-    {
-        // エフェクト用の色を強調（UColorUtilityLibraryを使用）
-        const FLinearColor EnhancedColor = UColorUtilityLibrary::EnhanceMaxComponent(
-            CurrentColor,
-            50.0f
-        );
+    if (TargetNiagara == nullptr)
+        return;
 
-        TargetNiagara->SetVariableLinearColor(FName("User_Color"), EnhancedColor);
-        ActiveNiagaraComponents.Add(TargetNiagara);
-    }
+    // エフェクト用の色を強調（UColorUtilityLibraryを使用）
+    const FLinearColor EnhancedColor = UColorUtilityLibrary::EnhanceMaxComponent(
+        CurrentColor,
+        50.0f
+    );
+
+    TargetNiagara->SetVariableLinearColor(FName("User_Color"), EnhancedColor);
+    ActiveNiagaraComponents.Add(TargetNiagara);
+
 }
 
 void UColorReactiveComponent::DeactivateAllEffects()

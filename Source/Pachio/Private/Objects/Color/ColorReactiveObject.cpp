@@ -106,26 +106,6 @@ FName AColorReactiveObject::GetColorEventID() const
 // 状態管理
 // =======================
 
-void AColorReactiveObject::SetLocked(bool bLocked)
-{
-    if (!ObjectColorComponent)
-    {
-        return;
-    }
-
-    ObjectColorComponent->SetLocked(bLocked);
-}
-
-bool AColorReactiveObject::IsColorModifiable() const
-{
-    if (!ObjectColorComponent)
-    {
-        return false;
-    }
-
-    return ObjectColorComponent->IsColorModifiable();
-}
-
 FLinearColor AColorReactiveObject::GetCurrentColor() const
 {
     if (!ObjectColorComponent)

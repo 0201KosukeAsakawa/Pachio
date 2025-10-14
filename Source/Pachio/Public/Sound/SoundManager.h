@@ -48,10 +48,6 @@ public:
 
     UFUNCTION(Category = "Beat")
     void SetTmp(EColorTargetType Mode, FLinearColor NewColor);
-
-    UPROPERTY(BlueprintAssignable, Category = "Beat")
-    FOnBeatDetected OnBeatDetected;
-    void OnMarkerBeat(int64 MarkerPositionMs); // マーカーで発火されたとき
 private:
 
     void LoadOrCreateVolumeSave();
@@ -76,9 +72,7 @@ private:
     UFUNCTION()
     void OnEnvelopeValue(const USoundWave* SoundWave, const float EnvelopeValue);
     bool PlayBGM();    
-    UFUNCTION()
-    void OnBeatTimerElapsed();
-    void InitTestSound();
+
 private:
     // サウンドデータを保持するためのマップ
     UPROPERTY(EditAnywhere, Category = "Sound")

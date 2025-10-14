@@ -61,12 +61,6 @@ public:
     /** 色変更が可能かを取得 */
     FORCEINLINE bool IsChangeable() const { return bColorChangeable; }
 
-    /** ロック状態を設定 */
-    void SetLocked(bool bLocked);
-
-    /** 色が変更可能な状態かを取得（ロック状態を考慮） */
-    FORCEINLINE bool IsColorModifiable() const { return bLocked; }
-
     /** 非表示状態かを取得 */
     bool IsHidden() const;
 
@@ -109,17 +103,6 @@ protected:
     /** マテリアルの初期設定 */
     void SetupMaterial();
 
-    /** サウンドイベントのバインド */
-    void BindSoundEvents();
-
-    // =======================
-    // エフェクト処理
-    // =======================
-
-    /** ビート演出を再生 */
-    UFUNCTION()
-    void PlayBeatAnimation();
-
     // =======================
     // ヘルパー関数
     // =======================
@@ -137,10 +120,6 @@ protected:
     // コンポーネントとプロパティ
     // =======================
 protected:
-    /** ビート演出用スケーラーコンポーネント */
-    UPROPERTY(VisibleAnywhere, Category = "Components")
-    TObjectPtr<UBeatScalerComponent> BeatScaler;
-
     /** 色リアクティブコンポーネント */
     UPROPERTY()
     TObjectPtr<UColorReactiveComponent> ColorReactive;
@@ -187,11 +166,6 @@ protected:
     /** ビート演出を有効化 */
     UPROPERTY(EditAnywhere, Category = "Effects|Behavior")
     bool bEnableBeatEffect;
-
-    /** 色を変数として扱う（動的に変更可能） */
-    UPROPERTY(EditAnywhere, Category = "Color|Behavior")
-    bool bTreatAsColorVariable;
-
     /** 補色を使用する */
     UPROPERTY(EditAnywhere, Category = "Color|Matching")
     bool bUseComplementaryColor;
@@ -222,9 +196,6 @@ private:
     /** 色変更が可能か */
     UPROPERTY(EditAnywhere, Category = "Color|State")
     bool bColorChangeable;
-
-    /** ロックされているか（変更を禁止） */
-    bool bLocked;
 
     // =======================
     // 定数

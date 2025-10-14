@@ -23,37 +23,6 @@
 // UFMODAudioComponent::EventInstance メンバーにアクセスするために必要です。
 #include "FMODAudioComponent.h"
 
-
-
-// =======================
-// FMOD コールバック（ビート検出）
-// =======================
-
-// FMOD の Timeline マーカーイベントを受け取る
-static FMOD_RESULT OnTimelineMarker(FMOD_STUDIO_EVENT_CALLBACK_TYPE type, FMOD_STUDIO_EVENTINSTANCE* eventInstance, void* parameters)
-{
-    if (type == FMOD_STUDIO_EVENT_CALLBACK_TIMELINE_MARKER)
-    {
-        auto* Marker = static_cast<FMOD_STUDIO_TIMELINE_MARKER_PROPERTIES*>(parameters);
-        FString MarkerName = UTF8_TO_TCHAR(Marker->name);
-
-        // "Beat" マーカーを検出した場合
-        if (MarkerName == "Beat")
-        {
-            void* RawUserData = nullptr;
-            ((FMOD::Studio::EventInstance*)eventInstance)->getUserData(&RawUserData);
-
-            // USoundManager を取得し、ビート処理を実行
-            USoundManager* Manager = static_cast<USoundManager*>(RawUserData);
-            if (Manager)
-            {
-                Manager->OnMarkerBeat(Marker->position);
-            }
-        }
-    }
-    return FMOD_OK;
-}
-
 // =======================
 // コンストラクタ
 // =======================
@@ -111,9 +80,6 @@ void USoundManager::Init()
 
     // 色変化に応じた BPM 変更イベントをバインド
     ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetColorTargetRegistry()->OnColorApplied.AddDynamic(this, &USoundManager::SetTmp);
-
-    // テスト用の BGM 初期化
-    InitTestSound();
 }
 
 // =======================
@@ -327,48 +293,11 @@ bool USoundManager::PlayBGM()
     EventInstance = BGM->StudioInstance;
     if (EventInstance)
     {
-        // USoundManager をユーザーデータとして渡し、FMOD のマーカーコールバックを登録
-        EventInstance->setUserData(this);
-        EventInstance->setCallback(OnTimelineMarker, FMOD_STUDIO_EVENT_CALLBACK_TIMELINE_MARKER);
+      
     }
 
     StartTime = GetWorld()->GetTimeSeconds();
     LastPredictedBeat = -1;
 
     return true;
-}
-
-// =======================
-// ビート通知処理
-// =======================
-
-void USoundManager::OnBeatTimerElapsed()
-{
-    // 手動タイマーによるビート検出が必要ならここで呼び出す
-    // OnBeatDetected.Broadcast();
-}
-
-void USoundManager::InitTestSound()
-{
-    if (!BGM)
-    {
-        BGM = NewObject<UFMODAudioComponent>(this);
-        BGM->RegisterComponent();
-
-        if (BGMEventAsset)
-        {
-            BGM->SetEvent(BGMEventAsset);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("TestEventAsset is null!"));
-        }
-    }
-}
-
-// FMOD マーカーからのビート検出時に呼ばれる
-void USoundManager::OnMarkerBeat(int64 MarkerPositionMs)
-{
-    LastConfirmedBeatTime = MarkerPositionMs / 1000.0f;
-    OnBeatDetected.Broadcast(); // Blueprint等へ通知
 }

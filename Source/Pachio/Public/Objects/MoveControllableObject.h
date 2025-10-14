@@ -18,10 +18,6 @@ class PACHIO_API AMoveControllableObject : public AColorReactiveObject
 
 public:
 	AMoveControllableObject();
-
-protected:
-	virtual void Initialize() override;
-
 public:
 	virtual void Tick(float DeltaTime) override;
 

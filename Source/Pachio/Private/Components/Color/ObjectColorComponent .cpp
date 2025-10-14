@@ -20,18 +20,16 @@
 UObjectColorComponent::UObjectColorComponent()
     : CurrentColor(FLinearColor::White)      // 現在の色（初期値: 白）
     , InitialColor(FLinearColor::White)      // 初期色（リセット時に使用）
+    , TargetType(EColorTargetType::WorldColor)
     , bApplyColorToMaterial(true)            // マテリアルに色を適用するか
     , bEnableColorAction(true)               // 色変更アクションを有効化
     , bEnableBeatEffect(true)                // ビート演出を有効化
-    , bTreatAsColorVariable(false)           // 色を変数として扱う（動的変更可能）
     , bUseComplementaryColor(false)          // 補色を使用するか
     , bColorMatched(false)                   // 色が一致しているか
     , bSelected(false)                       // 選択されているか
-    , bColorChangeable(false)                 // 色変更が可能か
-    , bLocked(false)                         // ロックされているか
+    , bColorChangeable(false)                // 色変更が可能か
+    
 {
-    // ビート演出用のスケーラーコンポーネントを生成
-    BeatScaler = CreateDefaultSubobject<UBeatScalerComponent>(TEXT("BeatScaler"));
 }
 
 // =======================
@@ -47,7 +45,6 @@ void UObjectColorComponent::Initialize()
     InitializeColorLogic();      // 色ロジックの初期化
     RegisterToColorManager();    // カラーマネージャーへの登録
     SetupMaterial();             // マテリアルの初期設定
-    BindSoundEvents();           // サウンドイベントのバインド
 }
 
 /**
@@ -126,7 +123,7 @@ void UObjectColorComponent::RegisterToColorManager()
  */
 void UObjectColorComponent::SetupMaterial()
 {
-    // マテリアル適用が無効な場合はスキップ
+    // マテリアル適用が有効な場合はスキップ
     if (!bApplyColorToMaterial)
     {
         return;
@@ -152,62 +149,12 @@ void UObjectColorComponent::SetupMaterial()
     Mesh->SetRenderCustomDepth(true);
     Mesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_STENCIL_VALUE);
 
-    // ダイナミックマテリアルインスタンスを作成
-    UMaterialInstanceDynamic* DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(MATERIAL_SLOT_INDEX);
-    if (DynMaterial)
-    {
-        // BaseColorパラメータに初期色を設定
-        DynMaterial->SetVectorParameterValue(FName("BaseColor"), InitialColor);
-    }
-}
-
-/**
- * サウンドイベントのバインド
- * ビート検出イベントを購読する
- */
-void UObjectColorComponent::BindSoundEvents()
-{
-    const ALevelManager* LevelManager = GetLevelManager();
-    if (!LevelManager)
-    {
-        return;
-    }
-
-    // サウンドマネージャーを取得
-    USoundManager* SoundManager = Cast<USoundManager>(
-        LevelManager->GetSoundManager().GetObject()
-    );
-
-    if (!SoundManager)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("SoundManager not found for %s"),
-            *GetOwner()->GetName());
-        return;
-    }
-
-    // ビート検出イベントにコールバックを登録
-    SoundManager->OnBeatDetected.AddDynamic(this, &UObjectColorComponent::PlayBeatAnimation);
+    ApplyColorToMaterial(InitialColor);
 }
 
 // =======================
 // イベント処理
 // =======================
-
-/**
- * ビート演出を再生
- * 音楽のビートに合わせてスケールアニメーションを実行
- */
-void UObjectColorComponent::PlayBeatAnimation()
-{
-    // ビート演出が無効、またはBeatScalerが無効な場合はスキップ
-    if (!bEnableBeatEffect || !BeatScaler)
-    {
-        return;
-    }
-
-    // ビートアニメーションを再生
-    BeatScaler->PlayBeat();
-}
 
 // =======================
 // 色操作API
@@ -233,7 +180,7 @@ void UObjectColorComponent::SetColor(const FLinearColor& NewColor,
     }
 
     // マテリアルへ色を反映
-    if (bApplyColorToMaterial)
+    if (bColorChangeable)
     {
         ApplyColorToMaterial(CurrentColor);
     }
@@ -297,7 +244,7 @@ void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor,
 
     // 色変数モード: ワールド色を直接マテリアルに適用
     // このモードでは、オブジェクトの色がワールド色に追従する
-    if (bTreatAsColorVariable)
+    if (bColorChangeable)
     {
         ColorReactive->ApplyColorToMaterial(WorldColor);
         CurrentColor = WorldColor;  // 内部状態も更新
@@ -327,7 +274,7 @@ void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor,
  */
 void UObjectColorComponent::ApplyColorToMaterial(const FLinearColor& Color)
 {
-    if (ColorReactive && bColorChangeable)
+    if (ColorReactive)
     {
         ColorReactive->ApplyColorToMaterial(Color);
     }
@@ -362,17 +309,6 @@ void UObjectColorComponent::SetSelected(bool bInSelected)
     {
         ColorReactive->SetSelectMode(bSelected);
     }
-}
-
-/**
- * ロック状態を設定
- * ロック時は色変更が禁止される
- *
- * @param bInLocked ロックするか
- */
-void UObjectColorComponent::SetLocked(bool bInLocked)
-{
-    bLocked = bInLocked;
 }
 
 /**

@@ -62,13 +62,6 @@ public:
     // =======================
     // 状態管理
     // =======================
-
-    /** ロック状態を変更 */
-    void SetLocked(bool bLocked);
-
-    /** 色変更が可能かを確認（修飾可能） */
-    bool IsColorModifiable() const;
-
     /** 現在の色を取得 */
     FLinearColor GetCurrentColor() const;
 
