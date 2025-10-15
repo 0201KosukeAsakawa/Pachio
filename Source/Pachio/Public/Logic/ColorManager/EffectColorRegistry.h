@@ -28,18 +28,6 @@ public:
     const TMap<EBuffEffect, FLinearColor>& GetEffectColorMap() const { return EffectColorMap; }
 
     // =======================
-    // エフェクト検索
-    // =======================
-
-    /** 色相ベースで最も近いエフェクトを検索 */
-    UFUNCTION(BlueprintPure, Category = "Effect|Matching")
-    FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor) const;
-
-    /** RGB距離ベースで最も近いエフェクトを検索 */
-    UFUNCTION(BlueprintPure, Category = "Effect|Matching")
-    FEffectMatchResult GetClosestEffectByRGB(const FLinearColor& InputColor) const;
-
-    // =======================
     // 色登録・更新
     // =======================
 
