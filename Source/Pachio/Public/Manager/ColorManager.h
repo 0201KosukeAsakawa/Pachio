@@ -23,28 +23,90 @@ public:
     // 色付け対象の初期化処理（クラスからインスタンス化など）
     void Init();
 
-    // 新しい色を適用する関数
+    /**
+     * 新しい色を適用する関数
+     *
+     * @param 対象のオブジェクトに渡すカラー
+     * @param 渡す対象の種類
+     */
     UFUNCTION()
     void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
-
+    /**
+     * オブジェクトを指定して新しい色を適用する関数
+     *
+     * @param 渡す対象のID
+     * @param 対象のオブジェクトに渡すカラー
+     */
     UFUNCTION()
     void ColorEvent(FName EventID, FLinearColor NewColor);
-
+    /**
+     * 色変更の対象を一つに絞る関数
+     *
+     * @param 絞る対象
+     */
     void SetColorTarget(IColorReactiveInterface*);
+    /**
+     *  色付け対象を登録する関数
+     *　必ずターゲットを絞ってあること
+     */
     void ResetColorTarget();
 
-    // 色付け対象を登録する関数
+    /**
+     *  色付け対象を登録する関数
+     * 
+     *  @param 登録する種類
+     *  @param 登録する対象
+     */
     void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);
 
+    /**
+     *  色を角度を利用して差を返す関数
+     * 
+     *  @param 比べる色
+     * 
+     *  @return 色差
+     * 
+     *  この引数と比べる対象は現在のレベルの色
+     */
     float GetColorDistanceRGB(const FLinearColor& A);
+
+    /**
+     *  色を角度を利用して差を返す関数
+     *
+     *  @param 比べる色1
+     *  @param 比べる色2
+     * 
+     *  @return 色差
+     *
+     *  この引数と比べる対象は現在のレベルの色
+     */
     float GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B );
 
-    FEffectMatchResult GetClosestEffectByHue();
-    FEffectMatchResult GetClosestEffectByHue(const FLinearColor& InputColor);
+    /**
+     *  色を適用・通知するコンポーネントを返す関数
+     * 
+     *  @return 色を適用・通知するコンポーネント
+     *
+     *  戻り値がnullptrかどうかを必ず確認すること
+     */
     UColorTargetRegistry* GetColorTargetRegistry()const {return ColorTargetRegistry;}
 
+    /**
+     *  現在適用されている全体の色を返す関数
+     *
+     *  @return 現在適用されている色
+     *
+     */
     FLinearColor GetWorldColor()const;
+    
+    /**
+     *  種類から色を返す関数
+     *
+     *  @return 種類の色
+     *
+     */
     FLinearColor GetEffectColor(EBuffEffect)const;
+
 private:
 
     void BindController();
