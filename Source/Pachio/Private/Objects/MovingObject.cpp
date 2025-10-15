@@ -8,7 +8,9 @@
 #include"Manager/LevelManager.h"
 
 // Sets default values
-AMovingObject::AMovingObject()
+AMovingObject::AMovingObject():
+                                MoveDuration(DEFAULT_DURATION)
+                                ,ElapsedTime(0.f)
 {
     PrimaryActorTick.bCanEverTick = true;
 
@@ -64,16 +66,16 @@ void AMovingObject::Tick(float DeltaTime)
         }
 
         // 移動完了判定
-        if (Alpha >= 1.0f)
+        if (Alpha >= DEFAULT_DURATION)
         {
             bIsMoving = false;
         }
     }
 }
 
-void AMovingObject::ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult& result)
+void AMovingObject::ApplyColorWithMatching(const FLinearColor& InColor)
 {
-    AColorReactiveObject::ApplyColorWithMatching(InColor, result);
+    AColorReactiveObject::ApplyColorWithMatching(InColor);
 
     StartLocation = GetActorLocation();
     ElapsedTime = 0.0f; // 経過時間リセット

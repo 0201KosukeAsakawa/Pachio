@@ -105,7 +105,7 @@ public:
      *  @return 種類の色
      *
      */
-    FLinearColor GetEffectColor(EBuffEffect)const;
+    FLinearColor GetEffectColor(EColorCategory)const;
 
 private:
 

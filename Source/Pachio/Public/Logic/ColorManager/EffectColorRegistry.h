@@ -21,11 +21,11 @@ public:
 
     /** エフェクトタイプに対応する色を取得 */
     UFUNCTION(BlueprintPure, Category = "Effect|Color")
-    FLinearColor GetEffectColor(EBuffEffect Effect) const;
+    FLinearColor GetEffectColor(EColorCategory Effect) const;
 
     /** 全てのエフェクト色マップを取得 */
     UFUNCTION(BlueprintPure, Category = "Effect|Color")
-    const TMap<EBuffEffect, FLinearColor>& GetEffectColorMap() const { return EffectColorMap; }
+    const TMap<EColorCategory, FLinearColor>& GetEffectColorMap() const { return EffectColorMap; }
 
     // =======================
     // 色登録・更新
@@ -33,7 +33,7 @@ public:
 
     /** エフェクト色を登録/更新 */
     UFUNCTION(BlueprintCallable, Category = "Effect|Color")
-    void SetEffectColor(EBuffEffect Effect, const FLinearColor& Color);
+    void SetEffectColor(EColorCategory Effect, const FLinearColor& Color);
 
     /** エフェクト色をリセット（デフォルト値に戻す） */
     UFUNCTION(BlueprintCallable, Category = "Effect|Color")
@@ -42,7 +42,7 @@ public:
 protected:
     /** エフェクトタイプと色のマッピング */
     UPROPERTY(EditAnywhere, Category = "Effect")
-    TMap<EBuffEffect, FLinearColor> EffectColorMap;
+    TMap<EColorCategory, FLinearColor> EffectColorMap;
 
 private:
     /** デフォルトの色マップを初期化 */

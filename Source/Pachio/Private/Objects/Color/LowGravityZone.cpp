@@ -14,6 +14,9 @@
 
 // デフォルト値設定
 ALowGravityZone::ALowGravityZone()
+                                    :bIsActive(false)
+                                    , GravityScale(DEFAULT_GRAVITY_SCALE)
+                                    , JumpBuff(DEFAULT_JUMP_BUFF)
 {
     PrimaryActorTick.bCanEverTick = false; // 毎フレーム更新は不要
 
@@ -57,13 +60,13 @@ void ALowGravityZone::Initialize()
 // 色反応処理
 // =======================
 
-void ALowGravityZone::ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult& result)
+void ALowGravityZone::ApplyColorWithMatching(const FLinearColor& InColor)
 {
     if (!ObjectColorComponent || !ZoneBox)
         return;
 
     // 親クラス処理呼び出し
-    AColorReactiveObject::ApplyColorWithMatching(InColor, result);
+    AColorReactiveObject::ApplyColorWithMatching(InColor);
 
     // 色が一致しなければ「重力を元に戻す」
     if (!UColorUtilityLibrary::IsHueSimilar(InColor,GetCurrentColor()))
@@ -80,7 +83,7 @@ void ALowGravityZone::ApplyColorWithMatching(const FLinearColor& InColor,const F
         if (UniverseEffect)
             UniverseEffect->Deactivate();
 
-        b = false; // ゾーン無効化フラグ
+        bIsActive = false; // ゾーン無効化フラグ
         return;
     }
 
@@ -88,7 +91,7 @@ void ALowGravityZone::ApplyColorWithMatching(const FLinearColor& InColor,const F
     if (UniverseEffect)
         UniverseEffect->Activate();
 
-    b = true;
+    bIsActive = true;
 
     // Box 範囲を取得
     FVector Center = ZoneBox->GetComponentLocation();
@@ -140,7 +143,7 @@ void ALowGravityZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
     bool bFromSweep, const FHitResult& SweepResult)
 {
     // ゾーンが無効なら処理しない
-    if (!b)
+    if (!bIsActive)
         return;
 
     // 自身以外のアクターに対して処理
@@ -163,7 +166,7 @@ void ALowGravityZone::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* 
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
     // ゾーンが無効なら処理しない
-    if (!b)
+    if (!bIsActive)
         return;
 
     // 自身以外のアクターに対して処理

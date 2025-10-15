@@ -38,14 +38,14 @@ void AColorReactiveSwitch::Initialize()
 // 色反応処理
 // =======================
 
-void AColorReactiveSwitch::ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult& result)
+void AColorReactiveSwitch::ApplyColorWithMatching(const FLinearColor& InColor)
 {
 	// ObjectColorComponent が存在しなければ処理中断
 	if (!ObjectColorComponent)
 		return;
 
 	// 親クラスの色処理を実行
-	AColorReactiveObject::ApplyColorWithMatching(InColor, result);
+	AColorReactiveObject::ApplyColorWithMatching(InColor);
 
 	// -----------------------
 	// 第一色との一致チェック

@@ -14,33 +14,61 @@ class UColorReactiveInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class PACHIO_API IColorReactiveInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-    /** �F��ݒ� */
-    virtual void ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult);
+    // =======================
+    // カラーリアクティブ共通インターフェース
+    // =======================
 
-    /** �F�����Z�b�g */
-    virtual void ResetColor(const FEffectMatchResult& MatchResult);
+    /**
+     * 指定された色を適用し、必要に応じてマッチング処理を行う
+     *
+     * @param NewColor - 適用する新しい色
+     */
+    virtual void ApplyColorWithMatching(const FLinearColor& NewColor);
 
-    /** �I����Ԃ�ݒ� */
+    /**
+     * 色の状態をリセットする
+     *
+     * @param MatchResult - エフェクトのマッチ結果情報
+     */
+    virtual void ResetColor();
+
+    /**
+     * 選択状態を設定する
+     *
+     * @param bIsSelected - 選択状態にする場合は true
+     */
     virtual void SetSelected(bool bIsSelected);
 
-    /** �F���ύX����Ă��邩���m�F */
+    /**
+     * 色が変更されたかを判定する
+     *
+     * @return 変更されていれば true
+     */
     virtual bool HasColorChanged() const;
 
-    /** �F�ύX���\�����m�F */
+    /**
+     * 色が変更可能かを判定する
+     *
+     * @return 変更可能であれば true
+     */
     virtual bool IsChangeable() const;
 
-    /** �F����v���Ă��邩���m�F */
+    /**
+     * 現在の色がマッチしているかを判定する
+     *
+     * @return マッチしていれば true
+     */
     virtual bool IsColorMatched() const;
 
-    /** �F�C�x���gID���擾 */
+    /**
+     * カラーイベントを識別するための ID を取得する
+     *
+     * @return カラーイベントの識別子（FName）
+     */
     virtual FName GetColorEventID() const;
 };

@@ -114,6 +114,39 @@ TArray<FLinearColor> UColorUtilityLibrary::GenerateSimilarColors(
     return SimilarColors;
 }
 
+EColorCategory UColorUtilityLibrary::GetNearestPrimaryColor(const FLinearColor& Color)
+{
+    float Hue = GetHue(Color);
+
+    // 各基本色との色相差を計算
+    float DistanceRed = GetHueDistanceFromAngle(Color, HUE_RED);
+    float DistanceGreen = GetHueDistanceFromAngle(Color, HUE_GREEN);
+    float DistanceBlue = GetHueDistanceFromAngle(Color, HUE_BLUE);
+    float DistanceYellow = GetHueDistanceFromAngle(Color, HUE_YELLOW);
+
+    // 最小距離を探す
+    float MinDistance = DistanceRed;
+    EColorCategory Result = EColorCategory::Red;
+
+    if (DistanceGreen < MinDistance)
+    {
+        MinDistance = DistanceGreen;
+        Result = EColorCategory::Green;
+    }
+    if (DistanceBlue < MinDistance)
+    {
+        MinDistance = DistanceBlue;
+        Result = EColorCategory::Blue;
+    }
+    if (DistanceYellow < MinDistance)
+    {
+        MinDistance = DistanceYellow;
+        Result = EColorCategory::Yellow;
+    }
+
+    return Result;
+}
+
 // =======================
 // エフェクト用ヘルパー
 // =======================

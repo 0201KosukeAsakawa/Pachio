@@ -26,24 +26,45 @@ public:
     // 初期化
     // =======================
 
-    /** コンポーネントの初期化を実行 */
+    /**
+     * コンポーネント全体の初期化
+     * 各種マネージャーへの登録とイベントバインドを行う
+     */
     void Initialize();
 
     // =======================
     // 色の操作
     // =======================
 
-    /** 新しい色を設定し、マテリアルとエフェクトに反映 */
-    void SetColor(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult);
+    /**
+     * 色を設定し、マテリアルとエフェクトに反映
+     *
+     * @param NewColor 新しい色
+     */
+    void SetColor(const FLinearColor& NewColor);
 
-    /** 色を初期状態にリセット */
-    void ResetColor(const FEffectMatchResult& MatchResult);
+    /**
+     * 色を初期状態にリセット
+     *
+     * @param MatchResult エフェクトマッチング結果
+     */
+    void ResetColor();
 
-    /** 内部的に現在の色のみを更新（マテリアルには反映しない） */
+    /**
+     * 内部的に現在の色のみを更新
+     * マテリアルやエフェクトには反映しない（軽量な更新用）
+     *
+     * @param NewColor 新しい色
+     */
     void SetCurrentColorOnly(const FLinearColor& NewColor);
 
-    /** 色のマッチング処理を実行 */
-    void ProcessColorMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult);
+    /**
+     * 色マッチング処理を実行
+     * ワールド色と現在色を比較し、一致判定を行う
+     *
+     * @param NewColor 新しく設定された色
+     */
+    void ProcessColorMatching(const FLinearColor& NewColor);
 
     // =======================
     // 状態の取得と設定
@@ -52,16 +73,29 @@ public:
     /** 色が一致しているかを取得 */
     FORCEINLINE bool IsColorMatched() const { return bColorMatched; }
 
-    /** 色の一致状態を設定 */
+    /**
+     * 色の一致状態を設定
+     *
+     * @param bMatched 一致しているか
+     */
     void SetColorMatched(bool bMatched);
 
-    /** 選択状態を設定 */
+    /**
+     * 選択状態を設定
+     * 選択時はエミッシブ効果などが適用される
+     *
+     * @param bInSelected 選択されているか
+     */
     void SetSelected(bool bSelected);
 
     /** 色変更が可能かを取得 */
     FORCEINLINE bool IsChangeable() const { return bColorChangeable; }
 
-    /** 非表示状態かを取得 */
+    /**
+     * 非表示状態かを取得
+     *
+     * @return 非表示状態の場合true
+     */
     bool IsHidden() const;
 
     /** 現在の色を取得 */
@@ -77,43 +111,80 @@ public:
     // 色の判定
     // =======================
 
-    /** 初期色から変更されているかを判定 */
+    /**
+     * 初期色から変更されているかを判定
+     *
+     * @return 変更されている場合true
+     */
     bool HasColorChanged(const  float Tolerance = 30.f) const;
 
-    /** 指定色と現在の色が一致しているかを判定 */
+    /**
+     * 指定色と現在の色が変更されているかを判定
+     *
+     * @param CompareColor 比較する色
+     * @return 変更されている場合true
+     */
     bool HasColorChanged(const FLinearColor& CompareColor, float Tolerance = 30.f) const;
 
     // =======================
     // エフェクト処理
     // =======================
 
-    /** マテリアルに色を適用 */
+    /**
+     * マテリアルに色を適用
+     * ColorReactiveを通じて実際のマテリアル更新を行う
+     *
+     * @param Color 適用する色
+     */
     void ApplyColorToMaterial(const FLinearColor& Color);
 protected:
     // =======================
     // 内部初期化処理
     // =======================
 
-    /** 色ロジックの初期化 */
+    /**
+     * 色ロジックの初期化
+     * ColorReactiveComponentを生成し、初期色を設定する
+     */
     void InitializeColorLogic();
 
-    /** カラーマネージャーへの登録 */
+    /**
+     * カラーマネージャーへの登録
+     * このオブジェクトを色管理対象として登録する
+     */
     void RegisterToColorManager();
 
-    /** マテリアルの初期設定 */
+    /**
+     * マテリアルの初期設定
+     * カスタムデプスレンダリングとダイナミックマテリアルを設定
+     */
     void SetupMaterial();
 
     // =======================
     // ヘルパー関数
     // =======================
 
-    /** SkeletalMeshComponentを取得 */
+    /**
+    * SkeletalMeshComponentを取得
+    * オーナーアクターから"Mesh"という名前のコンポーネントを検索
+    *
+    * @return SkeletalMeshComponent（見つからない場合はnullptr）
+    */
     USkeletalMeshComponent* GetMeshComponent() const;
 
-    /** レベルマネージャーを取得 */
+    /**
+     * レベルマネージャーを取得
+     *
+     * @return ALevelManager（見つからない場合はnullptr）
+     */
     ALevelManager* GetLevelManager() const;
 
-    /** カラーマネージャーを取得 */
+    /**
+     * カラーマネージャーを取得
+     * レベルマネージャーを経由して取得
+     *
+     * @return UColorManager（見つからない場合はnullptr）
+     */
     UColorManager* GetColorManager() const;
 
     // =======================
@@ -145,7 +216,7 @@ protected:
 
     /** エフェクトタイプ */
     UPROPERTY(EditAnywhere, Category = "Effects")
-    EBuffEffect EffectType;
+    EColorCategory EffectType;
 
     /** Niagaraアクター配列 */
     UPROPERTY(EditAnywhere, Category = "Effects")

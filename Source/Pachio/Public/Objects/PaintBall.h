@@ -22,9 +22,6 @@ public:
     UPROPERTY(EditAnywhere)
     FLinearColor PaintColor;
 
-    UPROPERTY(EditAnywhere)
-    FEffectMatchResult Match;
-
 protected:
     UFUNCTION()
     void OnOverlap(AActor* OtherActor);

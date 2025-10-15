@@ -8,7 +8,7 @@
 class IColorReactiveInterface;
 
 UENUM(BlueprintType)
-enum class EBuffEffect : uint8
+enum class EColorCategory : uint8
 {
     Black UMETA(DisplayName = "BLACK"),
     Red   UMETA(DisplayName = "RED"),
@@ -46,23 +46,4 @@ struct FColorTargetInstanceArray
 
     // 色付け対象インターフェースを持つインスタンス配列
     TArray<TScriptInterface<IColorReactiveInterface>> Instances;
-};
-
-
-USTRUCT(BlueprintType)
-struct FEffectMatchResult
-{
-    GENERATED_BODY()
-
-    // 最も近いバフ効果
-    UPROPERTY(EditAnywhere,BlueprintReadOnly)
-    EBuffEffect ClosestEffect = EBuffEffect::Red;
-
-    // 色相距離
-    UPROPERTY(BlueprintReadOnly)
-    float Distance = 9999.0f;
-
-    // 強度（0.0 ～ 1.0）
-    UPROPERTY(BlueprintReadOnly)
-    float StrengthRatio = 0.0f;
 };

@@ -18,7 +18,7 @@
 
 UColorReactiveComponent::UColorReactiveComponent()
     : CurrentColor(FLinearColor::White)
-    , Effect(EBuffEffect::Red)
+    , Effect(EColorCategory::Red)
     , bSelected(false)
     , bHide(false)
 {
@@ -72,7 +72,7 @@ void UColorReactiveComponent::SetupNiagaraActors(const TArray<ANiagaraActor*>& I
     Niagaras = InNiagaraActors;
 }
 
-void UColorReactiveComponent::SetEffectType(EBuffEffect NewEffect)
+void UColorReactiveComponent::SetEffectType(EColorCategory NewEffect)
 {
     Effect = NewEffect;
 }

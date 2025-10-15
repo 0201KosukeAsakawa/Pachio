@@ -11,7 +11,7 @@
 // 色の適用処理
 // =======================
 
-void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mode, FEffectMatchResult effect)
+void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
 {
     switch (Mode)
     {
@@ -22,16 +22,16 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
             PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
         }
         // 指定されたモードのターゲットに通知
-        NotifyTargets(Mode, NewColor, effect);
+        NotifyTargets(Mode, NewColor);
         // 常時反応するターゲット（例：UIなど Responders）にも通知
-        NotifyTargets(EColorTargetType::Responders, NewColor, effect);
+        NotifyTargets(EColorTargetType::Responders, NewColor);
         break;
 
     case EColorTargetType::ObjectColor:
         // 特定オブジェクトに色を適用
         if (!TargetObject)
             return;
-        TargetObject->ApplyColorWithMatching(NewColor, effect);
+        TargetObject->ApplyColorWithMatching(NewColor);
         break;
 
     default:
@@ -46,7 +46,7 @@ void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mo
 // イベント用の色適用処理
 // =======================
 
-void UColorTargetRegistry::ColorEvent(FName EventID, FLinearColor NewColor, FEffectMatchResult effect)
+void UColorTargetRegistry::ColorEvent(FName EventID, FLinearColor NewColor)
 {
     // Event ターゲットが存在しなければ終了
     if (!ColorResponseTargets.Contains(EColorTargetType::Event))
@@ -64,7 +64,7 @@ void UColorTargetRegistry::ColorEvent(FName EventID, FLinearColor NewColor, FEff
         if (TargetInstance->GetColorEventID() != EventID)
             continue;
 
-        TargetInstance->ApplyColorWithMatching(NewColor, effect);
+        TargetInstance->ApplyColorWithMatching(NewColor);
     }
 }
 
@@ -108,7 +108,7 @@ void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterfac
 // =======================
 
 // 指定モードの全ターゲットに色を通知
-void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearColor& Color, FEffectMatchResult effect)
+void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearColor& Color)
 {
     if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(Mode))
     {
@@ -117,7 +117,7 @@ void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearCol
             if (Target)
             {
                 // ターゲットの反応関数を呼び出す
-                Target->ApplyColorWithMatching(Color, effect);
+                Target->ApplyColorWithMatching(Color);
             }
         }
     }

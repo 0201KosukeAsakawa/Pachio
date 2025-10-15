@@ -10,7 +10,8 @@
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 
-ATeleportPortal::ATeleportPortal()
+ATeleportPortal::ATeleportPortal():
+                                    TeleportCooldown(1.f)
 {
     PrimaryActorTick.bCanEverTick = false;
 
@@ -34,7 +35,7 @@ void ATeleportPortal::Initialize()
         ->GetEffectColor(Effect);
 }
 
-void ATeleportPortal::ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult&)
+void ATeleportPortal::ApplyColorWithMatching(const FLinearColor& InColor)
 {
     if (!ObjectColorComponent)
         return;

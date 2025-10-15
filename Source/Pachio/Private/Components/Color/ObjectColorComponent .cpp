@@ -164,10 +164,8 @@ void UObjectColorComponent::SetupMaterial()
  * 色を設定し、マテリアルとエフェクトに反映
  *
  * @param NewColor 新しい色
- * @param MatchResult エフェクトマッチング結果（最適なエフェクトタイプを含む）
  */
-void UObjectColorComponent::SetColor(const FLinearColor& NewColor,
-    const FEffectMatchResult& MatchResult)
+void UObjectColorComponent::SetColor(const FLinearColor& NewColor)
 {
     CurrentColor = NewColor;
 
@@ -186,21 +184,17 @@ void UObjectColorComponent::SetColor(const FLinearColor& NewColor,
     }
 
     // エフェクトタイプを更新（最適なエフェクトに切り替え）
-    ColorReactive->SetEffectType(MatchResult.ClosestEffect);
+    ColorReactive->SetEffectType(UColorUtilityLibrary::GetNearestPrimaryColor(CurrentColor));
 
     // カラーマッチング処理を実行
-    ProcessColorMatching(NewColor, MatchResult);
+    ProcessColorMatching(NewColor);
 }
 
-/**
- * 色を初期状態にリセット
- *
- * @param MatchResult エフェクトマッチング結果
- */
-void UObjectColorComponent::ResetColor(const FEffectMatchResult& MatchResult)
+
+void UObjectColorComponent::ResetColor()
 {
     // 初期色で SetColor を呼び出し
-    SetColor(InitialColor, MatchResult);
+    SetColor(InitialColor);
 }
 
 /**
@@ -221,8 +215,7 @@ void UObjectColorComponent::SetCurrentColorOnly(const FLinearColor& NewColor)
  * @param NewColor 新しく設定された色
  * @param MatchResult エフェクトマッチング結果
  */
-void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor,
-    const FEffectMatchResult& MatchResult)
+void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor)
 {
     // 色アクションが無効、またはColorReactiveが無効な場合はスキップ
     if (!bEnableColorAction || !ColorReactive)

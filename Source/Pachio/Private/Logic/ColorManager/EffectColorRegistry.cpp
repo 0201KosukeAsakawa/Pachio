@@ -16,11 +16,11 @@ UEffectColorRegistry::UEffectColorRegistry()
 void UEffectColorRegistry::InitializeDefaultColors()
 {
     EffectColorMap = {
-        { EBuffEffect::Green,  FLinearColor(0.65f, 1.00f, 0.78f, 1.0f) }, // パステルミント
-        { EBuffEffect::Blue,   FLinearColor(0.65f, 0.78f, 1.00f, 1.0f) }, // パステルスカイブルー
-        { EBuffEffect::Red,    FLinearColor(1.00f, 0.75f, 0.65f, 1.0f) }, // パステルサーモン
-        { EBuffEffect::Yellow, FLinearColor(1.00f, 1.00f, 0.65f, 1.0f) }, // パステルイエロー
-        { EBuffEffect::Black,  FLinearColor(0.00f, 0.00f, 0.00f, 1.0f) }, // ブラック
+        { EColorCategory::Green,  FLinearColor(0.65f, 1.00f, 0.78f, 1.0f) }, // パステルミント
+        { EColorCategory::Blue,   FLinearColor(0.65f, 0.78f, 1.00f, 1.0f) }, // パステルスカイブルー
+        { EColorCategory::Red,    FLinearColor(1.00f, 0.75f, 0.65f, 1.0f) }, // パステルサーモン
+        { EColorCategory::Yellow, FLinearColor(1.00f, 1.00f, 0.65f, 1.0f) }, // パステルイエロー
+        { EColorCategory::Black,  FLinearColor(0.00f, 0.00f, 0.00f, 1.0f) }, // ブラック
     };
 }
 
@@ -33,7 +33,7 @@ void UEffectColorRegistry::ResetToDefaultColors()
 // エフェクト色の取得
 // =======================
 
-FLinearColor UEffectColorRegistry::GetEffectColor(EBuffEffect Effect) const
+FLinearColor UEffectColorRegistry::GetEffectColor(EColorCategory Effect) const
 {
     if (const FLinearColor* FoundColor = EffectColorMap.Find(Effect))
     {
@@ -49,7 +49,7 @@ FLinearColor UEffectColorRegistry::GetEffectColor(EBuffEffect Effect) const
 // 色登録・更新
 // =======================
 
-void UEffectColorRegistry::SetEffectColor(EBuffEffect Effect, const FLinearColor& Color)
+void UEffectColorRegistry::SetEffectColor(EColorCategory Effect, const FLinearColor& Color)
 {
     EffectColorMap.Add(Effect, Color);
 }

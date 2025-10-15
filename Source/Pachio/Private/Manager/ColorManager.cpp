@@ -40,16 +40,14 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
 {
     if (!ColorTargetRegistry)
         return;
-    FEffectMatchResult result = GetClosestEffectByHue(NewColor);
-    ColorTargetRegistry->ApplyColor(NewColor, Mode, result);
+    ColorTargetRegistry->ApplyColor(NewColor, Mode);
 }
 
 void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
 {
     if (!ColorTargetRegistry)
         return;
-    FEffectMatchResult result = GetClosestEffectByHue(NewColor);
-    ColorTargetRegistry->ColorEvent(EventID, NewColor, result);
+    ColorTargetRegistry->ColorEvent(EventID, NewColor);
 }
 
 void UColorManager::SetColorTarget(IColorReactiveInterface* target)
@@ -85,7 +83,7 @@ FLinearColor UColorManager::GetWorldColor() const
     return ColorTargetRegistry->GetPostProcessColor();
 }
 
-FLinearColor UColorManager::GetEffectColor(EBuffEffect effect) const
+FLinearColor UColorManager::GetEffectColor(EColorCategory effect) const
 {
     return EffectColorRegistry->GetEffectColor(effect);
 }
