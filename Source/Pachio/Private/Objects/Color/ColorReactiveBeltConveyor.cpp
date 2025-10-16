@@ -101,14 +101,14 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
 }
 
 // 指定された色に反応する処理
-void AColorReactiveBeltConveyor::ApplyColorWithMatching(const FLinearColor& InColor,const FEffectMatchResult& result)
+void AColorReactiveBeltConveyor::ApplyColorWithMatching(const FLinearColor& InColor)
 {
     //ApplyColorToMaterial(InColor);
     
     if (!ObjectColorComponent)
         return;
 
-    AColorReactiveObject::ApplyColorWithMatching(InColor,result);
+    AColorReactiveObject::ApplyColorWithMatching(InColor);
 
     // 色の一致状態を設定
     ObjectColorComponent->SetColorMatched(UColorUtilityLibrary::IsHueSimilar(GetCurrentColor(), InColor));

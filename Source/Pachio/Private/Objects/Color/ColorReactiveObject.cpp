@@ -39,7 +39,7 @@ void AColorReactiveObject::Initialize()
 // IColorReactiveInterface の実装
 // =======================
 
-void AColorReactiveObject::ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult)
+void AColorReactiveObject::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
     if (!ObjectColorComponent)
     {
@@ -47,10 +47,10 @@ void AColorReactiveObject::ApplyColorWithMatching(const FLinearColor& NewColor, 
         return;
     }
 
-    ObjectColorComponent->SetColor(NewColor, MatchResult);
+    ObjectColorComponent->SetColor(NewColor);
 }
 
-void AColorReactiveObject::ResetColor(const FEffectMatchResult& MatchResult)
+void AColorReactiveObject::ResetColor()
 {
     if (!ObjectColorComponent)
     {
@@ -58,7 +58,7 @@ void AColorReactiveObject::ResetColor(const FEffectMatchResult& MatchResult)
         return;
     }
 
-    ObjectColorComponent->ResetColor(MatchResult);
+    ObjectColorComponent->ResetColor();
 }
 
 void AColorReactiveObject::SetSelected(bool bIsSelected)
@@ -130,12 +130,12 @@ FLinearColor AColorReactiveObject::GetInitialColor() const
 // 色処理の委譲メソッド
 // =======================
 
-void AColorReactiveObject::ProcessColorMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult)
+void AColorReactiveObject::ProcessColorMatching(const FLinearColor& NewColor)
 {
     if (!ObjectColorComponent)
     {
         return;
     }
 
-    ObjectColorComponent->ProcessColorMatching(NewColor, MatchResult);
+    ObjectColorComponent->ProcessColorMatching(NewColor);
 }

@@ -35,7 +35,7 @@ void APaintBall::OnOverlap(AActor* OtherActor)
     IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(OtherActor);
     if (Interface)
     {
-        Interface->ApplyColorWithMatching(PaintColor, Match);
+        Interface->ApplyColorWithMatching(PaintColor);
         Destroy(); // 衝突したら消す場合
     }
 }

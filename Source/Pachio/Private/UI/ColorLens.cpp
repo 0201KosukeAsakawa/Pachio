@@ -126,7 +126,7 @@ FLinearColor AdjustColor(FLinearColor InColor)
     return HSV.HSVToLinearRGB();
 }
 
-void UColorLens::ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult)
+void UColorLens::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
     if (FilterColorImage == nullptr)
         return;

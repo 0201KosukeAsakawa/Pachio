@@ -4,43 +4,43 @@
 #include "Interface/ColorFilterInterface.h"
 
 
-/** F‚ğİ’è */
-void IColorReactiveInterface::ApplyColorWithMatching(const FLinearColor& NewColor, const FEffectMatchResult& MatchResult)
+/** ï¿½Fï¿½ï¿½İ’ï¿½ */
+void IColorReactiveInterface::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
 
 }
 
-/** F‚ğƒŠƒZƒbƒg */
-void IColorReactiveInterface::ResetColor(const FEffectMatchResult& MatchResult)
+/** ï¿½Fï¿½ï¿½ï¿½ï¿½Zï¿½bï¿½g */
+void IColorReactiveInterface::ResetColor()
 {
 
 }
 
-/** ‘I‘ğó‘Ô‚ğİ’è */
+/** ï¿½Iï¿½ï¿½ï¿½Ô‚ï¿½İ’ï¿½ */
 void IColorReactiveInterface::SetSelected(bool bIsSelected)
 {
 
 }
 
-/** F‚ª•ÏX‚³‚ê‚Ä‚¢‚é‚©‚ğŠm”F */
+/** ï¿½Fï¿½ï¿½ï¿½ÏXï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‚©ï¿½ï¿½mï¿½F */
 bool IColorReactiveInterface::HasColorChanged()const
 {
 	return false;
 }
 
-/** F•ÏX‚ª‰Â”\‚©‚ğŠm”F */
+/** ï¿½Fï¿½ÏXï¿½ï¿½ï¿½Â”\ï¿½ï¿½ï¿½ï¿½mï¿½F */
 bool IColorReactiveInterface::IsChangeable() const
 {
 	return false;
 }
 
-/** F‚ªˆê’v‚µ‚Ä‚¢‚é‚©‚ğŠm”F */
+/** ï¿½Fï¿½ï¿½ï¿½ï¿½vï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‚©ï¿½ï¿½mï¿½F */
 bool IColorReactiveInterface::IsColorMatched() const
 {
 	return false;
 }
 
-/** FƒCƒxƒ“ƒgID‚ğæ“¾ */
+/** ï¿½Fï¿½Cï¿½xï¿½ï¿½ï¿½gIDï¿½ï¿½æ“¾ */
 FName IColorReactiveInterface::GetColorEventID() const
 {
 	return FName();

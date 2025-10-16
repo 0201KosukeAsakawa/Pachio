@@ -40,16 +40,14 @@ void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
 {
     if (!ColorTargetRegistry)
         return;
-    FEffectMatchResult result = GetClosestEffectByHue(NewColor);
-    ColorTargetRegistry->ApplyColor(NewColor, Mode, result);
+    ColorTargetRegistry->ApplyColor(NewColor, Mode);
 }
 
 void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
 {
     if (!ColorTargetRegistry)
         return;
-    FEffectMatchResult result = GetClosestEffectByHue(NewColor);
-    ColorTargetRegistry->ColorEvent(EventID, NewColor, result);
+    ColorTargetRegistry->ColorEvent(EventID, NewColor);
 }
 
 void UColorManager::SetColorTarget(IColorReactiveInterface* target)
@@ -80,28 +78,12 @@ float UColorManager::GetColorDistanceRGB(const FLinearColor& A, const FLinearCol
     return UColorUtilityLibrary::GetHueAngleDistance(A,B);
 }
 
-FEffectMatchResult UColorManager::GetClosestEffectByHue()
-{
-    if (!EffectColorRegistry)
-        return FEffectMatchResult();
-
-    return EffectColorRegistry->GetClosestEffectByHue(ColorTargetRegistry->GetPostProcessColor());
-}
-
-FEffectMatchResult UColorManager::GetClosestEffectByHue(const FLinearColor& InputColor)
-{
-    if (!EffectColorRegistry)
-        return FEffectMatchResult();
-
-    return EffectColorRegistry->GetClosestEffectByHue(InputColor);
-}
-
 FLinearColor UColorManager::GetWorldColor() const
 {
     return ColorTargetRegistry->GetPostProcessColor();
 }
 
-FLinearColor UColorManager::GetEffectColor(EBuffEffect effect) const
+FLinearColor UColorManager::GetEffectColor(EColorCategory effect) const
 {
     return EffectColorRegistry->GetEffectColor(effect);
 }

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "DataContainer/EffectMatchResult.h"
 #include "ColorUtilityLibrary.generated.h"
 /**
  * HSL色空間の構造体
@@ -156,6 +157,15 @@ public:
     static TArray<FLinearColor> GenerateSimilarColors(const FLinearColor& BaseColor,
         float VariationDegrees = 15.0f,
         int32 Count = 3);
+    
+    /**
+ * 色が赤・青・緑・黄のどれに最も近いかを判定
+ *
+ * @param Color 対象色
+ * @return 最も近い基本色
+ */
+    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
+    static EColorCategory GetNearestPrimaryColor(const FLinearColor& Color);
 
     // =======================
     // エフェクト用ヘルパー

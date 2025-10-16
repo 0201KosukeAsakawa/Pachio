@@ -2,6 +2,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Logic/ColorManager/ColorTargetRegistry.h"
 #include "Components/AudioComponent.h"
+#include "ColorUtilityLibrary.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Manager/SaveManager.h"
@@ -115,14 +116,14 @@ void USoundManager::SetTmp(EColorTargetType Mode, FLinearColor NewColor)
     if (!colorManager) return;
 
     // 色から最も近いエフェクトを判定
-    FEffectMatchResult Match = colorManager->GetClosestEffectByHue(NewColor);
+    EColorCategory colorCategory = UColorUtilityLibrary::GetNearestPrimaryColor(NewColor);
 
     // 色に応じて BPM を設定
-    switch (Match.ClosestEffect)
+    switch (colorCategory)
     {
-    case EBuffEffect::Red:   MusicBPM = 160.f; break;
-    case EBuffEffect::Blue:  MusicBPM = 90.f; break;
-    case EBuffEffect::Green: MusicBPM = 120.f; break;
+    case EColorCategory::Red:   MusicBPM = 160.f; break;
+    case EColorCategory::Blue:  MusicBPM = 90.f; break;
+    case EColorCategory::Green: MusicBPM = 120.f; break;
     default:                 MusicBPM = 120.f; break;
     }
 
