@@ -11,30 +11,79 @@ class UColorReactiveComponent;
 UCLASS()
 class PACHIO_API UPlayerHoldState : public UPlayerStateComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
+
 public:
-	UPlayerHoldState();	
-	void SetUp(AActor*,bool);
+    /**
+     * @brief コンストラクタ。ホールド状態プレイヤーステートの初期化
+     */
+    UPlayerHoldState();
+
+    /**
+     * @brief ホールド対象の設定
+     *
+     * @param Target ホールドする対象のアクター
+     * @param bInitialGrab 初回ホールド時かどうか
+     */
+    void SetUp(AActor* Target, bool bInitialGrab);
+
 private:
-	bool OnEnter(APawn* owner, UWorld* world)override;
+    /**
+     * @brief ステートに入ったときの処理
+     *
+     * @param owner このステートが適用されるPawn
+     * @param world ワールド参照
+     * @return ステート遷移が成功した場合 true
+     */
+    bool OnEnter(APawn* owner, UWorld* world) override;
 
-	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
-	bool OnUpdate(float DeltaTime)override;
-	bool OnExit(APawn* owner)override;
+    /**
+     * @brief 毎フレームの更新処理（Tickの代わりに呼ばれる）
+     *
+     * @param DeltaTime 前フレームからの経過時間
+     * @return 更新が正常に行われた場合 true
+     */
+    bool OnUpdate(float DeltaTime) override;
 
-	bool OnSkill(const FInputActionValue& Value)override;
+    /**
+     * @brief ステートから出るときの処理
+     *
+     * @param owner このステートが適用されていたPawn
+     * @return ステート終了が正常に行われた場合 true
+     */
+    bool OnExit(APawn* owner) override;
 
-	void Movement(const FInputActionValue& Value)override;
+    /**
+     * @brief スキル入力処理（ホールド状態での特殊行動）
+     *
+     * @param Value 入力値
+     * @return スキル実行が成功した場合 true
+     */
+    bool OnSkill(const FInputActionValue& Value) override;
 
+    /**
+     * @brief ホールド状態での移動処理
+     *
+     * @param Value 入力値（スティックやキー操作）
+     */
+    void Movement(const FInputActionValue& Value) override;
 
 private:
-	UPROPERTY()
-	AActor* HoldTarget;
-	UPROPERTY()
-	UMoveComponent* MoveComp;
-	UPROPERTY()
-	UColorReactiveComponent* targetComp;
-	float InitialHoldDistance;
+    /** @brief ホールド対象のアクター */
+    UPROPERTY()
+    AActor* HoldTarget;
 
-	int32 GrabDirection = 1;
+    /** @brief プレイヤー移動コンポーネント */
+    UPROPERTY()
+    UMoveComponent* MoveComp;
+
+    /** @brief 色反応判定用コンポーネント */
+    UPROPERTY()
+    UColorReactiveComponent* targetComp;
+
+    /** @brief ホールド開始時の距離 */
+    float InitialHoldDistance;
+
+    /** @brief ホールド方向（左右の方向判定などに使用） */
+    int32 GrabDirection;
 };

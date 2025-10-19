@@ -22,6 +22,7 @@
 #include "Objects/Color/LadderActor.h"
 
 UPlayerDefaultState::UPlayerDefaultState()
+    :MoveSpeed(DEFAULT_MOVESPEED)
 {
 }
 
@@ -77,7 +78,7 @@ bool UPlayerDefaultState::OnEnter(APawn* owner, UWorld* world)
     }
 
     // 移動速度の初期値設定（ステート内で使用）
-    mMoveSpeed = 100.0f;
+    mMoveSpeed = DEFAULT_MOVESPEED;
     CurrentDirection = mOwner->GetActorForwardVector();
 
     return true; // ステートの切り替え成功

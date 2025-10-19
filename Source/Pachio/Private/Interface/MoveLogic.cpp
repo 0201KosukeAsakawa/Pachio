@@ -10,7 +10,6 @@ FVector IMoveLogic::Movement(float DeltaTime, AActor* Owner,const FInputActionVa
 	return FVector(0, 0, 0);
 }
 
-void IMoveLogic::Init(const float speed, const FVector)
+void IMoveLogic::Init(const float Speed, const FVector& Direction)
 {
-	return;
 }
