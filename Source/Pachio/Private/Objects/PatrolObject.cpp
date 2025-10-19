@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Objects/MoveControllableObject.h"
+#include "Objects/PatrolObject.h"
 #include "Components/MoveComponent.h"
 #include "Components/Player/PlayerInputComponent.h"
 #include "Components/BoxComponent.h"
@@ -11,7 +11,7 @@
 #include "Manager/LevelManager.h"
 
 
-AMoveControllableObject::AMoveControllableObject()
+APatrolObject::APatrolObject()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -23,8 +23,8 @@ AMoveControllableObject::AMoveControllableObject()
 	FootTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
 	FootTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-	FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMoveControllableObject::OnFootBeginOverlap);
-	FootTrigger->OnComponentEndOverlap.AddDynamic(this, &AMoveControllableObject::OnFootEndOverlap);
+	FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &APatrolObject::OnFootBeginOverlap);
+	FootTrigger->OnComponentEndOverlap.AddDynamic(this, &APatrolObject::OnFootEndOverlap);
 
 	// デフォルト設定
 	MoveDuration = 0.5f;
@@ -33,7 +33,7 @@ AMoveControllableObject::AMoveControllableObject()
 }
 
 
-void AMoveControllableObject::Tick(float DeltaTime)
+void APatrolObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	if (bCanMove)
@@ -44,7 +44,7 @@ void AMoveControllableObject::Tick(float DeltaTime)
 
 }
 
-void AMoveControllableObject::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void APatrolObject::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -61,7 +61,7 @@ void AMoveControllableObject::OnFootBeginOverlap(UPrimitiveComponent* Overlapped
 	}
 }
 
-void AMoveControllableObject::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void APatrolObject::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))
@@ -74,7 +74,7 @@ void AMoveControllableObject::OnFootEndOverlap(UPrimitiveComponent* OverlappedCo
 	}
 }
 
-void AMoveControllableObject::OnBeatDetected()
+void APatrolObject::OnBeatDetected()
 {
 	if (PatrolPoints.Num() == 0 || bIsMoving)
 		return;
@@ -93,7 +93,7 @@ void AMoveControllableObject::OnBeatDetected()
 	PlayCount = 0;
 }
 
-void AMoveControllableObject::Movement(float DeltaTime)
+void APatrolObject::Movement(float DeltaTime)
 {
 	FVector PreviousLocation = GetActorLocation();
 
@@ -128,7 +128,7 @@ void AMoveControllableObject::Movement(float DeltaTime)
 	}
 }
 
-void AMoveControllableObject::Check()
+void APatrolObject::Check()
 {
 	FVector CurrentLocation = GetActorLocation();
 	FVector TargetLocation = PatrolPoints[CurrentPatrolIndex];

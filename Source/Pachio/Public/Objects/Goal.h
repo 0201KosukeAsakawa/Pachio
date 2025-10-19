@@ -9,37 +9,59 @@ class UBoxComponent;
 UCLASS()
 class PACHIO_API AGoal : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
-	AGoal();
+    /**
+     * @brief コンストラクタ。ゴールアクターの初期化を行う
+     */
+    AGoal();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    /**
+     * @brief ゲーム開始時またはスポーン時に呼ばれる初期化処理
+     */
+    virtual void BeginPlay() override;
 
-	// �S�[���̃R���W�����R���|�[�l���g
-	UPROPERTY(VisibleAnywhere)
-	UBoxComponent* GoalBox;
+    /** @brief ゴール判定用のボックスコンポーネント */
+    UPROPERTY(VisibleAnywhere)
+    UBoxComponent* GoalBox;
 
-	// �Փˎ��ɌĂ΂��
-	UFUNCTION()
-	void OnGoalOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-		UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep,
-		const FHitResult& SweepResult);
+    /**
+     * @brief ゴールエリアにアクターが接触したときに呼ばれるオーバーラップイベント
+     *
+     * @param OverlappedComponent オーバーラップされたコンポーネント
+     * @param OtherActor 接触したアクター
+     * @param OtherComponent 接触したアクターのコンポーネント
+     * @param OtherBodyIndex ボディインデックス
+     * @param bFromSweep スイープによる衝突かどうか
+     * @param SweepResult 衝突の詳細情報
+     */
+    UFUNCTION()
+    void OnGoalOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep,
+        const FHitResult& SweepResult);
 
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    /**
+     * @brief 毎フレーム呼び出される更新処理
+     *
+     * @param DeltaTime 前フレームからの経過時間
+     */
+    virtual void Tick(float DeltaTime) override;
 
-	// �S�[�����B�����ꂽ���̏�Ԃ�擾
-	inline bool IsGoal() const { return isGoal; }
+    /**
+     * @brief ゴールに到達したかどうかを取得する
+     *
+     * @return ゴール到達済みの場合 true、それ以外は false
+     */
+    inline bool IsGoal() const { return isGoal; }
 
 private:
-	// �S�[���̏�ԃt���O
-	bool isGoal;
+    /** @brief ゴール到達フラグ */
+    bool isGoal;
 
-	UPROPERTY(EditAnywhere)
-	FName nextWorldName;
+    /** @brief 次のワールド（ステージ）名 */
+    UPROPERTY(EditAnywhere)
+    FName nextWorldName;
 };

@@ -32,6 +32,11 @@ USoundManager::USoundManager()
     : BGMVolume(1)
     , SEVolume(1)
     , mCurrentBGM(nullptr)
+    , MusicBPM(100.f)
+    , BeatInterval(5.f)
+    , StartTime(0.f)
+    , LastPredictedBeat(-1.f)
+    , LastConfirmedBeatTime(0.f)
 {
 }
 

@@ -17,5 +17,5 @@ class PACHIO_API ULadderMoveLogic : public UObject,public IMoveLogic
 private:
 	FVector Movement(float DeltaTime, AActor* Owner, const FInputActionValue& Value = FInputActionValue())override;
 
-	void Init(float speed, const FVector)override;
+	void Init(const float Speed = 1.f, const FVector& Direction = FVector(0, 0, 0))override;
 };

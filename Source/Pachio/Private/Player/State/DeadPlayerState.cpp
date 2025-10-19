@@ -10,6 +10,7 @@
 #include "Components/RespawnComponent.h"
 
 UDeadPlayerState::UDeadPlayerState()
+    :ElapsedTime(0.f)
 {
    
 }
@@ -62,7 +63,7 @@ bool UDeadPlayerState::OnUpdate(float DeltaTime)
 
     ElapsedTime += DeltaTime;
 
-    if (ElapsedTime >= 1.5f && !bIsRespawned)
+    if (ElapsedTime >= SETUP_POSITION_DELAYTIME && !bIsRespawned)
     {
         if (RespawnComponent == nullptr)
             return false;
@@ -73,7 +74,7 @@ bool UDeadPlayerState::OnUpdate(float DeltaTime)
     }
 
 
-    if (ElapsedTime >= RespawnDelay)
+    if (ElapsedTime >= RESPAWN_DELAY)
     {
         // 自作でOwner取るヘルパーとか
 

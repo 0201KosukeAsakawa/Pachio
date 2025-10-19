@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "Enemy/EnemyCategory.h"
 #include "EnemyCharacter.generated.h"
 
 class UBoxComponent;
@@ -42,5 +41,5 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere)
-	float MoveSpeed = 0.0f;
+	float MoveSpeed;
 };

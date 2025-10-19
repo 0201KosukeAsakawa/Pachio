@@ -22,7 +22,6 @@
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
-#include "Objects/ControllableObjectBase.h"
 #include "UI/UIManager.h"
 
 
@@ -30,6 +29,15 @@
 
 // コンストラクタ
 APlayerCharacter::APlayerCharacter()
+	:JumpForce(12.f)
+	, JumpBuff(1.f)
+	, MoveSpeed(10.f)
+	, MoveSoundCooldown(0.f)
+	, DefaultGravityScales(50.f)
+	, FixedXLocation(0.f)
+	, bHasPrevMouse(false)
+	, bHasPrevInputDir(false)
+	, PrevInputDir(FVector::ZeroVector)
 {
 	// 毎フレームTickを実行可能に設定
 	PrimaryActorTick.bCanEverTick = true;
@@ -105,7 +113,7 @@ void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 void APlayerCharacter::ResetBuff()
 {
 	 JumpBuff = 1;
-	 physics->SetGravityScale(true, DefaultGravityScalse);
+	 physics->SetGravityScale(true, DefaultGravityScales);
 }
 
 void APlayerCharacter::Circle()
@@ -189,7 +197,7 @@ void APlayerCharacter::SetGravityScale(bool applyGravity)
 	if (physics == nullptr)
 		return;
 
-	physics->SetGravityScale(applyGravity, DefaultGravityScalse);
+	physics->SetGravityScale(applyGravity, DefaultGravityScales);
 }
 
 void APlayerCharacter::SetGravityScale(bool applyGravity, float scale)
@@ -281,7 +289,7 @@ void APlayerCharacter::InitPhysicsSettings()
 {
 	physics->RegisterComponent();
 	// 重力を加える（値は任意、固定でOUTLINE_STENCIL_VALUEを加算）
-	physics->SetGravityScale(true, DefaultGravityScalse);
+	physics->SetGravityScale(true, DefaultGravityScales);
 
 }
 

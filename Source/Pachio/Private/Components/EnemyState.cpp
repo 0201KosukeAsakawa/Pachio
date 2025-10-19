@@ -3,7 +3,7 @@
 
 #include "Components/EnemyState.h"
 
-bool UEnemyState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEnemyStateComponent* LogicComponet , EEnemyCategory)
+bool UEnemyState::OnEnter(AEnemyCharacter* owner, UWorld* world, UEnemyStateComponent* LogicComponet)
 {
 	return false;
 }

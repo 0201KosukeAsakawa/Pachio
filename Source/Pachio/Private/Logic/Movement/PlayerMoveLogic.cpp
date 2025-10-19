@@ -20,7 +20,7 @@ FVector UPlayerMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputA
 
 
 // 移動速度などの初期化関数（未実装）
-void UPlayerMoveLogic::Init(float speed, const FVector)
+void UPlayerMoveLogic::Init(const float Speed, const FVector& Direction)
 {
     return;
 }

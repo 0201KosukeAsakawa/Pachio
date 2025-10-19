@@ -21,7 +21,7 @@ public:
 private:
 	FVector Movement(float DeltaTime, AActor* Owner,const FInputActionValue& Value = FInputActionValue())override;
 	bool IsCollidingWithWall(FVector Direction, const AActor* Owner);
-	void Init(float speed, const FVector = FVector(0,0,0))override;
+	void Init(const float Speed, const FVector& Direction)override;
 
 private:
 	float Speed;

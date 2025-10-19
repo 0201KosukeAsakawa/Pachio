@@ -93,14 +93,6 @@ public:
 	inline UScoreManager* GetScoreManager() const { return ScoreManager; }
 
 	/**
-	 * 敵データコンテナを取得
-	 *
-	 * @return 敵データ管理クラス
-	 */
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	inline UEnemyDataContainer* GetEnemyContainer() const { return EnemyContainer; }
-
-	/**
 	 * カラーマネージャーを取得
 	 *
 	 * @return 色管理クラス
@@ -154,17 +146,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UColorManager> ColorManagerClass;
 
-	/** 敵データを格納するコンテナ */
-	UPROPERTY()
-	TObjectPtr<UEnemyDataContainer> EnemyContainer;
-
 	/** 実行時に生成されたサウンドマネージャー */
 	UPROPERTY()
 	TObjectPtr<USoundManager> SoundManager;
-
-	/** 実行時に生成されたオブジェクトマネージャー */
-	UPROPERTY()
-	TObjectPtr<UObjectManager> ObjectManager;
 
 	/** 実行時に生成されたスコアマネージャー */
 	UPROPERTY()

@@ -12,6 +12,7 @@
 
 UPlayerHoldState::UPlayerHoldState()
     : HoldTarget(nullptr)
+    , GrabDirection(1)
 {
 }
 

@@ -11,29 +11,60 @@ class UBoxComponent;
 UCLASS()
 class PACHIO_API ALadderActor : public AColorReactiveObject
 {
-	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
-	ALadderActor();
+    GENERATED_BODY()
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+public:
+    /**
+     * @brief コンストラクタ。ラダーアクターの初期化を行う。
+     */
+    ALadderActor();
 
-	FVector GetTopWorldPosition() const;
+public:
+    /**
+     * @brief 毎フレーム呼び出される更新処理
+     *
+     * @param DeltaTime 前フレームからの経過時間
+     */
+    virtual void Tick(float DeltaTime) override;
 
-	FVector GetBottomWorldPosition() const;
+    /**
+     * @brief ラダーの上端位置をワールド座標で取得する
+     *
+     * @return 上端のワールド座標
+     */
+    FVector GetTopWorldPosition() const;
 
-	FVector GetFixedPositionForActor( AActor* OtherActor) const;
+    /**
+     * @brief ラダーの下端位置をワールド座標で取得する
+     *
+     * @return 下端のワールド座標
+     */
+    FVector GetBottomWorldPosition() const;
 
-	FRotator GetRotationForActorToFaceThis(AActor* OtherActor) const;
+    /**
+     * @brief 指定アクターが登るための固定位置を取得する
+     *
+     * @param OtherActor 対象アクター
+     * @return アクターがラダーに沿って移動する際の固定座標
+     */
+    FVector GetFixedPositionForActor(AActor* OtherActor) const;
+
+    /**
+     * @brief 指定アクターがラダーを向くための回転を取得する
+     *
+     * @param OtherActor 対象アクター
+     * @return アクターがラダー方向を向く回転値
+     */
+    FRotator GetRotationForActorToFaceThis(AActor* OtherActor) const;
 
 
 private:
-	UPROPERTY(EditAnywhere)
-	float Offset;
 
-	UPROPERTY(EditAnywhere)
-	UBoxComponent* LadderVolume;
+    /** @brief ラダーの上下端からのオフセット値 */
+    UPROPERTY(EditAnywhere)
+    float Offset;
+
+    /** @brief ラダー判定用のボリュームコンポーネント */
+    UPROPERTY(EditAnywhere)
+    UBoxComponent* LadderVolume;
 };

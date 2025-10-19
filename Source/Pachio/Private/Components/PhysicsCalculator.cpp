@@ -9,12 +9,20 @@
 // コンストラクタでデフォルト値を設定
 UPhysicsCalculator::UPhysicsCalculator()
 	: ForceScale(0)                          // 移動ベクトルのスケール
+	, GravityScale(DEFAULT_GRAVITYSCALE)	 //重力のスケール
 	, ForceDirection(FVector::ZeroVector)    // 移動方向
 	, PreviousPosition(FVector::ZeroVector)  // 前フレーム位置
+	, Velocity(FVector::ZeroVector)			 //現在かかっている力の向き
 	, Timer(0)                               // 経過時間（重力計算用）
+	, ForceModifier(1)                       //
 	, bShouldApplyGravity(true)              // 重力適用フラグ
 	, bIsSweep(false)                        // 移動時に Sweep を行うか
 	, bIsPhysicsEnabled(false)               // 物理挙動が有効かどうか
+	, bUseLocalOffset(true)
+	, bWasOnGround(false)
+	, bFalling(false)
+	, bHasJustLanded(false)
+	, MaxFallingSpeed(DEFAULT_MAX_FALLSPEED)
 {
 	// Tick を有効化
 	PrimaryComponentTick.bCanEverTick = true;

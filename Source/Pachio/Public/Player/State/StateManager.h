@@ -21,44 +21,70 @@ enum class EPlayerStateType : uint8
 /**
  * プレイヤーの状態（ステート）を切り替えて制御するコンポーネント
  */
-UCLASS(Blueprintable)
+UCLASS()
 class PACHIO_API UStateManager : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// コンストラクタ：デフォルト値の設定
-	UStateManager();
+    /**
+     * @brief コンストラクタ。StateManagerの初期化（デフォルト値設定）
+     */
+    UStateManager();
 
-	// ゲーム開始時の初期化処理
-	void Init(APawn* Owner, UWorld* World);
+    /**
+     * @brief ゲーム開始時の初期化処理
+     *
+     * @param Owner このステートマネージャが管理するプレイヤーPawn
+     * @param World ワールド参照
+     */
+    void Init(APawn* Owner, UWorld* World);
 
-	// 毎フレーム呼び出される更新処理（Tick 相当）
-	void Update(float DeltaTime);
+    /**
+     * @brief 毎フレーム呼び出される更新処理（Tick 相当）
+     *
+     * @param DeltaTime 前フレームからの経過時間
+     */
+    void Update(float DeltaTime);
 
-	// 状態を切り替える（タグ指定）
-	UPlayerStateComponent* ChangeState(EPlayerStateType NextStateTag);
+    /**
+     * @brief 指定ステートタグのステートに切り替える
+     *
+     * @param NextStateTag 遷移先ステートのタグ
+     * @return 遷移したステートインスタンス
+     */
+    UPlayerStateComponent* ChangeState(EPlayerStateType NextStateTag);
 
-	UFUNCTION(BlueprintCallable)
-	bool IsStateMatch(EPlayerStateType StateTag);
+    /**
+     * @brief 現在のステートが指定タグと一致するか確認
+     *
+     * @param StateTag チェックするステートタグ
+     * @return 一致する場合 true
+     */
+    UFUNCTION(BlueprintCallable)
+    bool IsStateMatch(EPlayerStateType StateTag);
 
-	// 現在のステートを取得
-	inline UPlayerStateComponent* GetCurrentState() const { return CurrentState; }
+    /**
+     * @brief 現在のアクティブステートを取得
+     *
+     * @return 現在のステートインスタンス
+     */
+    inline UPlayerStateComponent* GetCurrentState() const { return CurrentState; }
 
 private:
-	// ステート名（文字列）とステートインスタンスのマップ
-	UPROPERTY(EditAnywhere)
-	TMap<EPlayerStateType, TSubclassOf<UPlayerStateComponent>> StateClassMap;
+    /** @brief ステートタグとステートクラスのマップ（ステート生成用） */
+    UPROPERTY(EditAnywhere)
+    TMap<EPlayerStateType, TSubclassOf<UPlayerStateComponent>> StateClassMap;
 
-	// ステートの所有キャラクター
-	UPROPERTY()
-	APawn* mOwner;
+    /** @brief ステートの所有キャラクター */
+    UPROPERTY()
+    APawn* mOwner;
 
-	// 現在のアクティブなステート
-	UPROPERTY()
-	UPlayerStateComponent* CurrentState;
+    /** @brief 現在アクティブなステート */
+    UPROPERTY()
+    UPlayerStateComponent* CurrentState;
 
-	// ワールドへの参照（Tick処理等で使用）
-	UPROPERTY()
-	UWorld* pWorld;
+    /** @brief ワールドへの参照（Tick処理やステート初期化時に使用） */
+    UPROPERTY()
+    UWorld* pWorld;
 };

@@ -39,211 +39,275 @@ struct FInputActionValue;
 
 
 UCLASS()
-class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable,
-	public IControllableMover,
-	public IControllableJumper, public IControllableAbility,
-	public IColorModeController, public IStickAction,
-	public IOptionAction
+/**
+ * @brief プレイヤーキャラクタークラス
+ * IStateControllable, 移動・ジャンプ・スキル・色変更など複数のインターフェースを実装
+ * コンポーネント指向でステート管理、物理計算、カラー管理、入力処理を担当
+ */
+    class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable,
+    public IControllableMover,
+    public IControllableJumper, public IControllableAbility,
+    public IColorModeController, public IStickAction,
+    public IOptionAction
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// コンストラクタ（コンポーネントの生成や初期値設定）
-	APlayerCharacter();
+    /**
+     * @brief コンストラクタ
+     * コンポーネント生成や初期値設定を行う
+     */
+    APlayerCharacter();
 
 protected:
-	// ゲーム開始時に一度だけ呼ばれる初期化処理
-	virtual void BeginPlay() override;
+    /**
+     * @brief ゲーム開始時の初期化処理
+     * BeginPlay内で呼ばれる
+     */
+    virtual void BeginPlay() override;
 
 public:
-	// 毎フレーム実行される更新処理
-	virtual void Tick(float DeltaTime) override;
+    /**
+     * @brief 毎フレーム更新処理
+     * @param DeltaTime 前フレームからの経過時間
+     */
+    virtual void Tick(float DeltaTime) override;
 
-	// プレイヤー入力のバインディング設定
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    /**
+     * @brief プレイヤー入力バインディング設定
+     * @param PlayerInputComponent 入力コンポーネント
+     */
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
+    // ======================
+    // ==== 入力アクション ====
+    // ======================
 
-	// ======================
-	// ==== 入力アクション ====
-	// ======================
+    /**
+     * @brief カメラ位置をグリッドサイズとZバッファで設定
+     * @param NewGridSize カメラグリッドサイズ
+     * @param NewZBuffa カメラZバッファ位置
+     */
+    UFUNCTION(BlueprintCallable)
+    void SetCameraLocation(FVector2D NewGridSize, float NewZBuffa);
 
-	// カメラ位置をグリッドサイズとZバッファで設定
-	UFUNCTION(BlueprintCallable)
-	void SetCameraLocation(FVector2D NewGridSize, float NewZBuffa);
+    /**
+     * @brief 移動入力処理（IControllableMover実装）
+     * @param Value 入力値（軸方向やスティック情報を含む）
+     */
+    void Movement(const FInputActionValue& Value) override;
 
-	// 移動入力処理の実装（IControllableMoverのオーバーライド）
-	void Movement(const FInputActionValue& Value) override;
+    /**
+     * @brief ジャンプ入力処理（IControllableJumper実装）
+     * @param Value 入力値（ジャンプボタン押下情報など）
+     */
+    void Jump(const FInputActionValue& Value) override;
 
-	// ジャンプ開始処理（IControllableJumperのオーバーライド）
-	void Jump(const FInputActionValue& Value) override;
+    /**
+     * @brief 特殊アクション（スキル/ダッシュ）入力処理（IControllableAbility実装）
+     * @param Value 入力値（ボタン押下やスティック情報を含む）
+     */
+    void Action(const FInputActionValue& Value) override;
 
-	// 特殊アクション（スキル発動またはダッシュ）処理（IControllableAbilityのオーバーライド）
-	void Action(const FInputActionValue& Value) override;
+    /**
+     * @brief 重力スケールの有効/無効設定
+     * @param bEnable 有効化するか無効化するか
+     */
+    void SetGravityScale(bool bEnable);
 
-	// 重力スケールの設定（オーバーロードあり）
-	void SetGravityScale(bool bEnable);
-	void SetGravityScale(const bool bEnable, const float NewGravityScale);
+    /**
+     * @brief 重力スケールの設定（スケール値指定あり）
+     * @param bEnable 有効化するか無効化するか
+     * @param NewGravityScale 新しい重力スケール値
+     */
+    void SetGravityScale(const bool bEnable, const float NewGravityScale);
 
-	// マウスホイールスクロール入力処理
-	void OnMouseScroll(const FInputActionValue& Value);
+    /**
+     * @brief マウスホイールスクロール入力処理
+     * @param Value 入力値（スクロール方向や量）
+     */
+    void OnMouseScroll(const FInputActionValue& Value);
 
-	// 色変更（IColorModeControllerのオーバーライド）
-	void ChangeColor(float Value) override;
+    /**
+     * @brief 色変更（IColorModeController実装）
+     * @param Value 色の変化量（正/負で色モードを切り替え）
+     */
+    void ChangeColor(float Value) override;
 
-	// 色の直接設定
-	void SetColor(float Value);
+    /**
+     * @brief 色の直接設定
+     * @param Value 設定する色の値（0-1など正規化値）
+     */
+    void SetColor(float Value);
 
-	// カラーモードを1つ右にシフト
-	void ShiftArrayRightColorMode() override;
+    /**
+     * @brief カラーモードを右にシフト（IColorModeController実装）
+     */
+    void ShiftArrayRightColorMode() override;
 
-	// カラーモードを1つ左にシフト
-	void ShiftArrayLeftColorMode() override;
+    /**
+     * @brief カラーモードを左にシフト（IColorModeController実装）
+     */
+    void ShiftArrayLeftColorMode() override;
 
-	// スティック移動入力処理（IStickActionのオーバーライド）
-	void OnStickMove(const FInputActionValue& Value) override;
+    /**
+     * @brief スティック移動入力処理（IStickAction実装）
+     * @param Value 入力値（2Dスティック方向ベクトル）
+     */
+    void OnStickMove(const FInputActionValue& Value) override;
 
-	// メニューオープン処理（IOptionActionのオーバーライド）
-	void OpenMenu(const FInputActionValue& Value) override;
+    /**
+     * @brief メニューオープン処理（IOptionAction実装）
+     * @param Value 入力値（メニュー開閉ボタンの押下状態）
+     */
+    void OpenMenu(const FInputActionValue& Value) override;
 
-	// 光る対象の更新処理
-	void UpdateGlowTarget();
+    /**
+     * @brief 現在光らせている対象を更新
+     */
+    void UpdateGlowTarget();
 
-	// カメラコンポーネントの取得（BlueprintCallable）
-	UFUNCTION(BlueprintCallable)
-	UCameraComponent* GetCamera();
+    /**
+     * @brief カメラコンポーネント取得
+     * @return UCameraComponent* 現在のカメラコンポーネント
+     */
+    UFUNCTION(BlueprintCallable)
+    UCameraComponent* GetCamera();
 
-	// アニメーション速度の取得
-	UFUNCTION(BlueprintCallable)
-	FVector GetAnimVelocity() const;
+    /**
+     * @brief アニメーション速度取得
+     * @return FVector 現在の移動速度ベクトル
+     */
+    UFUNCTION(BlueprintCallable)
+    FVector GetAnimVelocity() const;
 
-	// 現在のYaw角度を取得
-	UFUNCTION(BlueprintCallable)
-	float GetYaw() const;
-
-private:
-	// 現在のプレイヤーステートを取得（IStateControllableの実装）
-	UPlayerStateComponent* GetPlayerState() const override;
-
-	// 状態変更処理（ステートタグによるステート遷移）
-	UPlayerStateComponent* ChangeState(EPlayerStateType Tag) override;
-
-	// ステートの初期化処理
-	void InitState();
-
-	// =======================
-	// ==== 初期化関数群 =====
-	// =======================
-
-	// 物理設定の初期化（摩擦、重力など）
-	void InitPhysicsSettings();
-
-	// 入力コンポーネントの初期化
-	void InitInput();
-
-	// 視覚的設定（メッシュのアウトライン表示など）
-	void InitVisualSettings();
-
-	// =======================
-	// ==== 状態・ステート処理 =
-	// =======================
-
-	// スティック入力による回転処理
-	void OnStickRotate(const FVector2D& StickInput);
-
-	// バフ状態のリセット処理
-	void ResetBuff();
-
-	// サークル処理（未詳細）
-	void Circle();
-
-private:
-	// ================
-	// ==== 変数 ======
-	// ================
-
-	// ジャンプ力の基本値
-	UPROPERTY(EditAnywhere)
-	float JumpForce = 12;
-
-	// ジャンプ力のバフ倍率
-	float JumpBuff = 1;
-
-	// 移動速度
-	UPROPERTY(EditAnywhere)
-	float MoveSpeed = 10;
-
-	// 移動時の効果音再生用クールダウンタイマー
-	float MoveSoundCooldown = 0.f;
-
-	// 効果音再生の最小間隔（秒）
-	const float MoveSoundInterval = 0.5f; // 0.5秒に1回まで再生可能
-
-	// デフォルト重力スケール
-	UPROPERTY(EditAnywhere)
-	float DefaultGravityScalse = 50.0f;
-
-	// X軸固定位置（使い所による？）
-	float FixedXLocation = 0;
-
-	// =====================
-	// ==== コンポーネント ====
-	// =====================
-
-	// カメラ制御用コンポーネント
-	UPROPERTY(EditAnywhere)
-	UCameraHandlerComponent* CameraComponent;
-
-	// プレイヤーステートのクラス参照（Blueprintで設定）
-	UPROPERTY(EditAnywhere, Category = "State")
-	TSubclassOf<UStateManager> StateManagerClass;
-
-	// ステート管理コンポーネント（状態遷移と更新処理を担当）
-	UPROPERTY()
-	UStateManager* StateManager;
-
-	// 物理計算用コンポーネント（地面判定や重力処理）
-	UPROPERTY()
-	UPhysicsCalculator* physics;
-
-	// カラーゲージ管理コンポーネント（色の状態管理）
-	UPROPERTY()
-	UColorControllerComponent* colorController;
-
-	// マウスの前回入力方向
-	FVector2D PrevMouseDir;
-
-	// マウス前回入力があるかフラグ
-	bool bHasPrevMouse = false;
-
-	// 前回の入力方向（ゲームパッドなど）
-	FVector2D PrevInputDir = FVector2D::ZeroVector;
-
-	// 前回の入力があるかフラグ
-	bool bHasPrevInputDir = false;
-
-	// 現在光らせている対象のActor
-	UPROPERTY()
-	AActor* CurrentGlowTarget;
+    /**
+     * @brief 現在のYaw角度取得
+     * @return float Yaw角度
+     */
+    UFUNCTION(BlueprintCallable)
+    float GetYaw() const;
 
 private:
-	// ============================
-	// ==== 定数定義（constexpr） ====
-	// ============================
+    // ============================
+    // ==== ステート管理関連 ======
+    // ============================
 
-	static constexpr int32 OUTLINE_STENCIL_VALUE = 10;
+    /** @brief 現在のプレイヤーステート取得（IStateControllable実装） */
+    UPlayerStateComponent* GetPlayerState() const override;
 
-	static constexpr float MOUSE_COLOR_CHANGE_RATE = 0.01f;
+    /** @brief ステート変更処理（タグ指定） */
+    UPlayerStateComponent* ChangeState(EPlayerStateType Tag) override;
 
-	static constexpr float SCROLL_COLOR_CHANGE_RATE = 0.1f;
+    /** @brief ステート初期化 */
+    void InitState();
 
-	static constexpr float STICK_DEADZONE = 0.02f;
+    // ============================
+    // ==== 初期化関数群 ==========
+    // ============================
 
-	static constexpr float MOVE_SOUND_INTERVAL = 0.5f;
+    /** @brief 物理設定の初期化（摩擦、重力など） */
+    void InitPhysicsSettings();
 
-	static constexpr float MOUSE_DELTA_THRESHOLD = 4.0f;
+    /** @brief 入力初期化 */
+    void InitInput();
 
-	static constexpr float GLOW_INTENSITY_ON = 1.0f;
+    /** @brief 視覚設定（メッシュアウトラインなど） */
+    void InitVisualSettings();
 
-	static constexpr float GLOW_INTENSITY_OFF = 0.0f;
+    // ============================
+    // ==== 状態・ステート処理 ===
+    // ============================
+
+    /** @brief スティック入力による回転処理
+     * @param StickInput 2Dスティック入力値
+     */
+    void OnStickRotate(const FVector2D& StickInput);
+
+    /** @brief バフ状態リセット */
+    void ResetBuff();
+
+    /** @brief サークル処理（未詳細） */
+    void Circle();
+
+private:
+    // ============================
+    // ==== プレイヤー変数 ========
+    // ============================
+
+    /** ジャンプ力の基本値 */
+    UPROPERTY(EditAnywhere)
+    float JumpForce;
+
+    /** ジャンプ力バフ倍率 */
+    float JumpBuff;
+
+    /** 移動速度 */
+    UPROPERTY(EditAnywhere)
+    float MoveSpeed;
+
+    /** 移動時効果音再生用クールダウン */
+    float MoveSoundCooldown;
+
+    /** デフォルト重力スケール */
+    UPROPERTY(EditAnywhere)
+    float DefaultGravityScales;
+
+    /** X軸固定位置 */
+    float FixedXLocation;
+
+    // ============================
+    // ==== コンポーネント ========
+    // ============================
+
+    /** カメラ制御用コンポーネント */
+    UPROPERTY(EditAnywhere)
+    UCameraHandlerComponent* CameraComponent;
+
+    /** ステートマネージャークラス（Blueprint設定用） */
+    UPROPERTY(EditAnywhere, Category = "State")
+    TSubclassOf<UStateManager> StateManagerClass;
+
+    /** ステート管理コンポーネント */
+    UPROPERTY()
+    UStateManager* StateManager;
+
+    /** 物理計算用コンポーネント（地面判定や重力処理） */
+    UPROPERTY()
+    UPhysicsCalculator* physics;
+
+    /** カラーゲージ管理コンポーネント */
+    UPROPERTY()
+    UColorControllerComponent* colorController;
+
+    /** 前回マウス入力方向 */
+    FVector2D PrevMouseDir;
+
+    /** 前回マウス入力フラグ */
+    bool bHasPrevMouse;
+
+    /** 前回入力方向（ゲームパッド） */
+    FVector2D PrevInputDir;
+
+    /** 前回入力有無フラグ */
+    bool bHasPrevInputDir;
+
+    /** 現在光らせている対象Actor */
+    UPROPERTY()
+    AActor* CurrentGlowTarget;
+
+private:
+    // ============================
+    // ==== 定数定義（constexpr） ====
+    // ============================
+
+    static constexpr int32 OUTLINE_STENCIL_VALUE = 10;
+    static constexpr float MOUSE_COLOR_CHANGE_RATE = 0.01f;
+    static constexpr float SCROLL_COLOR_CHANGE_RATE = 0.1f;
+    static constexpr float STICK_DEADZONE = 0.02f;
+    static constexpr float MOVE_SOUND_INTERVAL = 0.5f;
+    static constexpr float MOUSE_DELTA_THRESHOLD = 4.0f;
+    static constexpr float GLOW_INTENSITY_ON = 1.0f;
+    static constexpr float GLOW_INTENSITY_OFF = 0.0f;
 };
