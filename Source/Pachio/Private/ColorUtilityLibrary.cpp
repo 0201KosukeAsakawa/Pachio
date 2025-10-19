@@ -51,6 +51,30 @@ float UColorUtilityLibrary::GetHueDistanceFromAngle(const FLinearColor& Color,
     return FMath::Min(Delta, 360.0f - Delta);
 }
 
+float UColorUtilityLibrary::GetColorRatio(const FLinearColor& Color, EColorCategory ColorCategory)
+{
+    float f;
+    switch (ColorCategory)
+    {
+    case EColorCategory::Black:
+        return 0.f;
+        break;
+    case EColorCategory::Red:
+        f = Color.R;
+        break;
+    case EColorCategory::Green:
+        f = Color.G;
+        break;
+    case EColorCategory::Blue:
+        f = Color.B;
+        break;
+    default:
+        break;
+    }
+
+    return 1/f;
+}
+
 // =======================
 // 色相判定
 // =======================

@@ -30,6 +30,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+
 	UFUNCTION()
 	void OverlapDead(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep,

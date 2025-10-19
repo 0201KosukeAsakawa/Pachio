@@ -3,9 +3,10 @@
 
 #include "Objects/MovingObject.h"
 #include "Sound/SoundManager.h"
+#include "ColorUtilityLibrary.h"
 #include "Components/BoxComponent.h"
 #include "Components/Color/ObjectColorComponent.h"
-#include"Manager/LevelManager.h"
+#include "Manager/LevelManager.h"
 
 // Sets default values
 AMovingObject::AMovingObject():
@@ -79,10 +80,10 @@ void AMovingObject::ApplyColorWithMatching(const FLinearColor& InColor)
 
     StartLocation = GetActorLocation();
     ElapsedTime = 0.0f; // 経過時間リセット
-
+    
     if (ObjectColorComponent->HasColorChanged())
     {
-        TargetLocation = OffLocation;
+        TargetLocation = OffLocation * UColorUtilityLibrary::GetColorRatio(InColor, ObjectColorComponent->);
     }
     else
     {
