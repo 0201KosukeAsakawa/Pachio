@@ -51,28 +51,18 @@ float UColorUtilityLibrary::GetHueDistanceFromAngle(const FLinearColor& Color,
     return FMath::Min(Delta, 360.0f - Delta);
 }
 
-float UColorUtilityLibrary::GetColorRatio(const FLinearColor& Color, EColorCategory ColorCategory)
-{
-    float f;
-    switch (ColorCategory)
-    {
-    case EColorCategory::Black:
-        return 0.f;
-        break;
-    case EColorCategory::Red:
-        f = Color.R;
-        break;
-    case EColorCategory::Green:
-        f = Color.G;
-        break;
-    case EColorCategory::Blue:
-        f = Color.B;
-        break;
-    default:
-        break;
-    }
 
-    return 1/f;
+float UColorUtilityLibrary::GetColorRatio(const FLinearColor& ColorA, const FLinearColor& ColorB)
+{
+    float A, B = 0;
+    A = GetHue(ColorA);
+    B = GetHue(ColorB);
+
+    // 360度の剰余を取りつつ差を計算
+    float diff = FMath::Fmod(FMath::Abs(A - B) + 360.0f, 360.0f);
+    diff = FMath::Min(diff, 360.0f - diff);
+    float similarity = 1.0f - diff / 180.0f;
+    return similarity;
 }
 
 // =======================

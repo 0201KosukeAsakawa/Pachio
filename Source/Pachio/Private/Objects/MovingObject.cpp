@@ -80,15 +80,19 @@ void AMovingObject::ApplyColorWithMatching(const FLinearColor& InColor)
 
     StartLocation = GetActorLocation();
     ElapsedTime = 0.0f; // 経過時間リセット
+    //色の差を求める
+    float distance = UColorUtilityLibrary::GetColorRatio(InColor, ObjectColorComponent->GetCurrentColor());
     
+    FVector Direction = OnLocation - OffLocation;  // On - Offの差分ベクトル
     if (ObjectColorComponent->HasColorChanged())
     {
-        TargetLocation = OffLocation * UColorUtilityLibrary::GetColorRatio(InColor, ObjectColorComponent->);
+        TargetLocation = OffLocation + Direction * distance;  // OffからOnへdistance割合だけ動く
     }
     else
     {
-        TargetLocation = OnLocation;
+        TargetLocation = OnLocation - Direction * distance;  // OnからOffへdistance割合だけ動く
     }
+
 
     bIsMoving = true;
 }

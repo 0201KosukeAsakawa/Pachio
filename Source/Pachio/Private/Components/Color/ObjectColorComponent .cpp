@@ -167,6 +167,11 @@ void UObjectColorComponent::SetupMaterial()
  */
 void UObjectColorComponent::SetColor(const FLinearColor& NewColor)
 {
+    // カラーマッチング処理を実行
+    ProcessColorMatching(NewColor);
+    if (!bColorChangeable)
+        return;
+
     CurrentColor = NewColor;
 
     // ColorReactiveが無効な場合は早期リターン
@@ -178,16 +183,11 @@ void UObjectColorComponent::SetColor(const FLinearColor& NewColor)
     }
 
     // マテリアルへ色を反映
-    if (bColorChangeable)
-    {
-        ApplyColorToMaterial(CurrentColor);
-    }
+    ApplyColorToMaterial(CurrentColor);
+
 
     // エフェクトタイプを更新（最適なエフェクトに切り替え）
     ColorReactive->SetEffectType(UColorUtilityLibrary::GetNearestPrimaryColor(CurrentColor));
-
-    // カラーマッチング処理を実行
-    ProcessColorMatching(NewColor);
 }
 
 
