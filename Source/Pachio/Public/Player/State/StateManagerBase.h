@@ -1,19 +1,15 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Player/State/StateManagerBase.h"
-#include "GreenStateManager.generated.h"
+#include "Interface/StateManager.h"
+#include "StateManagerBase.generated.h"
 
-// 前方宣言：プレイヤーの状態を管理する基底クラス
-class UPlayerStateComponent;
-class ACharacter;
 
-/**
- * プレイヤーの状態（ステート）を切り替えて制御するコンポーネント
- */
-UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class PACHIO_API UGreenStateManager : public UStateManagerBase
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class PACHIO_API UStateManagerBase : public UActorComponent, public IStateManager
 {
     GENERATED_BODY()
 
@@ -21,7 +17,7 @@ public:
     /**
      * @brief コンストラクタ。GreenStateManagerの初期化（デフォルト値設定）
      */
-    UGreenStateManager();
+    UStateManagerBase();
 
     /**
      * @brief ゲーム開始時の初期化処理
@@ -60,4 +56,17 @@ public:
      * @return 現在のステートインスタンス
      */
     inline UPlayerStateComponent* GetCurrentState_Implementation() const override { return CurrentState; }
+
+protected:
+    /** @brief ステートタグとステートクラスのマップ（ステート生成用） */
+    UPROPERTY(EditAnywhere)
+    TMap<EPlayerStateType, TSubclassOf<UPlayerStateComponent>> StateClassMap;
+
+    /** @brief 現在アクティブなステート */
+    UPROPERTY()
+    UPlayerStateComponent* CurrentState;
+
+    UPROPERTY()
+    APawn* mOwner;
+
 };

@@ -5,7 +5,7 @@
 // コンストラクタ：このコンポーネントが毎フレームTickするように設定
 UGreenStateManager::UGreenStateManager()
 {
-	PrimaryComponentTick.bCanEverTick = true; // Tickを有効にする
+	
 }
 
 // ステートマネージャの初期化処理
@@ -14,7 +14,7 @@ void UGreenStateManager::Init_Implementation(APawn* owner, UWorld* world)
 	// 所有者またはワールドが無効な場合は処理しない
 	if (!owner || !world)
 		return;
-
+	mOwner = owner;
 	// 初期状態を "Default" に設定
 	Execute_ChangeState(this,EPlayerStateType::Default);
 }
@@ -31,8 +31,7 @@ void UGreenStateManager::Update_Implementation(float deltaTime)
 
 UPlayerStateComponent* UGreenStateManager::ChangeState_Implementation(EPlayerStateType NextStateTag)
 {
-	AActor* owner = GetOwner();
-	if (StateClassMap.IsEmpty() || !StateClassMap.Contains(NextStateTag)|| !owner)
+	if (StateClassMap.IsEmpty() || !StateClassMap.Contains(NextStateTag)|| !mOwner)
 		return nullptr;
 
 	TSubclassOf<UPlayerStateComponent> StateClass = StateClassMap[NextStateTag];
@@ -40,17 +39,17 @@ UPlayerStateComponent* UGreenStateManager::ChangeState_Implementation(EPlayerSta
 	// 既存ステートを終了
 	if (CurrentState)
 	{
-		CurrentState->OnExit(Cast<APawn>(owner));
+		CurrentState->OnExit(mOwner);
 		CurrentState->ConditionalBeginDestroy(); // メモリ解放（必要に応じて）
 		CurrentState = nullptr;
 	}
 
 	// 新しいステートを生成
-	CurrentState = NewObject<UPlayerStateComponent>(owner, StateClass);
+	CurrentState = NewObject<UPlayerStateComponent>(mOwner, StateClass);
 	if (!CurrentState)
 		return nullptr;
 
-	CurrentState->OnEnter(Cast<APawn>(owner), GetWorld());
+	CurrentState->OnEnter(mOwner, GetWorld());
 	return CurrentState;
 }
 

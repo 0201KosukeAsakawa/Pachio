@@ -274,7 +274,7 @@ private:
     // ステートマネージャークラス（Blueprint設定用）
     // IStateManagerを実装したクラス群のUClassポインタを格納
     UPROPERTY(EditAnywhere, Category = "State")
-    TMap<EColorCategory, TSubclassOf<UObject>> StateManagerClass;
+    TMap<EColorCategory, TSubclassOf<UStateManagerBase>> StateManagerClass;
 
     // 実際に生成したステートマネージャーのUObject保持
     UPROPERTY()
