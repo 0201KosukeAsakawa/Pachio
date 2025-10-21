@@ -13,10 +13,9 @@ AMovingObject::AMovingObject():
                                 MoveDuration(DEFAULT_DURATION)
                                 ,ElapsedTime(0.f)
 {
-    PrimaryActorTick.bCanEverTick = true;
-
+    PrimaryComponentTick.bCanEverTick = true;
     FootTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("FootTrigger"));
-    RootComponent = FootTrigger;
+    FootTrigger->SetupAttachment(this);
 
     FootTrigger->SetGenerateOverlapEvents(true);
     FootTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -30,23 +29,21 @@ AMovingObject::AMovingObject():
 
 void AMovingObject::Initialize()
 {
-    AColorReactiveObject::Initialize();
+    UObjectColorComponent::Initialize();
     TargetLocation = OffLocation;
 }
 
-void AMovingObject::Tick(float DeltaTime)
+void AMovingObject::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-    Super::Tick(DeltaTime);
-
     if (bIsMoving)
     {
         ElapsedTime += DeltaTime;
         float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
 
         FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
-        FVector DeltaMove = NewLocation - GetActorLocation();
+        FVector DeltaMove = NewLocation - GetOwner()->GetActorLocation();
 
-        SetActorLocation(NewLocation);
+        GetOwner()->SetActorLocation(NewLocation);
         TArray<AActor*> Actors = AttachedActors;
         // 上に乗っているアクターも追従
         for (AActor* ActorOnTop : Actors)
@@ -76,15 +73,15 @@ void AMovingObject::Tick(float DeltaTime)
 
 void AMovingObject::ApplyColorWithMatching(const FLinearColor& InColor)
 {
-    AColorReactiveObject::ApplyColorWithMatching(InColor);
+   SetColor(InColor);
 
-    StartLocation = GetActorLocation();
+    StartLocation = GetOwner()->GetActorLocation();
     ElapsedTime = 0.0f; // 経過時間リセット
     //色の差を求める
-    float distance = UColorUtilityLibrary::GetColorRatio(InColor, ObjectColorComponent->GetCurrentColor());
+    float distance = UColorUtilityLibrary::GetColorRatio(InColor, GetCurrentColor());
     
     FVector Direction = OnLocation - OffLocation;  // On - Offの差分ベクトル
-    if (ObjectColorComponent->HasColorChanged())
+    if (HasColorChanged())
     {
         TargetLocation = OffLocation + Direction * distance;  // OffからOnへdistance割合だけ動く
     }
@@ -104,7 +101,7 @@ void AMovingObject::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AAct
     if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))
         return;
 
-    if (OtherActor && OtherActor != this && !AttachedActors.Contains(OtherActor))
+    if (OtherActor && OtherActor != GetOwner() && !AttachedActors.Contains(OtherActor))
     {
         AttachedActors.Add(OtherActor);
         UE_LOG(LogTemp, Log, TEXT("Added actor on top: %s"), *OtherActor->GetName());

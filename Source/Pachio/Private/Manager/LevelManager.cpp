@@ -109,6 +109,8 @@ ALevelManager* ALevelManager::GetInstance(UObject* WorldContext)
 
 		// 見つからなければ新規生成
 		ALevelManager* NewInstance = World->SpawnActor<ALevelManager>();
+		if (!Instance.IsValid())
+			return nullptr;
 		Instance = NewInstance;
 		Instance->InitializeComponents();
 	}

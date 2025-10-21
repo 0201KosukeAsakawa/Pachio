@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/Color/ColorReactiveObject.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "DataContainer/EffectMatchResult.h"
 #include "MovingObject.generated.h"
 
 class UBoxComponent;
-UCLASS()
-class PACHIO_API AMovingObject : public AColorReactiveObject
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class PACHIO_API AMovingObject : public UObjectColorComponent
 {
 	GENERATED_BODY()
 
@@ -32,7 +32,7 @@ public:
 	 *
 	 * @param DeltaTime 前フレームからの経過時間
 	 */
-	virtual void Tick(float DeltaTime) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
 	/**

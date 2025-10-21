@@ -167,7 +167,7 @@ void UObjectColorComponent::RegisterToColorManager()
     }
 
     // ターゲットタイプを指定して登録
-    ColorManager->RegisterTarget(TargetType, GetOwner());
+    ColorManager->RegisterTarget(TargetType, this);
 }
 
 /**

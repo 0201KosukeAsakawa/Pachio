@@ -8,53 +8,72 @@
 #include "Manager/ColorManager.h"
 #include "Sound/SoundManager.h"
 
-// コンストラクタ：アクターの初期設定
-AColorReactiveBeltConveyor::AColorReactiveBeltConveyor()
+// ====================================================================
+// コンストラクタ：ベルトコンベアの基本設定
+// ====================================================================
+UColorReactiveBeltConveyorComponent::UColorReactiveBeltConveyorComponent()
+    : BaseDirection(1.f, 0.f, 0.f)               // デフォルト進行方向（X軸）
+    , DefaultPower(100.0f)                       // 基本推進力
+    , CurrentDirection(FVector::ZeroVector)      // 現在の方向（初期はゼロ）
+    , bReverseOnComplementary(false)             // 色反転OFF
+    , bUseLocalOffset(false)                     // ローカルオフセットOFF
+    , bAffectOnlyClosest(false)                  // 近い対象のみOFF
 {
-    // このアクターが毎フレーム Tick を呼び出すように設定
-    PrimaryActorTick.bCanEverTick = true;
+    // BoxComponent（当たり判定）を生成
+    BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
+    BoxComponent->InitBoxExtent(FVector(100.f, 100.f, 50.f)); // デフォルトサイズ設定
+    BoxComponent->SetCollisionProfileName(TEXT("Trigger"));
+    BoxComponent->SetGenerateOverlapEvents(true);
+    BoxComponent->SetupAttachment(this);
 
-    // Box Component の作成とルートへのアタッチ
-    BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
-    BoxComponent->SetupAttachment(RootComponent);
+    // 衝突イベントを安全にバインド
+    if (!BoxComponent->OnComponentBeginOverlap.IsAlreadyBound(this, &UColorReactiveBeltConveyorComponent::OnOverlapBegin))
+    {
+        BoxComponent->OnComponentBeginOverlap.AddDynamic(
+            this,
+            &UColorReactiveBeltConveyorComponent::OnOverlapBegin
+        );
+    }
 
-    // オーバーラップイベントのバインド（開始・終了）
-    BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AColorReactiveBeltConveyor::OnOverlapBegin);
-    BoxComponent->OnComponentEndOverlap.AddDynamic(this, &AColorReactiveBeltConveyor::OnOverlapEnd);
+    if (!BoxComponent->OnComponentEndOverlap.IsAlreadyBound(this, &UColorReactiveBeltConveyorComponent::OnOverlapEnd))
+    {
+        BoxComponent->OnComponentEndOverlap.AddDynamic(
+            this,
+            &UColorReactiveBeltConveyorComponent::OnOverlapEnd
+        );
+    }
+
+    // Tickを有効化
+    PrimaryComponentTick.bCanEverTick = true;
 }
 
 // ベルトコンベア初期化（親クラスの初期化も呼び出し）
-void AColorReactiveBeltConveyor::Initialize()
+void UColorReactiveBeltConveyorComponent::Initialize()
 {
-    AColorReactiveObject::Initialize(); // 親の Init を呼ぶ
-    CurrentDirection = direction; // 初期方向を設定
-    CurrentPower = DefaultPower;
+    UObjectColorComponent::Initialize(); // 親の Init を呼ぶ
+    CurrentDirection = BaseDirection; // 初期方向を設定
 
+}
 
-    //音との連携をしなくなったためコメントアウト
-    /*if (!bPlayBeat)
-        return;
-
-    const TObjectPtr<USoundManager> SoundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject());
-    if (!SoundManager) return;
-
-    SoundManager->OnBeatDetected.AddDynamic(this, &AColorReactiveBeltConveyor::OnBeatDetected);*/
+void UColorReactiveBeltConveyorComponent::OnRegister()
+{
+    UObjectColorComponent::OnRegister();
 }
 
 // 毎フレーム呼ばれる処理（Tick）
-void AColorReactiveBeltConveyor::Tick(float DeltaTime)
+void UColorReactiveBeltConveyorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     if (!BoxComponent->IsCollisionEnabled())
     {
-        hitObject.Empty();
+        HitObjects.Empty();
         return;
     }
 
-    if (bOnlyClosest)
+    if (bAffectOnlyClosest)
     {
-        FVector MyLocation = GetActorLocation();
+        FVector MyLocation = GetOwner()->GetActorLocation();
 
-        for (UPhysicsCalculator* target : hitObject)
+        for (UPhysicsCalculator* target : HitObjects)
         {
             if (target)
             {
@@ -67,7 +86,7 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
                 // 自分と対象の間に遮蔽物があるかどうかラインテスト
                 FHitResult HitResult;
                 FCollisionQueryParams Params;
-                Params.AddIgnoredActor(this);  // 自分自身は無視
+                Params.AddIgnoredActor(GetOwner());  // 自分自身は無視
                 Params.AddIgnoredActor(TargetActor); // 対象も無視して直接見えるか判定
 
                 bool bHit = GetWorld()->LineTraceSingleByChannel(
@@ -81,7 +100,7 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
                 if (!bHit)
                 {
                     // 遮蔽物無し → 力を加える
-                    target->AddForce(CurrentDirection, CurrentPower, true, bUseLocalOffset);
+                    target->AddForce(CurrentDirection, DefaultPower, true, bUseLocalOffset);
                 }
                 // bHit == true なら遮蔽物があるので加えない
             }
@@ -90,34 +109,30 @@ void AColorReactiveBeltConveyor::Tick(float DeltaTime)
     else
     {
         // これまで通り、全ての対象に力を加える
-        for (UPhysicsCalculator* target : hitObject)
+        for (UPhysicsCalculator* target : HitObjects)
         {
             if (target)
             {
-                target->AddForce(CurrentDirection, CurrentPower, true, bUseLocalOffset);
+                target->AddForce(CurrentDirection, DefaultPower, true, bUseLocalOffset);
             }
         }
     }
 }
 
 // 指定された色に反応する処理
-void AColorReactiveBeltConveyor::ApplyColorWithMatching(const FLinearColor& InColor)
+void UColorReactiveBeltConveyorComponent::ApplyColorWithMatching(const FLinearColor& InColor)
 {
-    //ApplyColorToMaterial(InColor);
-    
-    if (!ObjectColorComponent)
-        return;
-
-    AColorReactiveObject::ApplyColorWithMatching(InColor);
+    SetColor(InColor);
+    //AColorReactiveObject::ApplyColorWithMatching(InColor);
 
     // 色の一致状態を設定
-    ObjectColorComponent->SetColorMatched(UColorUtilityLibrary::IsHueSimilar(GetCurrentColor(), InColor));
-    if (ObjectColorComponent->IsColorMatched())
+   SetColorMatched(UColorUtilityLibrary::IsHueSimilar(GetCurrentColor(), InColor));
+    if (IsColorMatched())
     {
-        if (IsRevers)
+        if (bReverseOnComplementary)
         {
             // 色が一致していて IsRevers が true → 逆方向
-            CurrentDirection = -direction;
+            CurrentDirection = -BaseDirection;
         }
         else
         {
@@ -128,16 +143,16 @@ void AColorReactiveBeltConveyor::ApplyColorWithMatching(const FLinearColor& InCo
     else
     {
         // 色が一致していない → 通常方向
-        CurrentDirection = direction;
+        CurrentDirection = BaseDirection;
     }
 }
 
 // オーバーラップ開始時の処理
-void AColorReactiveBeltConveyor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void UColorReactiveBeltConveyorComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (OtherActor == nullptr || OtherActor == this)
+    if (OtherActor == nullptr || OtherActor == GetOwner())
         return;
 
     // 対象アクターに UPhysicsCalculator があるか確認
@@ -146,17 +161,17 @@ void AColorReactiveBeltConveyor::OnOverlapBegin(UPrimitiveComponent* OverlappedC
         return;
 
     // すでにリストに追加されていなければ追加
-    if (!hitObject.Contains(PhysicsCalculator))
+    if (!HitObjects.Contains(PhysicsCalculator))
     {
-        hitObject.Add(PhysicsCalculator);
+        HitObjects.Add(PhysicsCalculator);
     }
 }
 
 // オーバーラップ終了時の処理
-void AColorReactiveBeltConveyor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void UColorReactiveBeltConveyorComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-    if (OtherActor == nullptr || OtherActor == this)
+    if (OtherActor == nullptr || OtherActor == GetOwner())
         return;
 
     // 対象から UPhysicsCalculator を取得
@@ -165,10 +180,10 @@ void AColorReactiveBeltConveyor::OnOverlapEnd(UPrimitiveComponent* OverlappedCom
         return;
 
     // 対象をリストから除外
-    hitObject.Remove(PhysicsCalculator);
+    HitObjects.Remove(PhysicsCalculator);
 }
 
-void AColorReactiveBeltConveyor::OnBeatDetected()
+void UColorReactiveBeltConveyorComponent::OnBeatDetected()
 {
     //if (beatCount > playBeatCount)
     //{

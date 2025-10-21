@@ -27,7 +27,6 @@ void UColorReactiveSwitchComponent::Initialize()
 {
 	// 親クラスの初期化処理
 	UObjectColorComponent::Initialize();
-	BoxComponent->SetupAttachment(GetOwner()->GetRootComponent());
 	// 2色目の判定用カラーを取得
 	SecondaryColor = ALevelManager::GetInstance(GetWorld())
 		->GetColorManager()
@@ -74,5 +73,21 @@ void UColorReactiveSwitchComponent::ApplyColorWithMatching(const FLinearColor& I
 
 		// 第二色でも同様に ColorEvent を発火
 		levelManager->GetColorManager()->ColorEvent(GetColorEventID(), InColor);
+	}
+}
+
+void UColorReactiveSwitchComponent::OnRegister()
+{
+	UObjectColorComponent::OnRegister();
+
+	if (AActor* Owner = GetOwner())
+	{
+		if (USceneComponent* RootComp = Owner->GetRootComponent())
+		{
+			if (BoxComponent && BoxComponent->GetAttachParent() == nullptr)
+			{
+				BoxComponent->SetupAttachment(RootComp);
+			}
+		}
 	}
 }

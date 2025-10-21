@@ -15,7 +15,7 @@ class UColorManager;
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class PACHIO_API UObjectColorComponent : public UActorComponent,public IColorReactiveInterface
+class PACHIO_API UObjectColorComponent : public USceneComponent,public IColorReactiveInterface
 {
     GENERATED_BODY()
 

@@ -37,6 +37,15 @@ public:
 	 */
 	virtual void ApplyColorWithMatching(const FLinearColor& InColor);
 
+	/**
+	 * @brief コンポーネント登録時処理
+	 *
+	 * アクターにアタッチされた直後（エディタ・実行時とも）に呼ばれます。
+	 * 必要であれば、この段階で依存コンポーネントの取得や初期設定を行います。
+	 * @note BeginPlay よりも早いタイミングで呼び出されます。
+	 */
+	void OnRegister()override;
+
 private:
 	/** スイッチの当たり判定用ボックス（必要なら） */
 	UPROPERTY(VisibleAnywhere, Category = "Color Switch")
