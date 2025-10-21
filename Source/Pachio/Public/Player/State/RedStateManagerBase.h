@@ -4,19 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "Player/State/StateManagerBase.h"
-#include "BlueStateManager.generated.h"
+#include "RedStateManagerBase.generated.h"
 
-
-UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class PACHIO_API UBlueStateManager : public UStateManagerBase
+/**
+ * 
+ */
+UCLASS()
+class PACHIO_API URedStateManagerBase : public UStateManagerBase
 {
-    GENERATED_BODY()
-
+	GENERATED_BODY()
 public:
     /**
      * @brief コンストラクタ。GreenStateManagerの初期化（デフォルト値設定）
      */
-    UBlueStateManager();
+    URedStateManagerBase();
 
     /**
      * @brief ゲーム開始時の初期化処理

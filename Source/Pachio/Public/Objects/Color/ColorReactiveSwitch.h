@@ -3,48 +3,50 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/Color/ColorReactiveObject.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "DataContainer/EffectMatchResult.h"
 #include "ColorReactiveSwitch.generated.h"
 
 class UBoxComponent;
 
-UCLASS()
-class PACHIO_API AColorReactiveSwitch : public AColorReactiveObject
+/**
+ * @brief 色に反応して動作を切り替えるスイッチコンポーネント
+ */
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class PACHIO_API UColorReactiveSwitchComponent : public UObjectColorComponent
 {
 	GENERATED_BODY()
 
 public:
 	/**
-	 * コンストラクタ。スイッチの基本設定を行う
+	 * @brief コンストラクタ。デフォルト値設定
 	 */
-	AColorReactiveSwitch();
+	UColorReactiveSwitchComponent();
 
+public:
 	/**
-	 * 初期化処理
+	 * @brief 初期化処理
 	 * スイッチの初期状態やエフェクト設定を行う
 	 */
-	virtual void Initialize() override;
+	virtual void Initialize();
 
-private:
 	/**
-	 * 色反応処理
+	 * @brief 色反応処理
 	 * 指定された色に応じてスイッチの状態や動作を切り替える
-	 *
 	 * @param InColor 新しく適用された色
 	 */
-	virtual void ApplyColorWithMatching(const FLinearColor& InColor) override;
+	virtual void ApplyColorWithMatching(const FLinearColor& InColor);
 
 private:
-	/** スイッチの当たり判定用コリジョンボックス */
-	UPROPERTY(VisibleAnywhere)
-	UBoxComponent* BoxComponent;
+	/** スイッチの当たり判定用ボックス（必要なら） */
+	UPROPERTY(VisibleAnywhere, Category = "Color Switch")
+	TObjectPtr<UBoxComponent> BoxComponent;
 
 	/** 二次エフェクト（補助的な反応タイプを指定） */
-	UPROPERTY(EditAnywhere)
-	EColorCategory Second;
+	UPROPERTY(EditAnywhere, Category = "Color Switch")
+	EColorCategory SecondaryEffect;
 
 	/** 二次エフェクトに対応する色 */
-	FLinearColor SecondColor;
+	UPROPERTY(EditAnywhere, Category = "Color Switch")
+	FLinearColor SecondaryColor;
 };
-

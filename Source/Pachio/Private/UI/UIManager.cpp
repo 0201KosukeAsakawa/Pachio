@@ -17,6 +17,10 @@ void UUIManager::Init(const AActor*)
 
     // HUD と接続し、UIManager をセット
     APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+
+    if (PC == nullptr)
+        return;
+
     AInGameHUD* MyHUD = Cast<AInGameHUD>(PC->GetHUD());
     if (MyHUD)
     {

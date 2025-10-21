@@ -37,27 +37,4 @@ public:
      * @param DeltaTime 前フレームからの経過時間
      */
     void Update_Implementation(float DeltaTime)override;
-
-    /**
-     * @brief 指定ステートタグのステートに切り替える
-     *
-     * @param NextStateTag 遷移先ステートのタグ
-     * @return 遷移したステートインスタンス
-     */
-    UPlayerStateComponent* ChangeState_Implementation(EPlayerStateType NextStateTag)override;
-
-    /**
-     * @brief 現在のステートが指定タグと一致するか確認
-     *
-     * @param StateTag チェックするステートタグ
-     * @return 一致する場合 true
-     */
-    bool IsStateMatch_Implementation(EPlayerStateType StateTag)override;
-
-    /**
-     * @brief 現在のアクティブステートを取得
-     *
-     * @return 現在のステートインスタンス
-     */
-    inline UPlayerStateComponent* GetCurrentState_Implementation() const override { return CurrentState; }
 };

@@ -40,7 +40,7 @@ public:
      * @param NextStateTag 遷移先ステートのタグ
      * @return 遷移したステートインスタンス
      */
-    UPlayerStateComponent* ChangeState_Implementation(EPlayerStateType NextStateTag)override;
+    UPlayerStateComponent* ChangeState_Implementation(EPlayerStateType NextStateTag)final override;
 
     /**
      * @brief 現在のステートが指定タグと一致するか確認
@@ -48,14 +48,14 @@ public:
      * @param StateTag チェックするステートタグ
      * @return 一致する場合 true
      */
-    bool IsStateMatch_Implementation(EPlayerStateType StateTag)override;
+    bool IsStateMatch_Implementation(EPlayerStateType StateTag) final override;
 
     /**
      * @brief 現在のアクティブステートを取得
      *
      * @return 現在のステートインスタンス
      */
-    inline UPlayerStateComponent* GetCurrentState_Implementation() const override { return CurrentState; }
+    inline UPlayerStateComponent* GetCurrentState_Implementation()const final override { return CurrentState; }
 
 protected:
     /** @brief ステートタグとステートクラスのマップ（ステート生成用） */
@@ -66,7 +66,28 @@ protected:
     UPROPERTY()
     UPlayerStateComponent* CurrentState;
 
+    /*
+    * 
+    　@brief 所有元のオーナー 
+    *
+    * @note
+    * GetOwnerをするとControllerクラスが帰ってくるため
+    */
     UPROPERTY()
     APawn* mOwner;
 
+    /*
+    *
+　    @brief 状態ごとの姿
+    */
+    UPROPERTY(EditDefaultsOnly, Category = "Appearance")
+    TObjectPtr<USkeletalMesh> FormMesh;
+
+
+    /*
+    *
+　    @brief メッシュのアニメーション
+    */
+    UPROPERTY(EditDefaultsOnly, Category = "Appearance")
+    TSubclassOf<UAnimInstance> FormAnimBP;
 };

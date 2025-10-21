@@ -11,18 +11,9 @@ UBlueStateManager::UBlueStateManager()
 
 void UBlueStateManager::Init_Implementation(APawn* Owner, UWorld* World)
 {
+	UStateManagerBase::Init_Implementation(Owner, World);
 }
 
 void UBlueStateManager::Update_Implementation(float DeltaTime)
 {
-}
-
-UPlayerStateComponent* UBlueStateManager::ChangeState_Implementation(EPlayerStateType NextStateTag)
-{
-	return nullptr;
-}
-
-bool UBlueStateManager::IsStateMatch_Implementation(EPlayerStateType StateTag)
-{
-	return false;
 }

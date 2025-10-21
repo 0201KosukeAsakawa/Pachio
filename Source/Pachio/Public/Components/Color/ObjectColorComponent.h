@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "ColorUtilityLibrary.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "Interface/ColorFilterInterface.h"
 #include "ObjectColorComponent.generated.h"
 
 class ALevelManager;
@@ -15,12 +15,47 @@ class UColorManager;
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class PACHIO_API UObjectColorComponent : public UActorComponent
+class PACHIO_API UObjectColorComponent : public UActorComponent,public IColorReactiveInterface
 {
     GENERATED_BODY()
 
 public:
+    /**
+     * @brief コンストラクタ
+     *
+     * コンポーネント生成時にデフォルト値を初期化します。
+     * Unreal Engine のライフサイクル的に、まだアタッチ先アクターは確定していません。
+     */
     UObjectColorComponent();
+
+    /**
+     * @brief コンポーネント登録時処理
+     *
+     * アクターにアタッチされた直後（エディタ・実行時とも）に呼ばれます。
+     * 必要であれば、この段階で依存コンポーネントの取得や初期設定を行います。
+     * @note BeginPlay よりも早いタイミングで呼び出されます。
+     */
+    virtual void OnRegister() override;
+
+    /**
+     * @brief 実行開始時の初期化処理
+     *
+     * ゲーム開始時（またはアクターがスポーンした時）に呼び出されます。
+     * コンポーネントの初期化、マネージャー登録、マテリアル設定などを行うのに適しています。
+     */
+    virtual void BeginPlay() override;
+
+#if WITH_EDITOR
+    /**
+     * @brief プロパティ変更時のコールバック（エディタ専用）
+     *
+     * エディタ上でプロパティを変更した際に呼ばれます。
+     * 値変更に応じてリアルタイムで初期化・反映を行いたい場合に使用します。
+     *
+     * @param PropertyChangedEvent 変更されたプロパティに関する情報
+     */
+    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
     // =======================
     // 初期化
@@ -30,7 +65,14 @@ public:
      * コンポーネント全体の初期化
      * 各種マネージャーへの登録とイベントバインドを行う
      */
-    void Initialize();
+    virtual void Initialize();
+
+    /**
+     * 指定された色を適用し、必要に応じてマッチング処理を行う
+     *
+     * @param NewColor - 適用する新しい色
+     */
+    virtual void ApplyColorWithMatching(const FLinearColor& NewColor)override;
 
     // =======================
     // 色の操作
@@ -70,8 +112,12 @@ public:
     // 状態の取得と設定
     // =======================
 
-    /** 色が一致しているかを取得 */
-    FORCEINLINE bool IsColorMatched() const { return bColorMatched; }
+    /**
+     * 現在の色がマッチしているかを判定する
+     *
+     * @return マッチしていれば true
+     */
+    FORCEINLINE bool IsColorMatched() const final override { return bColorMatched; }
 
     /**
      * 色の一致状態を設定
@@ -86,11 +132,8 @@ public:
      *
      * @param bInSelected 選択されているか
      */
-    void SetSelected(bool bSelected);
-
-    /** 色変更が可能かを取得 */
-    FORCEINLINE bool IsChangeable() const { return bColorChangeable; }
-
+    void SetSelected(bool bSelected);    
+    
     /**
      * 非表示状態かを取得
      *
@@ -98,14 +141,25 @@ public:
      */
     bool IsHidden() const;
 
+    /**
+    * 色が変更可能かを判定する
+    *
+    * @return 変更可能であれば true
+    */
+    FORCEINLINE bool IsChangeable() const final override{ return bColorChangeable; }
+
     /** 現在の色を取得 */
     FORCEINLINE FLinearColor GetCurrentColor() const { return CurrentColor; }
 
     /** 初期色を取得 */
     FORCEINLINE FLinearColor GetInitialColor() const { return InitialColor; }
 
-    /** 色イベントIDを取得 */
-    FORCEINLINE FName GetColorEventID() const { return ColorEventID; }
+    /**
+     * カラーイベントを識別するための ID を取得する
+     *
+     * @return カラーイベントの識別子（FName）
+     */
+    FORCEINLINE FName GetColorEventID() const final override { return ColorEventID; }
 
     // =======================
     // 色の判定
@@ -268,6 +322,9 @@ private:
     UPROPERTY(EditAnywhere, Category = "Color|State")
     bool bColorChangeable;
 
+    /** 初期化済みであるか */
+    bool bInitialized;
+private:
     // =======================
     // 定数
     // =======================

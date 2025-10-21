@@ -28,6 +28,7 @@ UObjectColorComponent::UObjectColorComponent()
     , bColorMatched(false)                   // 色が一致しているか
     , bSelected(false)                       // 選択されているか
     , bColorChangeable(false)                // 色変更が可能か
+    , bInitialized(false)                    //初期化済みであるか
     
 {
 }
@@ -36,15 +37,67 @@ UObjectColorComponent::UObjectColorComponent()
 // 初期化フロー
 // =======================
 
+// =======================
+// 自動初期化フック
+// =======================
+
+void UObjectColorComponent::OnRegister()
+{
+    Super::OnRegister();
+
+    if (!bInitialized && GetWorld() && !GetWorld()->bIsTearingDown)
+    {
+        Initialize();
+        bInitialized = true;
+
+        UE_LOG(LogTemp, Log, TEXT("[%s] ColorComponent auto-initialized on register."),
+            *GetOwner()->GetName());
+    }
+}
+
+void UObjectColorComponent::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // OnRegisterがスキップされるケース用バックアップ
+    if (!bInitialized)
+    {
+        Initialize();
+        bInitialized = true;
+
+        UE_LOG(LogTemp, Log, TEXT("[%s] ColorComponent auto-initialized on BeginPlay."),
+            *GetOwner()->GetName());
+    }
+}
+
+#if WITH_EDITOR
+void UObjectColorComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+    Super::PostEditChangeProperty(PropertyChangedEvent);
+    if (!bInitialized)
+    {
+        Initialize();
+        bInitialized = true;
+    }
+}
+#endif
+
 /**
  * コンポーネント全体の初期化
  * 各種マネージャーへの登録とイベントバインドを行う
  */
 void UObjectColorComponent::Initialize()
 {
+    if (bInitialized)
+        return;
     InitializeColorLogic();      // 色ロジックの初期化
     RegisterToColorManager();    // カラーマネージャーへの登録
     SetupMaterial();             // マテリアルの初期設定
+}
+
+void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
+{
+    SetColor(NewColor);
 }
 
 /**
