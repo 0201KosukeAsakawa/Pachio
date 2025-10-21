@@ -2,35 +2,26 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "StateManager.generated.h"
+#include "Interface/StateManager.h"
+#include "GreenStateManager.generated.h"
 
 // 前方宣言：プレイヤーの状態を管理する基底クラス
 class UPlayerStateComponent;
 class ACharacter;
 
-UENUM(BlueprintType)
-enum class EPlayerStateType : uint8
-{
-	Default     UMETA(DisplayName = "Default"),
-	Hold     UMETA(DisplayName = "Hold"),
-	Climb    UMETA(DisplayName = "Climb"),
-	Dead     UMETA(DisplayName = "Dead"),
-	// 他のステートを追加...
-};
-
 /**
  * プレイヤーの状態（ステート）を切り替えて制御するコンポーネント
  */
-UCLASS()
-class PACHIO_API UStateManager : public UActorComponent
+UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class PACHIO_API UGreenStateManager : public UActorComponent,public IStateManager
 {
     GENERATED_BODY()
 
 public:
     /**
-     * @brief コンストラクタ。StateManagerの初期化（デフォルト値設定）
+     * @brief コンストラクタ。GreenStateManagerの初期化（デフォルト値設定）
      */
-    UStateManager();
+    UGreenStateManager();
 
     /**
      * @brief ゲーム開始時の初期化処理
@@ -38,14 +29,14 @@ public:
      * @param Owner このステートマネージャが管理するプレイヤーPawn
      * @param World ワールド参照
      */
-    void Init(APawn* Owner, UWorld* World);
+    void Init_Implementation(APawn* Owner, UWorld* World)override;
 
     /**
      * @brief 毎フレーム呼び出される更新処理（Tick 相当）
      *
      * @param DeltaTime 前フレームからの経過時間
      */
-    void Update(float DeltaTime);
+    void Update_Implementation(float DeltaTime)override;
 
     /**
      * @brief 指定ステートタグのステートに切り替える
@@ -53,7 +44,7 @@ public:
      * @param NextStateTag 遷移先ステートのタグ
      * @return 遷移したステートインスタンス
      */
-    UPlayerStateComponent* ChangeState(EPlayerStateType NextStateTag);
+    UPlayerStateComponent* ChangeState_Implementation(EPlayerStateType NextStateTag)override;
 
     /**
      * @brief 現在のステートが指定タグと一致するか確認
@@ -61,30 +52,22 @@ public:
      * @param StateTag チェックするステートタグ
      * @return 一致する場合 true
      */
-    UFUNCTION(BlueprintCallable)
-    bool IsStateMatch(EPlayerStateType StateTag);
+    bool IsStateMatch_Implementation(EPlayerStateType StateTag)override;
 
     /**
      * @brief 現在のアクティブステートを取得
      *
      * @return 現在のステートインスタンス
      */
-    inline UPlayerStateComponent* GetCurrentState() const { return CurrentState; }
+    inline UPlayerStateComponent* GetCurrentState_Implementation() const override { return CurrentState; }
 
 private:
     /** @brief ステートタグとステートクラスのマップ（ステート生成用） */
     UPROPERTY(EditAnywhere)
     TMap<EPlayerStateType, TSubclassOf<UPlayerStateComponent>> StateClassMap;
 
-    /** @brief ステートの所有キャラクター */
-    UPROPERTY()
-    APawn* mOwner;
-
     /** @brief 現在アクティブなステート */
     UPROPERTY()
     UPlayerStateComponent* CurrentState;
 
-    /** @brief ワールドへの参照（Tick処理やステート初期化時に使用） */
-    UPROPERTY()
-    UWorld* pWorld;
 };

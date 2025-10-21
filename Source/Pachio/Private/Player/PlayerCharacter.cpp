@@ -17,6 +17,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "InputAction.h"
 #include "Interface/Soundable.h"
+#include "Interface/StateManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h" 
 #include "Logic/Movement/PlayerMoveLogic.h"
@@ -58,7 +59,7 @@ void APlayerCharacter::BeginPlay()
 		CameraComponent->Init(RootComponent);
 	}
 	// ステート管理・攻撃管理初期化
-	InitState();
+	ChangeStateManager(EColorCategory::Blue);
 	// 物理パラメータ設定
 	InitPhysicsSettings();
 	// 入力設定初期化
@@ -79,12 +80,42 @@ void APlayerCharacter::Tick(float DeltaTime)
 		return;
 	Circle();
 
-	StateManager->Update(DeltaTime);
+	StateManager->Execute_Update(StateManagerObject,DeltaTime);
 	UpdateGlowTarget();
 	if (GetActorLocation().X != FixedXLocation)
 		SetActorLocation(FVector(FixedXLocation, GetActorLocation().Y, GetActorLocation().Z));
 }
 
+TScriptInterface<IStateManager> APlayerCharacter::ChangeStateManager(EColorCategory NextStateTag)
+{
+	AActor* owner = GetOwner();
+	if (!owner)
+		return nullptr;
+
+	if (StateManagerClass.Num() == 0 || !StateManagerClass.Contains(NextStateTag))
+		return nullptr;
+
+	TSubclassOf<UObject> StateClass = StateManagerClass[NextStateTag];
+	if (!StateClass)
+		return nullptr;
+
+	// 既存のステートを破棄（必要ならDestroy()などを呼ぶ）
+	StateManager = nullptr;
+
+	// 新しいステートを生成
+	StateManagerObject = NewObject<UObject>(owner, StateClass);
+	if (!StateManagerObject)
+		return nullptr;
+
+	StateManager.SetObject(StateManagerObject);
+	StateManager.SetInterface(Cast<IStateManager>(StateManagerObject));
+
+	if (!StateManager)
+		return nullptr;
+
+	StateManager->Execute_Init(StateManagerObject,this, GetWorld());
+	return StateManager;
+}
 // プレイヤー入力バインド処理
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -101,7 +132,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 // 現在のプレイヤーステートを取得
 UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 {
-	return StateManager ? StateManager->GetCurrentState() : nullptr;
+	return StateManager ? StateManager->Execute_GetCurrentState(StateManagerObject) : nullptr;
 }
 
 
@@ -155,7 +186,7 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 	if (StateManager == nullptr)
 		return;
 
-	UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
+	UPlayerStateComponent* CurrentState = StateManager->Execute_GetCurrentState(StateManagerObject);
 	if (CurrentState != nullptr)
 	{
 		CurrentState->Movement(Value);
@@ -171,7 +202,7 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 	if (StateManager == nullptr)
 		return;
 
-	UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
+	UPlayerStateComponent* CurrentState = StateManager->Execute_GetCurrentState(StateManagerObject);
 	if (CurrentState != nullptr)
 	{
 		CurrentState->Jump(JumpForce * JumpBuff);
@@ -185,7 +216,7 @@ void APlayerCharacter::Action(const FInputActionValue& Value)
 	if (StateManager == nullptr)
 		return;
 
-	UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
+	UPlayerStateComponent* CurrentState = StateManager->Execute_GetCurrentState(StateManagerObject);
 	if (CurrentState != nullptr)
 	{
 		CurrentState->OnSkill(Value);
@@ -259,30 +290,12 @@ void APlayerCharacter::ShiftArrayLeftColorMode()
 // 状態の変更（ステートタグを指定して遷移）
 UPlayerStateComponent* APlayerCharacter::ChangeState(EPlayerStateType Tag)
 {
-	UPlayerStateComponent* result = StateManager->ChangeState(Tag);
+	UPlayerStateComponent* result = StateManager->Execute_ChangeState(StateManagerObject,Tag);
 	
 	return result;
 }
 
-// ステート管理・攻撃管理の初期化
-void APlayerCharacter::InitState()
-{
-	if (!StateManagerClass)
-	{
-		UE_LOG(LogTemp, Error, TEXT("StateManagerClass is not set!"));
-		return;
-	}
 
-	StateManager = NewObject<UStateManager>(this, StateManagerClass);
-	if (!StateManager)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create StateManager!"));
-		return;
-	}
-
-	StateManager->RegisterComponent();
-	StateManager->Init(this, GetWorld());
-}
 
 // 物理パラメータの初期化（摩擦・重力設定など）
 void APlayerCharacter::InitPhysicsSettings()
@@ -376,7 +389,7 @@ FVector APlayerCharacter::GetAnimVelocity() const
 	if (StateManager == nullptr)
 		return FVector();
 
-	return StateManager->GetCurrentState()->GetAnimVelocity();
+	return StateManager->Execute_GetCurrentState(StateManagerObject)->GetAnimVelocity();
 }
 
 float APlayerCharacter::GetYaw() const
@@ -384,7 +397,7 @@ float APlayerCharacter::GetYaw() const
 	if (StateManager == nullptr)
 		return 0.0f;
 
-	return StateManager->GetCurrentState()->GetYaw();
+	return StateManager->Execute_GetCurrentState(StateManagerObject)->GetYaw();
 }
 
 void APlayerCharacter::UpdateGlowTarget()

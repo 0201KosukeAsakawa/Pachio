@@ -2,7 +2,7 @@
 
 
 #include "Player/State/LadderClimberState.h"
-#include "Player/State/StateManager.h"
+#include "Player/State/GreenStateManager.h"
 #include "Player/PlayerCharacter.h"
 #include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
@@ -164,7 +164,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 		if (!bFoundNewLadder)
 		{
 			// 近くに他の梯子がない → 通常状態へ戻す
-			if (UStateManager* StateManager = mOwner->FindComponentByClass<UStateManager>())
+			if (UGreenStateManager* GreenStateManager = mOwner->FindComponentByClass<UGreenStateManager>())
 			{
 				if (PlayerZ > LadderTopZ)
 				{
@@ -190,7 +190,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 					mOwner->SetActorLocation(ExitLocation, false, nullptr, ETeleportType::TeleportPhysics);
 
 					// 状態を戻す
-					StateManager->ChangeState(EPlayerStateType::Default);
+					GreenStateManager->ChangeState(EPlayerStateType::Default);
 				}
 			}
 		}

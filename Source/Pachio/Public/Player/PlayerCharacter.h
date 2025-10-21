@@ -6,7 +6,7 @@
 #include "Interface/StateControllable.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ActionControl/CharacterActionInterfaces.h"
-#include "Player/State/StateManager.h"
+#include "Player/State/GreenStateManager.h"
 #include "PlayerCharacter.generated.h"
 
 // ===========================
@@ -14,6 +14,7 @@
 // ===========================
 class IStateBase;
 class IMoveLogic;
+class IStateManager;
 class UPlayerDefaultState;
 class UInputMappingContext;
 class UInputAction;
@@ -72,6 +73,14 @@ public:
      * @param DeltaTime 前フレームからの経過時間
      */
     virtual void Tick(float DeltaTime) override;
+
+    /**
+     * @brief 色による処理の変化
+     * @param DeltaTime 次に変身する色
+     * 
+     * return 変更した状態
+     */
+    TScriptInterface<IStateManager> ChangeStateManager(EColorCategory);
 
     /**
      * @brief プレイヤー入力バインディング設定
@@ -200,9 +209,6 @@ private:
     /** @brief ステート変更処理（タグ指定） */
     UPlayerStateComponent* ChangeState(EPlayerStateType Tag) override;
 
-    /** @brief ステート初期化 */
-    void InitState();
-
     // ============================
     // ==== 初期化関数群 ==========
     // ============================
@@ -265,13 +271,18 @@ private:
     UPROPERTY(EditAnywhere)
     UCameraHandlerComponent* CameraComponent;
 
-    /** ステートマネージャークラス（Blueprint設定用） */
+    // ステートマネージャークラス（Blueprint設定用）
+    // IStateManagerを実装したクラス群のUClassポインタを格納
     UPROPERTY(EditAnywhere, Category = "State")
-    TSubclassOf<UStateManager> StateManagerClass;
+    TMap<EColorCategory, TSubclassOf<UObject>> StateManagerClass;
 
-    /** ステート管理コンポーネント */
+    // 実際に生成したステートマネージャーのUObject保持
     UPROPERTY()
-    UStateManager* StateManager;
+    UObject* StateManagerObject;
+
+    // インターフェイス参照
+    UPROPERTY()
+    TScriptInterface<IStateManager> StateManager;
 
     /** 物理計算用コンポーネント（地面判定や重力処理） */
     UPROPERTY()

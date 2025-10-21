@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Player/State/StateManager.h"
+#include "Player/State/GreenStateManager.h"
 #include "UObject/Interface.h"
 #include "StateControllable.generated.h"
 
