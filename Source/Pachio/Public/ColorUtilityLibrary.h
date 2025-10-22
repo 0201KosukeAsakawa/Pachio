@@ -100,6 +100,20 @@ public:
     static float GetColorRatio(const FLinearColor& ColorA,
         const FLinearColor& ColorB);
 
+    /**
+    * 特定色からの色相角度差を計算
+    *
+    * 例: 「赤からどれくらい離れているか」を判定
+    *
+    * @param Color 確かめる対象色
+    * @param EColorCategory 基準となる色相角度（0=赤, 120=緑, 240=青）
+    * @param 色の測定する範囲(大体前後60°がちょうどいいかも)
+    * @return その色とどれくらい離れているか(0～1)
+    */
+    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
+    static float GetColorRatioWithTolerance(const FLinearColor& ColorA,
+        const FLinearColor& ColorB , float Tolerance = 60);
+
     // =======================
     // 色相判定
     // =======================

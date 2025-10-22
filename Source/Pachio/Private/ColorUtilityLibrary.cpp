@@ -65,6 +65,27 @@ float UColorUtilityLibrary::GetColorRatio(const FLinearColor& ColorA, const FLin
     return similarity;
 }
 
+float UColorUtilityLibrary::GetColorRatioWithTolerance(const FLinearColor& ColorA, const FLinearColor& ColorB, float Tolerance)
+{
+    float A = GetHue(ColorA);
+    float B = GetHue(ColorB);
+    float ClampedTolerance = FMath::Clamp(Tolerance, -180.0f, 180.0f);
+    // 色相差の絶対値を0～180度の最小角度差で計算
+    float diff = FMath::Fmod(FMath::Abs(A - B) + 360.0f, 360.0f);
+    diff = FMath::Min(diff, 360.0f - diff);
+
+    // diffが±ClampedToleranceの範囲に入っているかチェック
+    if (diff > ClampedTolerance)
+    {
+        return 0.0f;  // 範囲外なら0
+    }
+
+    // 範囲内なら、diffが0で1、diffがClampedToleranceで0になるように正規化して返す
+    float normalized = 1.0f - (diff / ClampedTolerance);
+    return normalized;
+}
+
+
 // =======================
 // 色相判定
 // =======================

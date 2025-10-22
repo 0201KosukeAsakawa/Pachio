@@ -44,7 +44,7 @@ UObjectColorComponent::UObjectColorComponent()
 void UObjectColorComponent::OnRegister()
 {
     Super::OnRegister();
-
+    /*
     if (!bInitialized && GetWorld() && !GetWorld()->bIsTearingDown)
     {
         Initialize();
@@ -52,7 +52,7 @@ void UObjectColorComponent::OnRegister()
 
         UE_LOG(LogTemp, Log, TEXT("[%s] ColorComponent auto-initialized on register."),
             *GetOwner()->GetName());
-    }
+    }*/
 }
 
 void UObjectColorComponent::BeginPlay()

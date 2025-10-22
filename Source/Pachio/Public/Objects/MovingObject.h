@@ -9,7 +9,7 @@
 
 class UBoxComponent;
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class PACHIO_API UMovingComponent : public UObjectColorComponent
+class PACHIO_API UMoveOnColorComponent : public UObjectColorComponent
 {
 	GENERATED_BODY()
 
@@ -18,7 +18,7 @@ public:
 	 * コンストラクタ
 	 * デフォルト値の設定および必要なコンポーネントの初期化を行う
 	 */
-	UMovingComponent();
+	UMoveOnColorComponent();
 
 	/**
 	 * 初期化処理

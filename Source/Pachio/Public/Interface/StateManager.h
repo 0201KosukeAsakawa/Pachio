@@ -107,7 +107,6 @@ public:
      *
      * @note
      * - 状態遷移時には、前の状態の終了処理 → 新状態の初期化を行う。
-     * - 同一状態への再遷移はスキップする設計が望ましい。
      */
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "StateManager")
     UPlayerStateComponent* ChangeState(EPlayerStateType NextStateTag);
