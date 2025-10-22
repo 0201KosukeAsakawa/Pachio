@@ -9,7 +9,7 @@
 #include "Manager/LevelManager.h"
 
 // Sets default values
-AMovingObject::AMovingObject():
+UMovingComponent::UMovingComponent():
                                 MoveDuration(DEFAULT_DURATION)
                                 ,ElapsedTime(0.f)
 {
@@ -22,18 +22,18 @@ AMovingObject::AMovingObject():
     FootTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
     FootTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-    FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMovingObject::OnFootBeginOverlap);
-    FootTrigger->OnComponentEndOverlap.AddDynamic(this, &AMovingObject::OnFootEndOverlap);
+    FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &UMovingComponent::OnFootBeginOverlap);
+    FootTrigger->OnComponentEndOverlap.AddDynamic(this, &UMovingComponent::OnFootEndOverlap);
 }
 
 
-void AMovingObject::Initialize()
+void UMovingComponent::Initialize()
 {
     UObjectColorComponent::Initialize();
     TargetLocation = OffLocation;
 }
 
-void AMovingObject::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UMovingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     if (bIsMoving)
     {
@@ -71,7 +71,7 @@ void AMovingObject::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
     }
 }
 
-void AMovingObject::ApplyColorWithMatching(const FLinearColor& InColor)
+void UMovingComponent::ApplyColorWithMatching(const FLinearColor& InColor)
 {
    SetColor(InColor);
 
@@ -94,7 +94,7 @@ void AMovingObject::ApplyColorWithMatching(const FLinearColor& InColor)
     bIsMoving = true;
 }
 
-void AMovingObject::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void UMovingComponent::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -108,7 +108,7 @@ void AMovingObject::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AAct
     }
 }
 
-void AMovingObject::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void UMovingComponent::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
     if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))
