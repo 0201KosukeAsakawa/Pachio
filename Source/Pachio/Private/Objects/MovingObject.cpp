@@ -9,7 +9,7 @@
 #include "Manager/LevelManager.h"
 
 // Sets default values
-UMovingComponent::UMovingComponent():
+UMoveOnColorComponent::UMoveOnColorComponent():
                                 MoveDuration(DEFAULT_DURATION)
                                 ,ElapsedTime(0.f)
 {
@@ -22,18 +22,18 @@ UMovingComponent::UMovingComponent():
     FootTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
     FootTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-    FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &UMovingComponent::OnFootBeginOverlap);
-    FootTrigger->OnComponentEndOverlap.AddDynamic(this, &UMovingComponent::OnFootEndOverlap);
+    FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &UMoveOnColorComponent::OnFootBeginOverlap);
+    FootTrigger->OnComponentEndOverlap.AddDynamic(this, &UMoveOnColorComponent::OnFootEndOverlap);
 }
 
 
-void UMovingComponent::Initialize()
+void UMoveOnColorComponent::Initialize()
 {
     UObjectColorComponent::Initialize();
     TargetLocation = OffLocation;
 }
 
-void UMovingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UMoveOnColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     if (bIsMoving)
     {
@@ -71,14 +71,14 @@ void UMovingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
     }
 }
 
-void UMovingComponent::ApplyColorWithMatching(const FLinearColor& InColor)
+void UMoveOnColorComponent::ApplyColorWithMatching(const FLinearColor& InColor)
 {
    SetColor(InColor);
 
     StartLocation = GetOwner()->GetActorLocation();
     ElapsedTime = 0.0f; // 経過時間リセット
     //色の差を求める
-    float distance = UColorUtilityLibrary::GetColorRatio(InColor, GetCurrentColor());
+    float distance = UColorUtilityLibrary::GetColorRatioWithTolerance(InColor, GetCurrentColor());
     
     FVector Direction = OnLocation - OffLocation;  // On - Offの差分ベクトル
     if (HasColorChanged())
@@ -94,7 +94,7 @@ void UMovingComponent::ApplyColorWithMatching(const FLinearColor& InColor)
     bIsMoving = true;
 }
 
-void UMovingComponent::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void UMoveOnColorComponent::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -108,7 +108,7 @@ void UMovingComponent::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, A
     }
 }
 
-void UMovingComponent::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void UMoveOnColorComponent::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
     if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))

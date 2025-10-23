@@ -59,7 +59,7 @@ void APlayerCharacter::BeginPlay()
 		CameraComponent->Init(RootComponent);
 	}
 	// ステート管理・攻撃管理初期化
-	ChangeStateManager(EColorCategory::Blue);
+	ChangeStateManager(EColorCategory::Green);
 	// 物理パラメータ設定
 	InitPhysicsSettings();
 	// 入力設定初期化
