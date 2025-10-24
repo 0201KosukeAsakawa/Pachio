@@ -7,9 +7,10 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/MoveComponent.h"
 #include "Components/Color/ColorControllerComponent.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "Components/Player/PlayerInputComponent.h"
 #include "Components/CameraHandlerComponent.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "FunctionLibrary.h"
@@ -70,6 +71,12 @@ void APlayerCharacter::BeginPlay()
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 
 	bUseControllerRotationYaw = false;
+
+	if (UObjectColorComponent* Occ = GetComponentByClass<UObjectColorComponent>())
+	{
+		// UObject派生クラスのメンバ関数をバインド
+		Occ->OnColorChanged.AddUObject(this, &APlayerCharacter::NotifyStateManagerChange);
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -115,6 +122,10 @@ TScriptInterface<IStateManager> APlayerCharacter::ChangeStateManager(EColorCateg
 
 	StateManager->Execute_Init(StateManagerObject,this, GetWorld());
 	return StateManager;
+}
+void APlayerCharacter::NotifyStateManagerChange(EColorCategory NewColor)
+{
+	ChangeStateManager(NewColor);
 }
 // プレイヤー入力バインド処理
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

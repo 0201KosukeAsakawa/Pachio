@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EffectMatchResult.generated.h"
+#include "ColorTargetTypes.generated.h"
 
 class IColorReactiveInterface;
 

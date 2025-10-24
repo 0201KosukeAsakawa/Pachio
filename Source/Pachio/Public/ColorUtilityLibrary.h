@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "ColorUtilityLibrary.generated.h"
 /**
  * HSL色空間の構造体
@@ -112,7 +112,7 @@ public:
     */
     UFUNCTION(BlueprintPure, Category = "Color|Comparison")
     static float GetColorRatioWithTolerance(const FLinearColor& ColorA,
-        const FLinearColor& ColorB , float Tolerance = 60);
+        const FLinearColor& ColorB, float Tolerance = 60);
 
     // =======================
     // 色相判定
@@ -184,7 +184,7 @@ public:
     static TArray<FLinearColor> GenerateSimilarColors(const FLinearColor& BaseColor,
         float VariationDegrees = 15.0f,
         int32 Count = 3);
-    
+
     /**
  * 色が赤・青・緑・黄のどれに最も近いかを判定
  *
@@ -209,7 +209,6 @@ public:
     // =======================
     // 定義済み色相角度（定数）
     // =======================
-
     static constexpr float HUE_RED = 0.0f;
     static constexpr float HUE_ORANGE = 30.0f;
     static constexpr float HUE_YELLOW = 60.0f;
@@ -222,4 +221,6 @@ public:
     static constexpr float HUE_VIOLET = 270.0f;
     static constexpr float HUE_MAGENTA = 300.0f;
     static constexpr float HUE_ROSE = 330.0f;
+
+
 };

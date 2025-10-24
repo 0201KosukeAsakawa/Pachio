@@ -12,10 +12,10 @@ class UBeatScalerComponent;
 class UColorReactiveComponent;
 class UColorManager;
 
-
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnColorCategoryChanged, EColorCategory);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class PACHIO_API UObjectColorComponent : public USceneComponent,public IColorReactiveInterface
+class PACHIO_API UObjectColorComponent : public USceneComponent, public IColorReactiveInterface
 {
     GENERATED_BODY()
 
@@ -132,8 +132,8 @@ public:
      *
      * @param bInSelected 選択されているか
      */
-    void SetSelected(bool bSelected);    
-    
+    void SetSelected(bool bSelected);
+
     /**
      * 非表示状態かを取得
      *
@@ -146,7 +146,7 @@ public:
     *
     * @return 変更可能であれば true
     */
-    FORCEINLINE bool IsChangeable() const final override{ return bColorChangeable; }
+    FORCEINLINE bool IsChangeable() const final override { return bColorChangeable; }
 
     /** 現在の色を取得 */
     FORCEINLINE FLinearColor GetCurrentColor() const { return CurrentColor; }
@@ -244,6 +244,10 @@ protected:
     // =======================
     // コンポーネントとプロパティ
     // =======================
+public:
+    // グローバルやクラスメンバとしてデリゲートを宣言
+    FOnColorCategoryChanged OnColorChanged;
+
 protected:
     /** 色リアクティブコンポーネント */
     UPROPERTY()
@@ -306,7 +310,6 @@ protected:
     /** 色イベントID（イベントトリガー用） */
     UPROPERTY(EditAnywhere, Category = "Color|Events")
     FName ColorEventID;
-
 private:
     // =======================
     // 内部状態

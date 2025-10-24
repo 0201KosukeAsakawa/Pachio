@@ -7,7 +7,7 @@
 #include "Components/AudioComponent.h"
 #include "Components/ActorComponent.h"
 #include "Interface/Soundable.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "fmod_studio.hpp"     // FMOD Studio APIのC++ラッパー
 #include "SoundManager.generated.h"
 
