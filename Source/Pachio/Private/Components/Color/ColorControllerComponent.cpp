@@ -2,7 +2,7 @@
 
 
 #include "Components/Color/ColorControllerComponent.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "FunctionLibrary.h"
 #include "UI/ColorLens.h"
 #include "UI/UIManager.h"

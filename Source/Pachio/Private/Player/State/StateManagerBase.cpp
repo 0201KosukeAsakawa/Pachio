@@ -2,6 +2,8 @@
 
 
 #include "Player/State/StateManagerBase.h"
+#include "Components/Color/ColorReactiveMeshComponent.h"
+//#include "GameplayMessageSubsystem.h"
 #include "Components/Player/PlayerStateComponent.h"
 
 // Sets default values for this component's properties
@@ -19,6 +21,7 @@ void UStateManagerBase::Init_Implementation(APawn* Owner, UWorld* World)
 	mOwner = Owner;
 	// 初期状態を "Default" に設定
 	Execute_ChangeState(this, EPlayerStateType::Default);
+
 	// PlayerCharacter（やPawn）がACharacter型なら、SkeletalMeshを持っている
 	ACharacter* Character = Cast<ACharacter>(Owner);
 
@@ -74,6 +77,9 @@ UPlayerStateComponent* UStateManagerBase::ChangeState_Implementation(EPlayerStat
 		return nullptr;
 
 	CurrentState->OnEnter(mOwner, GetWorld());
+	// メッセージ送信（トピック名 "ColorChanged"）
+	/*UGameplayMessageSubsystem::Get(this)
+		.BroadcastMessage(TEXT("ColorChanged"), FColorChangedMessage{ NewColor });*/
 	return CurrentState;
 }
 

@@ -4,7 +4,7 @@
 #include "UObject/Interface.h"
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "ColorManager.generated.h"
 
 class IColorReactiveInterface;

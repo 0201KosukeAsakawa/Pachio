@@ -3,6 +3,8 @@
 
 #include "ColorUtilityLibrary.h"
 
+#define HOGE SSS
+
 // =======================
 // 色空間変換
 // =======================

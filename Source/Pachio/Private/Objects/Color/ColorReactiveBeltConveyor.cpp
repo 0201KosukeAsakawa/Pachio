@@ -3,7 +3,7 @@
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
 #include "ColorUtilityLibrary.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Sound/SoundManager.h"

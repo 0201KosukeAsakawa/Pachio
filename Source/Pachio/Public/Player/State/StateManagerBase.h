@@ -8,6 +8,7 @@
 #include "StateManagerBase.generated.h"
 
 
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PACHIO_API UStateManagerBase : public UActorComponent, public IStateManager
 {

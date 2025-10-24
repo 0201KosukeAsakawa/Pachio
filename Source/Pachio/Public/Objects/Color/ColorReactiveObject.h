@@ -4,7 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ColorReactionConfigInterface.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "ColorReactiveObject.generated.h"
 
 class UColorReactiveComponent;

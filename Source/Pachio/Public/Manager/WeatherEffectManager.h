@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "UObject/NoExportTypes.h"
 #include "WeatherEffectManager.generated.h"
 

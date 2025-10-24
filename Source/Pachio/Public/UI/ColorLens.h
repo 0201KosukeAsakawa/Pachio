@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Blueprint/UserWidget.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "ColorLens.generated.h"
 
 /**

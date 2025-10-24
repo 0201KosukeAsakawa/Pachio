@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/Color/ObjectColorComponent.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "ColorReactiveSwitch.generated.h"
 
 class UBoxComponent;

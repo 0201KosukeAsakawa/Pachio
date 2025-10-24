@@ -81,7 +81,15 @@ public:
      * return 変更した状態
      */
     TScriptInterface<IStateManager> ChangeStateManager(EColorCategory);
-
+    
+    /**
+      * @brief 色による処理の変化
+      * @param DeltaTime 次に変身する色
+      *
+      * return 変更した状態
+      */
+    void NotifyStateManagerChange(EColorCategory NewColor);
+    
     /**
      * @brief プレイヤー入力バインディング設定
      * @param PlayerInputComponent 入力コンポーネント

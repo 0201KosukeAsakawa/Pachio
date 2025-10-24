@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Objects/Color/ColorReactiveObject.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "TeleportPortal.generated.h"
 
 /**
