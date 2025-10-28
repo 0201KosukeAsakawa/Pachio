@@ -63,7 +63,7 @@ void AConfigTriggerZone::OnOverlapBegin(
 		return;
 
 	// すでに同じカメラ設定が適用済みか判定
-	if (!cameraHandle->IsParameterMatch(GridSize, ZBaffer))
+	if (!cameraHandle->IsParameterMatch(GridSize, ZBaffer, CameraViewType))
 	{
 		// 異なる設定ならカメラ設定を適用
 		cameraHandle->ApplyCameraSettings(GridSize, ZBaffer, CameraViewType);

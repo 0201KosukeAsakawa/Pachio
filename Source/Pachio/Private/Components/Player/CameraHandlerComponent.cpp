@@ -146,7 +146,7 @@ void UCameraHandlerComponent::ApplyCameraSettings(FVector2D newSize, float newBu
 }
 
 // 現在のカメラ設定と一致しているか確認
-bool UCameraHandlerComponent::IsParameterMatch(FVector2D newSize, float newBuffa)
+bool UCameraHandlerComponent::IsParameterMatch(FVector2D newSize, float newBuffa , ECameraViewType newType)
 {
-    return !(GridSize != newSize || Zbaffa != newBuffa);
+    return !(GridSize != newSize || Zbaffa != newBuffa || CameraViewType != newType);
 }

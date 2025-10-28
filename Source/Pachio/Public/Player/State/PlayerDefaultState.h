@@ -8,116 +8,270 @@
 class UMoveComponent;
 class UBoxComponent;
 
-UCLASS(Blueprintable)
-class PACHIO_API UPlayerDefaultState : public UPlayerStateComponent
+UCLASS()
+class UPlayerDefaultState : public UPlayerStateComponent
 {
     GENERATED_BODY()
 
 public:
-    /**
-     * @brief コンストラクタ。デフォルト状態プレイヤーステートの初期化を行う
-     */
     UPlayerDefaultState();
 
-public:
     /**
-     * @brief ステートに入ったときの処理
+     * 状態が有効化された際に呼ばれる
      *
-     * @param Owner このステートが適用されるPawn
-     * @param World ワールド参照
-     * @return ステート遷移が成功した場合 true
+     * @param owner この状態の所有者となるPawn
+     * @param world 実行中のWorld
+     * @return 状態の初期化が成功したか
      */
-    bool OnEnter(APawn*, UWorld*) override;
+    virtual bool OnEnter(APawn* owner, UWorld* world) override;
 
     /**
-     * @brief 毎フレームの更新処理
+     * 毎フレームの更新処理
      *
-     * @param DeltaTime 前フレームからの経過時間
-     * @return 更新が正常に行われた場合 true
+     * @param DeltaTime 経過時間
+     * @return 状態を継続するか（falseで終了）
      */
-    bool OnUpdate(float) override;
+    virtual bool OnUpdate(float DeltaTime) override;
 
     /**
-     * @brief ステートから出るときの処理
+     * 状態が終了する際に呼ばれる
      *
-     * @param Owner このステートが適用されていたPawn
-     * @return ステート終了が正常に行われた場合 true
+     * @param owner この状態の所有者となるPawn
+     * @return 終了処理が正常に完了したか
      */
-    bool OnExit(APawn*) override;
+    virtual bool OnExit(APawn* owner) override;
 
     /**
-     * @brief スキル入力処理（通常状態での特殊行動）
+     * スキル入力が行われた際に呼ばれる
      *
-     * @param Input 入力値
-     * @return スキル実行が成功した場合 true
+     * @param Value 入力値
+     * @return スキルを実行したか
      */
-    bool OnSkill(const FInputActionValue&) override;
+    virtual bool OnSkill(const FInputActionValue& Value) override;
 
     /**
-     * @brief プレイヤーの通常移動処理
+     * 移動入力を処理する
      *
-     * @param Value 入力値（スティックやキー操作）
+     * @param Value 入力方向値
      */
-    void Movement(const FInputActionValue& Value) override;
+    void Movement(const FInputActionValue& Value);
 
     /**
-     * @brief ジャンプ処理
+     * ジャンプ処理を実行する
      *
      * @param jumpForce ジャンプ力
-     * @return ジャンプ成功時 true
+     * @return ジャンプが成功したか
      */
-    bool Jump(float jumpForce) override;
+    bool Jump(float jumpForce);
 
 private:
+    // ===== 初期化関連 =====
+        // ===== 初期化関連 =====
     /**
-     * @brief ジャンプ時にラダー登攀状態に遷移可能か確認する
+     * 各種コンポーネントの初期化を行う
      *
-     * @return 登攀可能な場合 true
+     * @return すべての初期化が成功したか
+     */
+    bool InitializeComponents();
+
+    /**
+     * 移動コンポーネントを初期化する
+     *
+     * @return 初期化が成功したか
+     */
+    //bool InitializeMovementComponent();
+
+    /**
+     * 物理計算関連の初期化を行う
+     *
+     * @return 初期化が成功したか
+     */
+    //bool InitializePhysicsComponent();
+
+    /**
+     * 当たり判定コンポーネントを初期化する
+     *
+     * @return 初期化が成功したか
+     */
+    //bool InitializeHitBoxComponent();
+
+    /**
+     * プレイヤーのマテリアルを初期化する
+     *
+     * @param owner 対象となるPawn
+     * @return マテリアル設定が成功したか
+     */
+    //bool InitializeMaterial(APawn* owner);
+
+    /**
+     * プレイヤーコントローラーを初期化する
+     *
+     * @return 初期化が成功したか
+     */
+    //bool InitializePlayerController();
+
+    /**
+     * CharacterMovementを初期化する
+     *
+     * @return 初期化が成功したか
+     */
+    //bool InitializeCharacterMovement();
+
+
+    // ===== ジャンプ・着地関連 =====
+    /**
+     * ジャンプ中の状態更新を行う
+     *
+     * @param DeltaTime 経過時間
+     */
+    //void UpdateJumpState(float DeltaTime);
+
+    /**
+     * 着地時の共通処理を行う
+     */
+    //void HandleJumpLanding();
+
+    /**
+     * 通常着地時の処理を行う
+     */
+    //void HandleNormalLanding();
+
+    /**
+     * ジャンプ状態を終了すべきかを判定する
+     *
+     * @return ジャンプ状態を終了する必要がある場合はtrue
+     */
+    //bool ShouldExitJumpState() const;
+
+    /**
+     * ジャンプ状態をリセットする
+     */
+    void ResetJumpState();
+
+
+    // ===== 移動関連 =====
+    /**
+     * 入力値から移動方向を算出する
+     *
+     * @param MoveInput 入力方向（X: 前後, Y: 左右）
+     * @return ワールド空間での移動方向
+     */
+    //FVector CalculateMovementDirection(const FVector2D& MoveInput);
+
+    /**
+     * 入力方向に応じてキャラクターの回転を更新する
+     *
+     * @param direction 現在の移動方向
+     * @param MoveInput 入力ベクトル
+     */
+    //void UpdateCharacterRotation(const FVector& direction, const FVector2D& MoveInput);
+
+    /**
+     * 入力の強さ（移動速度スケール）を算出する
+     *
+     * @return 移動速度スケール値
+     */
+    //float CalculateInputScale() const;
+
+    /**
+     * 実際の移動を適用する
+     *
+     * @param direction 移動方向
+     */
+    //void ApplyMovement(const FVector& direction);
+
+
+    // ===== スキル関連 =====
+    /**
+     * スキルを発動できるか判定する
+     *
+     * @return 発動可能な場合はtrue
+     */
+    //bool CanActivateSkill() const;
+
+    /**
+     * 近くの持てるオブジェクトを検索する
+     *
+     * @return 持てるオブジェクト（存在しない場合はnullptr）
+     */
+    //AActor* FindHoldableObject() const;
+
+    /**
+     * 対象オブジェクトを持つ状態へ遷移を試みる
+     *
+     * @param Target 持つ対象となるアクター
+     * @return 状態遷移が成功したか
+     */
+    //bool TryChangeToHoldState(AActor* Target);
+
+
+    // ===== はしご関連 =====
+    /**
+     * ジャンプ中に梯子へ掴まれるかを判定する
+     *
+     * @return 掴まれる場合はtrue
      */
     bool TryEnterLadderOnJump() const;
 
+    /**
+     * 周囲の梯子を探索する
+     *
+     * @param OutLadders 発見した梯子アクターの配列
+     * @return 一つ以上の梯子が見つかった場合はtrue
+     */
+    //bool FindOverlappingLadder(TArray<AActor*>& OutLadders) const;
+
+
+    // ===== サウンド関連 =====
+    /**
+     * 着地音を再生する
+     */
+    //void PlayLandSound();
+
+    /**
+     * ジャンプ音を再生する
+     */
+    //void PlayJumpSound();
+
+
+    // ===== ユーティリティ =====
+    /**
+     * CharacterMovementコンポーネントを取得する
+     *
+     * @return 取得したUCharacterMovementComponent
+     */
+    UCharacterMovementComponent* GetCharacterMovement() const;
+
+    /**
+     * 空中にいるかを判定する
+     *
+     * @return 空中状態であればtrue
+     */
+    bool IsInAir() const;
+
+    /**
+     * 地上にいるかを判定する
+     *
+     * @return 地上にいればtrue
+     */
+    bool IsOnGround() const;
+
 private:
-    /** @brief ホールド可能判定チェック用タイマーハンドル */
-    FTimerHandle CheckHoldableHandle;
+    // ===== メンバ変数 =====
 
-    /** @brief プレイヤー移動コンポーネント */
     UPROPERTY()
-    UMoveComponent* MoveComp;
+    UMoveComponent* MoveComp;                  // 移動処理コンポーネント
 
-    /** @brief 当たり判定用ボックスコンポーネント */
     UPROPERTY()
-    UBoxComponent* BoxComp;
+    UPhysicsCalculator* Physics;               // 物理計算用コンポーネント
 
-    /** @brief 移動方向 */
-    float Direction;
-
-    /** @brief 移動速度 */
-    float MoveSpeed;
-
-    /** @brief 初期回転が設定済みか */
-    bool InitialRotationSet;
-
-    /** @brief 前フレームでホールド可能か */
-    bool bPrevCanHold;
-
-    /** @brief 前フレームで登攀可能か */
-    bool bPrevCanClim;
-
-    /** @brief 初期回転 */
-    FRotator InitialRotation;
-
-    /** @brief 現在の移動方向ベクトル */
-    FVector CurrentDirection;
-
-    /** @brief 物理計算コンポーネント */
     UPROPERTY()
-    UPhysicsCalculator* Physics;
+    UCapsuleComponent* HitBox;                 // 当たり判定用カプセル
 
-    /** @brief カプセル当たり判定コンポーネント */
-    UPROPERTY()
-    UCapsuleComponent* HitBox;
+    FVector CurrentDirection;                  // 現在の移動方向
+    bool bIsJumping;                           // ジャンプ中フラグ
+    float JumpStartTime;                       // ジャンプ開始時刻
+    float JumpStartIgnoreDuration;             // ジャンプ直後の入力無視時間
 
-private:
-    /** @brief デフォルト移動速度 */
-    static constexpr float DEFAULT_MOVESPEED = 100.0f;
+    float MoveSpeed = 1500.f;
 };

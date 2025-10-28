@@ -26,9 +26,6 @@
 #include "Manager/ColorManager.h"
 #include "UI/UIManager.h"
 
-
-
-
 // コンストラクタ
 APlayerCharacter::APlayerCharacter()
 	:JumpForce(12.f)

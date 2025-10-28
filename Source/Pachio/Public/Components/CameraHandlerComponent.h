@@ -88,7 +88,7 @@ public:
 	 *
 	 * @return 一致していれば true
 	 */
-	bool IsParameterMatch(FVector2D TargetGridSize, float TargetZbaffa);
+	bool IsParameterMatch(FVector2D TargetGridSize, float TargetZbaffa, ECameraViewType type);
 
 	/**
 	 * カメラコンポーネントを取得
