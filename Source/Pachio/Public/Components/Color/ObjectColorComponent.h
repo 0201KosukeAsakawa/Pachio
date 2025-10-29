@@ -14,6 +14,7 @@ class UColorManager;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnColorCategoryChanged, EColorCategory);
 
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UObjectColorComponent : public USceneComponent, public IColorReactiveInterface
 {
@@ -273,8 +274,8 @@ protected:
     // =======================
 
     /** エフェクトタイプ */
-    UPROPERTY(EditAnywhere, Category = "Effects")
-    EColorCategory EffectType;
+    UPROPERTY(EditAnywhere, Category = "Category")
+    EColorCategory ColorCategory;
 
     /** Niagaraアクター配列 */
     UPROPERTY(EditAnywhere, Category = "Effects")
@@ -327,14 +328,4 @@ private:
 
     /** 初期化済みであるか */
     bool bInitialized;
-private:
-    // =======================
-    // 定数
-    // =======================
-
-    /** カスタムデプスステンシル値 */
-    static constexpr int32 CUSTOM_DEPTH_STENCIL_VALUE = 10;
-
-    /** マテリアルスロットインデックス */
-    static constexpr int32 MATERIAL_SLOT_INDEX = 0;
 };

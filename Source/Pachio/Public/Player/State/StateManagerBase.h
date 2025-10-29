@@ -9,7 +9,7 @@
 
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) , DefaultToInstanced, BlueprintType)
 class PACHIO_API UStateManagerBase : public UActorComponent, public IStateManager
 {
     GENERATED_BODY()

@@ -6,7 +6,7 @@
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
 
-bool UReadyState::OnEnter(APawn* Owner, UWorld* World)
+bool UReadyState::OnEnter(APawn* Owner)
 {
 	if (GetWorld() == nullptr)
 		return false;

@@ -16,7 +16,7 @@ UPlayerHoldState::UPlayerHoldState()
 {
 }
 
-bool UPlayerHoldState::OnEnter(APawn* owner, UWorld* world)
+bool UPlayerHoldState::OnEnter(APawn* owner)
 {
     mOwner = owner;
     if (!MoveComp)

@@ -23,7 +23,7 @@ public:
      * @param world 実行中のWorld
      * @return 状態の初期化が成功したか
      */
-    virtual bool OnEnter(APawn* owner, UWorld* world) override;
+    virtual bool OnEnter(APawn* owner) override;
 
     /**
      * 毎フレームの更新処理
@@ -269,9 +269,10 @@ private:
     UCapsuleComponent* HitBox;                 // 当たり判定用カプセル
 
     FVector CurrentDirection;                  // 現在の移動方向
-    bool bIsJumping;                           // ジャンプ中フラグ
-    float JumpStartTime;                       // ジャンプ開始時刻
-    float JumpStartIgnoreDuration;             // ジャンプ直後の入力無視時間
 
-    float MoveSpeed = 1500.f;
+    bool bIsJumping;                           // ジャンプ中フラグ
+    
+    float JumpStartTime;                       // ジャンプ開始時刻
+    
+    float JumpStartIgnoreDuration;             // ジャンプ直後の入力無視時間
 };

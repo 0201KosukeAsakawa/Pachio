@@ -190,7 +190,7 @@ public:
      * @return UCameraComponent* 現在のカメラコンポーネント
      */
     UFUNCTION(BlueprintCallable)
-    UCameraComponent* GetCamera();
+    UCameraComponent* GetCamera()const;
 
     /**
      * @brief アニメーション速度取得
@@ -277,20 +277,15 @@ private:
 
     /** カメラ制御用コンポーネント */
     UPROPERTY(EditAnywhere)
-    UCameraHandlerComponent* CameraComponent;
+    UCameraHandlerComponent* CameraHandleComponent;
 
     // ステートマネージャークラス（Blueprint設定用）
-    // IStateManagerを実装したクラス群のUClassポインタを格納
     UPROPERTY(EditAnywhere, Category = "State")
     TMap<EColorCategory, TSubclassOf<UStateManagerBase>> StateManagerClass;
 
     // 実際に生成したステートマネージャーのUObject保持
     UPROPERTY()
-    UObject* StateManagerObject;
-
-    // インターフェイス参照
-    UPROPERTY()
-    TScriptInterface<IStateManager> StateManager;
+    UStateManagerBase* CurrentManagerComponent;
 
     /** 物理計算用コンポーネント（地面判定や重力処理） */
     UPROPERTY()
@@ -315,18 +310,4 @@ private:
     /** 現在光らせている対象Actor */
     UPROPERTY()
     AActor* CurrentGlowTarget;
-
-private:
-    // ============================
-    // ==== 定数定義（constexpr） ====
-    // ============================
-
-    static constexpr int32 OUTLINE_STENCIL_VALUE = 10;
-    static constexpr float MOUSE_COLOR_CHANGE_RATE = 0.01f;
-    static constexpr float SCROLL_COLOR_CHANGE_RATE = 0.1f;
-    static constexpr float STICK_DEADZONE = 0.02f;
-    static constexpr float MOVE_SOUND_INTERVAL = 0.5f;
-    static constexpr float MOUSE_DELTA_THRESHOLD = 4.0f;
-    static constexpr float GLOW_INTENSITY_ON = 1.0f;
-    static constexpr float GLOW_INTENSITY_OFF = 0.0f;
 };

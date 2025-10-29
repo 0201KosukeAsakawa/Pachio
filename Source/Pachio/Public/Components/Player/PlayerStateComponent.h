@@ -32,7 +32,7 @@ public:
 	 *
 	 * @return 成功時 true（ステート遷移を許可）
 	 */
-	virtual bool OnEnter(APawn* Owner, UWorld* World);
+	virtual bool OnEnter(APawn* Owner);
 
 	/**
 	 * 毎フレームの更新処理（Tick の代わりに呼ばれる）
@@ -102,10 +102,6 @@ protected:
 	/** このステートがアタッチされているプレイヤー */
 	UPROPERTY()
 	APawn* mOwner;
-
-	/** アクセス可能なワールドオブジェクト */
-	UPROPERTY()
-	UWorld* pWorld;
 
 	/** 現在の移動速度（ステートごとに異なる設定が可能） */
 	float mMoveSpeed;

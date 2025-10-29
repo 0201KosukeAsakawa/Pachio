@@ -54,6 +54,7 @@ void UStateManagerBase::Init_Implementation(APawn* Owner, UWorld* World)
 
 void UStateManagerBase::Update_Implementation(float DeltaTime)
 {
+	
 }
 
 UPlayerStateComponent* UStateManagerBase::ChangeState_Implementation(EPlayerStateType NextStateTag)
@@ -77,9 +78,7 @@ UPlayerStateComponent* UStateManagerBase::ChangeState_Implementation(EPlayerStat
 		return nullptr;
 
 	CurrentState->OnEnter(mOwner, GetWorld());
-	// メッセージ送信（トピック名 "ColorChanged"）
-	/*UGameplayMessageSubsystem::Get(this)
-		.BroadcastMessage(TEXT("ColorChanged"), FColorChangedMessage{ NewColor });*/
+
 	return CurrentState;
 }
 
@@ -94,4 +93,3 @@ bool UStateManagerBase::IsStateMatch_Implementation(EPlayerStateType StateTag)
 
 	return CurrentState->IsA(StateClass);
 }
-

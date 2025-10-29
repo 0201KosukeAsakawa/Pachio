@@ -3,8 +3,21 @@
 
 #include "ColorUtilityLibrary.h"
 
-#define HOGE SSS
-
+namespace
+{
+    static constexpr float HUE_RED = 0.0f;
+    static constexpr float HUE_ORANGE = 30.0f;
+    static constexpr float HUE_YELLOW = 60.0f;
+    static constexpr float HUE_CHARTREUSE = 90.0f;
+    static constexpr float HUE_GREEN = 120.0f;
+    static constexpr float HUE_SPRING_GREEN = 150.0f;
+    static constexpr float HUE_CYAN = 180.0f;
+    static constexpr float HUE_AZURE = 210.0f;
+    static constexpr float HUE_BLUE = 240.0f;
+    static constexpr float HUE_VIOLET = 270.0f;
+    static constexpr float HUE_MAGENTA = 300.0f;
+    static constexpr float HUE_ROSE = 330.0f;
+}
 // =======================
 // 色空間変換
 // =======================
@@ -130,25 +143,6 @@ FLinearColor UColorUtilityLibrary::RotateHue(const FLinearColor& InColor,
 
     // RGBに戻す
     return HSV.HSVToLinearRGB();
-}
-
-TArray<FLinearColor> UColorUtilityLibrary::GenerateSimilarColors(
-    const FLinearColor& BaseColor,
-    float VariationDegrees,
-    int32 Count)
-{
-    TArray<FLinearColor> SimilarColors;
-    SimilarColors.Reserve(Count);
-
-    const float Step = (VariationDegrees * 2.0f) / FMath::Max(Count - 1, 1);
-
-    for (int32 i = 0; i < Count; ++i)
-    {
-        const float Offset = -VariationDegrees + (Step * i);
-        SimilarColors.Add(RotateHue(BaseColor, Offset));
-    }
-
-    return SimilarColors;
 }
 
 EColorCategory UColorUtilityLibrary::GetNearestPrimaryColor(const FLinearColor& Color)

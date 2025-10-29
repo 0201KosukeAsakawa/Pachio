@@ -2,6 +2,15 @@
 #include "Math/UnrealMathUtility.h"
 #include "DrawDebugHelpers.h"
 
+namespace
+{
+	/** デフォルト重力値 */
+	static constexpr float DEFAULT_GRAVITYSCALE = 9.8f;
+
+	/** デフォルト最大落下速度 */
+	static constexpr float DEFAULT_MAX_FALLSPEED = 200.0f;
+}
+
 // =======================
 // コンストラクタ
 // =======================
@@ -13,7 +22,7 @@ UPhysicsCalculator::UPhysicsCalculator()
 	, ForceDirection(FVector::ZeroVector)    // 移動方向
 	, PreviousPosition(FVector::ZeroVector)  // 前フレーム位置
 	, Velocity(FVector::ZeroVector)			 //現在かかっている力の向き
-	, Timer(0)                               // 経過時間（重力計算用）
+	, FallingTimer(0)                               // 経過時間（重力計算用）
 	, ForceModifier(1)                       //
 	, bShouldApplyGravity(true)              // 重力適用フラグ
 	, bIsSweep(false)                        // 移動時に Sweep を行うか
@@ -91,7 +100,7 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		{
 			ForceDirection.Z = 0;
 			ForceScale = 0;
-			Timer = 0;
+			FallingTimer = 0;
 			bIsPhysicsEnabled = true;
 			bFalling = true;
 		}
@@ -126,7 +135,7 @@ void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSw
 {
 	ForceDirection = Direction;  // 力の方向
 	ForceScale = Force;          // 力の大きさ
-	Timer = 0;                   // 重力タイマーリセット
+	FallingTimer = 0;                   // 重力タイマーリセット
 	bIsSweep = bSweep;           // Sweep 使用有無
 	bIsPhysicsEnabled = false;   // 手動移動モードへ
 	bUseLocalOffset = useLocalOffset;
@@ -140,7 +149,7 @@ void UPhysicsCalculator::ResetForce()
 {
 	ForceDirection = FVector::ZeroVector;
 	ForceScale = 0;
-	Timer = 0;
+	FallingTimer = 0;
 	bIsPhysicsEnabled = true;
 }
 
@@ -155,15 +164,15 @@ void UPhysicsCalculator::AddGravity()
 	{
 		bIsPhysicsEnabled = false;
 		bFalling = false;
-		Timer = 0;
+		FallingTimer = 0;
 		return;
 	}
 
 	// 経過時間を加算
-	Timer += GetWorld()->DeltaTimeSeconds;
+	FallingTimer += GetWorld()->DeltaTimeSeconds;
 
 	// 落下速度 = 重力スケール × 経過時間 / 修正係数
-	float FallSpeed = (GravityScale * Timer) / ForceModifier;
+	float FallSpeed = (GravityScale * FallingTimer) / ForceModifier;
 
 	// 最大落下速度を制限
 	FallSpeed = FMath::Min(FallSpeed, MaxFallingSpeed);

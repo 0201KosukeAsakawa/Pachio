@@ -106,11 +106,9 @@ void UColorManager::BindController()
     }
 
     ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
-    if (levelManager == nullptr)
-        return;
-    if (levelManager->GetUIManager() == nullptr)
-        return;
-    if (levelManager->GetUIManager()->GetColorLens() == nullptr)
+    if (levelManager == nullptr 
+        || levelManager->GetUIManager() == nullptr 
+        || levelManager->GetUIManager()->GetColorLens() == nullptr)
         return;
     ColorController->AnimationDelegate.BindUObject(levelManager->GetUIManager()->GetColorLens(), &UColorLens::Animation);
 }

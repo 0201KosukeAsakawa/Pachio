@@ -111,6 +111,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Physics")
 	float MaxFallingSpeed;
 
+	/** タイマー（物理演算用の時間管理に使用） */
+	float FallingTimer;
+
+	/** 力の補正係数 */
+	float ForceModifier;
+
 	/** 現在加えられている力の方向 */
 	FVector ForceDirection;
 
@@ -119,12 +125,6 @@ private:
 
 	/** 現在の速度 */
 	FVector Velocity;
-
-	/** タイマー（物理演算用の時間管理に使用） */
-	float Timer;
-
-	/** 力の補正係数 */
-	float ForceModifier;
 
 	/** 重力を適用するかどうか */
 	UPROPERTY(EditAnywhere)
@@ -149,11 +149,4 @@ private:
 
 	/** 今フレームで着地したか */
 	bool bHasJustLanded;
-
-private:
-	/** デフォルト重力値 */
-	static constexpr float DEFAULT_GRAVITYSCALE = 9.8f;
-
-	/** デフォルト最大落下速度 */
-	static constexpr float DEFAULT_MAX_FALLSPEED = 200.0f;
 };

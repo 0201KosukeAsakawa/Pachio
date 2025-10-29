@@ -46,14 +46,12 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 
 }
 
-bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
+bool ULadderClimberState::OnEnter(APawn* Owner)
 {
 	if (!Owner)
 		return false;
 	if (!mOwner)
 		mOwner = Owner;
-	if (!pWorld)
-		pWorld = World;
 	if (!MoveComp)
 	{
 		MoveComp = NewObject<UMoveComponent>(mOwner);

@@ -14,6 +14,19 @@
 // ====================================================================
 
 // =======================
+// 定数
+// =======================
+namespace
+{
+    /** カスタムデプスステンシル値 */
+    static constexpr int32 CUSTOM_DEPTH_STENCIL_VALUE = 10;
+
+    /** マテリアルスロットインデックス */
+    static constexpr int32 MATERIAL_SLOT_INDEX = 0;
+}
+    
+
+// =======================
 // コンストラクタ
 // =======================
 
@@ -44,15 +57,6 @@ UObjectColorComponent::UObjectColorComponent()
 void UObjectColorComponent::OnRegister()
 {
     Super::OnRegister();
-    /*
-    if (!bInitialized && GetWorld() && !GetWorld()->bIsTearingDown)
-    {
-        Initialize();
-        bInitialized = true;
-
-        UE_LOG(LogTemp, Log, TEXT("[%s] ColorComponent auto-initialized on register."),
-            *GetOwner()->GetName());
-    }*/
 }
 
 void UObjectColorComponent::BeginPlay()
@@ -122,7 +126,7 @@ void UObjectColorComponent::InitializeColorLogic()
     {
         if (UColorManager* ColorManager = LevelManager->GetColorManager())
         {
-            InitialColor = ColorManager->GetEffectColor(EffectType);
+            InitialColor = ColorManager->GetEffectColor(ColorCategory);
         }
     }
 
@@ -143,12 +147,12 @@ void UObjectColorComponent::InitializeColorLogic()
     // ColorReactiveの初期化
     // 引数: 初期色, 色を変数として扱うか, オーナーアクター
     ColorReactive->Initialize(InitialColor, true, GetOwner());
-    ColorReactive->SetEffectType(EffectType);
+    ColorReactive->SetEffectType(ColorCategory);
     ColorReactive->SetupNiagaraActors(NiagaraActors);
 
     UE_LOG(LogTemp, Log, TEXT("ColorLogic initialized for %s (Effect: %d, Color: R=%.2f G=%.2f B=%.2f)"),
         *GetOwner()->GetName(),
-        static_cast<int32>(EffectType),
+        static_cast<int32>(ColorCategory),
         InitialColor.R, InitialColor.G, InitialColor.B);
 }
 
@@ -186,7 +190,7 @@ void UObjectColorComponent::SetupMaterial()
     const UColorManager* ColorManager = GetColorManager();
     if (ColorManager)
     {
-        InitialColor = ColorManager->GetEffectColor(EffectType);
+        InitialColor = ColorManager->GetEffectColor(ColorCategory);
     }
 
     // メッシュコンポーネントを取得
@@ -204,11 +208,6 @@ void UObjectColorComponent::SetupMaterial()
 
     ApplyColorToMaterial(InitialColor);
 }
-
-// =======================
-// イベント処理
-// =======================
-
 // =======================
 // 色操作API
 // =======================
@@ -310,6 +309,8 @@ void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor)
         // 色が一致した場合
         ColorReactive->OnColorMatched(WorldColor);
     }
+
+    OnColorChanged.Broadcast(UColorUtilityLibrary::GetNearestPrimaryColor(WorldColor));
 }
 
 /**

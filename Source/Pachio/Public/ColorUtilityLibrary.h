@@ -174,23 +174,11 @@ public:
         float RotationDegrees);
 
     /**
-     * 類似色を生成
+     * 色が赤・青・緑・黄のどれに最も近いかを判定
      *
-     * @param BaseColor 基準色
-     * @param VariationDegrees 色相のバリエーション（±N度）
-     * @return 類似色の配列
+     * @param Color 対象色
+     * @return 最も近い基本色
      */
-    UFUNCTION(BlueprintPure, Category = "Color|Generation")
-    static TArray<FLinearColor> GenerateSimilarColors(const FLinearColor& BaseColor,
-        float VariationDegrees = 15.0f,
-        int32 Count = 3);
-
-    /**
- * 色が赤・青・緑・黄のどれに最も近いかを判定
- *
- * @param Color 対象色
- * @return 最も近い基本色
- */
     UFUNCTION(BlueprintPure, Category = "Color|Comparison")
     static EColorCategory GetNearestPrimaryColor(const FLinearColor& Color);
 
@@ -205,22 +193,4 @@ public:
     UFUNCTION(BlueprintPure, Category = "Color|Effects")
     static FLinearColor EnhanceMaxComponent(const FLinearColor& Color,
         float Multiplier = 50.0f);
-
-    // =======================
-    // 定義済み色相角度（定数）
-    // =======================
-    static constexpr float HUE_RED = 0.0f;
-    static constexpr float HUE_ORANGE = 30.0f;
-    static constexpr float HUE_YELLOW = 60.0f;
-    static constexpr float HUE_CHARTREUSE = 90.0f;
-    static constexpr float HUE_GREEN = 120.0f;
-    static constexpr float HUE_SPRING_GREEN = 150.0f;
-    static constexpr float HUE_CYAN = 180.0f;
-    static constexpr float HUE_AZURE = 210.0f;
-    static constexpr float HUE_BLUE = 240.0f;
-    static constexpr float HUE_VIOLET = 270.0f;
-    static constexpr float HUE_MAGENTA = 300.0f;
-    static constexpr float HUE_ROSE = 330.0f;
-
-
 };

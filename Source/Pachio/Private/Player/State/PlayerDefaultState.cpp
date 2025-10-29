@@ -37,19 +37,16 @@ UPlayerDefaultState::UPlayerDefaultState()
 }
 
 // ステートに入る際に実行される処理
-bool UPlayerDefaultState::OnEnter(APawn* owner, UWorld* world)
+bool UPlayerDefaultState::OnEnter(APawn* owner)
 {
     // 所有キャラクターまたはワールドが無効な場合は失敗
-    if (owner == nullptr || world == nullptr)
+    if (owner == nullptr)
     {
         return false;
     }
 
     // 内部に所有者とワールドを保存
-    if (!mOwner)
         mOwner = owner;
-    if (!pWorld)
-        pWorld = world;
     if (!MoveComp)
     {
         MoveComp = NewObject<UMoveComponent>(mOwner);

@@ -37,7 +37,7 @@ private:
      * @param World ワールド参照
      * @return ステート遷移が成功した場合 true
      */
-    virtual bool OnEnter(APawn* Owner, UWorld* World) override;
+    virtual bool OnEnter(APawn* Owner) override;
 
     /**
      * @brief 毎フレームの更新処理（Tickの代わりに呼ばれる）

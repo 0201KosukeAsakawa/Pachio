@@ -15,7 +15,7 @@ UDeadPlayerState::UDeadPlayerState()
    
 }
 
-bool UDeadPlayerState::OnEnter(APawn* Owner, UWorld* World)
+bool UDeadPlayerState::OnEnter(APawn* Owner)
 {
     if (!Owner) return false;
 
