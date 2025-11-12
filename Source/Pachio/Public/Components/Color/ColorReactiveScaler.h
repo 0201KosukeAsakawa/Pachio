@@ -18,12 +18,10 @@ public:
 	UColorReactiveScaler();
 
 	/**
-	 * @brief 実行開始時の初期化処理
-	 *
-	 * ゲーム開始時（またはアクターがスポーンした時）に呼び出されます。
-	 * コンポーネントの初期化、マネージャー登録、マテリアル設定などを行うのに適しています。
+	 * コンポーネント全体の初期化
+	 * 各種マネージャーへの登録とイベントバインドを行う
 	 */
-	virtual void BeginPlay() override;
+	virtual void Initialize();
 
 	/**
 	 * @brief 色の反応処理

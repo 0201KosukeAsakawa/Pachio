@@ -53,8 +53,7 @@ void UColorReactiveComponent::Initialize(const FLinearColor& InitialColor, bool 
         return;
     }
 
-    USkeletalMeshComponent* MeshComp = UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(
-        TargetOwner, TEXT("Mesh"));
+    UStaticMeshComponent* MeshComp = GetOwner()->GetComponentByClass<UStaticMeshComponent>();
     if (!MeshComp)
     {
         UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: Mesh component not found on %s"),

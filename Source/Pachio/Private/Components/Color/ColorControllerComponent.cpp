@@ -2,12 +2,17 @@
 
 
 #include "Components/Color/ColorControllerComponent.h"
+#include "Components/Color/ObjectColorComponent.h"
+
 #include "DataContainer/ColorTargetTypes.h"
 #include "FunctionLibrary.h"
+
 #include "UI/ColorLens.h"
 #include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
+
+#include "Kismet/KismetSystemLibrary.h" 
 
 
 // =======================
@@ -37,7 +42,51 @@ UColorControllerComponent::UColorControllerComponent()
 
 void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-    // 現状は処理なし（必要なら毎フレーム更新処理を書く）
+    // レイの開始位置と終了位置を設定
+    FVector Start = GetOwner()->GetActorLocation();
+    FVector Direction = GetOwner()->GetActorRightVector().GetSafeNormal();
+    FVector End = Start + Direction * 1500.f; // 5.f だと短すぎるので500に変更（任意）
+
+    FHitResult HitResult;
+
+    // オーナーを無視するアクターリストに追加
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(GetOwner());
+    
+    FLinearColor TraceColor = ColorMap[CurrentColorMode];
+
+    // LineTraceSingle 実行
+    // LineTraceSingle 実行（デバッグカラー指定版）
+    bool bHit = UKismetSystemLibrary::LineTraceSingle(
+        this,
+        Start,
+        End,
+        UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_WorldStatic),
+        false,
+        ActorsToIgnore,
+        EDrawDebugTrace::ForDuration, // デバッグ描画オン
+        HitResult,
+        true,
+        TraceColor,
+        TraceColor,
+        2.0f // 表示時間
+    );
+
+    // ヒットしたら処理
+    if (bHit && HitResult.GetActor())
+    {
+        AActor* HitActor = HitResult.GetActor();
+
+        // 例えば、UMyComponent クラスを持っているか確認
+        if (UObjectColorComponent* ri = HitActor->GetComponentByClass<UObjectColorComponent>())
+        {
+            UE_LOG(LogTemp, Log, TEXT("%s has UMyComponent!"), *HitActor->GetName());
+
+            // ここに処理を書く
+            ri->ApplyColorWithMatching(TraceColor);
+        }
+    }
+
 }
 
 // =======================
@@ -49,7 +98,7 @@ void UColorControllerComponent::AdjustColor(float Delta)
     // 現在モードの色を HSV に変換
     FLinearColor HSV = ColorMap[CurrentColorMode].LinearRGBToHSV();
 
-    float Hue = HSV.R;                                 // 色相
+    float Hue = HSV.R;                                  // 色相
     float Saturation = FMath::Clamp(HSV.G, 0.1f, 0.3f); // 彩度（固定範囲に制限）
     float Value = FMath::Clamp(HSV.B, 0.8f, 1.0f);      // 明度（明るめを維持）
 
@@ -64,7 +113,7 @@ void UColorControllerComponent::AdjustColor(float Delta)
     ColorMap[CurrentColorMode] = FLinearColor(NewColor.R, NewColor.G, NewColor.B, ColorMap[CurrentColorMode].A);
 
     // イベントを通知
-    OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
+    //OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
 }
 
 void UColorControllerComponent::SetColor(float Value)

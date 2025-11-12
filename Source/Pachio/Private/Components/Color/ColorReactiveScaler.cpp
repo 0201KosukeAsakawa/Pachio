@@ -13,15 +13,17 @@ UColorReactiveScaler::UColorReactiveScaler()
 	// ...
 }
 
-void UColorReactiveScaler::BeginPlay()
+void UColorReactiveScaler::Initialize()
 {
+	UObjectColorComponent::Initialize();
 	DefaultScalse = GetOwner()->GetActorScale();
 }
 
 void UColorReactiveScaler::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
+	SetColor(NewColor);
 	const FLinearColor& Blue = UColorUtilityLibrary::FromHue(240);
 	float distance = UColorUtilityLibrary::GetColorRatio(NewColor, Blue);
-
-	GetOwner()->SetActorScale3D(DefaultScalse * distance);
+	if (0.3 < distance)
+		GetOwner()->SetActorScale3D(DefaultScalse * distance);
 }
