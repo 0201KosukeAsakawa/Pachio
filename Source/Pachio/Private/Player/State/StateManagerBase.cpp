@@ -77,7 +77,7 @@ UPlayerStateComponent* UStateManagerBase::ChangeState_Implementation(EPlayerStat
 	if (!CurrentState)
 		return nullptr;
 
-	CurrentState->OnEnter(mOwner, GetWorld());
+	CurrentState->OnEnter(mOwner);
 
 	return CurrentState;
 }
