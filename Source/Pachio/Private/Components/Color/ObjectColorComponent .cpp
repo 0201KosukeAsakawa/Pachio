@@ -194,7 +194,7 @@ void UObjectColorComponent::SetupMaterial()
     }
 
     // メッシュコンポーネントを取得
-    USkeletalMeshComponent* Mesh = GetMeshComponent();
+    UStaticMeshComponent* Mesh = GetMeshComponent();
     if (!Mesh)
     {
         UE_LOG(LogTemp, Warning, TEXT("Mesh component not found for %s"),
@@ -404,12 +404,13 @@ bool UObjectColorComponent::HasColorChanged(const FLinearColor& CompareColor, fl
  *
  * @return SkeletalMeshComponent（見つからない場合はnullptr）
  */
-USkeletalMeshComponent* UObjectColorComponent::GetMeshComponent() const
+UStaticMeshComponent* UObjectColorComponent::GetMeshComponent() const
 {
-    return UFunctionLibrary::FindComponentByName<USkeletalMeshComponent>(
+    /*return UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(
         GetOwner(),
         TEXT("Mesh")
-    );
+    );*/
+    return GetOwner()->GetComponentByClass<UStaticMeshComponent>();
 }
 
 /**

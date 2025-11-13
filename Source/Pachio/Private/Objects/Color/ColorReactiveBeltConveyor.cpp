@@ -123,7 +123,6 @@ void UColorReactiveBeltConveyorComponent::TickComponent(float DeltaTime, ELevelT
 void UColorReactiveBeltConveyorComponent::ApplyColorWithMatching(const FLinearColor& InColor)
 {
     SetColor(InColor);
-    //AColorReactiveObject::ApplyColorWithMatching(InColor);
 
     // 色の一致状態を設定
    SetColorMatched(UColorUtilityLibrary::IsHueSimilar(GetCurrentColor(), InColor));

@@ -225,7 +225,7 @@ protected:
     *
     * @return SkeletalMeshComponent（見つからない場合はnullptr）
     */
-    USkeletalMeshComponent* GetMeshComponent() const;
+    UStaticMeshComponent* GetMeshComponent() const;
 
     /**
      * レベルマネージャーを取得
