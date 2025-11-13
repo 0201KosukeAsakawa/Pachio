@@ -156,4 +156,6 @@ private:
     UPROPERTY(EditAnywhere)
     EColorTargetType CurrentColorMode;
 
+
+    FLinearColor Data;
 };
