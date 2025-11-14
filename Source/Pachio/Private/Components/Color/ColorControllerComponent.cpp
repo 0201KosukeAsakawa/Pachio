@@ -69,7 +69,7 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
         true,
         TraceColor,
         TraceColor,
-        2.0f // 表示時間
+        0.5f // 表示時間
     );
 
     // ヒットしたら処理
@@ -93,21 +93,39 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 // 色調整系
 // =======================
 
+float GetRoundedAngle(float X)
+{
+    // 最も近い60の倍数に丸めて360で正規化
+    float Rounded = FMath::RoundToFloat(X / 60.0f) * 60.0f;
+    float Result = FMath::Fmod(Rounded, 360.0f);
+
+    // Fmodは負の結果を返すことがあるので正に補正
+    if (Result < 0.0f)
+        Result += 360.0f;
+
+    return Result;
+}
+
 void UColorControllerComponent::AdjustColor(float Delta)
 {
     // 現在モードの色を HSV に変換
     FLinearColor HSV = ColorMap[CurrentColorMode].LinearRGBToHSV();
 
-    float Hue = HSV.R;                                  // 色相
+    float Hue = Data.R;                                  // 色相
     float Saturation = FMath::Clamp(HSV.G, 0.1f, 0.3f); // 彩度（固定範囲に制限）
     float Value = FMath::Clamp(HSV.B, 0.8f, 1.0f);      // 明度（明るめを維持）
 
     // Hue を Delta 分だけ回転
     Hue = FMath::Fmod(Hue + Delta * 360.0f, 360.0f);
-    if (Hue < 0.f) Hue += 360.f;
+    if (Hue < 0.f) 
+        Hue += 360.f;
 
+    Data = UColorUtilityLibrary::FromHue(Hue);
+    UE_LOG(LogTemp, Log, TEXT("Hue : : %f"), Hue);
+    float f = GetRoundedAngle(Hue);
+    UE_LOG(LogTemp, Log, TEXT("f : %f"), f);
     // HSV → RGB に戻す
-    FLinearColor NewColor = FLinearColor(Hue, Saturation, Value).HSVToLinearRGB();
+    FLinearColor NewColor = FLinearColor(f, Saturation, Value).HSVToLinearRGB();
 
     // 現在モードの色を更新（αは保持）
     ColorMap[CurrentColorMode] = FLinearColor(NewColor.R, NewColor.G, NewColor.B, ColorMap[CurrentColorMode].A);

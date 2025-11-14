@@ -87,14 +87,15 @@ public:
     static float GetHueDistanceFromAngle(const FLinearColor& Color,
         float ReferenceHue);
 
-    /**
-   * 特定色からの色相角度差を計算
-   *
-   * 戻り値は割合が返ってきます
-   *
-   * @param Color 確かめる対象色
-   * @param EColorCategory 基準となる色相角度（0=赤, 120=緑, 240=青）
-   * @return その色とどれくらい離れているか(0～1)
+    /*
+     *
+     * 特定色からの色相角度差を計算
+     *
+     * 戻り値は割合が返ってきます
+     *
+     * @param Color 確かめる対象色
+     * @param EColorCategory 基準となる色相角度（0=赤, 120=緑, 240=青）
+     * @return その色とどれくらい離れているか(0～1)
    */
     UFUNCTION(BlueprintPure, Category = "Color|Comparison")
     static float GetColorRatio(const FLinearColor& ColorA,
