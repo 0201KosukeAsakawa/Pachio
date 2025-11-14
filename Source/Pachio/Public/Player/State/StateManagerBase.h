@@ -9,8 +9,8 @@
 
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) , DefaultToInstanced, BlueprintType)
-class PACHIO_API UStateManagerBase : public UActorComponent, public IStateManager
+UCLASS()
+class PACHIO_API UStateManagerComponent : public UActorComponent
 {
     GENERATED_BODY()
 
@@ -18,7 +18,7 @@ public:
     /**
      * @brief コンストラクタ。GreenStateManagerの初期化（デフォルト値設定）
      */
-    UStateManagerBase();
+    UStateManagerComponent();
 
     /**
      * @brief ゲーム開始時の初期化処理
@@ -26,14 +26,14 @@ public:
      * @param Owner このステートマネージャが管理するプレイヤーPawn
      * @param World ワールド参照
      */
-    void Init_Implementation(APawn* Owner, UWorld* World)override;
+    void Init(APawn* Owner, UWorld* World);
 
     /**
      * @brief 毎フレーム呼び出される更新処理（Tick 相当）
      *
      * @param DeltaTime 前フレームからの経過時間
      */
-    void Update_Implementation(float DeltaTime)override;
+    void Update(float DeltaTime);
 
     /**
      * @brief 指定ステートタグのステートに切り替える
@@ -41,7 +41,7 @@ public:
      * @param NextStateTag 遷移先ステートのタグ
      * @return 遷移したステートインスタンス
      */
-    UPlayerStateComponent* ChangeState_Implementation(EPlayerStateType NextStateTag)final override;
+    UPlayerStateComponent* ChangeState(EPlayerStateType NextStateTag);
 
     /**
      * @brief 現在のステートが指定タグと一致するか確認
@@ -49,14 +49,14 @@ public:
      * @param StateTag チェックするステートタグ
      * @return 一致する場合 true
      */
-    bool IsStateMatch_Implementation(EPlayerStateType StateTag) final override;
+    bool IsStateMatch(EPlayerStateType StateTag)const;
 
     /**
      * @brief 現在のアクティブステートを取得
      *
      * @return 現在のステートインスタンス
      */
-    inline UPlayerStateComponent* GetCurrentState_Implementation()const final override { return CurrentState; }
+    inline UPlayerStateComponent* GetCurrentState()const{ return CurrentState; }
 
 protected:
     /** @brief ステートタグとステートクラスのマップ（ステート生成用） */
@@ -76,19 +76,4 @@ protected:
     */
     UPROPERTY()
     APawn* mOwner;
-
-    /*
-    *
-　    @brief 状態ごとの姿
-    */
-    UPROPERTY(EditDefaultsOnly, Category = "Appearance")
-    TObjectPtr<USkeletalMesh> FormMesh;
-
-
-    /*
-    *
-　    @brief メッシュのアニメーション
-    */
-    UPROPERTY(EditDefaultsOnly, Category = "Appearance")
-    TSubclassOf<UAnimInstance> FormAnimBP;
 };

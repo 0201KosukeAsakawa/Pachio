@@ -7,20 +7,20 @@
 #include "Components/Player/PlayerStateComponent.h"
 
 // Sets default values for this component's properties
-UStateManagerBase::UStateManagerBase() :
+UStateManagerComponent::UStateManagerComponent() :
 										CurrentState(nullptr)
 										,mOwner(nullptr)
 {
 
 }
 
-void UStateManagerBase::Init_Implementation(APawn* Owner, UWorld* World)
+void UStateManagerComponent::Init(APawn* Owner, UWorld* World)
 {
 	if (Owner == nullptr)
 		return;
 	mOwner = Owner;
 	// 初期状態を "Default" に設定
-	Execute_ChangeState(this, EPlayerStateType::Default);
+	ChangeState(EPlayerStateType::Default);
 
 	// PlayerCharacter（やPawn）がACharacter型なら、SkeletalMeshを持っている
 	ACharacter* Character = Cast<ACharacter>(Owner);
@@ -38,26 +38,15 @@ void UStateManagerBase::Init_Implementation(APawn* Owner, UWorld* World)
 		return;
 	}
 
-	// 🔸 StateManagerが保持するメッシュとアニメBPを適用
-	if (FormMesh)
-	{
-		MeshComp->SetSkeletalMesh(FormMesh);
-	}
-
-	if (FormAnimBP)
-	{
-		MeshComp->SetAnimInstanceClass(FormAnimBP);
-	}
-
 	UE_LOG(LogTemp, Log, TEXT("Red form mesh and animation blueprint applied successfully."));
 }
 
-void UStateManagerBase::Update_Implementation(float DeltaTime)
+void UStateManagerComponent::Update(float DeltaTime)
 {
 	
 }
 
-UPlayerStateComponent* UStateManagerBase::ChangeState_Implementation(EPlayerStateType NextStateTag)
+UPlayerStateComponent* UStateManagerComponent::ChangeState(EPlayerStateType NextStateTag)
 {
 	if (StateClassMap.IsEmpty() || !StateClassMap.Contains(NextStateTag) || !mOwner)
 		return nullptr;
@@ -82,7 +71,7 @@ UPlayerStateComponent* UStateManagerBase::ChangeState_Implementation(EPlayerStat
 	return CurrentState;
 }
 
-bool UStateManagerBase::IsStateMatch_Implementation(EPlayerStateType StateTag)
+bool UStateManagerComponent::IsStateMatch(EPlayerStateType StateTag) const
 {
 	TSubclassOf<UPlayerStateComponent> StateClass = StateClassMap.FindRef(StateTag);
 

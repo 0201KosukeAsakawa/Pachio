@@ -6,7 +6,7 @@
 #include "Interface/StateControllable.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Interface/ActionControl/CharacterActionInterfaces.h"
-#include "Player/State/GreenStateManager.h"
+
 #include "PlayerCharacter.generated.h"
 
 // ===========================
@@ -14,7 +14,7 @@
 // ===========================
 class IStateBase;
 class IMoveLogic;
-class IStateManager;
+class UStateManagerComponent;
 class UPlayerDefaultState;
 class UInputMappingContext;
 class UInputAction;
@@ -281,11 +281,11 @@ private:
 
     // ステートマネージャークラス（Blueprint設定用）
     UPROPERTY(EditAnywhere, Category = "State")
-    TMap<EColorCategory, TSubclassOf<UStateManagerBase>> StateManagerClass;
+    TSubclassOf<UStateManagerComponent> StateManagerClass;
 
     // 実際に生成したステートマネージャーのUObject保持
     UPROPERTY()
-    UStateManagerBase* CurrentManagerComponent;
+    UStateManagerComponent* CurrentManagerComponent;
 
     /** 物理計算用コンポーネント（地面判定や重力処理） */
     UPROPERTY()
