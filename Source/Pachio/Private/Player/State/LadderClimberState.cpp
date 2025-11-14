@@ -2,7 +2,6 @@
 
 
 #include "Player/State/LadderClimberState.h"
-#include "Player/State/GreenStateManager.h"
 #include "Player/PlayerCharacter.h"
 #include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
@@ -101,12 +100,12 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 		}
 		return true;
 	}
-	
+
 
 	if (Ladder)
 	{
 		LadderCenterPosition = Ladder->GetFixedPositionForActor(GetOwner());
-		
+
 		FVector OwnerLocation = GetOwner()->GetActorLocation();
 		// X,Yは梯子の中心、Zはキャラの現在位置のまま
 		FVector NewLocation = FVector(LadderCenterPosition.X, LadderCenterPosition.Y, OwnerLocation.Z);
@@ -162,33 +161,33 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 		if (!bFoundNewLadder)
 		{
 			// 近くに他の梯子がない → 通常状態へ戻す
-			if (UGreenStateManager* GreenStateManager = mOwner->FindComponentByClass<UGreenStateManager>())
+			if (PlayerZ > LadderTopZ)
 			{
-				if (PlayerZ > LadderTopZ)
+				float direction = 1.f;
+
+				// ★ 梯子の前後判定 ★
+				FVector LadderForward = Ladder->GetActorForwardVector();
+				FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
+				ToPlayer.Normalize();
+
+				float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
+				if (Dot < 0.f)
 				{
-					float direction = 1.f;
+					direction *= -1.f;
+				}
 
-					// ★ 梯子の前後判定 ★
-					FVector LadderForward = Ladder->GetActorForwardVector();
-					FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
-					ToPlayer.Normalize();
+				// 梯子の上に押し出す位置
+				FVector ExitLocation = Ladder->GetActorLocation();
+				ExitLocation.Z = LadderTopZ + 300.f;                 // 上に少し
+				ExitLocation += LadderForward * direction * 150.f;   // 前に少し
 
-					float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
-					if (Dot < 0.f)
-					{
-						direction *= -1.f;
-					}
+				// 確実にワープ
+				mOwner->SetActorLocation(ExitLocation, false, nullptr, ETeleportType::TeleportPhysics);
 
-					// 梯子の上に押し出す位置
-					FVector ExitLocation = Ladder->GetActorLocation();
-					ExitLocation.Z = LadderTopZ + 300.f;                 // 上に少し
-					ExitLocation += LadderForward * direction * 150.f;   // 前に少し
-
-					// 確実にワープ
-					mOwner->SetActorLocation(ExitLocation, false, nullptr, ETeleportType::TeleportPhysics);
-
+				if (IStateControllable* is = Cast<IStateControllable>(mOwner))
+				{
 					// 状態を戻す
-					GreenStateManager->ChangeState(EPlayerStateType::Default);
+					is->ChangeState(EPlayerStateType::Default);
 				}
 			}
 		}

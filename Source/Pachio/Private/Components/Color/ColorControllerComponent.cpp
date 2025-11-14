@@ -24,16 +24,9 @@ UColorControllerComponent::UColorControllerComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
 
-    // カラーマップ初期化（Responders / Event は除外）
-    const TArray<EColorTargetType> AllModes = UFunctionLibrary::GetAllEnumValues<EColorTargetType>();
-    for (EColorTargetType Mode : AllModes)
-    {
-        if (Mode == EColorTargetType::Responders || Mode == EColorTargetType::Event)
-            continue;
+    // 初期色は白
+    CurrentColor = FLinearColor::White;
 
-        // 初期色は白
-        ColorMap.Add(Mode, FLinearColor::White);
-    }
 }
 
 // =======================
@@ -53,7 +46,7 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(GetOwner());
     
-    FLinearColor TraceColor = ColorMap[CurrentColorMode];
+    FLinearColor TraceColor = CurrentColor;
 
     // LineTraceSingle 実行
     // LineTraceSingle 実行（デバッグカラー指定版）
@@ -109,9 +102,9 @@ float GetRoundedAngle(float X)
 void UColorControllerComponent::AdjustColor(float Delta)
 {
     // 現在モードの色を HSV に変換
-    FLinearColor HSV = ColorMap[CurrentColorMode].LinearRGBToHSV();
+    FLinearColor HSV = CurrentColor.LinearRGBToHSV();
 
-    float Hue = Data.R;                                  // 色相
+    float Hue = HSV.R;                                  // 色相
     float Saturation = FMath::Clamp(HSV.G, 0.1f, 0.3f); // 彩度（固定範囲に制限）
     float Value = FMath::Clamp(HSV.B, 0.8f, 1.0f);      // 明度（明るめを維持）
 
@@ -125,19 +118,19 @@ void UColorControllerComponent::AdjustColor(float Delta)
     float f = GetRoundedAngle(Hue);
     UE_LOG(LogTemp, Log, TEXT("f : %f"), f);
     // HSV → RGB に戻す
-    FLinearColor NewColor = FLinearColor(f, Saturation, Value).HSVToLinearRGB();
+    FLinearColor NewColor = FLinearColor(Hue, Saturation, Value).HSVToLinearRGB();
 
     // 現在モードの色を更新（αは保持）
-    ColorMap[CurrentColorMode] = FLinearColor(NewColor.R, NewColor.G, NewColor.B, ColorMap[CurrentColorMode].A);
-
+    CurrentColor = FLinearColor(NewColor.R, NewColor.G, NewColor.B, CurrentColor.A);
+;
     // イベントを通知
-    //OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
+    //OnColorChanged.Broadcast(CurrentColor[CurrentColorMode], CurrentColorMode);
 }
 
 void UColorControllerComponent::SetColor(float Value)
 {
     // 現在モードの色を HSV に変換
-    FLinearColor HSV = ColorMap[CurrentColorMode].LinearRGBToHSV();
+    FLinearColor HSV = CurrentColor.LinearRGBToHSV();
 
     float Hue = HSV.R;                                 // 色相
     float Saturation = FMath::Clamp(HSV.G, 0.2f, 0.6f); // 彩度
@@ -151,92 +144,10 @@ void UColorControllerComponent::SetColor(float Value)
     FLinearColor NewColor = FLinearColor(Hue, Saturation, Brightness).HSVToLinearRGB();
 
     // 現在モードの色を更新（αは保持）
-    ColorMap[CurrentColorMode] = FLinearColor(NewColor.R, NewColor.G, NewColor.B, ColorMap[CurrentColorMode].A);
+    CurrentColor = FLinearColor(NewColor.R, NewColor.G, NewColor.B, CurrentColor.A);
 
     // イベントを通知
-    OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
-}
-
-// =======================
-// モード切替系
-// =======================
-
-void UColorControllerComponent::ChangeMode(int Direction)
-{
-    // Direction を +1 / -1 に正規化
-    Direction = (Direction >= 1) ? 1 : -1;
-
-    // 次のモードを取得
-    EColorTargetType NextMode = (Direction > 0)
-        ? GetNextMode(CurrentColorMode)
-        : GetPreviousMode(CurrentColorMode);
-
-    UE_LOG(LogTemp, Warning, TEXT("Trying Mode Change: %d -> %d"), static_cast<int32>(CurrentColorMode), static_cast<int32>(NextMode));
-
-    // ObjectColor は特殊処理、それ以外はシンプル処理
-    if (NextMode == EColorTargetType::ObjectColor)
-    {
-        HandleObjectColorMode(Direction, NextMode);
-        return;
-    }
-
-    HandleSimpleMode(Direction, NextMode);
-}
-
-void UColorControllerComponent::HandleObjectColorMode(int Direction, EColorTargetType NextMode)
-{
-    // 必要なマネージャ取得
-    ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
-    UColorManager* ColorManager = LevelManager ? LevelManager->GetColorManager() : nullptr;
-    if (!LevelManager || !ColorManager)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("LevelManager または ColorManager が取得できませんでした"));
-        return;
-    }
-
-    // 最も近い対象を探索
-    IColorReactiveInterface* ClosestTarget = nullptr;
-    AActor* TargetActor = nullptr;
-    if (!FindClosestColorTarget(ClosestTarget, TargetActor))
-    {
-        UE_LOG(LogTemp, Warning, TEXT("対象が見つからなかったため、モードを変更しませんでした"));
-        return;
-    }
-
-    // モード更新
-    CurrentColorMode = NextMode;
-    UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
-
-    // カラーマネージャに対象を設定
-    ColorManager->SetColorTarget(ClosestTarget);
-    UE_LOG(LogTemp, Warning, TEXT("ColorTarget を ColorManager に設定しました"));
-
-    // UI にマーカーを表示
-    if (TargetActor)
-        LevelManager->GetUIManager()->ShowMarker(TEXT("ChangeColorTarget"), TargetActor);
-
-    // アニメーションコールバック実行
-    if (AnimationDelegate.IsBound())
-        AnimationDelegate.Execute(Direction);
-}
-
-void UColorControllerComponent::HandleSimpleMode(int Direction, EColorTargetType NextMode)
-{
-    // 必要なマネージャ取得
-    ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
-    UColorManager* ColorManager = LevelManager ? LevelManager->GetColorManager() : nullptr;
-
-    // モード更新
-    CurrentColorMode = NextMode;
-    UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
-
-    // ターゲットをリセットし、UIマーカーを非表示
-    if (ColorManager) ColorManager->ResetColorTarget();
-    if (LevelManager) LevelManager->GetUIManager()->HideMarker(TEXT("ChangeColorTarget"));
-
-    // アニメーションコールバック実行
-    if (AnimationDelegate.IsBound())
-        AnimationDelegate.Execute(Direction);
+    OnColorChanged.Broadcast(CurrentColor);
 }
 
 // =======================
@@ -287,38 +198,4 @@ bool UColorControllerComponent::FindClosestColorTarget(IColorReactiveInterface*&
     }
 
     return OutTarget != nullptr;
-}
-
-// =======================
-// モード取得処理
-// =======================
-
-EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType CurrentMode)
-{
-    return GetAdjacentMode(CurrentMode, +1);
-}
-
-EColorTargetType UColorControllerComponent::GetPreviousMode(EColorTargetType CurrentMode)
-{
-    return GetAdjacentMode(CurrentMode, -1);
-}
-
-EColorTargetType UColorControllerComponent::GetAdjacentMode(EColorTargetType CurrentMode, int Direction)
-{
-    // Responders / Event を除外したモード一覧を作成
-    TArray<EColorTargetType> FilteredModes;
-    for (EColorTargetType Mode : UFunctionLibrary::GetAllEnumValues<EColorTargetType>())
-    {
-        if (Mode != EColorTargetType::Responders && Mode != EColorTargetType::Event)
-            FilteredModes.Add(Mode);
-    }
-
-    // 現在モードのインデックスを取得
-    int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
-    if (CurrentIndex == INDEX_NONE)
-        return EColorTargetType::WorldColor;
-
-    // 指定方向へ循環移動
-    int32 NewIndex = (CurrentIndex + Direction + FilteredModes.Num()) % FilteredModes.Num();
-    return FilteredModes[NewIndex];
 }
