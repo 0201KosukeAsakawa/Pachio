@@ -122,12 +122,12 @@ public:
 	/**
 	 * @brief カラーモード配列を右方向（次の色）にシフトする。
 	 */
-	virtual void ShiftArrayRightColorMode();
+	virtual void ChangeCameraViewModeToCharacter();
 
 	/**
 	 * @brief カラーモード配列を左方向（前の色）にシフトする。
 	 */
-	virtual void ShiftArrayLeftColorMode();
+	virtual void ChangeCameraViewModeToGrid();
 };
 
 

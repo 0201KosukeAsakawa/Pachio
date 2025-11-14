@@ -8,29 +8,7 @@
 
 class UPlayerStateComponent;
 
-// ============================================================
-// プレイヤーの状態タイプを定義する列挙体
-// 各状態はプレイヤーの挙動や入力処理の分岐に利用される
-// ============================================================
 
-UENUM(BlueprintType)
-enum class EPlayerStateType : uint8
-{
-    /** 通常状態（地上での待機・移動など） */
-    Default  UMETA(DisplayName = "Default"),
-
-    /** オブジェクトを掴んで保持している状態 */
-    Hold     UMETA(DisplayName = "Hold"),
-
-    /** 梯子などを上っている状態 */
-    Climb    UMETA(DisplayName = "Climb"),
-
-    /** プレイヤーが死亡した状態 */
-    Dead     UMETA(DisplayName = "Dead"),
-
-    // 新しい状態を追加する場合はここに追記
-    // 例: Dash, Swim, Attack など
-};
 
 
 // ============================================================

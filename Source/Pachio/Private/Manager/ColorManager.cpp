@@ -99,11 +99,11 @@ void UColorManager::BindController()
     if (ColorController == nullptr)
         return;
 
-    if (!ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
-    {
-        // 色変更イベントにバインド
-        ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
-    }
+    //if (!ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
+    //{
+    //    // 色変更イベントにバインド
+    //    ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
+    //}
 
     ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
     if (levelManager == nullptr 

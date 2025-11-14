@@ -60,7 +60,7 @@ APlayerCharacter::APlayerCharacter()
 	CameraHandleComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
-	CurrentManagerComponent = CreateDefaultSubobject<UStateManagerBase>(TEXT("StateManager"));
+	StateManagerComponent = CreateDefaultSubobject<UStateManagerComponent>(TEXT("StateManager"));
 }
 
 // ゲーム開始時の初期化処理
@@ -73,8 +73,11 @@ void APlayerCharacter::BeginPlay()
 	{
 		CameraHandleComponent->Init(RootComponent);
 	}
-	// ステート管理・攻撃管理初期化
-	ChangeStateManager(EColorCategory::Green);
+	if (StateManagerComponent != nullptr)
+	{
+		StateManagerComponent->Init(this,GetWorld());
+		StateManagerComponent->ChangeState(EPlayerStateType::Default);
+	}
 	// 物理パラメータ設定
 	InitPhysicsSettings();
 	// 入力設定初期化
@@ -85,53 +88,22 @@ void APlayerCharacter::BeginPlay()
 	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 
 	bUseControllerRotationYaw = false;
-
-	if (UObjectColorComponent* Occ = GetComponentByClass<UObjectColorComponent>())
-	{
-		// UObject派生クラスのメンバ関数をバインド
-		Occ->OnColorChanged.AddUObject(this, &APlayerCharacter::NotifyStateManagerChange);
-	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (CurrentManagerComponent == nullptr)
+	if (StateManagerComponent == nullptr)
 		return;
 	Circle();
 
-	CurrentManagerComponent->Execute_Update(CurrentManagerComponent,DeltaTime);
+	StateManagerComponent->Update(DeltaTime);
 	UpdateGlowTarget();
 	if (GetActorLocation().X != FixedXLocation)
 		SetActorLocation(FVector(FixedXLocation, GetActorLocation().Y, GetActorLocation().Z));
 }
 
-TScriptInterface<IStateManager> APlayerCharacter::ChangeStateManager(EColorCategory NextStateTag)
-{
-	AActor* owner = GetOwner();
-	if (!owner)
-		return nullptr;
-
-	if (StateManagerClass.Num() == 0 || !StateManagerClass.Contains(NextStateTag))
-		return nullptr;
-
-	UStateManagerBase* newState = NewObject<UStateManagerBase>(this,StateManagerClass[NextStateTag]);
-	if (!newState)
-		return nullptr;
-
-	// 新しいステートを生成
-
-	newState->Execute_Init(newState, this, GetWorld());
-
-	CurrentManagerComponent = newState;
-
-	return CurrentManagerComponent;
-}
-void APlayerCharacter::NotifyStateManagerChange(EColorCategory NewColor)
-{
-	ChangeStateManager(NewColor);
-}
 // プレイヤー入力バインド処理
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -148,7 +120,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 // 現在のプレイヤーステートを取得
 UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 {
-	return CurrentManagerComponent ? CurrentManagerComponent->Execute_GetCurrentState(CurrentManagerComponent) : nullptr;
+	return StateManagerComponent ? StateManagerComponent->GetCurrentState() : nullptr;
 }
 
 
@@ -199,10 +171,10 @@ void APlayerCharacter::Circle()
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	if (CurrentManagerComponent == nullptr)
+	if (StateManagerComponent == nullptr)
 		return;
 
-	UPlayerStateComponent* CurrentState = CurrentManagerComponent->Execute_GetCurrentState(CurrentManagerComponent);
+	UPlayerStateComponent* CurrentState = StateManagerComponent->GetCurrentState();
 	if (CurrentState != nullptr)
 	{
 		CurrentState->Movement(Value);
@@ -215,10 +187,10 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	if (CurrentManagerComponent == nullptr)
+	if (StateManagerComponent == nullptr)
 		return;
 
-	UPlayerStateComponent* CurrentState = CurrentManagerComponent->Execute_GetCurrentState(CurrentManagerComponent);
+	UPlayerStateComponent* CurrentState = StateManagerComponent->GetCurrentState();
 	if (CurrentState != nullptr)
 	{
 		CurrentState->Jump(JumpForce * JumpBuff);
@@ -229,10 +201,10 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 // APlayerCharacter.cpp 内の Action メソッド
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
-	if (CurrentManagerComponent == nullptr)
+	if (StateManagerComponent == nullptr)
 		return;
 
-	UPlayerStateComponent* CurrentState = CurrentManagerComponent->Execute_GetCurrentState(CurrentManagerComponent);
+	UPlayerStateComponent* CurrentState = StateManagerComponent->GetCurrentState();
 	if (CurrentState != nullptr)
 	{
 		CurrentState->OnSkill(Value);
@@ -286,7 +258,7 @@ void APlayerCharacter::SetColor(float value)
 }
 
 // カラーモードを右にシフト（次の色モードへ変更）
-void APlayerCharacter::ShiftArrayRightColorMode()
+void APlayerCharacter::ChangeCameraViewModeToCharacter()
 {
 	if (CameraHandleComponent == nullptr)
 		return;
@@ -295,7 +267,7 @@ void APlayerCharacter::ShiftArrayRightColorMode()
 }
 
 // カラーモードを左にシフト（前の色モードへ変更）
-void APlayerCharacter::ShiftArrayLeftColorMode()
+void APlayerCharacter::ChangeCameraViewModeToGrid()
 {
 	if (CameraHandleComponent == nullptr)
 		return;
@@ -306,7 +278,7 @@ void APlayerCharacter::ShiftArrayLeftColorMode()
 // 状態の変更（ステートタグを指定して遷移）
 UPlayerStateComponent* APlayerCharacter::ChangeState(EPlayerStateType Tag)
 {
-	UPlayerStateComponent* result = CurrentManagerComponent->Execute_ChangeState(CurrentManagerComponent,Tag);
+	UPlayerStateComponent* result = StateManagerComponent->ChangeState(Tag);
 	
 	return result;
 }
@@ -402,18 +374,18 @@ UCameraComponent* APlayerCharacter::GetCamera()const
 
 FVector APlayerCharacter::GetAnimVelocity() const
 {
-	if (CurrentManagerComponent == nullptr || CurrentManagerComponent->Execute_GetCurrentState(CurrentManagerComponent) == nullptr)
+	if (StateManagerComponent == nullptr || StateManagerComponent->GetCurrentState() == nullptr)
 		return FVector();
 
-	return CurrentManagerComponent->Execute_GetCurrentState(CurrentManagerComponent)->GetAnimVelocity();
+	return StateManagerComponent->GetCurrentState()->GetAnimVelocity();
 }
 
 float APlayerCharacter::GetYaw() const
 {
-	if (CurrentManagerComponent == nullptr || CurrentManagerComponent->Execute_GetCurrentState(CurrentManagerComponent) == nullptr)
+	if (StateManagerComponent == nullptr || StateManagerComponent->GetCurrentState() == nullptr)
 		return 0.0f;
 
-	return CurrentManagerComponent->Execute_GetCurrentState(CurrentManagerComponent)->GetYaw();
+	return StateManagerComponent->GetCurrentState()->GetYaw();
 }
 
 void APlayerCharacter::UpdateGlowTarget()

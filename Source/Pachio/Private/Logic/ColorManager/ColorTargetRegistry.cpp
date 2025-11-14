@@ -13,30 +13,15 @@
 
 void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
 {
-    switch (Mode)
+    if (PostProcessMID)
     {
-    case EColorTargetType::WorldColor:
-        if (PostProcessMID)
-        {
-            // ポストプロセスマテリアルに色を適用（画面全体のカラー演出）
-            PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
-        }
-        // 指定されたモードのターゲットに通知
-        NotifyTargets(Mode, NewColor);
-        // 常時反応するターゲット（例：UIなど Responders）にも通知
-        NotifyTargets(EColorTargetType::Responders, NewColor);
-        break;
-
-    case EColorTargetType::ObjectColor:
-        // 特定オブジェクトに色を適用
-        if (!TargetObject)
-            return;
-        TargetObject->ApplyColorWithMatching(NewColor);
-        break;
-
-    default:
-        break;
+        // ポストプロセスマテリアルに色を適用（画面全体のカラー演出）
+        PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
     }
+    // 指定されたモードのターゲットに通知
+    NotifyTargets(Mode, NewColor);
+    // 常時反応するターゲット（例：UIなど Responders）にも通知
+    NotifyTargets(EColorTargetType::Responders, NewColor);
 
     // 色適用イベントをブロードキャスト
     OnColorApplied.Broadcast(Mode, NewColor);
