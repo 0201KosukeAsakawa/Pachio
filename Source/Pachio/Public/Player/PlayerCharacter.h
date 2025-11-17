@@ -30,6 +30,8 @@ class UCharacterMovementComponent;
 class UPhysicsCalculator;
 class UMoveComponent;
 
+class UNiagaraSystem;
+
 struct FInputActionValue;
 /**
  * APlayerCharacter
@@ -189,6 +191,9 @@ public:
     UFUNCTION(BlueprintCallable)
     float GetYaw() const;
 
+    UFUNCTION(BlueprintCallable)
+    void ApplayColorToEffect(FLinearColor NewColor);
+
 private:
     // ============================
     // ==== ステート管理関連 ======
@@ -289,4 +294,7 @@ private:
     /** 現在光らせている対象Actor */
     UPROPERTY()
     AActor* CurrentGlowTarget;
+
+    UPROPERTY(EditAnywhere)
+    class UNiagaraComponent* water;
 };

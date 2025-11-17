@@ -49,7 +49,6 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
     FLinearColor TraceColor = CurrentColor;
 
     // LineTraceSingle 実行
-    // LineTraceSingle 実行（デバッグカラー指定版）
     bool bHit = UKismetSystemLibrary::LineTraceSingle(
         this,
         Start,
@@ -57,7 +56,7 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
         UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_WorldStatic),
         false,
         ActorsToIgnore,
-        EDrawDebugTrace::ForDuration, // デバッグ描画オン
+        EDrawDebugTrace::None, 
         HitResult,
         true,
         TraceColor,
@@ -124,7 +123,7 @@ void UColorControllerComponent::AdjustColor(float Delta)
     CurrentColor = FLinearColor(NewColor.R, NewColor.G, NewColor.B, CurrentColor.A);
 ;
     // イベントを通知
-    //OnColorChanged.Broadcast(CurrentColor[CurrentColorMode], CurrentColorMode);
+    OnColorChanged.Broadcast(CurrentColor);
 }
 
 void UColorControllerComponent::SetColor(float Value)
