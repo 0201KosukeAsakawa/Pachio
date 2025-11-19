@@ -92,7 +92,7 @@ void APlayerCharacter::BeginPlay()
 	// 視覚関連設定（アウトラインなど）
 	InitVisualSettings();
 	// ColorManager に登録
-	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(this);
+	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
 
 	colorController->OnColorChanged.AddDynamic(this,&APlayerCharacter::ApplayColorToEffect);
 
