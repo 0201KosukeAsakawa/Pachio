@@ -135,13 +135,8 @@ void UWeatherComponent::InitializeEffects()
 // 天候設定処理（色に応じて切り替え）
 // =======================
 
-void UWeatherComponent::SetWeather(EColorTargetType Mode, FLinearColor NewColor)
+void UWeatherComponent::SetWeather( FLinearColor NewColor)
 {
-    // WorldColor 以外の色変化には反応しない
-    if (Mode != EColorTargetType::WorldColor)
-        return;
-
-
     // 色から最も近いエフェクト種別を取得
     EColorCategory Match =  UColorUtilityLibrary::GetNearestPrimaryColor(NewColor);
 

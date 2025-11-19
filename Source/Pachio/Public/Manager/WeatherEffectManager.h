@@ -48,7 +48,7 @@ public:
      * @param NewColor 設定する色
      */
     UFUNCTION(BlueprintCallable)
-    void SetWeather(EColorTargetType Mode, FLinearColor NewColor);
+    void SetWeather(FLinearColor NewColor);
 
 protected:
 

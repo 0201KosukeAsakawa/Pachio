@@ -35,50 +35,50 @@ UColorControllerComponent::UColorControllerComponent()
 
 void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-    // レイの開始位置と終了位置を設定
-    FVector Start = GetOwner()->GetActorLocation();
-    FVector Direction = GetOwner()->GetActorRightVector().GetSafeNormal();
-    FVector End = Start + Direction * 1500.f; // 5.f だと短すぎるので500に変更（任意）
+    //// レイの開始位置と終了位置を設定
+    //FVector Start = GetOwner()->GetActorLocation();
+    //FVector Direction = GetOwner()->GetActorRightVector().GetSafeNormal();
+    //FVector End = Start + Direction * 1500.f; // 5.f だと短すぎるので500に変更（任意）
 
-    FHitResult HitResult;
+    //FHitResult HitResult;
 
-    // オーナーを無視するアクターリストに追加
-    TArray<AActor*> ActorsToIgnore;
-    ActorsToIgnore.Add(GetOwner());
-    
-    FLinearColor TraceColor = CurrentColor;
+    //// オーナーを無視するアクターリストに追加
+    //TArray<AActor*> ActorsToIgnore;
+    //ActorsToIgnore.Add(GetOwner());
+    //
+    //FLinearColor TraceColor = CurrentColor;
 
-    // LineTraceSingle 実行
-    // LineTraceSingle 実行（デバッグカラー指定版）
-    bool bHit = UKismetSystemLibrary::LineTraceSingle(
-        this,
-        Start,
-        End,
-        UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_WorldStatic),
-        false,
-        ActorsToIgnore,
-        EDrawDebugTrace::ForDuration, // デバッグ描画オン
-        HitResult,
-        true,
-        TraceColor,
-        TraceColor,
-        0.5f // 表示時間
-    );
+    //// LineTraceSingle 実行
+    //// LineTraceSingle 実行（デバッグカラー指定版）
+    //bool bHit = UKismetSystemLibrary::LineTraceSingle(
+    //    this,
+    //    Start,
+    //    End,
+    //    UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_WorldStatic),
+    //    false,
+    //    ActorsToIgnore,
+    //    EDrawDebugTrace::ForDuration, // デバッグ描画オン
+    //    HitResult,
+    //    true,
+    //    TraceColor,
+    //    TraceColor,
+    //    0.5f // 表示時間
+    //);
 
-    // ヒットしたら処理
-    if (bHit && HitResult.GetActor())
-    {
-        AActor* HitActor = HitResult.GetActor();
+    //// ヒットしたら処理
+    //if (bHit && HitResult.GetActor())
+    //{
+    //    AActor* HitActor = HitResult.GetActor();
 
-        // 例えば、UMyComponent クラスを持っているか確認
-        if (UObjectColorComponent* ri = HitActor->GetComponentByClass<UObjectColorComponent>())
-        {
-            UE_LOG(LogTemp, Log, TEXT("%s has UMyComponent!"), *HitActor->GetName());
+    //    // 例えば、UMyComponent クラスを持っているか確認
+    //    if (UObjectColorComponent* ri = HitActor->GetComponentByClass<UObjectColorComponent>())
+    //    {
+    //        UE_LOG(LogTemp, Log, TEXT("%s has UMyComponent!"), *HitActor->GetName());
 
-            // ここに処理を書く
-            ri->ApplyColorWithMatching(TraceColor);
-        }
-    }
+    //        // ここに処理を書く
+    //        ri->ApplyColorWithMatching(TraceColor);
+    //    }
+    //}
 
 }
 
@@ -124,7 +124,7 @@ void UColorControllerComponent::AdjustColor(float Delta)
     CurrentColor = FLinearColor(NewColor.R, NewColor.G, NewColor.B, CurrentColor.A);
 ;
     // イベントを通知
-    //OnColorChanged.Broadcast(CurrentColor[CurrentColorMode], CurrentColorMode);
+    OnColorChanged.Broadcast(CurrentColor);
 }
 
 void UColorControllerComponent::SetColor(float Value)

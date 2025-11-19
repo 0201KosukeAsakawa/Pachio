@@ -22,7 +22,7 @@ void UColorLens::NativeConstruct()
 
     // ColorManager に対して、背景色変更の対象としてこのクラスを登録
     // 登録することで色変更イベントを受け取るようになる
-    Owner->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
+    Owner->GetColorManager()->RegisterTarget(this);
 }
 
 void UColorLens::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

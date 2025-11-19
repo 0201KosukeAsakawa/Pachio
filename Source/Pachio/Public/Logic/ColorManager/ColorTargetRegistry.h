@@ -9,7 +9,7 @@
 
 class IColorReactiveInterface;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnColorAppliedDelegate, EColorTargetType, Mode, FLinearColor, NewColor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnColorAppliedDelegate, FLinearColor, NewColor);
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -24,7 +24,7 @@ public:
      * @param NewColor - 適用する色
      * @param Mode - 色を適用する対象モード
      */
-    void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
+    void ApplyColor(FLinearColor NewColor);
 
     /**
      * 指定されたイベント ID に基づいて色イベントを発火する
@@ -35,24 +35,11 @@ public:
     void ColorEvent(FName EventID, FLinearColor Color);
 
     /**
-     * 現在の色操作対象を設定する
-     *
-     * @param Target - 設定する色反応インターフェース
-     */
-    void SetColorTarget(IColorReactiveInterface* Target);
-
-    /**
-     * 現在の色操作対象をリセットする
-     */
-    void ResetColorTarget();
-
-    /**
      * 色付け対象を登録する
      *
-     * @param Mode - 対象のモード
      * @param Target - 登録するインターフェース
      */
-    void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);
+    void RegisterTarget(TScriptInterface<IColorReactiveInterface> Target);
 
     /**
      * ポストエフェクト用マテリアルを初期化する
@@ -77,7 +64,7 @@ private:
      * @param Mode - 対象モード
      * @param Color - 通知する色
      */
-    void NotifyTargets(EColorTargetType Mode, const FLinearColor& Color);
+    void NotifyTargets(const FLinearColor& Color);
 
 private:
     /**
@@ -85,13 +72,7 @@ private:
      * （EColorTargetType ごとに IColorReactiveInterface 実装オブジェクトを保持）
      */
     UPROPERTY()
-    TMap<EColorTargetType, FColorTargetInstanceArray> ColorResponseTargets;
-
-    /**
-     * 現在操作対象となっているオブジェクト
-     */
-    UPROPERTY()
-    TScriptInterface<IColorReactiveInterface> TargetObject;
+    TArray<TScriptInterface<IColorReactiveInterface>> Instances;
 
     /**
      * ポストプロセスマテリアルの動的インスタンス

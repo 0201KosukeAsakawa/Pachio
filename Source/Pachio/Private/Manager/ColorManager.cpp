@@ -36,11 +36,11 @@ void UColorManager::Init()
 }
 
 // 色を反映し、ターゲットに通知する
-void UColorManager::ApplyColor(FLinearColor NewColor, EColorTargetType Mode)
+void UColorManager::ApplyColor(FLinearColor NewColor)
 {
     if (!ColorTargetRegistry)
         return;
-    ColorTargetRegistry->ApplyColor(NewColor, Mode);
+    ColorTargetRegistry->ApplyColor(NewColor);
 }
 
 void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
@@ -50,22 +50,12 @@ void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
     ColorTargetRegistry->ColorEvent(EventID, NewColor);
 }
 
-void UColorManager::SetColorTarget(IColorReactiveInterface* target)
-{
-    ColorTargetRegistry->SetColorTarget(target);
-}
-
-void UColorManager::ResetColorTarget()
-{
-    ColorTargetRegistry->ResetColorTarget();
-}
-
 // 色変化に反応するターゲットを登録
-void UColorManager::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
+void UColorManager::RegisterTarget(TScriptInterface<IColorReactiveInterface> Target)
 {
     if (!this || !ColorTargetRegistry)
         return;
-    ColorTargetRegistry->RegisterTarget(Mode, Target);
+    ColorTargetRegistry->RegisterTarget(Target);
 }
 
 float UColorManager::GetColorDistanceRGB(const FLinearColor& A)
@@ -99,11 +89,11 @@ void UColorManager::BindController()
     if (ColorController == nullptr)
         return;
 
-    //if (!ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
-    //{
-    //    // 色変更イベントにバインド
-    //    ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
-    //}
+    if (!ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
+    {
+        // 色変更イベントにバインド
+        ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
+    }
 
     ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
     if (levelManager == nullptr 

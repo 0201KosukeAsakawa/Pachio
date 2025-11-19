@@ -304,10 +304,6 @@ protected:
     // 登録設定
     // =======================
 
-    /** カラーマネージャーへの登録ターゲットタイプ */
-    UPROPERTY(EditAnywhere, Category = "Color|Registration")
-    EColorTargetType TargetType;
-
     /** 色イベントID（イベントトリガー用） */
     UPROPERTY(EditAnywhere, Category = "Color|Events")
     FName ColorEventID;

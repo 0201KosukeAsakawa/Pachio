@@ -33,7 +33,6 @@ namespace
 UObjectColorComponent::UObjectColorComponent()
     : CurrentColor(FLinearColor::White)      // 現在の色（初期値: 白）
     , InitialColor(FLinearColor::White)      // 初期色（リセット時に使用）
-    , TargetType(EColorTargetType::WorldColor)
     , bApplyColorToMaterial(true)            // マテリアルに色を適用するか
     , bEnableColorAction(true)               // 色変更アクションを有効化
     , bEnableBeatEffect(true)                // ビート演出を有効化
@@ -171,7 +170,7 @@ void UObjectColorComponent::RegisterToColorManager()
     }
 
     // ターゲットタイプを指定して登録
-    ColorManager->RegisterTarget(TargetType, this);
+    ColorManager->RegisterTarget(this);
 }
 
 /**

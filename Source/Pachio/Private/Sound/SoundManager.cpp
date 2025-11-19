@@ -112,7 +112,7 @@ void USoundManager::SetVolume(float NewBGM, float NewSE)
 // 色変化による BPM 設定
 // =======================
 
-void USoundManager::SetTmp(EColorTargetType Mode, FLinearColor NewColor)
+void USoundManager::SetTmp(FLinearColor NewColor)
 {
     ALevelManager* level = ALevelManager::GetInstance(GetWorld());
     if (!level) return;

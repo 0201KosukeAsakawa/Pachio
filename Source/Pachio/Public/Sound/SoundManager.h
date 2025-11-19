@@ -55,7 +55,7 @@ public:
      * @param NewColor 設定する色
      */
     UFUNCTION(Category = "Beat")
-    void SetTmp(EColorTargetType Mode, FLinearColor NewColor);
+    void SetTmp(FLinearColor NewColor);
 
 private:
     // ==========================

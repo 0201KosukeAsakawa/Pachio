@@ -30,7 +30,7 @@ public:
      * @param 渡す対象の種類
      */
     UFUNCTION()
-    void ApplyColor(FLinearColor NewColor, EColorTargetType Mode);
+    void ApplyColor(FLinearColor NewColor);
     /**
      * オブジェクトを指定して新しい色を適用する関数
      *
@@ -54,10 +54,9 @@ public:
     /**
      *  色付け対象を登録する関数
      * 
-     *  @param 登録する種類
      *  @param 登録する対象
      */
-    void RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target);
+    void RegisterTarget(TScriptInterface<IColorReactiveInterface> Target);
 
     /**
      *  色を角度を利用して差を返す関数
@@ -122,5 +121,5 @@ private:
     TSubclassOf<UColorTargetRegistry> ColorTargetRegistryClass;
     //色に反応するオブジェクトに現在の色を通知
     UPROPERTY()
-    TMap<EColorTargetType, FColorTargetInstanceArray> ColorResponseTargets;
+    TArray<TScriptInterface<IColorReactiveInterface>> ColorResponseTargets;
 };
