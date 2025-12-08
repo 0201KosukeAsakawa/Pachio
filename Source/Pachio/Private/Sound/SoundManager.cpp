@@ -2,6 +2,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Logic/ColorManager/ColorTargetRegistry.h"
 #include "Components/AudioComponent.h"
+#include "ColorUtilityLibrary.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Manager/SaveManager.h"
@@ -23,37 +24,6 @@
 // UFMODAudioComponent::EventInstance メンバーにアクセスするために必要です。
 #include "FMODAudioComponent.h"
 
-
-
-// =======================
-// FMOD コールバック（ビート検出）
-// =======================
-
-// FMOD の Timeline マーカーイベントを受け取る
-static FMOD_RESULT OnTimelineMarker(FMOD_STUDIO_EVENT_CALLBACK_TYPE type, FMOD_STUDIO_EVENTINSTANCE* eventInstance, void* parameters)
-{
-    if (type == FMOD_STUDIO_EVENT_CALLBACK_TIMELINE_MARKER)
-    {
-        auto* Marker = static_cast<FMOD_STUDIO_TIMELINE_MARKER_PROPERTIES*>(parameters);
-        FString MarkerName = UTF8_TO_TCHAR(Marker->name);
-
-        // "Beat" マーカーを検出した場合
-        if (MarkerName == "Beat")
-        {
-            void* RawUserData = nullptr;
-            ((FMOD::Studio::EventInstance*)eventInstance)->getUserData(&RawUserData);
-
-            // USoundManager を取得し、ビート処理を実行
-            USoundManager* Manager = static_cast<USoundManager*>(RawUserData);
-            if (Manager)
-            {
-                Manager->OnMarkerBeat(Marker->position);
-            }
-        }
-    }
-    return FMOD_OK;
-}
-
 // =======================
 // コンストラクタ
 // =======================
@@ -62,6 +32,11 @@ USoundManager::USoundManager()
     : BGMVolume(1)
     , SEVolume(1)
     , mCurrentBGM(nullptr)
+    , MusicBPM(100.f)
+    , BeatInterval(5.f)
+    , StartTime(0.f)
+    , LastPredictedBeat(-1.f)
+    , LastConfirmedBeatTime(0.f)
 {
 }
 
@@ -111,9 +86,6 @@ void USoundManager::Init()
 
     // 色変化に応じた BPM 変更イベントをバインド
     ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetColorTargetRegistry()->OnColorApplied.AddDynamic(this, &USoundManager::SetTmp);
-
-    // テスト用の BGM 初期化
-    InitTestSound();
 }
 
 // =======================
@@ -140,7 +112,7 @@ void USoundManager::SetVolume(float NewBGM, float NewSE)
 // 色変化による BPM 設定
 // =======================
 
-void USoundManager::SetTmp(EColorTargetType Mode, FLinearColor NewColor)
+void USoundManager::SetTmp(FLinearColor NewColor)
 {
     ALevelManager* level = ALevelManager::GetInstance(GetWorld());
     if (!level) return;
@@ -149,14 +121,14 @@ void USoundManager::SetTmp(EColorTargetType Mode, FLinearColor NewColor)
     if (!colorManager) return;
 
     // 色から最も近いエフェクトを判定
-    FEffectMatchResult Match = colorManager->GetClosestEffectByHue(NewColor);
+    EColorCategory colorCategory = UColorUtilityLibrary::GetNearestPrimaryColor(NewColor);
 
     // 色に応じて BPM を設定
-    switch (Match.ClosestEffect)
+    switch (colorCategory)
     {
-    case EBuffEffect::Red:   MusicBPM = 160.f; break;
-    case EBuffEffect::Blue:  MusicBPM = 90.f; break;
-    case EBuffEffect::Green: MusicBPM = 120.f; break;
+    case EColorCategory::Red:   MusicBPM = 160.f; break;
+    case EColorCategory::Blue:  MusicBPM = 90.f; break;
+    case EColorCategory::Green: MusicBPM = 120.f; break;
     default:                 MusicBPM = 120.f; break;
     }
 
@@ -327,48 +299,11 @@ bool USoundManager::PlayBGM()
     EventInstance = BGM->StudioInstance;
     if (EventInstance)
     {
-        // USoundManager をユーザーデータとして渡し、FMOD のマーカーコールバックを登録
-        EventInstance->setUserData(this);
-        EventInstance->setCallback(OnTimelineMarker, FMOD_STUDIO_EVENT_CALLBACK_TIMELINE_MARKER);
+      
     }
 
     StartTime = GetWorld()->GetTimeSeconds();
     LastPredictedBeat = -1;
 
     return true;
-}
-
-// =======================
-// ビート通知処理
-// =======================
-
-void USoundManager::OnBeatTimerElapsed()
-{
-    // 手動タイマーによるビート検出が必要ならここで呼び出す
-    // OnBeatDetected.Broadcast();
-}
-
-void USoundManager::InitTestSound()
-{
-    if (!BGM)
-    {
-        BGM = NewObject<UFMODAudioComponent>(this);
-        BGM->RegisterComponent();
-
-        if (BGMEventAsset)
-        {
-            BGM->SetEvent(BGMEventAsset);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("TestEventAsset is null!"));
-        }
-    }
-}
-
-// FMOD マーカーからのビート検出時に呼ばれる
-void USoundManager::OnMarkerBeat(int64 MarkerPositionMs)
-{
-    LastConfirmedBeatTime = MarkerPositionMs / 1000.0f;
-    OnBeatDetected.Broadcast(); // Blueprint等へ通知
 }

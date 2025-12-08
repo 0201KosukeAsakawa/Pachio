@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "GameFramework/Actor.h"
 #include "PaintBall.generated.h"
 
@@ -21,9 +21,6 @@ public:
 
     UPROPERTY(EditAnywhere)
     FLinearColor PaintColor;
-
-    UPROPERTY(EditAnywhere)
-    FEffectMatchResult Match;
 
 protected:
     UFUNCTION()

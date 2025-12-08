@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include <Enemy/EnemyCategory.h>
 #include "EnemyState.generated.h"
 
 class AEnemyCharacter;
@@ -16,7 +15,7 @@ class PACHIO_API UEnemyState : public UObject
 	GENERATED_BODY()
 	
 public:
-	virtual bool OnEnter(AEnemyCharacter* owner, UWorld* world , UEnemyStateComponent* LogicComponet ,const EEnemyCategory materialID = EEnemyCategory::None);
+	virtual bool OnEnter(AEnemyCharacter* owner, UWorld* world , UEnemyStateComponent* LogicComponet);
 	virtual bool OnUpdate(float deltaTime);
 	virtual bool OnExit();
 	virtual bool OnOverlap(AActor*);

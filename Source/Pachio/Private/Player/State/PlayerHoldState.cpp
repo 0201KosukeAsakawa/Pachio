@@ -12,10 +12,11 @@
 
 UPlayerHoldState::UPlayerHoldState()
     : HoldTarget(nullptr)
+    , GrabDirection(1)
 {
 }
 
-bool UPlayerHoldState::OnEnter(APawn* owner, UWorld* world)
+bool UPlayerHoldState::OnEnter(APawn* owner)
 {
     mOwner = owner;
     if (!MoveComp)

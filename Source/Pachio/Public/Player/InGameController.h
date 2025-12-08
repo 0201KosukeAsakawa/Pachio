@@ -12,22 +12,48 @@
 UCLASS()
 class PACHIO_API AInGameController : public APlayerController
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
+
+public:
+    /**
+     * @brief コンストラクタ。コントローラー初期化
+     */
+    AInGameController();
 
 protected:
+    /**
+     * @brief 入力コンポーネントのセットアップ
+     *
+     * 入力アクションや軸入力をバインドする
+     */
     virtual void SetupInputComponent() override;
+
 public:
- void TogglePossession(AActor*);
- void ReturnToOriginalPlayer();
+    /**
+     * @brief 指定アクターへのポゼッション切り替え
+     *
+     * @param Target ポゼッション対象アクター
+     */
+    void TogglePossession(AActor* Target);
+
+    /**
+     * @brief 元のプレイヤーPawnにポゼッションを戻す
+     */
+    void ReturnToOriginalPlayer();
 
 private:
+    /** @brief 元々のプレイヤーPawn */
     UPROPERTY()
     APawn* OriginalPawn = nullptr;
+
+    /** @brief 現在ポゼッション中かどうか */
     bool bIsPossessing = false;
 
+    /** @brief ポゼッション対象を検出する最大距離 */
     UPROPERTY(EditDefaultsOnly)
-    float DetectionDistance = 300.f;
+    float DetectionDistance;
 
+    /** @brief ポゼッション判定用のBoxサイズ（半分サイズ） */
     UPROPERTY(EditDefaultsOnly)
-    FVector BoxHalfSize = FVector(5000.f, 5000.f, 5000.f);
+    FVector BoxHalfSize;
 };

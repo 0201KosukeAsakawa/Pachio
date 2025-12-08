@@ -3,39 +3,45 @@
 
 #include "Interface/ColorFilterInterface.h"
 
-// Add default functionality here for any IColorFilterInterface functions that are not pure virtual.
 
-void IColorReactiveInterface::ColorAction(FLinearColor, FEffectMatchResult)
-{
-}
-
-void IColorReactiveInterface::SetColor(FLinearColor, FEffectMatchResult)
+/** �F��ݒ� */
+void IColorReactiveInterface::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
 
 }
 
+/** �F����Z�b�g */
 void IColorReactiveInterface::ResetColor()
 {
+
 }
 
-void IColorReactiveInterface::SetSelectMode(bool)
+/** �I���Ԃ�ݒ� */
+void IColorReactiveInterface::SetSelected(bool bIsSelected)
 {
+
 }
 
-bool IColorReactiveInterface::IsColorChange() const
+/** �F���ύX����Ă��邩��m�F */
+bool IColorReactiveInterface::HasColorChanged()const
 {
-    return true;
+	return false;
 }
 
-bool IColorReactiveInterface::IsColorModifiable() const
+/** �F�ύX���\����m�F */
+bool IColorReactiveInterface::IsChangeable() const
 {
-    return false;
+	return false;
 }
-bool IColorReactiveInterface::IsChangeable()const
+
+/** �F����v���Ă��邩��m�F */
+bool IColorReactiveInterface::IsColorMatched() const
 {
-    return false;
+	return false;
 }
+
+/** �F�C�x���gID��擾 */
 FName IColorReactiveInterface::GetColorEventID() const
 {
-    return FName();
+	return FName();
 }

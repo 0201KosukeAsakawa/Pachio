@@ -7,6 +7,7 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Logic/ColorManager/ColorTargetRegistry.h"
+#include "Components/Color/ColorReactiveComponent.h"
 
 // =======================
 // コンストラクタ
@@ -134,16 +135,10 @@ void UWeatherComponent::InitializeEffects()
 // 天候設定処理（色に応じて切り替え）
 // =======================
 
-void UWeatherComponent::SetWeather(EColorTargetType Mode, FLinearColor NewColor)
+void UWeatherComponent::SetWeather( FLinearColor NewColor)
 {
-    // WorldColor 以外の色変化には反応しない
-    if (Mode != EColorTargetType::WorldColor)
-        return;
-
     // 色から最も近いエフェクト種別を取得
-    FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
-        ->GetColorManager()
-        ->GetClosestEffectByHue(NewColor);
+    EColorCategory Match =  UColorUtilityLibrary::GetNearestPrimaryColor(NewColor);
 
     // すべてのエフェクトを一旦停止
     if (RainEffect) RainEffect->Deactivate();
@@ -154,9 +149,9 @@ void UWeatherComponent::SetWeather(EColorTargetType Mode, FLinearColor NewColor)
     EWeatherType NewWeather = EWeatherType::Clear;
 
     // 色に応じて天候を切り替える
-    switch (Match.ClosestEffect)
+    switch (Match)
     {
-    case EBuffEffect::Red: // 赤 → 雷
+    case EColorCategory::Red: // 赤 → 雷
         if (ThunderEffect)
         {
             ThunderEffect->Activate();
@@ -164,7 +159,7 @@ void UWeatherComponent::SetWeather(EColorTargetType Mode, FLinearColor NewColor)
         }
         break;
 
-    case EBuffEffect::Green: // 緑 → 風
+    case EColorCategory::Green: // 緑 → 風
         if (WindEffect)
         {
             WindEffect->Activate();
@@ -172,7 +167,7 @@ void UWeatherComponent::SetWeather(EColorTargetType Mode, FLinearColor NewColor)
         }
         break;
 
-    case EBuffEffect::Blue: // 青 → 雨
+    case EColorCategory::Blue: // 青 → 雨
         if (RainEffect)
         {
             RainEffect->Activate();

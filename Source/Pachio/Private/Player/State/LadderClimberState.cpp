@@ -2,11 +2,10 @@
 
 
 #include "Player/State/LadderClimberState.h"
-#include "Player/State/StateManager.h"
 #include "Player/PlayerCharacter.h"
 #include "Objects/Color/LadderActor.h"
 #include "Components/MoveComponent.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PhysicsCalculator.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -36,24 +35,22 @@ void ULadderClimberState::SetTargetLadder(ALadderActor* ladderClimber)
 
 	if (Ladder)
 	{
-		p = Ladder->GetFixedPositionForActor(GetOwner());
-		UColorConfigurator* comp = Ladder->GetComponentByClass<UColorConfigurator>();
+		LadderCenterPosition = Ladder->GetFixedPositionForActor(GetOwner());
+		UObjectColorComponent* comp = Ladder->GetComponentByClass<UObjectColorComponent>();
 		if (comp != nullptr)
 			targetComp = comp;
 
-		GetOwner()->SetActorLocation(p);
+		GetOwner()->SetActorLocation(LadderCenterPosition);
 	}
 
 }
 
-bool ULadderClimberState::OnEnter(APawn* Owner, UWorld* World)
+bool ULadderClimberState::OnEnter(APawn* Owner)
 {
 	if (!Owner)
 		return false;
 	if (!mOwner)
 		mOwner = Owner;
-	if (!pWorld)
-		pWorld = World;
 	if (!MoveComp)
 	{
 		MoveComp = NewObject<UMoveComponent>(mOwner);
@@ -103,15 +100,15 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 		}
 		return true;
 	}
-	
+
 
 	if (Ladder)
 	{
-		p = Ladder->GetFixedPositionForActor(GetOwner());
-		
+		LadderCenterPosition = Ladder->GetFixedPositionForActor(GetOwner());
+
 		FVector OwnerLocation = GetOwner()->GetActorLocation();
 		// X,Yは梯子の中心、Zはキャラの現在位置のまま
-		FVector NewLocation = FVector(p.X, p.Y, OwnerLocation.Z);
+		FVector NewLocation = FVector(LadderCenterPosition.X, LadderCenterPosition.Y, OwnerLocation.Z);
 		GetOwner()->SetActorLocation(NewLocation);
 	}
 
@@ -164,33 +161,33 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 		if (!bFoundNewLadder)
 		{
 			// 近くに他の梯子がない → 通常状態へ戻す
-			if (UStateManager* StateManager = mOwner->FindComponentByClass<UStateManager>())
+			if (PlayerZ > LadderTopZ)
 			{
-				if (PlayerZ > LadderTopZ)
+				float direction = 1.f;
+
+				// ★ 梯子の前後判定 ★
+				FVector LadderForward = Ladder->GetActorForwardVector();
+				FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
+				ToPlayer.Normalize();
+
+				float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
+				if (Dot < 0.f)
 				{
-					float direction = 1.f;
+					direction *= -1.f;
+				}
 
-					// ★ 梯子の前後判定 ★
-					FVector LadderForward = Ladder->GetActorForwardVector();
-					FVector ToPlayer = mOwner->GetActorLocation() - Ladder->GetActorLocation();
-					ToPlayer.Normalize();
+				// 梯子の上に押し出す位置
+				FVector ExitLocation = Ladder->GetActorLocation();
+				ExitLocation.Z = LadderTopZ + 300.f;                 // 上に少し
+				ExitLocation += LadderForward * direction * 150.f;   // 前に少し
 
-					float Dot = FVector::DotProduct(Ladder->GetActorRightVector(), ToPlayer);
-					if (Dot < 0.f)
-					{
-						direction *= -1.f;
-					}
+				// 確実にワープ
+				mOwner->SetActorLocation(ExitLocation, false, nullptr, ETeleportType::TeleportPhysics);
 
-					// 梯子の上に押し出す位置
-					FVector ExitLocation = Ladder->GetActorLocation();
-					ExitLocation.Z = LadderTopZ + 300.f;                 // 上に少し
-					ExitLocation += LadderForward * direction * 150.f;   // 前に少し
-
-					// 確実にワープ
-					mOwner->SetActorLocation(ExitLocation, false, nullptr, ETeleportType::TeleportPhysics);
-
+				if (IStateControllable* is = Cast<IStateControllable>(mOwner))
+				{
 					// 状態を戻す
-					StateManager->ChangeState(EPlayerStateType::Default);
+					is->ChangeState(EPlayerStateType::Default);
 				}
 			}
 		}
@@ -284,6 +281,6 @@ void ULadderClimberState::Movement(const FInputActionValue& Value)
 	MoveDelta = direction * 10;
 	// 通常の移動
 	GetOwner()->AddActorLocalOffset(direction * 10, false);
-	p = Ladder->GetFixedPositionForActor(GetOwner());
-	GetOwner()->SetActorLocation(p);
+	LadderCenterPosition = Ladder->GetFixedPositionForActor(GetOwner());
+	GetOwner()->SetActorLocation(LadderCenterPosition);
 }

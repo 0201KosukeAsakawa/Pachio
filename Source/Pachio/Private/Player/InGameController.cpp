@@ -4,7 +4,13 @@
 #include "Player/InGameController.h"
 #include "Manager/LevelManager.h"
 #include "Sound/SoundManager.h"
-#include "Objects/ControllableObjectBase.h"
+
+
+AInGameController::AInGameController()
+    :DetectionDistance(300)
+    , BoxHalfSize(FVector(5000.f, 5000.f, 5000.f))
+{
+}
 
 // 入力をセットアップする関数
 void AInGameController::SetupInputComponent()
@@ -22,15 +28,6 @@ void AInGameController::TogglePossession(AActor* HitActor)
         bIsPossessing = false;        // 所有状態フラグをリセット
         ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE","PlayChange");
         return;
-    }
-
-    // 憑依可能な対象を探す
-    if (AControllableObjectBase* Target = Cast<AControllableObjectBase>(HitActor))
-    {
-        OriginalPawn = GetPawn();                     // 現在のPawnを保存
-        Possess(Cast<APawn>(Target));                // 対象をPawnとしてキャストして憑依
-        bIsPossessing = true;                         // 所有状態フラグをセット
-        ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE", "PlayChange");
     }
 }
 

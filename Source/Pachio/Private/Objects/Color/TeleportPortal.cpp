@@ -4,13 +4,14 @@
 #include "Objects/Color/TeleportPortal.h"
 #include "Components/BoxComponent.h"
 #include "Components/Color/ColorReactiveComponent.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 
-ATeleportPortal::ATeleportPortal()
+ATeleportPortal::ATeleportPortal():
+                                    TeleportCooldown(1.f)
 {
     PrimaryActorTick.bCanEverTick = false;
 
@@ -25,21 +26,21 @@ void ATeleportPortal::BeginPlay()
     Super::BeginPlay();
 }
 
-void ATeleportPortal::Init()
+void ATeleportPortal::Initialize()
 {
-    AColorReactiveObject::Init();
+    AColorReactiveObject::Initialize();
     CurrentTargetPortal = PrimaryDestination;
     SecondColor = ALevelManager::GetInstance(GetWorld())
         ->GetColorManager()
         ->GetEffectColor(Effect);
 }
 
-void ATeleportPortal::ColorAction(const FLinearColor InColor, FEffectMatchResult)
+void ATeleportPortal::ApplyColorWithMatching(const FLinearColor& InColor)
 {
-    if (!ColorConfigurator)
+    if (!ObjectColorComponent)
         return;
 
-    bool b = ColorConfigurator->IsColorMatch(InColor, SecondColor);
+    bool b = UColorUtilityLibrary::IsHueSimilar(InColor, SecondColor);
     if (b)
     {
         if (AlternatePortal)

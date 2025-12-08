@@ -1,140 +1,135 @@
 #include "Objects/Color/ColorReactiveObject.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "Manager/ColorManager.h"
 #include "Manager/LevelManager.h"
 
+
 // コンストラクタ：Tick はデフォルトで無効（基本的にリアルタイム更新不要）
 AColorReactiveObject::AColorReactiveObject()
+    : bEnableBeatAnimation(true)
 {
-	PrimaryActorTick.bCanEverTick = false;
-	ColorConfigurator = CreateDefaultSubobject<UColorConfigurator>(TEXT("ColorConfigurator"));
+    PrimaryActorTick.bCanEverTick = false;
+
+    // オブジェクト色管理コンポーネントを生成
+    ObjectColorComponent = CreateDefaultSubobject<UObjectColorComponent>(TEXT("ObjectColorComponent"));
 }
 
 // BeginPlay（ゲーム開始時）に初期化処理を実行
 void AColorReactiveObject::BeginPlay()
 {
-	Super::BeginPlay();
-	ColorConfigurator->Init();
-	Init();
+    Super::BeginPlay();
+
+    if (ObjectColorComponent)
+    {
+        // コンポーネントの初期化
+        ObjectColorComponent->Initialize();
+    }
+
+    // 派生クラス用の初期化
+    Initialize();
 }
 
-// 色反応オブジェクトの初期化処理
-void AColorReactiveObject::Init()
+// オブジェクト固有の初期化処理（派生クラスでオーバーライド可能）
+void AColorReactiveObject::Initialize()
 {
-
+    // 派生クラスで実装
 }
 
-// 色反応ロジックの初期化（UColorReactiveComponentの生成）
-void AColorReactiveObject::InitializeColorLogic()
+// =======================
+// IColorReactiveInterface の実装
+// =======================
+
+void AColorReactiveObject::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
-	if (ColorConfigurator == nullptr)
-		return;
+    if (!ObjectColorComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ObjectColorComponent is null in %s"), *GetName());
+        return;
+    }
 
-	ColorConfigurator->InitializeColorLogic();
-}
-
-// レベル上のカラーマネージャーに自身を登録
-void AColorReactiveObject::RegisterToColorManager()
-{
-	if (ColorConfigurator == nullptr)
-		return;
-
-	ColorConfigurator->RegisterToColorManager();
-}
-
-// マテリアルとカスタムデプス設定
-void AColorReactiveObject::SetupMaterial()
-{
-	if (ColorConfigurator == nullptr)
-		return;
-
-	ColorConfigurator->SetupMaterial();
-}
-
-void AColorReactiveObject::PlayBeatAnimation()
-{
-	if (ColorConfigurator == nullptr || !bPlayBeat)
-		return;
-
-	ColorConfigurator->PlayBeatAnimation();
-}
-
-// 色アクション実行時の処理（デフォルト実装）
-void AColorReactiveObject::ColorAction(FLinearColor NewColor , FEffectMatchResult result)
-{
-	if (ColorConfigurator == nullptr)
-		return;
-
-	ColorConfigurator->ColorAction(NewColor,result);
-}
-
-void AColorReactiveObject::SetColor(FLinearColor newColor, FEffectMatchResult result)
-{
-	if (ColorConfigurator == nullptr)
-		return;
-
-	ColorConfigurator->SetColor(newColor, result);
+    ObjectColorComponent->SetColor(NewColor);
 }
 
 void AColorReactiveObject::ResetColor()
 {
-	if (ColorConfigurator == nullptr)
-		return;
+    if (!ObjectColorComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ObjectColorComponent is null in %s"), *GetName());
+        return;
+    }
 
-	//SetColor(StartColor);
+    ObjectColorComponent->ResetColor();
 }
 
-void AColorReactiveObject::SetSelectMode(bool bIsSelected)
+void AColorReactiveObject::SetSelected(bool bIsSelected)
 {
-	if (!ColorConfigurator)
-		return;
+    if (!ObjectColorComponent)
+    {
+        return;
+    }
 
-	ColorConfigurator->SetSelectMode(bIsSelected);
+    ObjectColorComponent->SetSelected(bIsSelected);
 }
 
-// マテリアルに色を適用（外部から手動適用する用）
-void AColorReactiveObject::ApplyColorToMaterial(FLinearColor InColor)
+bool AColorReactiveObject::HasColorChanged() const
 {
-	if (ColorConfigurator == nullptr)
-		return;
-
-	ColorConfigurator->ApplyColorToMaterial(InColor);
-}
-
-void AColorReactiveObject::ChangeLock(bool b)
-{
-	if (ColorConfigurator == nullptr)
-		return;
-	ColorConfigurator->ChangeLock(b);
-}
-
-bool AColorReactiveObject::IsColorChange() const
-{
-	return ColorConfigurator&&ColorConfigurator->IsColorChange();
+    return ObjectColorComponent && ObjectColorComponent->HasColorChanged();
 }
 
 bool AColorReactiveObject::IsChangeable() const
 {
-	return ColorConfigurator&& ColorConfigurator->IsChangeable();
+    return ObjectColorComponent && ObjectColorComponent->IsChangeable();
 }
 
-bool AColorReactiveObject::IsColorModifiable() const
+bool AColorReactiveObject::IsColorMatched() const
 {
-	if (ColorConfigurator == nullptr)
-		return false;
-	return ColorConfigurator->IsColorModifiable();
-}
-
-bool AColorReactiveObject::IsColorMatch() const
-{
-	return ColorConfigurator && ColorConfigurator->IsColorMatch();
+    return ObjectColorComponent && ObjectColorComponent->IsColorMatched();
 }
 
 FName AColorReactiveObject::GetColorEventID() const
 {
-	if (ColorConfigurator == nullptr)
-		return " ";
+    if (!ObjectColorComponent)
+    {
+        return NAME_None;
+    }
 
-	return ColorConfigurator->GetColorEventID();
+    return ObjectColorComponent->GetColorEventID();
 }
 
+// =======================
+// 状態管理
+// =======================
+
+FLinearColor AColorReactiveObject::GetCurrentColor() const
+{
+    if (!ObjectColorComponent)
+    {
+        return FLinearColor::White;
+    }
+
+    return ObjectColorComponent->GetCurrentColor();
+}
+
+FLinearColor AColorReactiveObject::GetInitialColor() const
+{
+    if (!ObjectColorComponent)
+    {
+        return FLinearColor::White;
+    }
+
+    return ObjectColorComponent->GetInitialColor();
+}
+
+// =======================
+// 色処理の委譲メソッド
+// =======================
+
+void AColorReactiveObject::ProcessColorMatching(const FLinearColor& NewColor)
+{
+    if (!ObjectColorComponent)
+    {
+        return;
+    }
+
+    ObjectColorComponent->ProcessColorMatching(NewColor);
+}

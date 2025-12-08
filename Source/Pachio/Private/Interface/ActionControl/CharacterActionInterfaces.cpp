@@ -21,11 +21,11 @@ void IColorModeController::ChangeColor(float)
 {
 }
 
-void IColorModeController::ShiftArrayRightColorMode()
+void IColorModeController::ChangeCameraViewModeToCharacter()
 {
 }
 
-void IColorModeController::ShiftArrayLeftColorMode()
+void IColorModeController::ChangeCameraViewModeToGrid()
 {
 }
 

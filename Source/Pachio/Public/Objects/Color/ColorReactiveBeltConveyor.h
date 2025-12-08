@@ -3,73 +3,122 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/Color/ColorReactiveObject.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "Components/Color/ObjectColorComponent.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "ColorReactiveBeltConveyor.generated.h"
 
 class UBoxComponent;
 class UPhysicsCalculator;
 
 /**
- * 色によって挙動（ベルトの進行方向）が変化するベルトコンベアクラス
+ * @brief 色によって挙動（ベルトの進行方向）が変化するベルトコンベアコンポーネント
  * 対象のアクター（UPhysicsCalculator を持つ）に力を加える
  */
-UCLASS()
-class PACHIO_API AColorReactiveBeltConveyor : public AColorReactiveObject
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class PACHIO_API UColorReactiveBeltConveyorComponent : public UObjectColorComponent
 {
 	GENERATED_BODY()
 
 public:
-	AColorReactiveBeltConveyor();
+	/**
+	 * @brief コンストラクタ。ベルトコンベアの初期設定を行う
+	 */
+	UColorReactiveBeltConveyorComponent();
 
-	// 初期化処理（親クラスも初期化）
-	virtual void Init() override;
+	/**
+	 * @brief 初期化処理（親クラスの初期化も呼び出す）
+	 */
+	virtual void Initialize() override;
 
-	// 毎フレーム呼ばれる処理：ベルト上の物体に力を加える
-	virtual void Tick(float) override;
+	/**
+	 * @brief コンポーネント登録時処理
+	 *
+	 * アクターにアタッチされた直後（エディタ・実行時とも）に呼ばれます。
+	 * 必要であれば、この段階で依存コンポーネントの取得や初期設定を行います。
+	 * @note BeginPlay よりも早いタイミングで呼び出されます。
+	 */
+	void OnRegister()override;
+
+	/**
+	 * @brief 毎フレーム呼ばれる処理
+	 * ベルト上の物体に進行方向の力を加える
+	 *
+	 * @param DeltaTime フレーム間の経過時間
+	 */
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-	// 色反応処理：色一致で進行方向、補色一致で逆方向へ変更
-	virtual void ColorAction(const FLinearColor InColor, FEffectMatchResult) override;
+	/**
+	 * @brief 色の反応処理
+	 * 色が一致した場合は進行方向へ、補色が一致した場合は逆方向へ切り替える
+	 *
+	 * @param NewColor 新しく適用された色
+	 */
+	virtual void ApplyColorWithMatching(const FLinearColor& NewColor) override;
 
-	// オーバーラップ開始処理：対象をベルト上として登録
+	/**
+	 * @brief オーバーラップ開始時の処理
+	 * ベルト上に乗った対象を登録する
+	 */
 	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnOverlapBegin(
+		UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult
+	);
 
-	// オーバーラップ終了処理：対象の登録解除
+	/**
+	 * @brief オーバーラップ終了時の処理
+	 * ベルト上から離れた対象の登録を解除する
+	 */
 	UFUNCTION()
-	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	void OnOverlapEnd(
+		UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex
+	);
 
+	/**
+	 * @brief ビート検出時に呼ばれる処理
+	 * ベルトの力やアニメーションを一時的に強調させる
+	 */
 	UFUNCTION()
 	void OnBeatDetected();
 
 private:
-	// ベルトの当たり判定用 Box コリジョン
-	UPROPERTY(VisibleAnywhere)
-	UBoxComponent* BoxComponent;
+	/** ベルトコンベアの当たり判定用 Box コリジョン */
+	UPROPERTY(VisibleAnywhere, Category = "BeltConveyor")
+	TObjectPtr<UBoxComponent> BoxComponent;
 
-	// ベルトの進行方向（Editor 設定可能）
-	UPROPERTY(EditAnywhere)
-	FVector direction;
+	/** ベルトの基本進行方向（エディタから設定可能） */
+	UPROPERTY(EditAnywhere, Category = "BeltConveyor|Movement")
+	FVector BaseDirection;
 
-	// ベルトの推進力（Editor 設定可能）
-	UPROPERTY(EditAnywhere)
-	float DefaultPower = 0;
-	float CurrentPower = 0;
-	// 実際の現在方向（色に応じて切り替わる）
+	/** ベルトの基礎推進力（エディタ設定可） */
+	UPROPERTY(EditAnywhere, Category = "BeltConveyor|Movement", meta = (ClampMin = "0.0"))
+	float DefaultPower;
+
+	/** 現在の実際の進行方向（色反応によって切り替わる） */
+	UPROPERTY(VisibleAnywhere, Category = "BeltConveyor|Runtime")
 	FVector CurrentDirection;
 
-	// ベルト上に存在する対象アクター（物理的に影響を与える）
+	/** ベルト上に存在する対象（物理的影響を受ける） */
 	UPROPERTY()
-	TArray<UPhysicsCalculator*> hitObject;
+	TArray<TObjectPtr<UPhysicsCalculator>> HitObjects;
 
-	UPROPERTY(EditAnywhere)
-	bool IsRevers = false;
+	/** 色反応で方向を反転させるか */
+	UPROPERTY(EditAnywhere, Category = "BeltConveyor|Behavior")
+	bool bReverseOnComplementary;
 
-	UPROPERTY(EditAnywhere)
-	bool bUseLocalOffset = false;
+	/** ローカルオフセットを使用するか */
+	UPROPERTY(EditAnywhere, Category = "BeltConveyor|Behavior")
+	bool bUseLocalOffset;
 
-	UPROPERTY(EditAnywhere)
-	bool bOnlyClosest = false;
+	/** 最も近い対象のみに作用させるか */
+	UPROPERTY(EditAnywhere, Category = "BeltConveyor|Behavior")
+	bool bAffectOnlyClosest;
 };

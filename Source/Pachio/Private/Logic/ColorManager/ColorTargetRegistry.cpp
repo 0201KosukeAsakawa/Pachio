@@ -2,7 +2,7 @@
 
 
 #include "Logic/ColorManager/ColorTargetRegistry.h"
-#include "Logic/ColorManager/EffectColorMatcher.h"
+#include "Logic/ColorManager/EffectColorRegistry.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -11,95 +11,55 @@
 // 色の適用処理
 // =======================
 
-void UColorTargetRegistry::ApplyColor(FLinearColor NewColor, EColorTargetType Mode, FEffectMatchResult effect)
+void UColorTargetRegistry::ApplyColor(FLinearColor NewColor)
 {
-    switch (Mode)
+    if (PostProcessMID)
     {
-    case EColorTargetType::WorldColor:
-        if (PostProcessMID)
-        {
-            // ポストプロセスマテリアルに色を適用（画面全体のカラー演出）
-            PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"), NewColor);
-        }
-        // 指定されたモードのターゲットに通知
-        NotifyTargets(Mode, NewColor, effect);
-        // 常時反応するターゲット（例：UIなど Responders）にも通知
-        NotifyTargets(EColorTargetType::Responders, NewColor, effect);
-        break;
-
-    case EColorTargetType::ObjectColor:
-        // 特定オブジェクトに色を適用
-        if (!TargetObject)
-            return;
-        TargetObject->ColorAction(NewColor, effect);
-        break;
-
-    default:
-        break;
+        // ポストプロセスマテリアルに色を適用（画面全体のカラー演出）
+        PostProcessMID->SetVectorParameterValue(TEXT("FilterColor"),NewColor);
     }
+    // 指定されたモードのターゲットに通知
+    NotifyTargets(NewColor);
+    // 常時反応するターゲット（例：UIなど Responders）にも通知
+    NotifyTargets(NewColor);
 
     // 色適用イベントをブロードキャスト
-    OnColorApplied.Broadcast(Mode, NewColor);
+    OnColorApplied.Broadcast(NewColor);
 }
 
 // =======================
 // イベント用の色適用処理
 // =======================
 
-void UColorTargetRegistry::ColorEvent(FName EventID, FLinearColor NewColor, FEffectMatchResult effect)
-{
-    // Event ターゲットが存在しなければ終了
-    if (!ColorResponseTargets.Contains(EColorTargetType::Event))
-    {
-        return;
-    }
-
-    auto& Instances = ColorResponseTargets[EColorTargetType::Event].Instances;
+void UColorTargetRegistry::ColorEvent(FName EventID, FLinearColor NewColor)
+{   
+    auto& instances = Instances;
     if (Instances.Num() == 0)
         return;
 
     // EventID が一致するターゲットにのみ通知
-    for (auto& TargetInstance : Instances)
+    for (auto& TargetInstance : instances)
     {
         if (TargetInstance->GetColorEventID() != EventID)
             continue;
 
-        TargetInstance->ColorAction(NewColor, effect);
+        TargetInstance->ApplyColorWithMatching(NewColor);
     }
-}
-
-// =======================
-// ターゲットの選択・リセット
-// =======================
-
-// 特定のオブジェクトを現在の色ターゲットとして設定
-void UColorTargetRegistry::SetColorTarget(IColorReactiveInterface* InInterface)
-{
-    TargetObject.SetObject(Cast<UObject>(InInterface));
-    TargetObject.SetInterface(InInterface);
-    InInterface->SetSelectMode(true); // 選択状態を付与
-}
-
-// 選択中のターゲットをリセット
-void UColorTargetRegistry::ResetColorTarget()
-{
-    TargetObject->SetSelectMode(false);
 }
 
 // =======================
 // ターゲット登録処理
 // =======================
 
-// 指定モードに新しいターゲットを登録
-void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterface<IColorReactiveInterface> Target)
+// 新しいターゲットを登録
+void UColorTargetRegistry::RegisterTarget(TScriptInterface<IColorReactiveInterface> Target)
 {
     if (!Target)
         return;
 
-    FColorTargetInstanceArray& TargetArray = ColorResponseTargets.FindOrAdd(Mode);
-    if (!TargetArray.Instances.Contains(Target))
+    if (!Instances.Contains(Target))
     {
-        TargetArray.Instances.Add(Target);
+        Instances.Add(Target);
     }
 }
 
@@ -107,18 +67,15 @@ void UColorTargetRegistry::RegisterTarget(EColorTargetType Mode, TScriptInterfac
 // ターゲット通知処理
 // =======================
 
-// 指定モードの全ターゲットに色を通知
-void UColorTargetRegistry::NotifyTargets(EColorTargetType Mode, const FLinearColor& Color, FEffectMatchResult effect)
+//全ターゲットに色を通知
+void UColorTargetRegistry::NotifyTargets(const FLinearColor& Color)
 {
-    if (FColorTargetInstanceArray* TargetArray = ColorResponseTargets.Find(Mode))
+    for (const TScriptInterface<IColorReactiveInterface>& Target : Instances)
     {
-        for (const TScriptInterface<IColorReactiveInterface>& Target : TargetArray->Instances)
+        if (Target)
         {
-            if (Target)
-            {
-                // ターゲットの反応関数を呼び出す
-                Target->ColorAction(Color, effect);
-            }
+            // ターゲットの反応関数を呼び出す
+            Target->ApplyColorWithMatching(Color);
         }
     }
 }

@@ -5,6 +5,8 @@
 #include "FunctionLibrary.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Manager/ColorManager.h"
+#include "Manager/LevelManager.h"
 #include "NiagaraActor.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -53,10 +55,12 @@ bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 // 初期化処理
 // =======================
 
-void UColorProximitySpawner::Init(bool bVariable)
+void UColorProximitySpawner::Initialize(const FLinearColor& InitialColor, bool bVariable ,AActor* owner)
 {
+    FLinearColor color =  ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetEffectColor(Effect);
+
     // 親クラスの初期化呼び出し
-    UColorReactiveComponent::Init(bVariable);
+    UColorReactiveComponent::Initialize(color,bVariable, owner);
 
     // 初期状態はエフェクト停止 & 非表示
     ToggleNiagaraActiveState(false);
@@ -72,9 +76,9 @@ void UColorProximitySpawner::OffMesh()
 {
     // すでに非表示なら処理しない
     if (bHide) return;
-
     AActor* Owner = GetOwner();
-    if (!Owner) return;
+
+    if (Owner == nullptr) return;
 
     // Owner が持つ全コンポーネントを走査
     for (UActorComponent* Component : Owner->GetComponents())
@@ -115,9 +119,8 @@ void UColorProximitySpawner::OnMesh()
 {
     // すでに表示状態なら処理しない
     if (!bHide) return;
-
     AActor* Owner = GetOwner();
-    if (!Owner) return;
+    if (Owner == nullptr) return;
 
     // Owner が持つ全コンポーネントを走査
     for (UActorComponent* Component : Owner->GetComponents())

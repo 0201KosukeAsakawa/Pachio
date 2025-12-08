@@ -2,7 +2,7 @@
 
 
 #include "Objects/Color/ColorReactiveSwitch.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Components/Color/ColorReactiveComponent.h"
@@ -12,48 +12,43 @@
 // コンストラクタ
 // =======================
 
-AColorReactiveSwitch::AColorReactiveSwitch()
+UColorReactiveSwitchComponent::UColorReactiveSwitchComponent()
 {
 	// 当たり判定用の BoxComponent を生成して Root にアタッチ
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
-	BoxComponent->SetupAttachment(RootComponent);
+	
 }
 
 // =======================
 // 初期化処理
 // =======================
 
-void AColorReactiveSwitch::Init()
+void UColorReactiveSwitchComponent::Initialize()
 {
 	// 親クラスの初期化処理
-	AColorReactiveObject::Init();
-
+	UObjectColorComponent::Initialize();
 	// 2色目の判定用カラーを取得
-	SecondColor = ALevelManager::GetInstance(GetWorld())
+	SecondaryColor = ALevelManager::GetInstance(GetWorld())
 		->GetColorManager()
-		->GetEffectColor(Second);
+		->GetEffectColor(SecondaryEffect);
 }
 
 // =======================
 // 色反応処理
 // =======================
 
-void AColorReactiveSwitch::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
+void UColorReactiveSwitchComponent::ApplyColorWithMatching(const FLinearColor& InColor)
 {
-	// ColorConfigurator が存在しなければ処理中断
-	if (!ColorConfigurator)
-		return;
-
 	// 親クラスの色処理を実行
-	AColorReactiveObject::ColorAction(InColor, result);
+	//AColorReactiveObject::ApplyColorWithMatching(InColor);
 
 	// -----------------------
 	// 第一色との一致チェック
 	// -----------------------
-	if (ColorConfigurator->CheckColorMatch(result, InColor))
+	if (UColorUtilityLibrary::GetHueAngleDistance(GetCurrentColor(), InColor))
 	{
 		// 一致した色をマテリアルに反映
-		ColorConfigurator->ApplyColorToMaterial(InColor);
+		SetColor(InColor);
 
 		// LevelManager を取得
 		ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
@@ -61,15 +56,15 @@ void AColorReactiveSwitch::ColorAction(const FLinearColor InColor, FEffectMatchR
 			return;
 
 		// ColorEvent を発火（イベントIDで識別）
-		levelManager->GetColorManager()->ColorEvent(ColorConfigurator->GetColorEventID(), InColor);
+		levelManager->GetColorManager()->ColorEvent(GetColorEventID(), InColor);
 	}
 	// -----------------------
 	// 第二色との一致チェック
 	// -----------------------
-	else if (ColorConfigurator->IsColorMatch(SecondColor, InColor))
+	else if (UColorUtilityLibrary::IsHueSimilar(SecondaryColor, InColor))
 	{
 		// 一致した色をマテリアルに反映
-		ColorConfigurator->ApplyColorToMaterial(InColor);
+		SetColor(InColor);
 
 		// LevelManager を取得
 		ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
@@ -77,6 +72,22 @@ void AColorReactiveSwitch::ColorAction(const FLinearColor InColor, FEffectMatchR
 			return;
 
 		// 第二色でも同様に ColorEvent を発火
-		levelManager->GetColorManager()->ColorEvent(ColorConfigurator->GetColorEventID(), InColor);
+		levelManager->GetColorManager()->ColorEvent(GetColorEventID(), InColor);
+	}
+}
+
+void UColorReactiveSwitchComponent::OnRegister()
+{
+	UObjectColorComponent::OnRegister();
+
+	if (AActor* Owner = GetOwner())
+	{
+		if (USceneComponent* RootComp = Owner->GetRootComponent())
+		{
+			if (BoxComponent && BoxComponent->GetAttachParent() == nullptr)
+			{
+				BoxComponent->SetupAttachment(RootComp);
+			}
+		}
 	}
 }

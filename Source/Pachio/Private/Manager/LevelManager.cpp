@@ -1,5 +1,4 @@
 #include "Manager/LevelManager.h"
-#include "Manager/ObjectManager.h"
 #include "Manager/ScoreManager.h"
 #include "Manager/ColorManager.h"
 #include "Manager/SaveManager.h"
@@ -110,6 +109,8 @@ ALevelManager* ALevelManager::GetInstance(UObject* WorldContext)
 
 		// 見つからなければ新規生成
 		ALevelManager* NewInstance = World->SpawnActor<ALevelManager>();
+		if (!Instance.IsValid())
+			return nullptr;
 		Instance = NewInstance;
 		Instance->InitializeComponents();
 	}

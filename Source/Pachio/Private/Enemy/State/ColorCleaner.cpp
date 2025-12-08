@@ -58,7 +58,7 @@ void AColorCleaner::Tick(float DeltaTime)
 
     if (TargetActor)
     {
-        if (TargetActor->IsHidden() || !IsInsideMoveRange(TargetActor->GetActorLocation()))
+       /* if (TargetActor->IsHidden() || !IsInsideMoveRange(TargetActor->GetActorLocation()))
         {
             TargetActor = nullptr;
             return;
@@ -69,7 +69,7 @@ void AColorCleaner::Tick(float DeltaTime)
         {
             TargetActor = nullptr;
             return;
-        }
+        }*/
 
         MoveTowards(TargetActor->GetActorLocation(), DeltaTime);
     }
@@ -89,7 +89,7 @@ void AColorCleaner::Tick(float DeltaTime)
 
 AActor* AColorCleaner::FindTarget()
 {
-    FVector AbsMin = StartLocation + SearchAreaMin;
+ /*   FVector AbsMin = StartLocation + SearchAreaMin;
     FVector AbsMax = StartLocation + SearchAreaMax;
     FVector Center = (AbsMin + AbsMax) * 0.5f;
     FVector Extent = (AbsMax - AbsMin) * 0.5f;
@@ -115,7 +115,7 @@ AActor* AColorCleaner::FindTarget()
         {
             return HitActor;
         }
-    }
+    }*/
 
     return nullptr;
 }
@@ -274,11 +274,11 @@ bool AColorCleaner::IsCliffAhead(const FVector& Direction)
 
 void AColorCleaner::Overlap(AActor* OtherActor)
 {
-    if (!OtherActor || OtherActor == this) return;
+    //if (!OtherActor || OtherActor == this) return;
 
-    IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(OtherActor);
-    if (Interface && !Interface->IsColorModifiable() && !Interface->IsColorChange())
-    {
-        Interface->ResetColor();
-    }
+    //IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(OtherActor);
+    //if (Interface && !Interface->IsColorModifiable() && !Interface->IsColorChange())
+    //{
+    //    Interface->ResetColor();
+    //}
 }

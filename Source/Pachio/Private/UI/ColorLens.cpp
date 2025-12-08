@@ -22,14 +22,7 @@ void UColorLens::NativeConstruct()
 
     // ColorManager に対して、背景色変更の対象としてこのクラスを登録
     // 登録することで色変更イベントを受け取るようになる
-    Owner->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
-
-    // 初期化時（BeginPlayなど）
-        // 初期化時（BeginPlayなど）
-    if (USoundManager* soundManager = Cast<USoundManager>(ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetObject()))
-    {
-        soundManager->OnBeatDetected.AddDynamic(this, &UColorLens::PlayBeatAnimation);
-    }
+    Owner->GetColorManager()->RegisterTarget(this);
 }
 
 void UColorLens::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -133,16 +126,16 @@ FLinearColor AdjustColor(FLinearColor InColor)
     return HSV.HSVToLinearRGB();
 }
 
-void UColorLens::ColorAction(FLinearColor InColor, FEffectMatchResult)
+void UColorLens::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
     if (FilterColorImage == nullptr)
         return;
 
     float H, S, V;
-    ConvertRGBToHSV(InColor, H, S, V);
+    ConvertRGBToHSV(NewColor, H, S, V);
 
     // メイン画像の色設定
-    FilterColorImage->SetColorAndOpacity(AdjustColor(InColor));
+    FilterColorImage->SetColorAndOpacity(AdjustColor(NewColor));
 
 
     // H を角度に変換（0~360）
