@@ -308,6 +308,6 @@ private:
     FLinearColor StartColor;
     FLinearColor LastColor;
 
-    bool bIsPlayedPaint = false;
+    bool b = false;
     bool bIsPainting = false;
 };

@@ -20,6 +20,4 @@ public:
 
     bool OnColorMatched(const FLinearColor& FilterColor);
     bool OnColorMismatched(const FLinearColor& FilterColor);
-
-
 };

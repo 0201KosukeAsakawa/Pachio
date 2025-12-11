@@ -181,7 +181,37 @@ public:
      * @return 最も近い基本色
      */
     UFUNCTION(BlueprintPure, Category = "Color|Comparison")
-    static EColorCategory GetNearestPrimaryColor(const FLinearColor& Color);
+    static EColorCategory GetNearestPrimaryColorCategory(const FLinearColor& Color);
+
+    /**
+     * 最も近いカテゴリの色を返す
+     *
+     * @param Color 対象色
+     * @return 最も近い基本色
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
+    static FLinearColor GetNearestPrimaryColor(const FLinearColor& Color);
+
+    /**
+     * 色の色相に角度を加算して循環処理した色を返す
+     *
+     * @param ColorA 入力色
+     * @param ColorB 加算する色
+     * @return 色相を加算した新しい色
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Conversion")
+    static FLinearColor AddHue(const FLinearColor& ColorA, const FLinearColor& ColorB);
+
+    /**
+     * 色相だけを補間して色を生成
+     *
+     * @param FromColor 開始色
+     * @param ToColor   終了色
+     * @param Alpha     補間率 0～1
+     * @return 補間された色
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Conversion")
+    static FLinearColor LerpHue(const FLinearColor& FromColor, const FLinearColor& ToColor, float Alpha);
 
     // =======================
     // エフェクト用ヘルパー

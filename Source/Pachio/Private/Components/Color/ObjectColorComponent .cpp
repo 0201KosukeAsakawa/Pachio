@@ -45,6 +45,7 @@ UObjectColorComponent::UObjectColorComponent()
     , bInitialized(false)                    //初期化済みであるか
     , HitTimer(0.f)
 {
+    PrimaryComponentTick.bCanEverTick = true;
 }
 
 // =======================
@@ -54,12 +55,6 @@ UObjectColorComponent::UObjectColorComponent()
 // =======================
 // 自動初期化フック
 // =======================
-
-void UObjectColorComponent::OnRegister()
-{
-    Super::OnRegister();
-}
-
 void UObjectColorComponent::BeginPlay()
 {
     Super::BeginPlay();
@@ -72,6 +67,43 @@ void UObjectColorComponent::BeginPlay()
 
         UE_LOG(LogTemp, Log, TEXT("[%s] ColorComponent auto-initialized on BeginPlay."),
             *GetOwner()->GetName());
+    }
+}
+
+void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+    LastPaintTime += GetWorld()->DeltaTimeSeconds;
+    if (bIsPlayedPaint)
+    {
+        if (LastPaintTime > 0.5f)
+        {
+            bIsPlayedPaint = false;
+            HitTimer = 0.f;
+        }
+    }
+
+    if (!bIsPainting)
+    {
+        return;
+    }
+    if (LastPaintTime < CHANGE_HITCOLOR)
+        return;
+    HitTimer -= GetWorld()->DeltaTimeSeconds;
+    // 補間割合（0→1）
+    float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
+
+    // Hue 補間ベースで色を更新
+    HitColor = UColorUtilityLibrary::LerpHue(HitColor, CurrentColor, Ratio);
+
+    // 補間中は MaterialAlpha で反映
+    ApplyColorToMaterialAlpha(1-Ratio, CurrentColor);
+    //ApplyColorToMaterial(HitColor);
+
+    if (Ratio >= 1)
+    {
+        LastPaintTime = 0;
+        HitTimer = 0;
+        bIsPainting = false;
     }
 }
 
@@ -95,6 +127,15 @@ void UObjectColorComponent::Initialize()
 {
     if (bInitialized)
         return;
+
+    UStaticMeshComponent* MeshComp = GetOwner()->GetComponentByClass<UStaticMeshComponent>();
+    if (MeshComp)
+    {
+        // ダイナミックマテリアルを生成
+        constexpr int32 MaterialSlotIndex = 0;
+        DynMesh = MeshComp->CreateAndSetMaterialInstanceDynamic(MaterialSlotIndex);
+    }
+
     InitializeColorLogic();      // 色ロジックの初期化
     RegisterToColorManager();    // カラーマネージャーへの登録
     SetupMaterial();             // マテリアルの初期設定
@@ -102,19 +143,39 @@ void UObjectColorComponent::Initialize()
 
 void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
+    // 色変更が開始された瞬間の処理
+    bool bNear = UColorUtilityLibrary::IsHueSimilar(HitColor, NewColor, 1);
+    if (!bNear)
+    {
+        // 初回の変更時にリセット
+        if (LastColor != NewColor)
+        {
+            LastColor = NewColor;
+            StartColor = HitColor;  // 補間開始位置を確保
+        }
+    }
+
+    // タイマー進行
     HitTimer += GetWorld()->DeltaTimeSeconds;
-    if (HitColor != NewColor)
+    bIsPainting = true;
+    LastPaintTime = 0;
+    // 補間割合（0→1）
+    float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
+
+    // Hue 補間ベースで色を更新
+    HitColor = UColorUtilityLibrary::LerpHue(StartColor, NewColor, Ratio);
+    if (!bIsPlayedPaint && !bNear)
     {
-        HitTimer = 0;
-        HitColor = NewColor;
+        // 補間中は MaterialAlpha で反映
+        ApplyColorToMaterialAlpha(1.0f - Ratio, HitColor);
     }
-    if (CurrentColor == NewColor || HitTimer < CHANGE_HITCOLOR)
+    // 補間が完了したら最終色をセット
+    if (Ratio >= 1.0f)
     {
-        float Ratio = 1 - (HitTimer / CHANGE_HITCOLOR);
-        ColorReactive->ApplyColorToMaterialAlpha(FMath::Clamp(Ratio, 0.0f, 1.0f), NewColor);
-        return;
+        SetColor(NewColor);
+        bIsPainting = false;
+        bIsPlayedPaint = true;
     }
-    SetColor(NewColor);
 }
 
 /**
@@ -123,17 +184,6 @@ void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
  */
 void UObjectColorComponent::InitializeColorLogic()
 {
-    // ReactiveComponentClassが設定されていない場合は警告
-    if (!ReactiveComponentClass)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ReactiveComponentClass is not set in %s"),
-            *GetOwner()->GetName());
-        return;
-    }
-
-    // ColorReactiveコンポーネントを動的に生成
-    ColorReactive = NewObject<UColorReactiveComponent>(this, ReactiveComponentClass);
-
     // カラーマネージャーから初期色を取得
     if (ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld()))
     {
@@ -144,24 +194,6 @@ void UObjectColorComponent::InitializeColorLogic()
     }
 
     CurrentColor = InitialColor;
-
-    // ColorReactiveの生成確認
-    if (!ColorReactive)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to create ColorReactive component in %s"),
-            *GetOwner()->GetName());
-        return;
-    }
-
-    // コンポーネントとして登録・有効化
-    ColorReactive->RegisterComponent();
-    ColorReactive->Activate(true);
-
-    // ColorReactiveの初期化
-    // 引数: 初期色, 色を変数として扱うか, オーナーアクター
-    ColorReactive->Initialize(InitialColor, true, GetOwner());
-    ColorReactive->SetEffectType(ColorCategory);
-    ColorReactive->SetupNiagaraActors(NiagaraActors);
 
     UE_LOG(LogTemp, Log, TEXT("ColorLogic initialized for %s (Effect: %d, Color: R=%.2f G=%.2f B=%.2f)"),
         *GetOwner()->GetName(),
@@ -233,26 +265,12 @@ void UObjectColorComponent::SetupMaterial()
 void UObjectColorComponent::SetColor(const FLinearColor& NewColor)
 {
     // カラーマッチング処理を実行
-    ProcessColorMatching(NewColor);
     if (!bColorChangeable)
         return;
 
-    CurrentColor = NewColor;
-
-    // ColorReactiveが無効な場合は早期リターン
-    if (ColorReactive == nullptr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ColorReactive is null in SetColor for %s"),
-            *GetOwner()->GetName());
-        return;
-    }
-
+    CurrentColor = HitColor;
     // マテリアルへ色を反映
-    ApplyColorToMaterial(NewColor);
-
-
-    // エフェクトタイプを更新（最適なエフェクトに切り替え）
-    ColorReactive->SetEffectType(UColorUtilityLibrary::GetNearestPrimaryColor(NewColor));
+    ApplyColorToMaterial(CurrentColor);
 }
 
 
@@ -273,72 +291,6 @@ void UObjectColorComponent::SetCurrentColorOnly(const FLinearColor& NewColor)
     CurrentColor = NewColor;
 }
 
-/**
- * 色マッチング処理を実行
- * ワールド色と現在色を比較し、一致判定を行う
- *
- * @param NewColor 新しく設定された色
- * @param MatchResult エフェクトマッチング結果
- */
-void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor)
-{
-    // 色アクションが無効、またはColorReactiveが無効な場合はスキップ
-    if (!bEnableColorAction || !ColorReactive)
-    {
-        return;
-    }
-    // カラーマネージャーを取得
-    const UColorManager* ColorManager = GetColorManager();
-    if (!ColorManager)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ColorManager not found in ProcessColorMatching for %s"),
-            *GetOwner()->GetName());
-        return;
-    }
-
-    // ワールド色（フィルター色）を取得
-    const FLinearColor WorldColor = ColorManager->GetWorldColor();
-
-    // 色変数モード: ワールド色を直接マテリアルに適用
-    // このモードでは、オブジェクトの色がワールド色に追従する
-    if (bColorChangeable)
-    {
-        ColorReactive->ApplyColorToMaterial(WorldColor);
-        CurrentColor = WorldColor;  // 内部状態も更新
-    }
-
-    // 色一致判定を実行（色相角度ベース）
-    bColorMatched = UColorUtilityLibrary::IsHueSimilar(InitialColor, WorldColor);
-
-    // 判定結果に応じてColorReactiveにコールバック
-    if (!bColorMatched)
-    {
-        // 色が不一致の場合
-        ColorReactive->OnColorMismatched(WorldColor);
-    }
-    else
-    {
-        // 色が一致した場合
-        ColorReactive->OnColorMatched(WorldColor);
-    }
-
-    OnColorChanged.Broadcast(UColorUtilityLibrary::GetNearestPrimaryColor(WorldColor));
-}
-
-/**
- * マテリアルに色を適用
- * ColorReactiveを通じて実際のマテリアル更新を行う
- *
- * @param Color 適用する色
- */
-void UObjectColorComponent::ApplyColorToMaterial(const FLinearColor& Color)
-{
-    if (ColorReactive)
-    {
-        ColorReactive->ApplyColorToMaterial(Color);
-    }
-}
-
 // =======================
 // 状態の取得と設定
 // =======================
@@ -354,30 +306,13 @@ void UObjectColorComponent::SetColorMatched(bool bMatched)
 }
 
 /**
- * 選択状態を設定
- * 選択時はエミッシブ効果などが適用される
- *
- * @param bInSelected 選択されているか
- */
-void UObjectColorComponent::SetSelected(bool bInSelected)
-{
-    bSelected = bInSelected;
-
-    // ColorReactiveにも選択状態を通知
-    if (ColorReactive)
-    {
-        ColorReactive->SetSelectMode(bSelected);
-    }
-}
-
-/**
  * 非表示状態かを取得
  *
  * @return 非表示状態の場合true
  */
 bool UObjectColorComponent::IsHidden() const
 {
-    return ColorReactive && ColorReactive->IsHidden();
+    return false;//ColorReactive/* && ColorReactive->IsHidden()*/;
 }
 
 // =======================
@@ -405,6 +340,40 @@ bool UObjectColorComponent::HasColorChanged(const FLinearColor& CompareColor, fl
 {
     return UColorUtilityLibrary::GetHueAngleDistance(CurrentColor, CompareColor) <= Tolerance;
 }
+
+// =======================
+// 色の適用
+// =======================
+/**
+ * マテリアルに色を適用
+ * ColorReactiveを通じて実際のマテリアル更新を行う
+ *
+ * @param Color 適用する色
+ */
+void UObjectColorComponent::ApplyColorToMaterial(const FLinearColor& InColor)
+{
+    if (!DynMesh)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: DynMesh is null in ApplyColorToMaterial"));
+        return;
+    }
+
+    CurrentColor = InColor;
+    DynMesh->SetVectorParameterValue(FName("BaseColor"), InColor);
+}
+
+void UObjectColorComponent::ApplyColorToMaterialAlpha(const float Alpha, const FLinearColor& InColor)
+{
+    if (!DynMesh)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: DynMesh is null in ApplyColorToMaterial"));
+        return;
+    }
+
+    DynMesh->SetVectorParameterValue(FName("Param"), InColor);
+    DynMesh->SetScalarParameterValue(FName("Alpha"), Alpha);
+}
+
 
 // =======================
 // ヘルパー関数
@@ -446,3 +415,4 @@ UColorManager* UObjectColorComponent::GetColorManager() const
     const ALevelManager* LevelManager = GetLevelManager();
     return LevelManager ? LevelManager->GetColorManager() : nullptr;
 }
+

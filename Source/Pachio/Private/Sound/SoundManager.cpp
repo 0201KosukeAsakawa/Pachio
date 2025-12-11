@@ -121,7 +121,7 @@ void USoundManager::SetTmp(FLinearColor NewColor)
     if (!colorManager) return;
 
     // 色から最も近いエフェクトを判定
-    EColorCategory colorCategory = UColorUtilityLibrary::GetNearestPrimaryColor(NewColor);
+    EColorCategory colorCategory = UColorUtilityLibrary::GetNearestPrimaryColorCategory(NewColor);
 
     // 色に応じて BPM を設定
     switch (colorCategory)

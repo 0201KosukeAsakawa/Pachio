@@ -19,6 +19,7 @@
 // デフォルトコンストラクタ
 UColorProximitySpawner::UColorProximitySpawner()
 {
+    bHide = false;
 }
 
 // =======================
@@ -28,12 +29,8 @@ UColorProximitySpawner::UColorProximitySpawner()
 // 色が一致したときに呼ばれる
 bool UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
-    // パーティクル（Niagara）を有効化
-    ToggleNiagaraActiveState(true);
-
     // メッシュを表示状態に切り替え
     OnMesh();
-
     // 戻り値は任意仕様（ここでは false）
     return false;
 }
@@ -41,9 +38,6 @@ bool UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 // 色が不一致だったときに呼ばれる
 bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 {
-    // パーティクル（Niagara）を無効化
-    ToggleNiagaraActiveState(false);
-
     // メッシュを非表示状態に切り替え
     OffMesh();
 
@@ -55,15 +49,9 @@ bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 // 初期化処理
 // =======================
 
-void UColorProximitySpawner::Initialize(const FLinearColor& InitialColor, bool bVariable ,AActor* owner)
+void UColorProximitySpawner::Initialize()
 {
-    FLinearColor color =  ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetEffectColor(Effect);
-
-    // 親クラスの初期化呼び出し
-    UColorReactiveComponent::Initialize(color,bVariable, owner);
-
     // 初期状態はエフェクト停止 & 非表示
-    ToggleNiagaraActiveState(false);
     bHide = false;
     OffMesh();
 }
@@ -104,9 +92,6 @@ void UColorProximitySpawner::OffMesh()
         }
     }
 
-    // 出現／消滅エフェクトの再生
-    PlayAppearEffect();
-
     // 非表示フラグ更新
     bHide = true;
 }
@@ -144,10 +129,6 @@ void UColorProximitySpawner::OnMesh()
             Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
-
-    // エフェクトを停止
-    DeactivateAllEffects();
-
     // 非表示フラグ更新
     bHide = false;
 }

@@ -11,10 +11,10 @@ UENUM(BlueprintType)
 enum class EColorCategory : uint8
 {
     Black UMETA(DisplayName = "BLACK"),
-    Red   UMETA(DisplayName = "RED"),
-    Green  UMETA(DisplayName = "GREEEEN"),
-    Blue      UMETA(DisplayName = "BLUE"),
-    Yellow UMETA(DisplayName = "YELLOW"),
+    Red  = 0  UMETA(DisplayName = "RED"),
+    Green = 120 UMETA(DisplayName = "GREEEEN"),
+    Blue  = 240    UMETA(DisplayName = "BLUE"),
+    Yellow = 60 UMETA(DisplayName = "YELLOW"),
 };
 
 // 色付け対象のクラス群を格納する構造体（編集可能）

@@ -46,7 +46,7 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(GetOwner());
     
-    FLinearColor TraceColor = CurrentColor;
+    FLinearColor TraceColor = UColorUtilityLibrary::GetNearestPrimaryColor( CurrentColor);
 
     bool bHit = UKismetSystemLibrary::LineTraceSingle(
         this,

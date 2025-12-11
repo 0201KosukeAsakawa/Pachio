@@ -30,16 +30,16 @@ bool UPlayerHoldState::OnEnter(APawn* owner)
 
 bool UPlayerHoldState::OnUpdate(float DeltaTime)
 {
-    if (HoldTarget == nullptr || mOwner == nullptr || targetComp == nullptr) return false;
-    if (targetComp->IsHidden())
-    {
-        // Hold解除して Default に戻す
-        if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
-        {
-            Player->ChangeState(EPlayerStateType::Default);
-        }
-        return true;
-    }
+    if (HoldTarget == nullptr || mOwner == nullptr /*|| targetComp == nullptr*/) return false;
+    //if (targetComp->IsHidden())
+    //{
+    //    // Hold解除して Default に戻す
+    //    if (IStateControllable* Player = Cast<IStateControllable>(mOwner))
+    //    {
+    //        Player->ChangeState(EPlayerStateType::Default);
+    //    }
+    //    return true;
+    //}
 
     // 距離チェック
     float distance = FVector::Dist(mOwner->GetActorLocation(), HoldTarget->GetActorLocation());
@@ -59,7 +59,7 @@ bool UPlayerHoldState::OnUpdate(float DeltaTime)
 bool UPlayerHoldState::OnExit(APawn* owner)
 {
     HoldTarget = nullptr;
-    targetComp = nullptr;
+   // targetComp = nullptr;
     ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE", "Put");
     return true;
 }
@@ -118,7 +118,7 @@ void UPlayerHoldState::SetUp(AActor* target, bool b)
     if (HoldTarget && mOwner)
     {
         InitialHoldDistance = FVector::Dist(mOwner->GetActorLocation(), HoldTarget->GetActorLocation());
-        targetComp = HoldTarget->GetComponentByClass<UColorReactiveComponent>();
+        //targetComp = HoldTarget->GetComponentByClass<UColorReactiveComponent>();
     }
 
     // 掴んだ時の向きを固定値として保持

@@ -201,6 +201,27 @@ FLinearColor UColorUtilityLibrary::AddHue(const FLinearColor& ColorA, const FLin
 }
 
 FLinearColor UColorUtilityLibrary::LerpHue(const FLinearColor& FromColor, const FLinearColor& ToColor, float Alpha)
+//{
+//    float H1 = GetHue(FromColor);
+//    float H2 = GetHue(ToColor);
+//
+//    float Delta = H2 - H1;
+//    if (Delta > 180.0f) Delta -= 360.0f;
+//    if (Delta < -180.0f) Delta += 360.0f;
+//
+//    float H = H1 + Delta * Alpha;
+//    H = FMath::Fmod(H, 360.0f);
+//    if (H < 0) H += 360.0f;
+//
+//    constexpr float PastelS = 0.35f;   
+//    constexpr float PastelV = 0.95f;   
+//
+//    return FLinearColor::MakeFromHSV8(
+//        (uint8)(H / 360.0f * 255.0f),
+//        (uint8)(PastelS * 255.0f),
+//        (uint8)(PastelV * 255.0f)
+//    );
+//}
 {
     float H1 = GetHue(FromColor);
     float H2 = GetHue(ToColor);
@@ -209,12 +230,14 @@ FLinearColor UColorUtilityLibrary::LerpHue(const FLinearColor& FromColor, const 
     if (Delta > 180.0f) Delta -= 360.0f;
     if (Delta < -180.0f) Delta += 360.0f;
 
+    // 毎回「AlphaStep」だけ近づく
     float H = H1 + Delta * Alpha;
+
     H = FMath::Fmod(H, 360.0f);
     if (H < 0) H += 360.0f;
 
-    constexpr float PastelS = 0.35f;   
-    constexpr float PastelV = 0.95f;   
+    constexpr float PastelS = 0.35f;
+    constexpr float PastelV = 0.95f;
 
     return FLinearColor::MakeFromHSV8(
         (uint8)(H / 360.0f * 255.0f),
@@ -222,7 +245,6 @@ FLinearColor UColorUtilityLibrary::LerpHue(const FLinearColor& FromColor, const 
         (uint8)(PastelV * 255.0f)
     );
 }
-
 // =======================
 // エフェクト用ヘルパー
 // =======================
