@@ -11,6 +11,7 @@ UColorReactiveMeshComponent::UColorReactiveMeshComponent()
 
 void UColorReactiveMeshComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
+    Super::ApplyColorWithMatching(NewColor);
     // 1️ 色から最も近い色の種類を取得
     EColorCategory Category = UColorUtilityLibrary::GetNearestPrimaryColor(NewColor);
 

@@ -23,6 +23,8 @@ namespace
 
     /** マテリアルスロットインデックス */
     static constexpr int32 MATERIAL_SLOT_INDEX = 0;
+
+    static constexpr float CHANGE_HITCOLOR = 2.f;
 }
     
 
@@ -41,7 +43,7 @@ UObjectColorComponent::UObjectColorComponent()
     , bSelected(false)                       // 選択されているか
     , bColorChangeable(false)                // 色変更が可能か
     , bInitialized(false)                    //初期化済みであるか
-    
+    , HitTimer(0.f)
 {
 }
 
@@ -100,6 +102,18 @@ void UObjectColorComponent::Initialize()
 
 void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
+    HitTimer += GetWorld()->DeltaTimeSeconds;
+    if (HitColor != NewColor)
+    {
+        HitTimer = 0;
+        HitColor = NewColor;
+    }
+    if (CurrentColor == NewColor || HitTimer < CHANGE_HITCOLOR)
+    {
+        float Ratio = 1 - (HitTimer / CHANGE_HITCOLOR);
+        ColorReactive->ApplyColorToMaterialAlpha(FMath::Clamp(Ratio, 0.0f, 1.0f), NewColor);
+        return;
+    }
     SetColor(NewColor);
 }
 
@@ -234,11 +248,11 @@ void UObjectColorComponent::SetColor(const FLinearColor& NewColor)
     }
 
     // マテリアルへ色を反映
-    ApplyColorToMaterial(CurrentColor);
+    ApplyColorToMaterial(NewColor);
 
 
     // エフェクトタイプを更新（最適なエフェクトに切り替え）
-    ColorReactive->SetEffectType(UColorUtilityLibrary::GetNearestPrimaryColor(CurrentColor));
+    ColorReactive->SetEffectType(UColorUtilityLibrary::GetNearestPrimaryColor(NewColor));
 }
 
 
@@ -273,7 +287,6 @@ void UObjectColorComponent::ProcessColorMatching(const FLinearColor& NewColor)
     {
         return;
     }
-
     // カラーマネージャーを取得
     const UColorManager* ColorManager = GetColorManager();
     if (!ColorManager)

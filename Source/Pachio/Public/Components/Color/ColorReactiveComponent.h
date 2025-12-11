@@ -64,6 +64,13 @@ public:
     void ApplyColorToMaterial(const FLinearColor& InColor);
 
     /**
+     * マテリアルに指定された色を適用
+     *
+     * @param InColor - 適用する色
+     */
+    void ApplyColorToMaterialAlpha(const float Alpha, const FLinearColor& InColor);
+
+    /**
      * 現在の色を取得
      *
      * @return 現在設定されている色

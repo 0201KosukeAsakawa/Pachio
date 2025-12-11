@@ -92,6 +92,34 @@ void UColorReactiveComponent::ApplyColorToMaterial(const FLinearColor& InColor)
     DynMesh->SetVectorParameterValue(FName("BaseColor"), InColor);
 }
 
+void UColorReactiveComponent::ApplyColorToMaterialAlpha(const float Alpha, const FLinearColor& InColor)
+{
+    if (!DynMesh)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ColorReactiveComponent: DynMesh is null in ApplyColorToMaterial"));
+        return;
+    }
+
+    // 入力カラー
+    const float R = InColor.R;
+    const float G = InColor.G;
+    const float B = InColor.B;
+
+    // 最大成分を取得
+    const float MaxValue = FMath::Max3(R, G, B);
+
+    // しきい値：最大値の80%以上を「強い成分」として1にする
+    const float Threshold = MaxValue * 0.8f;
+
+    FLinearColor OutColor = FLinearColor::Black;
+
+    if (R >= Threshold) OutColor.R = 1.0f;
+    if (G >= Threshold) OutColor.G = 1.0f;
+    if (B >= Threshold) OutColor.B = 1.0f;
+
+    DynMesh->SetVectorParameterValue(FName("Param"), OutColor);
+}
+
 // =======================
 // 状態管理
 // =======================

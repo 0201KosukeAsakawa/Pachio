@@ -266,6 +266,7 @@ protected:
     UPROPERTY(VisibleAnywhere, Category = "Color|State")
     FLinearColor CurrentColor;
 
+    FLinearColor HitColor;
     /** 初期色 */
     FLinearColor InitialColor;
 
@@ -324,4 +325,6 @@ private:
 
     /** 初期化済みであるか */
     bool bInitialized;
+
+    float HitTimer;
 };
