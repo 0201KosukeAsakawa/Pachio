@@ -109,7 +109,7 @@ void UColorReactiveComponent::ApplyColorToMaterialAlpha(const float Alpha, const
     const float MaxValue = FMath::Max3(R, G, B);
 
     // しきい値：最大値の80%以上を「強い成分」として1にする
-    const float Threshold = MaxValue * 0.8f;
+    const float Threshold = MaxValue * 0.9f;
 
     FLinearColor OutColor = FLinearColor::Black;
 
@@ -118,6 +118,7 @@ void UColorReactiveComponent::ApplyColorToMaterialAlpha(const float Alpha, const
     if (B >= Threshold) OutColor.B = 1.0f;
 
     DynMesh->SetVectorParameterValue(FName("Param"), OutColor);
+    DynMesh->SetScalarParameterValue(FName("Alpha"), Alpha);
 }
 
 // =======================
