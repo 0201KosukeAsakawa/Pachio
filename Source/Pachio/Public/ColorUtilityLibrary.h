@@ -213,6 +213,18 @@ public:
     UFUNCTION(BlueprintPure, Category = "Color|Conversion")
     static FLinearColor LerpHue(const FLinearColor& FromColor, const FLinearColor& ToColor, float Alpha);
 
+
+    /**
+     * 色相だけを一定ステップ量で近づける（比例補間ではない）
+     *
+     * @param FromColor 現在の色
+     * @param ToColor   目標色
+     * @param Step      1 Tick で動かす Hue の角度（例：5.0f など）
+     * @return 近づいた新しい色
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Conversion")
+    static FLinearColor MoveHueToward(const FLinearColor& FromColor, const FLinearColor& ToColor, float Step);
+
     // =======================
     // エフェクト用ヘルパー
     // =======================

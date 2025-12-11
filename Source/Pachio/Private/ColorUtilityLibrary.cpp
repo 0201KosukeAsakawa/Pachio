@@ -223,6 +223,41 @@ FLinearColor UColorUtilityLibrary::LerpHue(const FLinearColor& FromColor, const 
     );
 }
 
+FLinearColor UColorUtilityLibrary::MoveHueToward(const FLinearColor& FromColor, const FLinearColor& ToColor, float Step)
+{
+    float H1 = GetHue(FromColor);
+    float H2 = GetHue(ToColor);
+
+    float Delta = H2 - H1;
+
+    // 最短距離に正規化
+    if (Delta > 180.0f) Delta -= 360.0f;
+    if (Delta < -180.0f) Delta += 360.0f;
+
+    // 到達できるか？
+    if (FMath::Abs(Delta) <= Step)
+    {
+        // もう目標に到達可能 → 完全一致させる
+        return ToColor;
+    }
+
+    // 一定ステップだけ進める
+    float NewHue = H1 + (Delta > 0 ? Step : -Step);
+
+    // 正規化
+    NewHue = FMath::Fmod(NewHue, 360.0f);
+    if (NewHue < 0) NewHue += 360.0f;
+
+    constexpr float PastelS = 0.35f;
+    constexpr float PastelV = 0.95f;
+
+    return FLinearColor::MakeFromHSV8(
+        (uint8)(NewHue / 360.0f * 255.0f),
+        (uint8)(PastelS * 255.0f),
+        (uint8)(PastelV * 255.0f)
+    );
+}
+
 // =======================
 // エフェクト用ヘルパー
 // =======================
