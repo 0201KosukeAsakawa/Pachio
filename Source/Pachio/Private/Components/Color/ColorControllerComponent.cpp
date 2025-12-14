@@ -234,5 +234,5 @@ void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetCom
         ColorTankMap.FindOrAdd(Comp.Key) += AddAmount;
     }
 
-    TargetComp->ApplyColorWithMatching(FLinearColor::White);
+    //TargetComp->ApplyColorWithMatching(FLinearColor::White);
 }

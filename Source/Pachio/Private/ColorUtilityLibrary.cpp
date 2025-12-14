@@ -101,6 +101,9 @@ float UColorUtilityLibrary::GetColorRatio(const FLinearColor& ColorA, const FLin
     A = GetHSL(ColorA);
     B = GetHSL(ColorB);
 
+    if (A == B)
+        return 0;
+
     // 360度の剰余を取りつつ差を計算
     float diff = FMath::Fmod(FMath::Abs(A.X - B.X) + 360.0f, 360.0f);
     diff = FMath::Min(diff, 360.0f - diff);
@@ -285,14 +288,13 @@ EColorCategory UColorUtilityLibrary::GetNearestColorCategoryRGBY(const FLinearCo
     if (Color == FLinearColor::White)
         return EColorCategory::White;
 
-    float MinDistance = FLT_MAX;
+     float MinDistance = FLT_MAX;
     EColorCategory Result = EColorCategory::Red;
 
     for (auto& Pair : EffectColorMap) // Pair.Key = Category, Pair.Value = FLinearColor
     {
         if (Pair.Key != EColorCategory::Red && Pair.Key != EColorCategory::Blue
-            && Pair.Key != EColorCategory::Yellow && Pair.Key != EColorCategory::Green
-            && Pair.Key != EColorCategory::White)
+            &&  Pair.Key != EColorCategory::Green && Pair.Key != EColorCategory::White)
             continue; 
 
         float Distance = GetColorRatio(Color, Pair.Value); // EffectColorMap の色を使用
