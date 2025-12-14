@@ -73,11 +73,6 @@ FLinearColor UColorManager::GetWorldColor() const
     return ColorTargetRegistry->GetPostProcessColor();
 }
 
-FLinearColor UColorManager::GetEffectColor(EColorCategory effect) const
-{
-    return EffectColorRegistry->GetEffectColor(effect);
-}
-
 // プレイヤーの色コントローラーとイベント接続
 void UColorManager::BindController()
 {

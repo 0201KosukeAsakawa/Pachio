@@ -18,6 +18,24 @@ namespace
     static constexpr float HUE_MAGENTA = 300.0f;
     static constexpr float HUE_ROSE = 330.0f;
 }
+
+TMap<EColorCategory, FLinearColor> UColorUtilityLibrary::EffectColorMap = {
+    { EColorCategory::Red,          UColorUtilityLibrary::FromHue(HUE_RED) },
+    { EColorCategory::Orange,       UColorUtilityLibrary::FromHue(HUE_ORANGE) },
+    { EColorCategory::Yellow,       UColorUtilityLibrary::FromHue(HUE_YELLOW) },
+    { EColorCategory::Chatreuse,    UColorUtilityLibrary::FromHue(HUE_CHARTREUSE) },
+    { EColorCategory::Green,        UColorUtilityLibrary::FromHue(HUE_GREEN) },
+    { EColorCategory::SpringGreen,  UColorUtilityLibrary::FromHue(HUE_SPRING_GREEN) },
+    { EColorCategory::Cyan,         UColorUtilityLibrary::FromHue(HUE_CYAN) },
+    { EColorCategory::Azure,        UColorUtilityLibrary::FromHue(HUE_AZURE) },
+    { EColorCategory::Blue,         UColorUtilityLibrary::FromHue(HUE_BLUE) },
+    { EColorCategory::Violet,       UColorUtilityLibrary::FromHue(HUE_VIOLET) },
+    { EColorCategory::Magenta,      UColorUtilityLibrary::FromHue(HUE_MAGENTA) },
+    { EColorCategory::Rose,         UColorUtilityLibrary::FromHue(HUE_ROSE) },
+    { EColorCategory::Black,        FLinearColor::Black }
+};
+
+
 // =======================
 // 色空間変換
 // =======================
@@ -145,43 +163,30 @@ FLinearColor UColorUtilityLibrary::RotateHue(const FLinearColor& InColor,
     return HSV.HSVToLinearRGB();
 }
 
-EColorCategory UColorUtilityLibrary::GetNearestPrimaryColorCategory(const FLinearColor& Color)
+EColorCategory UColorUtilityLibrary::GetNearestColorCategory(const FLinearColor& Color)
 {
-    float Hue = GetHue(Color);
+    // 明度が低い場合など、黒扱い
+    if (Color.R < 0.05f && Color.G < 0.05f && Color.B < 0.05f)
+    {
+        return EColorCategory::Black;
+    }
 
-    // 各基本色との色相差を計算
-    float DistanceRed = GetHueDistanceFromAngle(Color, HUE_RED);
-    float DistanceGreen = GetHueDistanceFromAngle(Color, HUE_GREEN);
-    float DistanceBlue = GetHueDistanceFromAngle(Color, HUE_BLUE);
-    float DistanceYellow = GetHueDistanceFromAngle(Color, HUE_YELLOW);
-
-    // 最小距離を探す
-    float MinDistance = DistanceRed;
+    float MinDistance = FLT_MAX;
     EColorCategory Result = EColorCategory::Red;
 
-    if (DistanceGreen < MinDistance)
+    for (auto& Pair : EffectColorMap) // Pair.Key = Category, Pair.Value = FLinearColor
     {
-        MinDistance = DistanceGreen;
-        Result = EColorCategory::Green;
-    }
-    if (DistanceBlue < MinDistance)
-    {
-        MinDistance = DistanceBlue;
-        Result = EColorCategory::Blue;
-    }
-    if (DistanceYellow < MinDistance)
-    {
-        MinDistance = DistanceYellow;
-        Result = EColorCategory::Yellow;
+        if (Pair.Key == EColorCategory::Black) continue; // 黒は除外
+
+        float Distance = GetColorRatio(Color, Pair.Value); // EffectColorMap の色を使用
+        if (Distance < MinDistance)
+        {
+            MinDistance = Distance;
+            Result = Pair.Key;
+        }
     }
 
     return Result;
-}
-
-FLinearColor UColorUtilityLibrary::GetNearestPrimaryColor(const FLinearColor& Color)
-{
-    float deg = (float)GetNearestPrimaryColorCategory(Color);
-    return FromHue(deg);
 }
 
 FLinearColor UColorUtilityLibrary::AddHue(const FLinearColor& ColorA, const FLinearColor& ColorB)
@@ -223,41 +228,6 @@ FLinearColor UColorUtilityLibrary::LerpHue(const FLinearColor& FromColor, const 
     );
 }
 
-FLinearColor UColorUtilityLibrary::MoveHueToward(const FLinearColor& FromColor, const FLinearColor& ToColor, float Step)
-{
-    float H1 = GetHue(FromColor);
-    float H2 = GetHue(ToColor);
-
-    float Delta = H2 - H1;
-
-    // 最短距離に正規化
-    if (Delta > 180.0f) Delta -= 360.0f;
-    if (Delta < -180.0f) Delta += 360.0f;
-
-    // 到達できるか？
-    if (FMath::Abs(Delta) <= Step)
-    {
-        // もう目標に到達可能 → 完全一致させる
-        return ToColor;
-    }
-
-    // 一定ステップだけ進める
-    float NewHue = H1 + (Delta > 0 ? Step : -Step);
-
-    // 正規化
-    NewHue = FMath::Fmod(NewHue, 360.0f);
-    if (NewHue < 0) NewHue += 360.0f;
-
-    constexpr float PastelS = 0.35f;
-    constexpr float PastelV = 0.95f;
-
-    return FLinearColor::MakeFromHSV8(
-        (uint8)(NewHue / 360.0f * 255.0f),
-        (uint8)(PastelS * 255.0f),
-        (uint8)(PastelV * 255.0f)
-    );
-}
-
 // =======================
 // エフェクト用ヘルパー
 // =======================
@@ -277,4 +247,44 @@ FLinearColor UColorUtilityLibrary::EnhanceMaxComponent(const FLinearColor& Color
 
     Enhanced.A = Color.A;
     return Enhanced;
+}
+
+EColorCategory UColorUtilityLibrary::GetNearestColorCategoryRGBY(const FLinearColor& Color)
+{
+    // 明度が低い場合など、黒扱い
+    if (Color.R < 0.05f && Color.G < 0.05f && Color.B < 0.05f)
+    {
+        return EColorCategory::Black;
+    }
+
+    float MinDistance = FLT_MAX;
+    EColorCategory Result = EColorCategory::Red;
+
+    for (auto& Pair : EffectColorMap) // Pair.Key = Category, Pair.Value = FLinearColor
+    {
+        if (Pair.Key != EColorCategory::Red && Pair.Key != EColorCategory::Blue
+            && Pair.Key != EColorCategory::Yellow && Pair.Key != EColorCategory::Green) 
+            continue; // 黒は除外
+
+        float Distance = GetColorRatio(Color, Pair.Value); // EffectColorMap の色を使用
+        if (Distance < MinDistance)
+        {
+            MinDistance = Distance;
+            Result = Pair.Key;
+        }
+    }
+
+    return Result;
+}
+
+FLinearColor UColorUtilityLibrary::GetCategoryColor(EColorCategory targetCategory)
+{
+    if (const FLinearColor* FoundColor = EffectColorMap.Find(targetCategory))
+    {
+        return *FoundColor;
+    }
+
+    // 見つからない場合はデフォルト値（白）を返す
+    UE_LOG(LogTemp, Warning, TEXT("Effect color not found for effect type: %d"), static_cast<int32>(targetCategory));
+    return FLinearColor::White;
 }

@@ -72,39 +72,40 @@ void UObjectColorComponent::BeginPlay()
 
 void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-    LastPaintTime += GetWorld()->DeltaTimeSeconds;
+    
     if (bIsPlayedPaint)
     {
-        if (LastPaintTime > 0.5f)
+        LastPaintTime += GetWorld()->DeltaTimeSeconds;
+        if (LastPaintTime > 1.f)
         {
             bIsPlayedPaint = false;
             HitTimer = 0.f;
         }
     }
 
-    if (!bIsPainting)
-    {
-        return;
-    }
-    if (LastPaintTime < CHANGE_HITCOLOR)
-        return;
-    HitTimer -= GetWorld()->DeltaTimeSeconds;
-    // 補間割合（0→1）
-    float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
+    //if (!bIsPainting)
+    //{
+    //    return;
+    //}
+    //if (LastPaintTime < CHANGE_HITCOLOR)
+    //    return;
+    //HitTimer -= GetWorld()->DeltaTimeSeconds;
+    //// 補間割合（0→1）
+    //float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
 
-    // Hue 補間ベースで色を更新
-    HitColor = UColorUtilityLibrary::LerpHue(HitColor, CurrentColor, Ratio);
+    //// Hue 補間ベースで色を更新
+    //HitColor = UColorUtilityLibrary::LerpHue(HitColor, CurrentColor, Ratio);
 
-    // 補間中は MaterialAlpha で反映
-    ApplyColorToMaterialAlpha(1-Ratio, CurrentColor);
+    //// 補間中は MaterialAlpha で反映
+    //ApplyColorToMaterialAlpha(1-Ratio, CurrentColor);
     //ApplyColorToMaterial(HitColor);
 
-    if (Ratio >= 1)
-    {
-        LastPaintTime = 0;
-        HitTimer = 0;
-        bIsPainting = false;
-    }
+    //if (Ratio >= 1)
+    //{
+    //    LastPaintTime = 0;
+    //    HitTimer = 0;
+    //    bIsPainting = false;
+    //}
 }
 
 #if WITH_EDITOR
@@ -143,11 +144,17 @@ void UObjectColorComponent::Initialize()
 
 void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
-    // 色変更が開始された瞬間の処理
+    if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, NewColor, 1))
+        return;
+
+    // 色変更開始時の処理
     bool bNear = UColorUtilityLibrary::IsHueSimilar(HitColor, NewColor, 1);
+    if (bIsPlayedPaint && bNear)
+        return;
+
     if (!bNear)
     {
-        // 初回の変更時にリセット
+        // 初回変更時にリセット
         if (LastColor != NewColor)
         {
             LastColor = NewColor;
@@ -159,17 +166,43 @@ void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
     HitTimer += GetWorld()->DeltaTimeSeconds;
     bIsPainting = true;
     LastPaintTime = 0;
+
     // 補間割合（0→1）
     float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
 
-    // Hue 補間ベースで色を更新
-    HitColor = UColorUtilityLibrary::LerpHue(StartColor, NewColor, Ratio);
+    // HUE を取得
+    float currentHue = UColorUtilityLibrary::GetHue(CurrentColor);
+    float targetHue = UColorUtilityLibrary::GetHue(NewColor);
+
+    // ========= 修正ポイント：最短方向の符号を計算 =========
+    float rawDiff = targetHue - currentHue;
+
+    // 差を -180 ～ +180 に正規化
+    float wrappedDiff = FMath::Fmod(rawDiff + 540.0f, 360.0f) - 180.0f;
+
+    // 回転方向（最短経路）
+    float deltaSign = FMath::Sign(wrappedDiff);
+
+    UE_LOG(LogTemp, Log, TEXT("rawDiff:%f wrappedDiff:%f deltaSign:%f"),
+        rawDiff, wrappedDiff, deltaSign);
+    // =======================================================
+
+    // 最短経路で色相を変化させる
+    float newHue = currentHue + deltaSign * 30.0f * GetWorld()->DeltaTimeSeconds;
+
+    // 0-360範囲に収める
+    newHue = FMath::Fmod(newHue + 360.0f, 360.0f);
+
+    HitColor = UColorUtilityLibrary::FromHue(newHue);
+
+    // 補間中は MaterialAlpha で反映
     if (!bIsPlayedPaint && !bNear)
     {
-        // 補間中は MaterialAlpha で反映
         ApplyColorToMaterialAlpha(1.0f - Ratio, HitColor);
+        ApplyColorToMaterial(HitColor);
     }
-    // 補間が完了したら最終色をセット
+
+    // 補間完了時
     if (Ratio >= 1.0f)
     {
         SetColor(NewColor);
@@ -178,20 +211,14 @@ void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
     }
 }
 
+
 /**
  * 色ロジックの初期化
  * ColorReactiveComponentを生成し、初期色を設定する
  */
 void UObjectColorComponent::InitializeColorLogic()
 {
-    // カラーマネージャーから初期色を取得
-    if (ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld()))
-    {
-        if (UColorManager* ColorManager = LevelManager->GetColorManager())
-        {
-            InitialColor = ColorManager->GetEffectColor(ColorCategory);
-        }
-    }
+    InitialColor = UColorUtilityLibrary::GetCategoryColor(ColorCategory);
 
     CurrentColor = InitialColor;
 
@@ -235,7 +262,7 @@ void UObjectColorComponent::SetupMaterial()
     const UColorManager* ColorManager = GetColorManager();
     if (ColorManager)
     {
-        InitialColor = ColorManager->GetEffectColor(ColorCategory);
+        InitialColor = UColorUtilityLibrary::GetCategoryColor(ColorCategory); 
     }
 
     // メッシュコンポーネントを取得

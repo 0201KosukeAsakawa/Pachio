@@ -10,11 +10,19 @@ class IColorReactiveInterface;
 UENUM(BlueprintType)
 enum class EColorCategory : uint8
 {
-    Black UMETA(DisplayName = "BLACK"),
-    Red  = 0  UMETA(DisplayName = "RED"),
-    Green = 120 UMETA(DisplayName = "GREEEEN"),
-    Blue  = 240    UMETA(DisplayName = "BLUE"),
-    Yellow = 60 UMETA(DisplayName = "YELLOW"),
+    Black        UMETA(DisplayName = "BLACK"),
+    Red             UMETA(DisplayName = "RED"),
+    Orange          UMETA(DisplayName = "ORANGE"),
+    Yellow         UMETA(DisplayName = "YELLOW"),
+    Chatreuse      UMETA(DisplayName = "CHARTREUSE"),
+    Green          UMETA(DisplayName = "GREEEEN"),
+    SpringGreen    UMETA(DisplayName = "SPRING_GREEN"),
+    Cyan         UMETA(DisplayName = "CYAN"),
+    Azure         UMETA(DisplayName = "AZURE"),
+    Blue          UMETA(DisplayName = "BLUE"),
+    Violet        UMETA(DisplayName = "VIOLET"),
+    Magenta        UMETA(DisplayName = "MAGENTA"),
+    Rose         UMETA(DisplayName = "ROSE"),
 };
 
 // 色付け対象のクラス群を格納する構造体（編集可能）

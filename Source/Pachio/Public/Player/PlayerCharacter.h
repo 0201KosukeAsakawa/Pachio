@@ -135,13 +135,7 @@ public:
      * @brief 色変更（IColorModeController実装）
      * @param Value 色の変化量（正/負で色モードを切り替え）
      */
-    void ChangeColor(float Value) override;
-
-    /**
-     * @brief 色の直接設定
-     * @param Value 設定する色の値（0-1など正規化値）
-     */
-    void SetColor(float Value);
+    void ChangeColor(float Vale) override;
 
     /**
      * @brief カラーモードを右にシフト（IColorModeController実装）

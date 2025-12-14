@@ -46,7 +46,7 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(GetOwner());
     
-    FLinearColor TraceColor = UColorUtilityLibrary::GetNearestPrimaryColor( CurrentColor);
+    FLinearColor TraceColor = UColorUtilityLibrary::GetCategoryColor(UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentColor));
 
     bool bHit = UKismetSystemLibrary::LineTraceSingle(
         this,
@@ -83,18 +83,6 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 // 色調整系
 // =======================
 
-float GetRoundedAngle(float X)
-{
-    // 最も近い60の倍数に丸めて360で正規化
-    float Rounded = FMath::RoundToFloat(X / 60.0f) * 60.0f;
-    float Result = FMath::Fmod(Rounded, 360.0f);
-
-    // Fmodは負の結果を返すことがあるので正に補正
-    if (Result < 0.0f)
-        Result += 360.0f;
-
-    return Result;
-}
 
 void UColorControllerComponent::AdjustColor(float Delta)
 {
@@ -112,8 +100,6 @@ void UColorControllerComponent::AdjustColor(float Delta)
 
     Data = UColorUtilityLibrary::FromHue(Hue);
     UE_LOG(LogTemp, Log, TEXT("Hue : : %f"), Hue);
-    float f = GetRoundedAngle(Hue);
-    UE_LOG(LogTemp, Log, TEXT("f : %f"), f);
     // HSV → RGB に戻す
     FLinearColor NewColor = FLinearColor(Hue, Saturation, Value).HSVToLinearRGB();
 
@@ -123,30 +109,6 @@ void UColorControllerComponent::AdjustColor(float Delta)
     // イベントを通知
     //OnColorChanged.Broadcast(CurrentColor);
 }
-
-void UColorControllerComponent::SetColor(float Value)
-{
-    // 現在モードの色を HSV に変換
-    FLinearColor HSV = CurrentColor.LinearRGBToHSV();
-
-    float Hue = HSV.R;                                 // 色相
-    float Saturation = FMath::Clamp(HSV.G, 0.2f, 0.6f); // 彩度
-    float Brightness = FMath::Clamp(HSV.B, 0.8f, 1.0f); // 明度
-
-    // Hue を直接設定
-    Hue = FMath::Fmod(Value, 360.0f);
-    if (Hue < 0.f) Hue += 360.f;
-
-    // HSV → RGB に戻す
-    FLinearColor NewColor = FLinearColor(Hue, Saturation, Brightness).HSVToLinearRGB();
-
-    // 現在モードの色を更新（αは保持）
-    CurrentColor = FLinearColor(NewColor.R, NewColor.G, NewColor.B, CurrentColor.A);
-
-    // イベントを通知
-    OnColorChanged.Broadcast(CurrentColor);
-}
-
 // =======================
 // ターゲット探索処理
 // =======================
