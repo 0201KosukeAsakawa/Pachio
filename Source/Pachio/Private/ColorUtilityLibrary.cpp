@@ -5,34 +5,36 @@
 
 namespace
 {
-    static constexpr float HUE_RED = 0.0f;
-    static constexpr float HUE_ORANGE = 30.0f;
-    static constexpr float HUE_YELLOW = 60.0f;
-    static constexpr float HUE_CHARTREUSE = 90.0f;
-    static constexpr float HUE_GREEN = 120.0f;
-    static constexpr float HUE_SPRING_GREEN = 150.0f;
-    static constexpr float HUE_CYAN = 180.0f;
-    static constexpr float HUE_AZURE = 210.0f;
-    static constexpr float HUE_BLUE = 240.0f;
-    static constexpr float HUE_VIOLET = 270.0f;
-    static constexpr float HUE_MAGENTA = 300.0f;
-    static constexpr float HUE_ROSE = 330.0f;
+    // FVector(X: Hue, Y: Saturation, Z: Lightness)
+    static const FVector HSL_RED = FVector(0.0f, 1.0f, 1.0f);
+    static const FVector HSL_ORANGE = FVector(30.0f, 1.0f, 1.0f);
+    static const FVector HSL_YELLOW = FVector(60.0f, 1.0f, 1.0f);
+    static const FVector HSL_CHARTREUSE = FVector(90.0f, 1.0f, 1.0f);
+    static const FVector HSL_GREEN = FVector(120.0f, 1.0f, 1.0f);
+    static const FVector HSL_SPRING_GREEN = FVector(150.0f, 1.0f, 1.0f);
+    static const FVector HSL_CYAN = FVector(180.0f, 1.0f, 1.0f);
+    static const FVector HSL_AZURE = FVector(210.0f, 1.0f, 1.0f);
+    static const FVector HSL_BLUE = FVector(240.0f, 1.0f, 1.0f);
+    static const FVector HSL_VIOLET = FVector(270.0f, 1.0f, 1.0f);
+    static const FVector HSL_MAGENTA = FVector(300.0f, 1.0f, 1.0f);
+    static const FVector HSL_ROSE = FVector(330.0f, 1.0f, 1.0f);
 }
 
 TMap<EColorCategory, FLinearColor> UColorUtilityLibrary::EffectColorMap = {
-    { EColorCategory::Red,          UColorUtilityLibrary::FromHue(HUE_RED) },
-    { EColorCategory::Orange,       UColorUtilityLibrary::FromHue(HUE_ORANGE) },
-    { EColorCategory::Yellow,       UColorUtilityLibrary::FromHue(HUE_YELLOW) },
-    { EColorCategory::Chatreuse,    UColorUtilityLibrary::FromHue(HUE_CHARTREUSE) },
-    { EColorCategory::Green,        UColorUtilityLibrary::FromHue(HUE_GREEN) },
-    { EColorCategory::SpringGreen,  UColorUtilityLibrary::FromHue(HUE_SPRING_GREEN) },
-    { EColorCategory::Cyan,         UColorUtilityLibrary::FromHue(HUE_CYAN) },
-    { EColorCategory::Azure,        UColorUtilityLibrary::FromHue(HUE_AZURE) },
-    { EColorCategory::Blue,         UColorUtilityLibrary::FromHue(HUE_BLUE) },
-    { EColorCategory::Violet,       UColorUtilityLibrary::FromHue(HUE_VIOLET) },
-    { EColorCategory::Magenta,      UColorUtilityLibrary::FromHue(HUE_MAGENTA) },
-    { EColorCategory::Rose,         UColorUtilityLibrary::FromHue(HUE_ROSE) },
-    { EColorCategory::Black,        FLinearColor::Black }
+    { EColorCategory::Red,          UColorUtilityLibrary::FromHSL(HSL_RED) },
+    { EColorCategory::Orange,       UColorUtilityLibrary::FromHSL(HSL_ORANGE) },
+    { EColorCategory::Yellow,       UColorUtilityLibrary::FromHSL(HSL_YELLOW) },
+    { EColorCategory::Chatreuse,    UColorUtilityLibrary::FromHSL(HSL_CHARTREUSE) },
+    { EColorCategory::Green,        UColorUtilityLibrary::FromHSL(HSL_GREEN) },
+    { EColorCategory::SpringGreen,  UColorUtilityLibrary::FromHSL(HSL_SPRING_GREEN) },
+    { EColorCategory::Cyan,         UColorUtilityLibrary::FromHSL(HSL_CYAN) },
+    { EColorCategory::Azure,        UColorUtilityLibrary::FromHSL(HSL_AZURE) },
+    { EColorCategory::Blue,         UColorUtilityLibrary::FromHSL(HSL_BLUE) },
+    { EColorCategory::Violet,       UColorUtilityLibrary::FromHSL(HSL_VIOLET) },
+    { EColorCategory::Magenta,      UColorUtilityLibrary::FromHSL(HSL_MAGENTA) },
+    { EColorCategory::Rose,         UColorUtilityLibrary::FromHSL(HSL_ROSE) },
+    { EColorCategory::Black,        FLinearColor::Black },
+    { EColorCategory::White,        FLinearColor::White }
 };
 
 
@@ -40,20 +42,20 @@ TMap<EColorCategory, FLinearColor> UColorUtilityLibrary::EffectColorMap = {
 // 色空間変換
 // =======================
 
-float UColorUtilityLibrary::GetHue(const FLinearColor& Color)
+FVector UColorUtilityLibrary::GetHSL(const FLinearColor& Color)
 {
     // UEの組み込み関数を使用（HSVのR成分が色相）
     const FLinearColor HSV = Color.LinearRGBToHSV();
-    return HSV.R;  // 0〜360度
+    return FVector(HSV.R, HSV.G, HSV.B);  // 0〜360度
 }
 
-FLinearColor UColorUtilityLibrary::FromHue(float HueDegrees)
+FLinearColor UColorUtilityLibrary::FromHSL(FVector HueDegrees)
 {
     // 色相のみから色を生成（彩度=1.0, 明度=1.0）
     FLinearColor HSV;
-    HSV.R = FMath::Fmod(HueDegrees, 360.0f);  // 色相（0〜360）
-    HSV.G = 1.0f;  // 彩度（最大）
-    HSV.B = 1.0f;  // 明度（最大）
+    HSV.R = FMath::Fmod(HueDegrees.X, 360.0f);  // 色相（0〜360）
+    HSV.G = FMath::Clamp(HueDegrees.Y, 0, 1);   // 彩度（0～１）
+    HSV.B = FMath::Clamp(HueDegrees.Z, 0, 1);   // 明度（0～１）
     HSV.A = 1.0f;  // アルファ
 
     return HSV.HSVToLinearRGB();
@@ -63,36 +65,44 @@ FLinearColor UColorUtilityLibrary::FromHue(float HueDegrees)
 // 色相角度の差（距離）
 // =======================
 
-float UColorUtilityLibrary::GetHueAngleDistance(const FLinearColor& ColorA,
+FVector UColorUtilityLibrary::GetHSLDistance(const FLinearColor& ColorA,
     const FLinearColor& ColorB)
 {
-    const float HueA = GetHue(ColorA);
-    const float HueB = GetHue(ColorB);
-
+    const FVector HSL_A = GetHSL(ColorA);
+    const FVector HSL_B = GetHSL(ColorB);
+    // 無彩色判定
+    if (HSL_A.Y < 0.01f || HSL_B.Y < 0.01f)
+    {
+        // 無彩色同士なら Lightness の差だけ比較、Hueは無視
+        return FVector(0.0f, 0.0f, FMath::Abs(HSL_A.Z - HSL_B.Z));
+    }
     // 色相環での最短距離を計算
-    const float Delta = FMath::Abs(HueA - HueB);
-    return FMath::Min(Delta, 360.0f - Delta);
+    const float Delta = FMath::Abs(HSL_A.X - HSL_B.X);
+    const float Saturation = FMath::Abs(HSL_A.Y - HSL_B.Y);
+    const float Lightness = FMath::Abs(HSL_A.Z - HSL_B.Z);
+   
+    return  FVector(FMath::Min(Delta, 360.0f - Delta), Saturation, Lightness);
 }
 
 float UColorUtilityLibrary::GetHueDistanceFromAngle(const FLinearColor& Color,
     float ReferenceHue)
 {
-    const float Hue = GetHue(Color);
+    const FVector Hue = GetHSL(Color);
 
     // 基準角度からの最短距離
-    const float Delta = FMath::Abs(Hue - ReferenceHue);
+    const float Delta = (float)FMath::Abs(Hue.X - ReferenceHue);
     return FMath::Min(Delta, 360.0f - Delta);
 }
 
 
 float UColorUtilityLibrary::GetColorRatio(const FLinearColor& ColorA, const FLinearColor& ColorB)
 {
-    float A, B = 0;
-    A = GetHue(ColorA);
-    B = GetHue(ColorB);
+    FVector A, B = FVector::ZeroVector;
+    A = GetHSL(ColorA);
+    B = GetHSL(ColorB);
 
     // 360度の剰余を取りつつ差を計算
-    float diff = FMath::Fmod(FMath::Abs(A - B) + 360.0f, 360.0f);
+    float diff = FMath::Fmod(FMath::Abs(A.X - B.X) + 360.0f, 360.0f);
     diff = FMath::Min(diff, 360.0f - diff);
     float similarity = 1.0f - diff / 180.0f;
     return similarity;
@@ -100,11 +110,11 @@ float UColorUtilityLibrary::GetColorRatio(const FLinearColor& ColorA, const FLin
 
 float UColorUtilityLibrary::GetColorRatioWithTolerance(const FLinearColor& ColorA, const FLinearColor& ColorB, float Tolerance)
 {
-    float A = GetHue(ColorA);
-    float B = GetHue(ColorB);
+    FVector A = GetHSL(ColorA);
+    FVector B = GetHSL(ColorB);
     float ClampedTolerance = FMath::Clamp(Tolerance, -180.0f, 180.0f);
     // 色相差の絶対値を0～180度の最小角度差で計算
-    float diff = FMath::Fmod(FMath::Abs(A - B) + 360.0f, 360.0f);
+    float diff = FMath::Fmod(FMath::Abs(A.X - B.X) + 360.0f, 360.0f);
     diff = FMath::Min(diff, 360.0f - diff);
 
     // diffが±ClampedToleranceの範囲に入っているかチェック
@@ -125,10 +135,10 @@ float UColorUtilityLibrary::GetColorRatioWithTolerance(const FLinearColor& Color
 
 bool UColorUtilityLibrary::IsHueSimilar(const FLinearColor& ColorA,
     const FLinearColor& ColorB,
-    float ThresholdDegrees)
+    FVector ThresholdHSL)
 {
-    const float Distance = GetHueAngleDistance(ColorA, ColorB);
-    return Distance <= ThresholdDegrees;
+    const FVector Distance = GetHSLDistance(ColorA, ColorB);
+    return Distance.X <= ThresholdHSL.X && Distance.Y <= ThresholdHSL.Y && Distance.Z <= ThresholdHSL.Z;
 }
 
 bool UColorUtilityLibrary::IsHueInRange(const FLinearColor& Color,
@@ -170,6 +180,8 @@ EColorCategory UColorUtilityLibrary::GetNearestColorCategory(const FLinearColor&
     {
         return EColorCategory::Black;
     }
+    if (Color == FLinearColor::White)
+        return EColorCategory::White;
 
     float MinDistance = FLT_MAX;
     EColorCategory Result = EColorCategory::Red;
@@ -189,32 +201,45 @@ EColorCategory UColorUtilityLibrary::GetNearestColorCategory(const FLinearColor&
     return Result;
 }
 
-FLinearColor UColorUtilityLibrary::AddHue(const FLinearColor& ColorA, const FLinearColor& ColorB)
+FLinearColor UColorUtilityLibrary::BlendHSL(
+    const FLinearColor& ColorA,
+    const FLinearColor& ColorB,
+    float MixingRatio /* 0.0 ～ 1.0 */
+)
 {
-    float A = GetHue(ColorA);
-    float B = GetHue(ColorB);
+    FVector A = GetHSL(ColorA);
+    FVector B = GetHSL(ColorB);
 
-    // 色相だけ加算し 0～360° の範囲で循環
-    float NewHue = FMath::Fmod(A + B, 360.0f);
+    // --- Hue（角度補間） ---
+    float Delta = B.X - A.X;
+    if (FMath::Abs(Delta) > 180.0f)
+    {
+        Delta -= FMath::Sign(Delta) * 360.0f;
+    }
+
+    float NewHue = FMath::Fmod(A.X + Delta * MixingRatio, 360.0f);
     if (NewHue < 0.0f)
     {
         NewHue += 360.0f;
     }
 
-    // HSV に戻してカラー生成
-    return FromHue(NewHue);
+    // --- Saturation / Lightness ---
+    float NewS = FMath::Lerp(A.Y, B.Y, MixingRatio);
+    float NewL = FMath::Lerp(A.Z, B.Z, MixingRatio);
+
+    return FromHSL(FVector(NewHue, NewS, NewL));
 }
 
 FLinearColor UColorUtilityLibrary::LerpHue(const FLinearColor& FromColor, const FLinearColor& ToColor, float Alpha)
 {
-    float H1 = GetHue(FromColor);
-    float H2 = GetHue(ToColor);
+    FVector H1 = GetHSL(FromColor);
+    FVector H2 = GetHSL(ToColor);
 
-    float Delta = H2 - H1;
+    float Delta = H2.X - H1.X;
     if (Delta > 180.0f) Delta -= 360.0f;
     if (Delta < -180.0f) Delta += 360.0f;
 
-    float H = H1 + Delta * Alpha;
+    float H = H1.X + Delta * Alpha;
     H = FMath::Fmod(H, 360.0f);
     if (H < 0) H += 360.0f;
 
@@ -257,14 +282,18 @@ EColorCategory UColorUtilityLibrary::GetNearestColorCategoryRGBY(const FLinearCo
         return EColorCategory::Black;
     }
 
+    if (Color == FLinearColor::White)
+        return EColorCategory::White;
+
     float MinDistance = FLT_MAX;
     EColorCategory Result = EColorCategory::Red;
 
     for (auto& Pair : EffectColorMap) // Pair.Key = Category, Pair.Value = FLinearColor
     {
         if (Pair.Key != EColorCategory::Red && Pair.Key != EColorCategory::Blue
-            && Pair.Key != EColorCategory::Yellow && Pair.Key != EColorCategory::Green) 
-            continue; // 黒は除外
+            && Pair.Key != EColorCategory::Yellow && Pair.Key != EColorCategory::Green
+            && Pair.Key != EColorCategory::White)
+            continue; 
 
         float Distance = GetColorRatio(Color, Pair.Value); // EffectColorMap の色を使用
         if (Distance < MinDistance)

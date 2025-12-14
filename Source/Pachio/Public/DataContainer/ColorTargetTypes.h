@@ -7,10 +7,16 @@
 
 class IColorReactiveInterface;
 
+namespace
+{
+    constexpr float COLOR_CATEGORIES = 14;
+}
+
 UENUM(BlueprintType)
 enum class EColorCategory : uint8
 {
     Black        UMETA(DisplayName = "BLACK"),
+    White        UMETA(DisplayName = "White"),
     Red             UMETA(DisplayName = "RED"),
     Orange          UMETA(DisplayName = "ORANGE"),
     Yellow         UMETA(DisplayName = "YELLOW"),

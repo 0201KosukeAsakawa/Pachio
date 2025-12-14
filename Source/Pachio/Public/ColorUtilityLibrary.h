@@ -6,23 +6,6 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "DataContainer/ColorTargetTypes.h"
 #include "ColorUtilityLibrary.generated.h"
-/**
- * HSL色空間の構造体
- */
-USTRUCT(BlueprintType)
-struct FHSLColor
-{
-    GENERATED_BODY()
-
-    UPROPERTY(BlueprintReadWrite, Category = "Color")
-    float H = 0.0f;  // 色相 (0.0 - 1.0)
-
-    UPROPERTY(BlueprintReadWrite, Category = "Color")
-    float S = 0.0f;  // 彩度 (0.0 - 1.0)
-
-    UPROPERTY(BlueprintReadWrite, Category = "Color")
-    float L = 0.0f;  // 輝度 (0.0 - 1.0)
-};
 
 /**
  * 色計算の共通ユーティリティライブラリ
@@ -42,19 +25,20 @@ public:
      * 色から色相角度を取得（0〜360度）
      *
      * @param Color 対象色
-     * @return 色相角度（0=赤, 120=緑, 240=青）
+     * @return FVector（R : 色相 , G : 彩度 , B : 輝度）
      */
     UFUNCTION(BlueprintPure, Category = "Color|Hue")
-    static float GetHue(const FLinearColor& Color);
+    static FVector GetHSL(const FLinearColor& Color);
 
     /**
      * 色相角度から色を生成（彩度・明度は最大）
      *
-     * @param HueDegrees 色相角度（0〜360度）
+     * @param FVector（R : 色相 , G : 彩度 , B : 輝度）
+     * 
      * @return 生成された色
      */
     UFUNCTION(BlueprintPure, Category = "Color|Hue")
-    static FLinearColor FromHue(float HueDegrees);
+    static FLinearColor FromHSL(FVector HueDegrees);
 
     // =======================
     // 色相角度の差（距離）
@@ -64,14 +48,12 @@ public:
      * 2色間の色相角度差を計算（0〜180度）
      * 色相環の最短距離を返す
      *
-     * 例: 赤(0度) と 青(240度) → 120度（360-240=120の方が近い）
-     *
      * @param ColorA 色A
      * @param ColorB 色B
      * @return 色相角度差（-180〜180度）
      */
     UFUNCTION(BlueprintPure, Category = "Color|Comparison")
-    static float GetHueAngleDistance(const FLinearColor& ColorA,
+    static FVector GetHSLDistance(const FLinearColor& ColorA,
         const FLinearColor& ColorB);
 
     /**
@@ -124,13 +106,13 @@ public:
      *
      * @param ColorA 色A
      * @param ColorB 色B
-     * @param ThresholdDegrees 閾値（度）デフォルト: 30度
+     * @param ThresholdHSL 閾値（度）デフォルト: 30度
      * @return 類似している場合true
      */
     UFUNCTION(BlueprintPure, Category = "Color|Comparison")
     static bool IsHueSimilar(const FLinearColor& ColorA,
         const FLinearColor& ColorB,
-        float ThresholdDegrees = 30.0f);
+        FVector ThresholdHSL = FVector(30.0f,0.1f,0.2f));
 
     /**
      * 特定の色相範囲内にあるかを判定
@@ -201,10 +183,11 @@ public:
      *
      * @param ColorA 入力色
      * @param ColorB 加算する色
+     * @param MixingRatio 混ぜる割合 基礎値は0.5
      * @return 色相を加算した新しい色
      */
     UFUNCTION(BlueprintPure, Category = "Color|Conversion")
-    static FLinearColor AddHue(const FLinearColor& ColorA, const FLinearColor& ColorB);
+    static FLinearColor BlendHSL(const FLinearColor& ColorA, const FLinearColor& ColorB ,const float MixingRatio = 0.5f);
 
     /**
      * 色相だけを補間して色を生成

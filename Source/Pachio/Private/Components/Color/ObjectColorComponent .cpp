@@ -82,30 +82,6 @@ void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
             HitTimer = 0.f;
         }
     }
-
-    //if (!bIsPainting)
-    //{
-    //    return;
-    //}
-    //if (LastPaintTime < CHANGE_HITCOLOR)
-    //    return;
-    //HitTimer -= GetWorld()->DeltaTimeSeconds;
-    //// 補間割合（0→1）
-    //float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
-
-    //// Hue 補間ベースで色を更新
-    //HitColor = UColorUtilityLibrary::LerpHue(HitColor, CurrentColor, Ratio);
-
-    //// 補間中は MaterialAlpha で反映
-    //ApplyColorToMaterialAlpha(1-Ratio, CurrentColor);
-    //ApplyColorToMaterial(HitColor);
-
-    //if (Ratio >= 1)
-    //{
-    //    LastPaintTime = 0;
-    //    HitTimer = 0;
-    //    bIsPainting = false;
-    //}
 }
 
 #if WITH_EDITOR
@@ -144,11 +120,8 @@ void UObjectColorComponent::Initialize()
 
 void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
-    if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, NewColor, 1))
-        return;
-
     // 色変更開始時の処理
-    bool bNear = UColorUtilityLibrary::IsHueSimilar(HitColor, NewColor, 1);
+    bool bNear = UColorUtilityLibrary::IsHueSimilar(HitColor, NewColor, FVector(1, 0.1f, 0.1f));
     if (bIsPlayedPaint && bNear)
         return;
 
@@ -170,30 +143,37 @@ void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
     // 補間割合（0→1）
     float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
 
-    // HUE を取得
-    float currentHue = UColorUtilityLibrary::GetHue(CurrentColor);
-    float targetHue = UColorUtilityLibrary::GetHue(NewColor);
+    // HSL を取得
+    FVector currentHSL = UColorUtilityLibrary::GetHSL(CurrentColor);
+    FVector targetHSL = UColorUtilityLibrary::GetHSL(NewColor);
 
-    // ========= 修正ポイント：最短方向の符号を計算 =========
-    float rawDiff = targetHue - currentHue;
+    // 無彩色判定
+    if (targetHSL.Y < 0.01f)
+    {
+        HitColor = NewColor;
+    }
+    else
+    {
+        // Hueの最短角距離
+        float deltaHue = targetHSL.X - currentHSL.X;
+        deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
 
-    // 差を -180 ～ +180 に正規化
-    float wrappedDiff = FMath::Fmod(rawDiff + 540.0f, 360.0f) - 180.0f;
+        // Hue速度（度/秒）
+        float hueSpeed = 90.0f; // 1秒で90°動く
+        float hueStep = FMath::Clamp(deltaHue, -hueSpeed * GetWorld()->DeltaTimeSeconds, hueSpeed * GetWorld()->DeltaTimeSeconds);
 
-    // 回転方向（最短経路）
-    float deltaSign = FMath::Sign(wrappedDiff);
+        // Hue更新
+        float newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
 
-    UE_LOG(LogTemp, Log, TEXT("rawDiff:%f wrappedDiff:%f deltaSign:%f"),
-        rawDiff, wrappedDiff, deltaSign);
-    // =======================================================
+        // S/Lは線形補間速度
+        float sStep = (targetHSL.Y - currentHSL.Y) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
+        float lStep = (targetHSL.Z - currentHSL.Z) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
 
-    // 最短経路で色相を変化させる
-    float newHue = currentHue + deltaSign * 30.0f * GetWorld()->DeltaTimeSeconds;
+        float newS = currentHSL.Y + sStep;
+        float newL = currentHSL.Z + lStep;
 
-    // 0-360範囲に収める
-    newHue = FMath::Fmod(newHue + 360.0f, 360.0f);
-
-    HitColor = UColorUtilityLibrary::FromHue(newHue);
+        HitColor = UColorUtilityLibrary::FromHSL(FVector(newHue, newS, newL));
+    }
 
     // 補間中は MaterialAlpha で反映
     if (!bIsPlayedPaint && !bNear)
@@ -354,18 +334,7 @@ bool UObjectColorComponent::IsHidden() const
 bool UObjectColorComponent::HasColorChanged(const float Tolerance) const
 {
     // 現在色と初期色を比較
-    return HasColorChanged(InitialColor,Tolerance);
-}
-
-/**
- * 指定色と現在の色が変更されているかを判定
- *
- * @param CompareColor 比較する色
- * @return 変更されている場合true
- */
-bool UObjectColorComponent::HasColorChanged(const FLinearColor& CompareColor, float Tolerance) const
-{
-    return UColorUtilityLibrary::GetHueAngleDistance(CurrentColor, CompareColor) <= Tolerance;
+    return UColorUtilityLibrary::IsHueSimilar(InitialColor,CurrentColor);
 }
 
 // =======================

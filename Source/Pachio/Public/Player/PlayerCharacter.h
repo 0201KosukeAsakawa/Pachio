@@ -46,11 +46,7 @@ UCLASS()
  * IStateControllable, 移動・ジャンプ・スキル・色変更など複数のインターフェースを実装
  * コンポーネント指向でステート管理、物理計算、カラー管理、入力処理を担当
  */
-    class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable,
-    public IControllableMover,
-    public IControllableJumper, public IControllableAbility,
-    public IColorModeController, public IStickAction,
-    public IOptionAction
+class PACHIO_API APlayerCharacter : public ACharacter, public IStateControllable, public IControllableInterface
 {
     GENERATED_BODY()
 

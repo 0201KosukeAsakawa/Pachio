@@ -11,6 +11,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnColorChanged, FLinearColor, NewCo
 DECLARE_DELEGATE_OneParam(FColorAnimationDelegate, float);
 
 class IColorReactiveInterface;
+class UColorUtilityLibrary;
+class UObjectColorComponent;
+enum class EColorCategory : uint8;
 
 // アクターにアタッチして「色の制御・切り替え」を行うコンポーネント
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -51,7 +54,12 @@ public:
      * @return 現在のモードの色
      */
     UFUNCTION(BlueprintCallable)
-    FLinearColor GetCurrentColor() const { return CurrentColor; }
+    FLinearColor GetCurrentColor() const;
+
+    UFUNCTION(BlueprintCallable)
+    void ChangePaintMode(bool PlayPaint) { bPlayPaint = PlayPaint; }
+
+    UObjectColorComponent* GetHitColorComponent(float Distance);
 
 public:
     // ====== デリゲート ======
@@ -63,23 +71,10 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnColorChanged OnColorChanged;
 
-    /**
-     * モード切替時などの演出用デリゲート（C++ 側で使用）
-     */
-    FColorAnimationDelegate AnimationDelegate;
-
 private:
     // ====== 内部処理 ======
-
-    /**
-     * 最も近い色対象（IColorReactiveInterface 実装アクター）を検索する
-     *
-     * @param OutTarget - 見つかったターゲットインターフェース
-     * @param OutActor - 対象アクター
-     *
-     * @return 見つかった場合は true
-     */
-    bool FindClosestColorTarget(IColorReactiveInterface*& OutTarget, AActor*& OutActor);
+    void PaintHitObject(UObjectColorComponent* TargetComp);
+    void AbsorbHitObject(UObjectColorComponent* TargetComp);
 
 private:
     // ====== 内部データ ======
@@ -89,5 +84,8 @@ private:
      */
     FLinearColor CurrentColor;
 
-    FLinearColor Data;
+    TMap<EColorCategory, float>ColorTankMap;
+
+    UPROPERTY(EditAnywhere, Category = "Debug")
+    bool bPlayPaint = false;
 };

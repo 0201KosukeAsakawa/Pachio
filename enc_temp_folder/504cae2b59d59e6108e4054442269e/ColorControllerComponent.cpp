@@ -29,15 +29,15 @@ UColorControllerComponent::UColorControllerComponent()
     // 初期色は白
     CurrentColor = FLinearColor::White;
 
-    ColorTankMap.Add(EColorCategory::Red, 0);
+    ColorTankMap.Add(EColorCategory::Red, 1);
     //ColorTankMap.Add(EColorCategory::Orange, 0);
     //ColorTankMap.Add(EColorCategory::Yellow, 0);
     //ColorTankMap.Add(EColorCategory::Chatreuse, 0);
-    ColorTankMap.Add(EColorCategory::Green, 0);
+    ColorTankMap.Add(EColorCategory::Green, 1);
     //ColorTankMap.Add(EColorCategory::SpringGreen, 0);
     //ColorTankMap.Add(EColorCategory::Cyan, 0);
     //ColorTankMap.Add(EColorCategory::Azure, 0);
-    ColorTankMap.Add(EColorCategory::Blue, 0);
+    ColorTankMap.Add(EColorCategory::Blue, 1);
     //ColorTankMap.Add(EColorCategory::Violet, 0);
     //ColorTankMap.Add(EColorCategory::Magenta, 0);
     //ColorTankMap.Add(EColorCategory::Rose, 0);
@@ -171,8 +171,8 @@ UObjectColorComponent* UColorControllerComponent::GetHitColorComponent(float Dis
         EDrawDebugTrace::ForDuration,
         HitResult,
         true,
-        CurrentColor,
-        CurrentColor,
+        FLinearColor::Red,
+        FLinearColor::Red,
         0.5f
     );
 
@@ -233,6 +233,4 @@ void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetCom
         int32 AddAmount = FMath::RoundToInt(Comp.Value * 1); // 1にスケール調整可
         ColorTankMap.FindOrAdd(Comp.Key) += AddAmount;
     }
-
-    TargetComp->ApplyColorWithMatching(FLinearColor::White);
 }
