@@ -138,7 +138,7 @@ void UWeatherComponent::InitializeEffects()
 void UWeatherComponent::SetWeather( FLinearColor NewColor)
 {
     // 色から最も近いエフェクト種別を取得
-    EColorCategory Match =  UColorUtilityLibrary::GetNearestPrimaryColorCategory(NewColor);
+    EColorCategory Match =  UColorUtilityLibrary::GetNearestColorCategory(NewColor);
 
     // すべてのエフェクトを一旦停止
     if (RainEffect) RainEffect->Deactivate();

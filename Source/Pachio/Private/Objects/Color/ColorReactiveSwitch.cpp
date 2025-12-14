@@ -28,9 +28,7 @@ void UColorReactiveSwitchComponent::Initialize()
 	// 親クラスの初期化処理
 	UObjectColorComponent::Initialize();
 	// 2色目の判定用カラーを取得
-	SecondaryColor = ALevelManager::GetInstance(GetWorld())
-		->GetColorManager()
-		->GetEffectColor(SecondaryEffect);
+	SecondaryColor = InitialColor = UColorUtilityLibrary::GetCategoryColor(SecondaryEffect);
 }
 
 // =======================

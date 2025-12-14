@@ -46,14 +46,6 @@ public:
     void AdjustColor(float Delta);
 
     /**
-     * Hue を直接指定して色を決定する
-     *
-     * @param Value - Hue 値（0 ~ 360）
-     */
-    UFUNCTION(BlueprintCallable)
-    void SetColor(float Value);
-
-    /**
      * 現在のモードで保持している色を取得
      *
      * @return 現在のモードの色

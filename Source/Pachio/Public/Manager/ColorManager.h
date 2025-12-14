@@ -39,17 +39,6 @@ public:
      */
     UFUNCTION()
     void ColorEvent(FName EventID, FLinearColor NewColor);
-    /**
-     * 色変更の対象を一つに絞る関数
-     *
-     * @param 絞る対象
-     */
-    void SetColorTarget(IColorReactiveInterface*);
-    /**
-     *  色付け対象を登録する関数
-     *　必ずターゲットを絞ってあること
-     */
-    void ResetColorTarget();
 
     /**
      *  色付け対象を登録する関数
@@ -97,14 +86,6 @@ public:
      *
      */
     FLinearColor GetWorldColor()const;
-    
-    /**
-     *  種類から色を返す関数
-     *
-     *  @return 種類の色
-     *
-     */
-    FLinearColor GetEffectColor(EColorCategory)const;
 
 private:
 

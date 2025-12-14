@@ -68,7 +68,7 @@ public:
      *
      * @param ColorA 色A
      * @param ColorB 色B
-     * @return 色相角度差（0〜180度）
+     * @return 色相角度差（-180〜180度）
      */
     UFUNCTION(BlueprintPure, Category = "Color|Comparison")
     static float GetHueAngleDistance(const FLinearColor& ColorA,
@@ -81,7 +81,7 @@ public:
      *
      * @param Color 対象色
      * @param ReferenceHue 基準となる色相角度（0=赤, 120=緑, 240=青）
-     * @return 色相角度差（0〜180度）
+     * @return 色相角度差（-180〜180度）
      */
     UFUNCTION(BlueprintPure, Category = "Color|Comparison")
     static float GetHueDistanceFromAngle(const FLinearColor& Color,
@@ -175,22 +175,26 @@ public:
         float RotationDegrees);
 
     /**
+     * 色が登録されている色のどれに最も近いかを判定
+     *
+     * @param Color 対象色
+     * @return 最も近い基本色
+     */
+    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
+    static EColorCategory GetNearestColorCategory(const FLinearColor& Color);
+
+    /**
      * 色が赤・青・緑・黄のどれに最も近いかを判定
      *
      * @param Color 対象色
      * @return 最も近い基本色
      */
     UFUNCTION(BlueprintPure, Category = "Color|Comparison")
-    static EColorCategory GetNearestPrimaryColorCategory(const FLinearColor& Color);
+    static EColorCategory GetNearestColorCategoryRGBY(const FLinearColor& Color);
 
-    /**
-     * 最も近いカテゴリの色を返す
-     *
-     * @param Color 対象色
-     * @return 最も近い基本色
-     */
-    UFUNCTION(BlueprintPure, Category = "Color|Comparison")
-    static FLinearColor GetNearestPrimaryColor(const FLinearColor& Color);
+
+    UFUNCTION(BlueprintPure, Category = "Color|Effects")
+    static FLinearColor GetCategoryColor(EColorCategory targetCategory);
 
     /**
      * 色の色相に角度を加算して循環処理した色を返す
@@ -212,19 +216,6 @@ public:
      */
     UFUNCTION(BlueprintPure, Category = "Color|Conversion")
     static FLinearColor LerpHue(const FLinearColor& FromColor, const FLinearColor& ToColor, float Alpha);
-
-
-    /**
-     * 色相だけを一定ステップ量で近づける（比例補間ではない）
-     *
-     * @param FromColor 現在の色
-     * @param ToColor   目標色
-     * @param Step      1 Tick で動かす Hue の角度（例：5.0f など）
-     * @return 近づいた新しい色
-     */
-    UFUNCTION(BlueprintPure, Category = "Color|Conversion")
-    static FLinearColor MoveHueToward(const FLinearColor& FromColor, const FLinearColor& ToColor, float Step);
-
     // =======================
     // エフェクト用ヘルパー
     // =======================
@@ -236,4 +227,7 @@ public:
     UFUNCTION(BlueprintPure, Category = "Color|Effects")
     static FLinearColor EnhanceMaxComponent(const FLinearColor& Color,
         float Multiplier = 50.0f);
+
+private:
+    static TMap<EColorCategory, FLinearColor> EffectColorMap;
 };

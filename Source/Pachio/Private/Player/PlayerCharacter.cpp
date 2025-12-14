@@ -258,13 +258,6 @@ void APlayerCharacter::ChangeColor(float value)
 	colorController->AdjustColor(value);
 }
 
-void APlayerCharacter::SetColor(float value)
-{
-	if (colorController == nullptr)
-		return;
-
-	colorController->SetColor(value);
-}
 
 // カラーモードを右にシフト（次の色モードへ変更）
 void APlayerCharacter::ChangeCameraViewModeToCharacter()
@@ -356,7 +349,7 @@ void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 		{
 			AngleDegrees += 360.0f;
 		}
-		SetColor(AngleDegrees);
+		ChangeColor(AngleDegrees);
 
 		return;
 	}
