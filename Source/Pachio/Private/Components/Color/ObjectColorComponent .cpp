@@ -37,7 +37,6 @@ UObjectColorComponent::UObjectColorComponent()
     , InitialColor(FLinearColor::White)      // 初期色（リセット時に使用）
     , bApplyColorToMaterial(true)            // マテリアルに色を適用するか
     , bEnableColorAction(true)               // 色変更アクションを有効化
-    , bEnableBeatEffect(true)                // ビート演出を有効化
     , bUseComplementaryColor(false)          // 補色を使用するか
     , bColorMatched(false)                   // 色が一致しているか
     , bSelected(false)                       // 選択されているか
@@ -72,7 +71,12 @@ void UObjectColorComponent::BeginPlay()
 
 void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-    
+    if(bIsPainting && !bIsPlayedPaint)
+    {
+        HitTimer += GetWorld()->DeltaTimeSeconds;
+        ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
+    }
+
     if (bIsPlayedPaint)
     {
         LastPaintTime += GetWorld()->DeltaTimeSeconds;
@@ -136,7 +140,6 @@ void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
     }
 
     // タイマー進行
-    HitTimer += GetWorld()->DeltaTimeSeconds;
     bIsPainting = true;
     LastPaintTime = 0;
 
@@ -178,8 +181,9 @@ void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
     // 補間中は MaterialAlpha で反映
     if (!bIsPlayedPaint && !bNear)
     {
-        ApplyColorToMaterialAlpha(1.0f - Ratio, HitColor);
+        /*ApplyColorToMaterialAlpha(1.0f - Ratio, HitColor);*/
         ApplyColorToMaterial(HitColor);
+        ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
     }
 
     // 補間完了時

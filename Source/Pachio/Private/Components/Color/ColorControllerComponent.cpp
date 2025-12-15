@@ -41,7 +41,7 @@ UColorControllerComponent::UColorControllerComponent()
     //ColorTankMap.Add(EColorCategory::Violet, 0);
     //ColorTankMap.Add(EColorCategory::Magenta, 0);
     //ColorTankMap.Add(EColorCategory::Rose, 0);
-    ColorTankMap.Add(EColorCategory::White, 1);
+    ColorTankMap.Add(EColorCategory::White, 0);
 }
 
 // =======================
@@ -234,5 +234,5 @@ void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetCom
         ColorTankMap.FindOrAdd(Comp.Key) += AddAmount;
     }
 
-    //TargetComp->ApplyColorWithMatching(FLinearColor::White);
+    TargetComp->ApplyColorWithMatching(FLinearColor::White);
 }
