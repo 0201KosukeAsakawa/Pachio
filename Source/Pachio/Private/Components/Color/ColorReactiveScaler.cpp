@@ -22,7 +22,7 @@ void UColorReactiveScaler::Initialize()
 void UColorReactiveScaler::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
 	SetColor(NewColor);
-	const FLinearColor& Blue = UColorUtilityLibrary::FromHue(240);
+	const FLinearColor& Blue = UColorUtilityLibrary::FromHSL(FVector(240,1,1));
 	float distance = UColorUtilityLibrary::GetColorRatio(NewColor, Blue);
 	if (0.3 < distance)
 		GetOwner()->SetActorScale3D(DefaultScalse * distance);

@@ -56,7 +56,7 @@ public:
      * 
      *  この引数と比べる対象は現在のレベルの色
      */
-    float GetColorDistanceRGB(const FLinearColor& A);
+    FVector GetColorDistanceRGB(const FLinearColor& A);
 
     /**
      *  色を角度を利用して差を返す関数
@@ -68,7 +68,7 @@ public:
      *
      *  この引数と比べる対象は現在のレベルの色
      */
-    float GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B );
+    FVector GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B );
 
     /**
      *  色を適用・通知するコンポーネントを返す関数

@@ -122,7 +122,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	UPlayerInputComponent* PlayerInputData = GetComponentByClass<UPlayerInputComponent>();
 	if (PlayerInputData)
 	{
-		PlayerInputData->BindInput<APlayerCharacter>(PlayerInputComponent);
+		PlayerInputData->BindInput(PlayerInputComponent);
 	}
 }
 
@@ -144,11 +144,44 @@ void APlayerCharacter::ResetBuff()
 	 physics->SetGravityScale(true, DefaultGravityScales);
 }
 
+//void APlayerCharacter::Circle()
+//{
+//	float DeltaX, DeltaY;
+//	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+//	if (PC == nullptr) 
+//		return;
+//
+//	PC->GetInputMouseDelta(DeltaX, DeltaY);
+//	FVector2D CurrentDir(DeltaX, DeltaY);
+//
+//	if (CurrentDir.SizeSquared() > MOUSE_DELTA_THRESHOLD)
+//	{
+//		CurrentDir.Normalize();
+//
+//		if (bHasPrevMouse)
+//		{
+//			float CrossZ = PrevMouseDir.X * CurrentDir.Y - PrevMouseDir.Y * CurrentDir.X;
+//
+//			if (CrossZ > 0)
+//			{
+//				ChangeColor(-MOUSE_COLOR_CHANGE_RATE);  // 左回し → -1
+//			}
+//			else if (CrossZ < 0)
+//			{
+//				ChangeColor(MOUSE_COLOR_CHANGE_RATE); // 右回し → +1
+//			}
+//		}
+//
+//		PrevMouseDir = CurrentDir;
+//		bHasPrevMouse = true;
+//	}
+//}
+
 void APlayerCharacter::Circle()
 {
 	float DeltaX, DeltaY;
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (PC == nullptr) 
+	if (PC == nullptr)
 		return;
 
 	PC->GetInputMouseDelta(DeltaX, DeltaY);
@@ -156,26 +189,34 @@ void APlayerCharacter::Circle()
 
 	if (CurrentDir.SizeSquared() > MOUSE_DELTA_THRESHOLD)
 	{
-		CurrentDir.Normalize();
+		// マウス移動方向の角度を計算
+		float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(DeltaY, DeltaX));
 
-		if (bHasPrevMouse)
+		// -180 ~ +180 を 0 ~ 360 に正規化
+		if (AngleDegrees < 0)
 		{
-			float CrossZ = PrevMouseDir.X * CurrentDir.Y - PrevMouseDir.Y * CurrentDir.X;
-
-			if (CrossZ > 0)
-			{
-				ChangeColor(-MOUSE_COLOR_CHANGE_RATE);  // 左回し → -1
-			}
-			else if (CrossZ < 0)
-			{
-				ChangeColor(MOUSE_COLOR_CHANGE_RATE); // 右回し → +1
-			}
+			AngleDegrees += 360.0f;
 		}
 
+		// 基準をX+からY+にシフト（必要に応じて）
+		AngleDegrees -= 90.0f;
+
+		// 再度0~360に正規化
+		if (AngleDegrees < 0)
+		{
+			AngleDegrees += 360.0f;
+		}
+
+		// 角度をそのまま渡す
+		ChangeColor(AngleDegrees);
+
+		// 前回の方向を保存
+		CurrentDir.Normalize();
 		PrevMouseDir = CurrentDir;
 		bHasPrevMouse = true;
 	}
 }
+
 
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
@@ -262,19 +303,19 @@ void APlayerCharacter::ChangeColor(float value)
 // カラーモードを右にシフト（次の色モードへ変更）
 void APlayerCharacter::ChangeCameraViewModeToCharacter()
 {
-	if (CameraHandleComponent == nullptr)
+	if (colorController == nullptr)
 		return;
 
-	CameraHandleComponent->ChangeViewMode(ECameraViewType::CharacterView);
+	colorController->ChangePaintMode(false);
 }
 
 // カラーモードを左にシフト（前の色モードへ変更）
 void APlayerCharacter::ChangeCameraViewModeToGrid()
 {
-	if (CameraHandleComponent == nullptr)
+	if (colorController == nullptr)
 		return;
 
-	CameraHandleComponent->ChangeViewMode(ECameraViewType::GridView);
+	colorController->ChangePaintMode(true);
 }
 
 // 状態の変更（ステートタグを指定して遷移）
@@ -319,10 +360,45 @@ void APlayerCharacter::InitVisualSettings()
 }
 
 
+//void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
+//{
+//	//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
+//
+//	const float DeadZone = STICK_DEADZONE;
+//	if (StickInput.SizeSquared() < DeadZone)
+//	{
+//		//UE_LOG(LogTemp, Log, TEXT("StickInput is Neutral"));
+//		bHasPrevInputDir = false;
+//		return;
+//	}
+//
+//	if (!bHasPrevInputDir)
+//	{
+//		float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(StickInput.Y, StickInput.X));
+//
+//		// -180 ~ +180 を 0 ~ 360 に正規化
+//		if (AngleDegrees < 0)
+//		{
+//			AngleDegrees += 360.0f;
+//		}
+//
+//		// 基準をX+からY+にしたいなら -90°
+//		AngleDegrees += 90.0f;
+//
+//		// 再度0~360に正規化（マイナスになった場合）
+//		if (AngleDegrees < 0)
+//		{
+//			AngleDegrees += 360.0f;
+//		}
+//		ChangeColor(AngleDegrees);
+//
+//		return;
+//	}
+//}
+
 void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 {
 	//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
-
 	const float DeadZone = STICK_DEADZONE;
 	if (StickInput.SizeSquared() < DeadZone)
 	{
@@ -333,6 +409,7 @@ void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 
 	if (!bHasPrevInputDir)
 	{
+		// スティックの角度を計算
 		float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(StickInput.Y, StickInput.X));
 
 		// -180 ~ +180 を 0 ~ 360 に正規化
@@ -341,16 +418,19 @@ void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 			AngleDegrees += 360.0f;
 		}
 
-		// 基準をX+からY+にしたいなら -90°
-		AngleDegrees += 90.0f;
+		// 基準をX+からY+にシフト（-90°）
+		AngleDegrees -= 90.0f;
 
-		// 再度0~360に正規化（マイナスになった場合）
+		// 再度0~360に正規化
 		if (AngleDegrees < 0)
 		{
 			AngleDegrees += 360.0f;
 		}
+
+		// 角度をそのまま渡す
 		ChangeColor(AngleDegrees);
 
+		bHasPrevInputDir = true;
 		return;
 	}
 }

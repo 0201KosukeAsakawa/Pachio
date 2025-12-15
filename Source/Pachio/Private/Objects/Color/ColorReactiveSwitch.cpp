@@ -43,7 +43,7 @@ void UColorReactiveSwitchComponent::ApplyColorWithMatching(const FLinearColor& I
 	// -----------------------
 	// 第一色との一致チェック
 	// -----------------------
-	if (UColorUtilityLibrary::GetHueAngleDistance(GetCurrentColor(), InColor))
+	if (UColorUtilityLibrary::IsHueSimilar(GetCurrentColor(), InColor))
 	{
 		// 一致した色をマテリアルに反映
 		SetColor(InColor);

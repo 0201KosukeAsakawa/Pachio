@@ -153,14 +153,6 @@ public:
      */
     bool HasColorChanged(const  float Tolerance = 30.f) const;
 
-    /**
-     * 指定色と現在の色が変更されているかを判定
-     *
-     * @param CompareColor 比較する色
-     * @return 変更されている場合true
-     */
-    bool HasColorChanged(const FLinearColor& CompareColor, float Tolerance = 30.f) const;
-
     // =======================
     // エフェクト処理
     // =======================

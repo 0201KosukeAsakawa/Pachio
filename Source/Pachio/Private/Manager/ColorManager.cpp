@@ -58,14 +58,14 @@ void UColorManager::RegisterTarget(TScriptInterface<IColorReactiveInterface> Tar
     ColorTargetRegistry->RegisterTarget(Target);
 }
 
-float UColorManager::GetColorDistanceRGB(const FLinearColor& A)
+FVector UColorManager::GetColorDistanceRGB(const FLinearColor& A)
 {
-    return UColorUtilityLibrary::GetHueAngleDistance(A, ColorTargetRegistry->GetPostProcessColor());
+    return UColorUtilityLibrary::GetHSLDistance(A, ColorTargetRegistry->GetPostProcessColor());
 }
 
-float UColorManager::GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B)
+FVector UColorManager::GetColorDistanceRGB(const FLinearColor& A, const FLinearColor& B)
 {
-    return UColorUtilityLibrary::GetHueAngleDistance(A,B);
+    return UColorUtilityLibrary::GetHSLDistance(A,B);
 }
 
 FLinearColor UColorManager::GetWorldColor() const
@@ -90,12 +90,6 @@ void UColorManager::BindController()
         ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
     }
 
-    ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
-    if (levelManager == nullptr 
-        || levelManager->GetUIManager() == nullptr 
-        || levelManager->GetUIManager()->GetColorLens() == nullptr)
-        return;
-    ColorController->AnimationDelegate.BindUObject(levelManager->GetUIManager()->GetColorLens(), &UColorLens::Animation);
 }
 
 // ポストプロセス用マテリアルの初期化（ビジュアルフィルター表示などに使用）
