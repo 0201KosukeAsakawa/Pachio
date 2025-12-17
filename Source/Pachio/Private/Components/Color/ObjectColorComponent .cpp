@@ -71,22 +71,67 @@ void UObjectColorComponent::BeginPlay()
 
 void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-    if(bIsPainting && !bIsPlayedPaint)
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    // フラッシュ演出（球が当たった直後）
+    if (bIsPainting && !bIsPlayedPaint)
     {
         HitTimer += GetWorld()->DeltaTimeSeconds;
-        ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
-    }
 
-    if (bIsPlayedPaint)
-    {
-        LastPaintTime += GetWorld()->DeltaTimeSeconds;
-        if (LastPaintTime > 1.f)
+        // フラッシュ演出の進行度（0→1）
+        float Progress = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
+
+        // 白色の場合：フェードイン（0→1）
+        if (HitColor == FLinearColor::White || HitColor.GetLuminance() > 0.9f)
         {
-            bIsPlayedPaint = false;
-            HitTimer = 0.f;
+            ApplyColorToMaterialAlpha(Progress, HitColor);
+        }
+        else
+        {
+            // その他の色：フェードアウト（1→0）
+            ApplyColorToMaterialAlpha(1.0f - Progress, HitColor);
+        }
+
+        // フラッシュ演出が終わったら色遷移開始
+        if (Progress >= 1.0f)
+        {
+            bIsPlayedPaint = true;
+            LastPaintTime = 0.f;
         }
     }
+
+    // 色遷移（フラッシュ後）
+    if (bIsPlayedPaint)
+    {
+        UpdateHitColorTransition(HitColor);
+    }
 }
+
+//void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+//{
+//    UpdateHitColorTransition(CurrentColor);
+//    if(bIsPainting && !bIsPlayedPaint)
+//    {
+//        HitTimer += GetWorld()->DeltaTimeSeconds;
+//        if (HitColor == FLinearColor::White)
+//        {
+//            ApplyColorToMaterialAlpha(FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
+//        }
+//
+//       
+//        ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
+//    }
+//
+//    //if (bIsPlayedPaint)
+//    //{
+//    //    LastPaintTime += GetWorld()->DeltaTimeSeconds;
+//    //    if (LastPaintTime > 1.f)
+//    //    {
+//    //        bIsPlayedPaint = false;
+//    //        HitTimer = 0.f;
+//    //    }
+//    //}
+//}
 
 #if WITH_EDITOR
 void UObjectColorComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -124,76 +169,20 @@ void UObjectColorComponent::Initialize()
 
 void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
-    // 色変更開始時の処理
-    bool bNear = UColorUtilityLibrary::IsHueSimilar(HitColor, NewColor, FVector(1, 0.1f, 0.1f));
-    if (bIsPlayedPaint && bNear)
-        return;
+    // 新しい色を設定
+    HitColor = NewColor;
 
-    if (!bNear)
-    {
-        // 初回変更時にリセット
-        if (LastColor != NewColor)
-        {
-            LastColor = NewColor;
-            StartColor = HitColor;  // 補間開始位置を確保
-        }
-    }
-
-    // タイマー進行
+    // 色遷移を開始
     bIsPainting = true;
-    LastPaintTime = 0;
+    bIsPlayedPaint = false;
+    HitTimer = 0.f;
+    LastPaintTime = 0.f;
+    LastColor = NewColor;
 
-    // 補間割合（0→1）
-    float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
-
-    // HSL を取得
-    FVector currentHSL = UColorUtilityLibrary::GetHSL(CurrentColor);
-    FVector targetHSL = UColorUtilityLibrary::GetHSL(NewColor);
-
-    // 無彩色判定
-    if (targetHSL.Y < 0.01f)
-    {
-        HitColor = NewColor;
-    }
-    else
-    {
-        // Hueの最短角距離
-        float deltaHue = targetHSL.X - currentHSL.X;
-        deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
-
-        // Hue速度（度/秒）
-        float hueSpeed = 90.0f; // 1秒で90°動く
-        float hueStep = FMath::Clamp(deltaHue, -hueSpeed * GetWorld()->DeltaTimeSeconds, hueSpeed * GetWorld()->DeltaTimeSeconds);
-
-        // Hue更新
-        float newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
-
-        // S/Lは線形補間速度
-        float sStep = (targetHSL.Y - currentHSL.Y) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
-        float lStep = (targetHSL.Z - currentHSL.Z) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
-
-        float newS = currentHSL.Y + sStep;
-        float newL = currentHSL.Z + lStep;
-
-        HitColor = UColorUtilityLibrary::FromHSL(FVector(newHue, newS, newL));
-    }
-
-    // 補間中は MaterialAlpha で反映
-    if (!bIsPlayedPaint && !bNear)
-    {
-        /*ApplyColorToMaterialAlpha(1.0f - Ratio, HitColor);*/
-        ApplyColorToMaterial(HitColor);
-        ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
-    }
-
-    // 補間完了時
-    if (Ratio >= 1.0f)
-    {
-        SetColor(NewColor);
-        bIsPainting = false;
-        bIsPlayedPaint = true;
-    }
+    UE_LOG(LogTemp, Log, TEXT("[%s] Hit by projectile, blending towards color (R=%.2f G=%.2f B=%.2f)"),
+        *GetOwner()->GetName(), NewColor.R, NewColor.G, NewColor.B);
 }
+
 
 
 /**
@@ -316,16 +305,6 @@ void UObjectColorComponent::SetColorMatched(bool bMatched)
     bColorMatched = bMatched;
 }
 
-/**
- * 非表示状態かを取得
- *
- * @return 非表示状態の場合true
- */
-bool UObjectColorComponent::IsHidden() const
-{
-    return false;//ColorReactive/* && ColorReactive->IsHidden()*/;
-}
-
 // =======================
 // 色判定API（UColorUtilityLibraryに委譲）
 // =======================
@@ -387,10 +366,6 @@ void UObjectColorComponent::ApplyColorToMaterialAlpha(const float Alpha, const F
  */
 UStaticMeshComponent* UObjectColorComponent::GetMeshComponent() const
 {
-    /*return UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(
-        GetOwner(),
-        TEXT("Mesh")
-    );*/
     return GetOwner()->GetComponentByClass<UStaticMeshComponent>();
 }
 
@@ -416,3 +391,147 @@ UColorManager* UObjectColorComponent::GetColorManager() const
     return LevelManager ? LevelManager->GetColorManager() : nullptr;
 }
 
+//void UObjectColorComponent::UpdateHitColorTransition(FLinearColor NewColor)
+//{
+//    // 色変更開始時の処理
+//    bool bNear = UColorUtilityLibrary::IsHueSimilar(HitColor, NewColor, FVector(1, 0.1f, 0.1f));
+//    if (bIsPlayedPaint && bNear)
+//        return;
+//
+//    if (!bNear)
+//    {
+//        // 初回変更時にリセット
+//        if (LastColor != NewColor)
+//        {
+//            LastColor = NewColor;
+//            StartColor = HitColor;  // 補間開始位置を確保
+//        }
+//    }
+//
+//    // タイマー進行
+//    bIsPainting = true;
+//    LastPaintTime = 0;
+//
+//    // 補間割合（0→1）
+//    float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
+//
+//    // HSL を取得
+//    FVector currentHSL = UColorUtilityLibrary::GetHSL(CurrentColor);
+//    FVector targetHSL = UColorUtilityLibrary::GetHSL(NewColor);
+//
+//    // 無彩色判定
+//    if (targetHSL.Y < 0.01f)
+//    {
+//        HitColor = NewColor;
+//    }
+//    else
+//    {
+//        // Hueの最短角距離
+//        float deltaHue = targetHSL.X - currentHSL.X;
+//        deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
+//
+//        // Hue速度（度/秒）
+//        float hueSpeed = 90.0f; // 1秒で90°動く
+//        float hueStep = FMath::Clamp(deltaHue, -hueSpeed * GetWorld()->DeltaTimeSeconds, hueSpeed * GetWorld()->DeltaTimeSeconds);
+//
+//        // Hue更新
+//        float newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
+//
+//        // S/Lは線形補間速度
+//        float sStep = (targetHSL.Y - currentHSL.Y) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
+//        float lStep = (targetHSL.Z - currentHSL.Z) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
+//
+//        float newS = currentHSL.Y + sStep;
+//        float newL = currentHSL.Z + lStep;
+//
+//        HitColor = UColorUtilityLibrary::FromHSL(FVector(newHue, newS, newL));
+//    }
+//
+//    // 補間中は MaterialAlpha で反映
+//    if (!bIsPlayedPaint && !bNear)
+//    {
+//        ApplyColorToMaterial(HitColor);
+//        //ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
+//    }
+//
+//    // 補間完了時
+//    if (Ratio >= 1.0f)
+//    {
+//        SetColor(NewColor);
+//        bIsPainting = false;
+//        bIsPlayedPaint = true;
+//    }
+//}
+
+void UObjectColorComponent::UpdateHitColorTransition(FLinearColor TargetColor)
+{
+    //    if (!bIsPainting)
+    //        return;
+    //
+    //    // HSL を取得
+    //    FVector currentHSL = UColorUtilityLibrary::GetHSL(CurrentColor);
+    //    FVector targetHSL = UColorUtilityLibrary::GetHSL(TargetColor);
+    //
+    //    // 無彩色判定
+    //    if (targetHSL.Y < 0.01f)
+    //    {
+    //        // グレースケールの場合も徐々に近づく
+    //        float lStep = (targetHSL.Z - currentHSL.Z) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
+    //        float newL = currentHSL.Z + lStep;
+    //        CurrentColor = UColorUtilityLibrary::FromHSL(FVector(currentHSL.X, currentHSL.Y, newL));
+    //        ApplyColorToMaterial(CurrentColor);
+    //        return;
+    //    }
+    //
+    //    // Hueの最短角距離
+    //    float deltaHue = targetHSL.X - currentHSL.X;
+    //    deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
+    //
+    //    // Hue速度（度/秒）
+    //    float hueSpeed = 90.0f; // 1秒で90°動く
+    //    float hueStep = FMath::Clamp(deltaHue, -hueSpeed * GetWorld()->DeltaTimeSeconds, hueSpeed * GetWorld()->DeltaTimeSeconds);
+    //
+    //    // Hue更新
+    //    float newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
+    //
+    //    // S/Lは線形補間速度
+    //    float sStep = (targetHSL.Y - currentHSL.Y) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
+    //    float lStep = (targetHSL.Z - currentHSL.Z) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
+    //
+    //    float newS = currentHSL.Y + sStep;
+    //    float newL = currentHSL.Z + lStep;
+    //
+    //    // 新しい色を適用
+    //    CurrentColor = UColorUtilityLibrary::FromHSL(FVector(newHue, newS, newL));
+    //    ApplyColorToMaterial(CurrentColor);
+    // 
+    // 
+    // 
+    FVector currentHSL = UColorUtilityLibrary::GetHSL(CurrentColor);
+    FVector targetHSL = UColorUtilityLibrary::GetHSL(TargetColor);
+    // Hueの最短角距離
+    float deltaHue = targetHSL.X - currentHSL.X;
+    deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
+
+    // Hue速度（度/秒）
+    float hueSpeed = 90.0f; // 1秒で90°動く
+    float hueStep = FMath::Clamp(deltaHue, -hueSpeed * GetWorld()->DeltaTimeSeconds, hueSpeed * GetWorld()->DeltaTimeSeconds);
+
+    // Hue更新
+    float newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
+
+    // S/Lは線形補間速度
+    float sStep = (targetHSL.Y - currentHSL.Y) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
+    float lStep = (targetHSL.Z - currentHSL.Z) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
+
+    float newS = currentHSL.Y + sStep;
+    float newL = currentHSL.Z + lStep;
+
+    HitColor = UColorUtilityLibrary::FromHSL(FVector(newHue, newS, newL));
+
+
+    // 補間中は MaterialAlpha で反映
+    ApplyColorToMaterial(HitColor);
+    ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
+
+}

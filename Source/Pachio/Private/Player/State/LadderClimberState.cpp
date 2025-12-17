@@ -91,7 +91,7 @@ bool ULadderClimberState::OnUpdate(float DeltaTime)
 	if (!mOwner || !Ladder) return false;
 
 
-	if (targetComp && targetComp->IsHidden())
+	if (targetComp)
 	{
 		// Hold解除して Default に戻す
 		if (IStateControllable* Player = Cast<IStateControllable>(mOwner))

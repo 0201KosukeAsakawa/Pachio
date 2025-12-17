@@ -116,13 +116,6 @@ public:
     void SetColorMatched(bool bMatched);
 
     /**
-     * 非表示状態かを取得
-     *
-     * @return 非表示状態の場合true
-     */
-    bool IsHidden() const;
-
-    /**
     * 色が変更可能かを判定する
     *
     * @return 変更可能であれば true
@@ -214,6 +207,9 @@ protected:
      * @return UColorManager（見つからない場合はnullptr）
      */
     UColorManager* GetColorManager() const;
+
+
+    void UpdateHitColorTransition(FLinearColor);
 
     // =======================
     // コンポーネントとプロパティ
