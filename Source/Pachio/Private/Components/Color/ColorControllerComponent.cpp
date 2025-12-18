@@ -29,19 +29,10 @@ UColorControllerComponent::UColorControllerComponent()
     // 初期色は白
     CurrentColor = FLinearColor::White;
 
-    ColorTankMap.Add(EColorCategory::Red, 0);
-    //ColorTankMap.Add(EColorCategory::Orange, 0);
-    //ColorTankMap.Add(EColorCategory::Yellow, 0);
-    //ColorTankMap.Add(EColorCategory::Chatreuse, 0);
-    ColorTankMap.Add(EColorCategory::Green, 0);
-    //ColorTankMap.Add(EColorCategory::SpringGreen, 0);
-    //ColorTankMap.Add(EColorCategory::Cyan, 0);
-    //ColorTankMap.Add(EColorCategory::Azure, 0);
-    ColorTankMap.Add(EColorCategory::Blue, 0);
-    //ColorTankMap.Add(EColorCategory::Violet, 0);
-    //ColorTankMap.Add(EColorCategory::Magenta, 0);
-    //ColorTankMap.Add(EColorCategory::Rose, 0);
-    ColorTankMap.Add(EColorCategory::White, 0);
+    ColorTankMap.Add(EColorCategory::Red, 1);
+    ColorTankMap.Add(EColorCategory::Green, 1);
+    ColorTankMap.Add(EColorCategory::Blue, 1);
+    ColorTankMap.Add(EColorCategory::White, 1);
 }
 
 // =======================
@@ -50,7 +41,7 @@ UColorControllerComponent::UColorControllerComponent()
 
 void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-    UObjectColorComponent* TargetComp = GetHitColorComponent(1500.f);
+   /* UObjectColorComponent* TargetComp = GetHitColorComponent(1500.f);
     if (!TargetComp) return;
 
     if (bPlayPaint)
@@ -60,39 +51,12 @@ void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickTy
     else
     {
         AbsorbHitObject(TargetComp);
-    }
+    }*/
 }
 
 // =======================
 // 色調整系
 // =======================
-
-
-//void UColorControllerComponent::AdjustColor(float Delta)
-//{
-//    // 現在モードの色を HSV に変換
-//    FLinearColor HSV = CurrentColor.LinearRGBToHSV();
-//
-//    float Hue = HSV.R;                                  // 色相
-//    float Saturation = FMath::Clamp(HSV.G, 0.1f, 0.3f); // 彩度（固定範囲に制限）
-//    float Value = FMath::Clamp(HSV.B, 0.8f, 1.0f);      // 明度（明るめを維持）
-//
-//    // Hue を Delta 分だけ回転
-//    Hue = FMath::Fmod(Hue + Delta * 360.0f, 360.0f);
-//    if (Hue < 0.f) 
-//        Hue += 360.f;
-//
-//    UE_LOG(LogTemp, Log, TEXT("Hue : : %f"), Hue);
-//    // HSV → RGB に戻す
-//    FLinearColor NewColor = FLinearColor(Hue, Saturation, Value).HSVToLinearRGB();
-//
-//    // 現在モードの色を更新（αは保持）
-//    CurrentColor = FLinearColor(NewColor.R, NewColor.G, NewColor.B, CurrentColor.A);
-//    // イベントを通知
-//    //OnColorChanged.Broadcast(CurrentColor);
-//}
-
-
 void UColorControllerComponent::AdjustColor(float Delta)
 {
     // 現在モードの色を HSV に変換

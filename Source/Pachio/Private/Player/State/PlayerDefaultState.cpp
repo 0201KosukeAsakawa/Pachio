@@ -19,7 +19,9 @@
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
+#include "Objects/ColorProjectile.h"
 #include "Objects/Color/LadderActor.h"
+#include "Components/Color/ColorControllerComponent.h"
 
 namespace Player_DEFAULT_Constants
 {
@@ -157,38 +159,95 @@ bool UPlayerDefaultState::OnExit(APawn*)
 // スキルボタン入力時の処理（現時点では何もしない）
 bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
-    if (!Value.Get<bool>())
-        return false;
-
-    // 目の前に持てるオブジェクトがあるか判定
-    FVector Start = mOwner->GetActorLocation();
-    FVector End = Start + CurrentDirection * 200.f; // 2m先まで
-
-    FHitResult Hit;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(mOwner);
-    bool bIsHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
-    if (!bIsHit)
-        return false;
-
-    AActor* Target = Hit.GetActor();
-    if (Target == nullptr || !Target->ActorHasTag("Holdable")) // 持てるオブジェクトにタグを付けておく
-        return false;
-
-    IStateControllable* Player = Cast<IStateControllable>(mOwner);
-    if (Player == nullptr)
-        return false;
-    UPlayerStateComponent* NewState = Player->ChangeState(EPlayerStateType::Hold);
-    if (NewState == nullptr)
-        return false;
-
-    if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
+    if (!ProjectileClass)
     {
-        if (CurrentDirection.Y > 0)
-            HoldState->SetUp(Target, true);
-        else
-            HoldState->SetUp(Target, false);
+        UE_LOG(LogTemp, Warning, TEXT("ProjectileClass is not set in PlayerDefaultState"));
+        return false;
     }
+
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+    if (!Character)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Character is null"));
+        return false;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World)
+        return false;
+
+    // プレイヤーの向きと位置を取得
+    FVector PlayerLocation = Character->GetActorLocation();
+    FRotator PlayerRotation = Character->GetActorRotation();
+    FVector PlayerForward = Character->GetActorForwardVector();
+    // 発射位置（プレイヤーの前方 + 少し上）
+    FVector LaunchLocation = PlayerLocation + (PlayerForward ) + FVector(0, 0, 50.0f);
+
+    // 発射方向を計算（プレイヤーの向き + 発射角度）
+    FRotator LaunchRotation = PlayerRotation;
+    LaunchRotation.Pitch += LaunchAngle; // 上向きに角度を追加
+    FVector LaunchDirection = LaunchRotation.Vector();
+
+    // 現在選択中の色を取得（ColorManagerから取得する場合）
+    UColorControllerComponent* comp = GetOwner()->GetComponentByClass<UColorControllerComponent>();
+     if (comp)
+     {
+         CurrentSelectedColor = comp->GetCurrentColor();
+     }
+
+    // 投射物をスポーン
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = Character;
+    SpawnParams.Instigator = Character;
+
+    AColorProjectile* Projectile = World->SpawnActor<AColorProjectile>(
+        ProjectileClass,
+        LaunchLocation,
+        LaunchDirection.Rotation(),
+        SpawnParams
+    );
+
+    if (Projectile)
+    {
+        // 球を発射
+        Projectile->Launch(LaunchDirection, LaunchSpeed, CurrentSelectedColor);
+
+        UE_LOG(LogTemp, Log, TEXT("ColorProjectile fired: Angle=%.1f°, Speed=%.1f, Color(R=%.2f G=%.2f B=%.2f)"),
+            LaunchAngle, LaunchSpeed,
+            CurrentSelectedColor.R, CurrentSelectedColor.G, CurrentSelectedColor.B);
+    }
+    //if (!Value.Get<bool>())
+    //    return false;
+
+    //// 目の前に持てるオブジェクトがあるか判定
+    //FVector Start = mOwner->GetActorLocation();
+    //FVector End = Start + CurrentDirection * 200.f; // 2m先まで
+
+    //FHitResult Hit;
+    //FCollisionQueryParams Params;
+    //Params.AddIgnoredActor(mOwner);
+    //bool bIsHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+    //if (!bIsHit)
+    //    return false;
+
+    //AActor* Target = Hit.GetActor();
+    //if (Target == nullptr || !Target->ActorHasTag("Holdable")) // 持てるオブジェクトにタグを付けておく
+    //    return false;
+
+    //IStateControllable* Player = Cast<IStateControllable>(mOwner);
+    //if (Player == nullptr)
+    //    return false;
+    //UPlayerStateComponent* NewState = Player->ChangeState(EPlayerStateType::Hold);
+    //if (NewState == nullptr)
+    //    return false;
+
+    //if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
+    //{
+    //    if (CurrentDirection.Y > 0)
+    //        HoldState->SetUp(Target, true);
+    //    else
+    //        HoldState->SetUp(Target, false);
+    //}
 
     return true;
 }
