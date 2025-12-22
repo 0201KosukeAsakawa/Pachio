@@ -35,6 +35,8 @@ namespace Player_DEFAULT_Constants
 }
 
 UPlayerDefaultState::UPlayerDefaultState()
+    :LaunchAngle(30.f)
+    , LaunchSpeed(1000.f)
 {
 }
 
@@ -156,7 +158,7 @@ bool UPlayerDefaultState::OnExit(APawn*)
     return true;
 }
 
-// スキルボタン入力時の処理（現時点では何もしない）
+// スキルボタン入力時の処理
 bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
     if (!ProjectileClass)
@@ -174,32 +176,60 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 
     UWorld* World = GetWorld();
     if (!World)
+    {
         return false;
+    }
 
-    // プレイヤーの向きと位置を取得
-    FVector PlayerLocation = Character->GetActorLocation();
-    FRotator PlayerRotation = Character->GetActorRotation();
-    FVector PlayerForward = Character->GetActorForwardVector();
-    // 発射位置（プレイヤーの前方 + 少し上）
-    FVector LaunchLocation = PlayerLocation + (PlayerForward ) + FVector(0, 0, 50.0f);
+    // プレイヤーの位置と回転
+    const FVector PlayerLocation = Character->GetActorLocation();
+    const FRotator PlayerRotation = Character->GetActorRotation();
 
-    // 発射方向を計算（プレイヤーの向き + 発射角度）
-    FRotator LaunchRotation = PlayerRotation;
-    LaunchRotation.Pitch += LaunchAngle; // 上向きに角度を追加
-    FVector LaunchDirection = LaunchRotation.Vector();
+    // 発射位置（前方 + 少し上）
+    const FVector LaunchLocation =
+        PlayerLocation + FVector(0.0f, 0.0f, 50.0f);
 
-    // 現在選択中の色を取得（ColorManagerから取得する場合）
-    UColorControllerComponent* comp = GetOwner()->GetComponentByClass<UColorControllerComponent>();
-     if (comp)
-     {
-         CurrentSelectedColor = comp->GetCurrentColor();
-     }
+    // ----------------------------
+    // 発射方向の決定
+    // Yaw == 0   → +Y
+    // Yaw == 180 → -Y
+    // ----------------------------
+    FVector LaunchDirection = FVector::ZeroVector;
 
-    // 投射物をスポーン
+    if (FMath::IsNearlyEqual(PlayerRotation.Yaw, 0.0f, 1.0f))
+    {
+        LaunchDirection = FVector(0.0f, 1.0f, 0.0f);
+    }
+    else if (FMath::IsNearlyEqual(PlayerRotation.Yaw, 180.0f, 1.0f) ||
+        FMath::IsNearlyEqual(PlayerRotation.Yaw, -180.0f, 1.0f))
+    {
+        LaunchDirection = FVector(0.0f, -1.0f, 0.0f);
+    }
+    else
+    {
+        // 想定外の向きの場合の保険
+        LaunchDirection = Character->GetActorForwardVector();
+    }
+
+    // 発射角度（Pitch）を加味
+    FRotator LaunchRotation = LaunchDirection.Rotation();
+    LaunchRotation.Pitch += LaunchAngle;
+    LaunchDirection = LaunchRotation.Vector();
+
+    UE_LOG(LogTemp, Warning, TEXT("PlayerYaw: %.1f"), PlayerRotation.Yaw);
+
+    // 現在選択中の色を取得
+    if (UColorControllerComponent* Comp =
+        GetOwner()->GetComponentByClass<UColorControllerComponent>())
+    {
+        CurrentSelectedColor = Comp->GetCurrentColor();
+    }
+
+    // スポーン設定
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = Character;
     SpawnParams.Instigator = Character;
 
+    // 投射物スポーン
     AColorProjectile* Projectile = World->SpawnActor<AColorProjectile>(
         ProjectileClass,
         LaunchLocation,
@@ -209,45 +239,23 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 
     if (Projectile)
     {
-        // 球を発射
-        Projectile->Launch(LaunchDirection, LaunchSpeed, CurrentSelectedColor);
+        Projectile->Launch(
+            LaunchDirection,
+            LaunchSpeed,
+            CurrentSelectedColor
+        );
 
-        UE_LOG(LogTemp, Log, TEXT("ColorProjectile fired: Angle=%.1f°, Speed=%.1f, Color(R=%.2f G=%.2f B=%.2f)"),
-            LaunchAngle, LaunchSpeed,
-            CurrentSelectedColor.R, CurrentSelectedColor.G, CurrentSelectedColor.B);
+        UE_LOG(
+            LogTemp,
+            Log,
+            TEXT("ColorProjectile fired: Angle=%.1f Speed=%.1f Color(R=%.2f G=%.2f B=%.2f)"),
+            LaunchAngle,
+            LaunchSpeed,
+            CurrentSelectedColor.R,
+            CurrentSelectedColor.G,
+            CurrentSelectedColor.B
+        );
     }
-    //if (!Value.Get<bool>())
-    //    return false;
-
-    //// 目の前に持てるオブジェクトがあるか判定
-    //FVector Start = mOwner->GetActorLocation();
-    //FVector End = Start + CurrentDirection * 200.f; // 2m先まで
-
-    //FHitResult Hit;
-    //FCollisionQueryParams Params;
-    //Params.AddIgnoredActor(mOwner);
-    //bool bIsHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
-    //if (!bIsHit)
-    //    return false;
-
-    //AActor* Target = Hit.GetActor();
-    //if (Target == nullptr || !Target->ActorHasTag("Holdable")) // 持てるオブジェクトにタグを付けておく
-    //    return false;
-
-    //IStateControllable* Player = Cast<IStateControllable>(mOwner);
-    //if (Player == nullptr)
-    //    return false;
-    //UPlayerStateComponent* NewState = Player->ChangeState(EPlayerStateType::Hold);
-    //if (NewState == nullptr)
-    //    return false;
-
-    //if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
-    //{
-    //    if (CurrentDirection.Y > 0)
-    //        HoldState->SetUp(Target, true);
-    //    else
-    //        HoldState->SetUp(Target, false);
-    //}
 
     return true;
 }

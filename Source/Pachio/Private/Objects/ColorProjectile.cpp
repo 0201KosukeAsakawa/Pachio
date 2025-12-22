@@ -4,6 +4,7 @@
 #include "Objects/ColorProjectile.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Components/SphereComponent.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 AColorProjectile::AColorProjectile()
@@ -103,26 +104,33 @@ void AColorProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAct
     bHasHit = true;
 
     // ヒットしたアクターがインターフェースを実装しているか確認
-    if (OtherActor && OtherActor != this)
+    if (OtherActor != this)
     {
-        // IColorReceiverインターフェースを持つコンポーネントを検索
-        TArray<UActorComponent*> Components;
-        OtherActor->GetComponents(Components);
 
-        for (UActorComponent* Component : Components)
+        UObjectColorComponent* comp = OtherActor->GetComponentByClass<UObjectColorComponent>();
+
+        if (comp)
         {
-            // インターフェースを実装しているか確認
-            IColorReactiveInterface* ColorReceiver = Cast<IColorReactiveInterface>(Component);
-            if (ColorReceiver)
-            {
-                // 色を渡す（インターフェースメソッド経由）
-                 ColorReceiver->ApplyColorWithMatching(ProjectileColor);
-
-                UE_LOG(LogTemp, Log, TEXT("ColorProjectile hit: %s, Color applied"),
-                    *OtherActor->GetName());
-                break;
-            }
+            comp->SetTargetColor(ProjectileColor);
         }
+        //// IColorReceiverインターフェースを持つコンポーネントを検索
+        //TArray<UActorComponent*> Components;
+        //OtherActor->GetComponents(Components);
+
+        //for (UActorComponent* Component : Components)
+        //{
+        //    // インターフェースを実装しているか確認
+        //    IColorReactiveInterface* ColorReceiver = Cast<IColorReactiveInterface>(Component);
+        //    if (ColorReceiver)
+        //    {
+        //        // 色を渡す（インターフェースメソッド経由）
+        //         ColorReceiver->ApplyColorWithMatching(ProjectileColor);
+
+        //        UE_LOG(LogTemp, Log, TEXT("ColorProjectile hit: %s, Color applied"),
+        //            *OtherActor->GetName());
+        //        break;
+        //    }
+        //}
     }
 
     // エフェクトやサウンドをここで再生可能
