@@ -29,10 +29,10 @@ UColorControllerComponent::UColorControllerComponent()
     // 初期色は白
     CurrentColor = FLinearColor::White;
 
-    ColorTankMap.Add(EColorCategory::Red, 1);
-    ColorTankMap.Add(EColorCategory::Green, 1);
-    ColorTankMap.Add(EColorCategory::Blue, 1);
-    ColorTankMap.Add(EColorCategory::White, 1);
+    ColorTankMap.Add(EColorCategory::Red, 0);
+    ColorTankMap.Add(EColorCategory::Green, 0);
+    ColorTankMap.Add(EColorCategory::Blue, 0);
+    ColorTankMap.Add(EColorCategory::White, 0);
 }
 
 // =======================
@@ -188,5 +188,7 @@ void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetCom
         ColorTankMap.FindOrAdd(Comp.Key) += AddAmount;
     }
 
-    TargetComp->ApplyColorWithMatching(FLinearColor::White);
+   // TargetComp->ApplyColorWithMatching(FLinearColor::White);
+    TargetComp->SetTargetColor(FLinearColor::White);
+
 }

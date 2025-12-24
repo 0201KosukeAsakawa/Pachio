@@ -56,11 +56,7 @@ public:
     UFUNCTION(BlueprintCallable)
     FLinearColor GetCurrentColor() const;
 
-    UFUNCTION(BlueprintCallable)
-    void ChangePaintMode(bool PlayPaint) { bPlayPaint = PlayPaint; }
-
     UObjectColorComponent* GetHitColorComponent(float Distance);
-
 public:
     // ====== デリゲート ======
 
@@ -71,7 +67,6 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnColorChanged OnColorChanged;
 
-private:
     // ====== 内部処理 ======
     void PaintHitObject(UObjectColorComponent* TargetComp);
     void AbsorbHitObject(UObjectColorComponent* TargetComp);
@@ -85,7 +80,4 @@ private:
     FLinearColor CurrentColor;
 
     TMap<EColorCategory, float>ColorTankMap;
-
-    UPROPERTY(EditAnywhere, Category = "Debug")
-    bool bPlayPaint = false;
 };

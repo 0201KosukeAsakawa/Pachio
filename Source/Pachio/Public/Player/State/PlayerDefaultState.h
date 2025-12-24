@@ -8,6 +8,13 @@
 class UMoveComponent;
 class UBoxComponent;
 
+UENUM(BlueprintType)
+enum class EColorAbsorbMode:uint8
+{
+    Absorb,   // 色を吸収する
+    Paint      // 色は吸収しない（無視）
+};
+
 UCLASS()
 class UPlayerDefaultState : public UPlayerStateComponent
 {
@@ -64,6 +71,7 @@ public:
      */
     bool Jump(float jumpForce);
 
+    void ChangePaintMode(EColorAbsorbMode m)override { mode = m; };
 private:
     // ===== はしご関連 =====
     /**
@@ -109,4 +117,7 @@ private:
     /** 発射速度 */
     UPROPERTY(EditAnywhere, Category = "Projectile")
     float LaunchSpeed;
+
+    UPROPERTY(EditAnywhere)
+    EColorAbsorbMode mode;
 };

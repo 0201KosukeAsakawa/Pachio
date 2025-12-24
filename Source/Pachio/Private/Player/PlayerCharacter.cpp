@@ -306,7 +306,7 @@ void APlayerCharacter::ChangeCameraViewModeToCharacter()
 	if (colorController == nullptr)
 		return;
 
-	colorController->ChangePaintMode(false);
+	StateManagerComponent->GetCurrentState()->ChangePaintMode(EColorAbsorbMode::Absorb);
 }
 
 // カラーモードを左にシフト（前の色モードへ変更）
@@ -315,7 +315,7 @@ void APlayerCharacter::ChangeCameraViewModeToGrid()
 	if (colorController == nullptr)
 		return;
 
-	colorController->ChangePaintMode(true);
+	StateManagerComponent->GetCurrentState()->ChangePaintMode(EColorAbsorbMode::Paint);
 }
 
 // 状態の変更（ステートタグを指定して遷移）
