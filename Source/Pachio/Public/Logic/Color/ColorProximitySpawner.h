@@ -17,7 +17,7 @@ public:
 	UColorProximitySpawner();
 
 private:
-	void Initialize(const FLinearColor& InitialColor, bool bVariable , AActor* owner)override;
+	void Initialize()override;
 
 	void OffMesh();
 	void OnMesh();

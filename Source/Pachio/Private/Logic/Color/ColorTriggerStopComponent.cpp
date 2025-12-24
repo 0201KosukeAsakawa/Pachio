@@ -53,16 +53,8 @@ bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
             Component->PrimaryComponentTick.SetTickFunctionEnable(false);
         }
     }
-
-    // 消滅時の演出エフェクト
-    PlayAppearEffect();
-
-    // 追加の効果を有効化
-    //ActiveEffect(true);
-
     // 非表示状態に更新
     bHide = true;
-
     return bHide;
 }
 
@@ -76,9 +68,6 @@ bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
     if (!bHide) return false;
     AActor* Owner = GetOwner();
     if (Owner == nullptr) return false;
-
-    // エフェクト停止
-    DeactivateAllEffects();
 
     // オーナーが持つ全コンポーネントを走査
     for (UActorComponent* Component : Owner->GetComponents())
@@ -102,10 +91,6 @@ bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterCol
             Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
-
-    // 効果を無効化
-    //ActiveEffect(false);
-
     // 表示状態に更新
     return bHide = false;
 }

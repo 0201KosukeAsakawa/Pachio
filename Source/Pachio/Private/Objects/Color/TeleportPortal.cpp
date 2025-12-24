@@ -30,9 +30,7 @@ void ATeleportPortal::Initialize()
 {
     AColorReactiveObject::Initialize();
     CurrentTargetPortal = PrimaryDestination;
-    SecondColor = ALevelManager::GetInstance(GetWorld())
-        ->GetColorManager()
-        ->GetEffectColor(Effect);
+    SecondColor = UColorUtilityLibrary::GetCategoryColor(Effect);
 }
 
 void ATeleportPortal::ApplyColorWithMatching(const FLinearColor& InColor)

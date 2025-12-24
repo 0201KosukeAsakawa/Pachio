@@ -131,5 +131,5 @@ void AColorReactiveObject::ProcessColorMatching(const FLinearColor& NewColor)
         return;
     }
 
-    ObjectColorComponent->ProcessColorMatching(NewColor);
+    //ObjectColorComponent->ProcessColorMatching(NewColor);
 }

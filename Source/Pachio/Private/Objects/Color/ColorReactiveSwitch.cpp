@@ -28,9 +28,7 @@ void UColorReactiveSwitchComponent::Initialize()
 	// 親クラスの初期化処理
 	UObjectColorComponent::Initialize();
 	// 2色目の判定用カラーを取得
-	SecondaryColor = ALevelManager::GetInstance(GetWorld())
-		->GetColorManager()
-		->GetEffectColor(SecondaryEffect);
+	SecondaryColor = InitialColor = UColorUtilityLibrary::GetCategoryColor(SecondaryEffect);
 }
 
 // =======================
@@ -45,7 +43,7 @@ void UColorReactiveSwitchComponent::ApplyColorWithMatching(const FLinearColor& I
 	// -----------------------
 	// 第一色との一致チェック
 	// -----------------------
-	if (UColorUtilityLibrary::GetHueAngleDistance(GetCurrentColor(), InColor))
+	if (UColorUtilityLibrary::IsHueSimilar(GetCurrentColor(), InColor))
 	{
 		// 一致した色をマテリアルに反映
 		SetColor(InColor);

@@ -78,8 +78,8 @@ private:
     UMoveComponent* MoveComp;
 
     /** @brief 色反応判定用コンポーネント */
-    UPROPERTY()
-    UColorReactiveComponent* targetComp;
+    //UPROPERTY()
+    //UColorReactiveComponent* targetComp;
 
     /** @brief ホールド開始時の距離 */
     float InitialHoldDistance;

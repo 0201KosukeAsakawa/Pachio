@@ -8,6 +8,7 @@
 // 前方宣言（InputActionValue を参照するため）
 struct FInputActionValue;
 class UPhysicsCalculator;
+enum class EColorAbsorbMode :uint8;
 
 /**
  * プレイヤーの状態（ステート）を表す基底クラス。
@@ -97,6 +98,8 @@ public:
 	 * @return 角度（整数値）
 	 */
 	int32 GetYaw() const;
+
+	virtual void ChangePaintMode(EColorAbsorbMode){};
 
 protected:
 	/** このステートがアタッチされているプレイヤー */
