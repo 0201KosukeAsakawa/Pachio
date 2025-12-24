@@ -41,17 +41,7 @@ UColorControllerComponent::UColorControllerComponent()
 
 void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-   /* UObjectColorComponent* TargetComp = GetHitColorComponent(1500.f);
-    if (!TargetComp) return;
-
-    if (bPlayPaint)
-    {
-        PaintHitObject(TargetComp);
-    }
-    else
-    {
-        AbsorbHitObject(TargetComp);
-    }*/
+ 
 }
 
 // =======================
