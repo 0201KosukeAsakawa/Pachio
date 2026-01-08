@@ -383,8 +383,8 @@ AudioMixerModuleName=
 </pre></div>
 
 <h2 id="linux"><a href="#linux">8.5 Linux</a></h2>
-<p>To deploy on linux, you will need to rebuild the engine from source via github. For compiling linux from windows, see this <a href="https://docs.unrealengine.com/linux-development-requirements-for-unreal-engine">page</a> for instructions how to get up and running with Unreal. Then, add in both the fmodstudio linux .zip and windows .zip on top of each other into the engine plugins directory.</p>
-<p>The last thing you will need to do is to get the FMOD .so libraries into a directory that the executable can read them. The easiest way is to copy them from</p>
+<p>To deploy on Linux, you will need to rebuild the Engine from source via <a href="https://github.com/EpicGames/Signup">GitHub</a>. For compiling Linux from Windows, see this <a href="https://docs.unrealengine.com/linux-development-requirements-for-unreal-engine">page</a> for instructions how to get up and running with Unreal. Then, add in both the fmodstudio Linux <code>.zip</code> and Windows <code>.zip</code> on top of each other into the <code>Engine/Plugins</code> directory.</p>
+<p>The last thing you will need to do is to get the FMOD <code>.so</code> libraries into a directory that the executable can read them. The easiest way is to copy them from</p>
 <div class="highlight language-text"><pre><span></span>&lt;DeployedDir&gt;\Engine\Plugins\FMODStudio\Binaries\Linux\x86_64
 </pre></div>
 
@@ -392,7 +392,7 @@ AudioMixerModuleName=
 <div class="highlight language-text"><pre><span></span>&lt;DeployedDir&gt;\&lt;GameName&gt;\Binaries\Linux
 </pre></div>
 
-<p>To see what directories the .so files can be located, look at LinuxToolChain.cs. Currently there are only a set of hard coded directories that are supported.</p>
+<p>To see what directories the <code>.so</code> files can be located, look at <code>LinuxToolChain.cs</code>. Currently there are only a set of hard coded directories that are supported.</p>
 <h2 id="macos"><a href="#macos">8.6 macOS</a></h2>
 <div class="admonition warning">
 <p>This has been solved in UE 4.27 and above, the following is only required if you are using an older version of Unreal.</p>
@@ -447,6 +447,9 @@ AudioMixerModuleName=
 <div class="highlight language-text"><pre><span></span>[/Script/UnrealEd.ProjectPackagingSettings]
 -DirectoriesToAlwaysStageAsNonUFS=(Path=&quot;FMOD/Desktop&quot;)
 +DirectoriesToAlwaysStageAsNonUFS=(Path=&quot;FMOD/Switch&quot;)
+
+[Staging]
++WhitelistDirectories=MyGame/Content/FMOD/Switch
 </pre></div>
 
 <h3 id="live-update"><a href="#live-update">8.9.2 Live Update</a></h3>
@@ -455,8 +458,8 @@ AudioMixerModuleName=
 <div class="highlight language-text"><pre><span></span>IP address: 192.168.1.189
 </pre></div></div>
 
-<p class="manual-footer">Unreal Integration 2.03.09 (2025-08-05). &copy; 2025 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">Unreal Integration 2.03.11 (2025-11-18). &copy; 2025 Firelight Technologies Pty Ltd.</p>
+</div>
 </body>
 </html>
 
-</div>

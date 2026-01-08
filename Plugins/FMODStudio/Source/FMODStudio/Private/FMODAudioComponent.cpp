@@ -99,7 +99,7 @@ void UFMODAudioComponent::OnRegister()
     if (IsActive() && bAutoActivate)
     {
         FMOD_STUDIO_PLAYBACK_STATE state = FMOD_STUDIO_PLAYBACK_STOPPED;
-        if (StudioInstance->isValid())
+        if (StudioInstance && StudioInstance->isValid())
         {
             StudioInstance->getPlaybackState(&state);
         }
@@ -735,8 +735,7 @@ void UFMODAudioComponent::PlayInternal(EFMODSystemContext::Type Context, bool bR
 {
     Stop();
 
-    if (!FMODUtils::IsWorldAudible(GetWorld(), Context == EFMODSystemContext::Editor
-        || Context == EFMODSystemContext::Auditioning))
+    if (!FMODUtils::IsWorldAudible(GetWorld(), Context == EFMODSystemContext::Editor))
     {
         return;
     }
@@ -863,7 +862,7 @@ void UFMODAudioComponent::ResumeInternal(PauseContext Pauser)
 void UFMODAudioComponent::Stop()
 {
     UE_LOG(LogFMOD, Verbose, TEXT("UFMODAudioComponent %p Stop"), this);
-    if (StudioInstance->isValid())
+    if (StudioInstance && StudioInstance->isValid())
     {
         StudioInstance->stop(FMOD_STUDIO_STOP_ALLOWFADEOUT);
     }
@@ -893,7 +892,7 @@ void UFMODAudioComponent::ReleaseEventCache()
 
 void UFMODAudioComponent::ReleaseEventInstance()
 {
-    if (StudioInstance->isValid())
+    if (StudioInstance && StudioInstance->isValid())
     {
         if (NeedDestroyProgrammerSoundCallback)
         {
