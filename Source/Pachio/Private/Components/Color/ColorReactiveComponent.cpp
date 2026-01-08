@@ -19,7 +19,7 @@
 UColorReactiveComponent::UColorReactiveComponent()
     :  bHide(false)
 {
-    PrimaryComponentTick.bCanEverTick = false;  // Tickは不要
+    PrimaryComponentTick.bCanEverTick = true;  // Tickは不要
 
     // Niagaraシステムのアセット参照を取得
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> FireflyBurst(

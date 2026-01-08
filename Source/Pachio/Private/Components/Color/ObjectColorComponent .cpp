@@ -105,6 +105,7 @@ void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
     if (bHasTargetColor && bColorChangeable)
     {
         UpdateColorGradually(DeltaTime);
+        ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(ColorChangeTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
     }
 }
 
@@ -148,74 +149,7 @@ void UObjectColorComponent::Initialize()
  */
 void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
 {
-    // 色変更開始時の処理
-    bool bNear = UColorUtilityLibrary::IsHueSimilar(HitColor, NewColor, FVector(1, 0.1f, 0.1f));
-    if (bIsPlayedPaint && bNear)
-        return;
-
-    if (!bNear)
-    {
-        // 初回変更時にリセット
-        if (LastColor != NewColor)
-        {
-            LastColor = NewColor;
-            StartColor = HitColor;  // 補間開始位置を確保
-        }
-    }
-
-    // タイマー進行
-    bIsPainting = true;
-    LastPaintTime = 0;
-
-    // 補間割合（0→1）
-    float Ratio = FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f);
-
-    // HSL を取得
-    FVector currentHSL = UColorUtilityLibrary::GetHSL(CurrentColor);
-    FVector targetHSL = UColorUtilityLibrary::GetHSL(NewColor);
-
-    // 無彩色判定
-    if (targetHSL.Y < 0.01f)
-    {
-        HitColor = NewColor;
-    }
-    else
-    {
-        // Hueの最短角距離
-        float deltaHue = targetHSL.X - currentHSL.X;
-        deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
-
-        // Hue速度（度/秒）- 従来の90度/秒
-        float hueSpeed = 90.0f;
-        float hueStep = FMath::Clamp(deltaHue, -hueSpeed * GetWorld()->DeltaTimeSeconds, hueSpeed * GetWorld()->DeltaTimeSeconds);
-
-        // Hue更新
-        float newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
-
-        // S/Lは線形補間速度
-        float sStep = (targetHSL.Y - currentHSL.Y) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
-        float lStep = (targetHSL.Z - currentHSL.Z) * GetWorld()->DeltaTimeSeconds / CHANGE_HITCOLOR;
-
-        float newS = currentHSL.Y + sStep;
-        float newL = currentHSL.Z + lStep;
-
-        HitColor = UColorUtilityLibrary::FromHSL(FVector(newHue, newS, newL));
-    }
-
-    // 補間中は MaterialAlpha で反映
-    if (!bIsPlayedPaint && !bNear)
-    {
-        ApplyColorToMaterial(HitColor);
-        ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
-    }
-
-    // 補間完了時
-    if (Ratio >= 1.0f)
-    {
-        SetColor(NewColor);
-        bIsPainting = false;
-        bIsPlayedPaint = true;
-    }
+    
 }
 
 
@@ -251,6 +185,11 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
         bHasTargetColor = false;
         UE_LOG(LogTemp, Log, TEXT("[%s] Color change time expired (%.2f seconds)"),
             *GetOwner()->GetName(), ColorChangeTimer);
+
+        if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05,0.05)))
+        {
+            ApplyColorWithMatching(CurrentColor);
+        }
         return;
     }
 
@@ -287,10 +226,13 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
         FMath::Abs(targetHSL.Z - newL) < 0.05f)
     {
         // 完全に目標色に到達（時間内に到達）
-        CurrentColor = TargetColor;
+        //CurrentColor = TargetColor;
         ApplyColorToMaterial(CurrentColor);
         bHasTargetColor = false;
-
+        if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05, 0.05)))
+        {
+            ApplyColorWithMatching(CurrentColor);
+        }
         UE_LOG(LogTemp, Log, TEXT("[%s] Reached target color in %.2f seconds"),
             *GetOwner()->GetName(), ColorChangeTimer);
     }
@@ -354,8 +296,8 @@ void UObjectColorComponent::SetupMaterial()
     // カスタムデプスレンダリングを有効化（アウトライン表示などに使用）
     Mesh->SetRenderCustomDepth(true);
     Mesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_STENCIL_VALUE);
-
-    ApplyColorToMaterial(InitialColor);
+    FLinearColor materialColor = UColorUtilityLibrary::GetCategoryColor(StartMaterialColorCategory);
+    ApplyColorToMaterial(materialColor);
 }
 
 // =======================

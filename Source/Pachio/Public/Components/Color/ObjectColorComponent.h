@@ -173,6 +173,8 @@ public:
      */
     void ApplyColorToMaterialAlpha(const float Alpha, const FLinearColor& InColor);
 
+
+    bool IsPainting()const { return bIsPainting; }
 protected:
     // =======================
     // 内部初期化処理
@@ -255,6 +257,7 @@ protected:
     /** 目標色（30度/秒の段階的変化用） */
     FLinearColor TargetColor;
 
+
     /** 補間開始時の色 */
     FLinearColor StartColor;
 
@@ -268,6 +271,9 @@ protected:
     /** エフェクトタイプ */
     UPROPERTY(EditAnywhere, Category = "Category")
     EColorCategory ColorCategory;
+
+    UPROPERTY(EditAnywhere, Category = "Category")
+    EColorCategory StartMaterialColorCategory;
 
     /**
      * ダイナミックマテリアル
