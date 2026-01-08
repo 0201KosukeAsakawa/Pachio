@@ -4,6 +4,7 @@
 #include "Objects/ColorProjectile.h"
 #include "Interface/ColorFilterInterface.h"
 #include "Components/SphereComponent.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 AColorProjectile::AColorProjectile()
@@ -99,26 +100,28 @@ void AColorProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAct
     // 既に衝突処理済みの場合はスキップ
     if (bHasHit)
         return;
-
     bHasHit = true;
 
     // ヒットしたアクターがインターフェースを実装しているか確認
     if (OtherActor && OtherActor != this)
     {
-        // IColorReceiverインターフェースを持つコンポーネントを検索
+        // コンポーネントを検索
         TArray<UActorComponent*> Components;
         OtherActor->GetComponents(Components);
 
         for (UActorComponent* Component : Components)
         {
-            // インターフェースを実装しているか確認
-            IColorReactiveInterface* ColorReceiver = Cast<IColorReactiveInterface>(Component);
-            if (ColorReceiver)
+            // UObjectColorComponentとして取得
+            UObjectColorComponent* ColorComponent = Cast<UObjectColorComponent>(Component);
+            if (ColorComponent)
             {
-                // 色を渡す（インターフェースメソッド経由）
-                 ColorReceiver->ApplyColorWithMatching(ProjectileColor);
+                // ProjectileColorを渡して、2秒間色変更を実行
+                ColorComponent->SetTargetColor(ProjectileColor);
 
-                UE_LOG(LogTemp, Log, TEXT("ColorProjectile hit: %s, Color applied"),
+                // カスタム時間を指定する場合
+                // ColorComponent->SetTargetColor(ProjectileColor, 3.0f);
+
+                UE_LOG(LogTemp, Log, TEXT("ColorProjectile hit: %s, Target color set (will change for 2 seconds)"),
                     *OtherActor->GetName());
                 break;
             }
@@ -126,7 +129,6 @@ void AColorProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAct
     }
 
     // エフェクトやサウンドをここで再生可能
-
     // 投射物を破棄
     Destroy();
 }

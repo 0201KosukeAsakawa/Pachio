@@ -26,7 +26,8 @@ UColorTriggerStopComponent::UColorTriggerStopComponent()
 bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
     // すでに非表示なら処理不要
-    if (bHide) return false;
+    if (bHide) 
+        return false;
     AActor* Owner = GetOwner();
     if (Owner == nullptr) return false;
 

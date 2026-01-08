@@ -16,6 +16,12 @@
 
 #include "Kismet/KismetSystemLibrary.h" 
 
+namespace
+{
+    constexpr int32 ABSORB_AMOUNT = 5;      // 吸収時の回収量
+    constexpr int32 MAX_TANK_CAPACITY = 10;  // タンクの最大容量
+    constexpr int32 MIN_TANK_CAPACITY = 0;   // タンクの最小容量
+}
 
 // =======================
 // コンストラクタ
@@ -29,10 +35,10 @@ UColorControllerComponent::UColorControllerComponent()
     // 初期色は白
     CurrentColor = FLinearColor::White;
 
-    ColorTankMap.Add(EColorCategory::Red, 1);
-    ColorTankMap.Add(EColorCategory::Green, 1);
-    ColorTankMap.Add(EColorCategory::Blue, 1);
-    ColorTankMap.Add(EColorCategory::White, 1);
+    ColorTankMap.Add(EColorCategory::Red, 10);
+    ColorTankMap.Add(EColorCategory::Green, 10);
+    ColorTankMap.Add(EColorCategory::Blue, 10);
+    ColorTankMap.Add(EColorCategory::White, 10);
 }
 
 // =======================
@@ -41,17 +47,7 @@ UColorControllerComponent::UColorControllerComponent()
 
 void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-   /* UObjectColorComponent* TargetComp = GetHitColorComponent(1500.f);
-    if (!TargetComp) return;
-
-    if (bPlayPaint)
-    {
-        PaintHitObject(TargetComp);
-    }
-    else
-    {
-        AbsorbHitObject(TargetComp);
-    }*/
+ 
 }
 
 // =======================
@@ -68,7 +64,7 @@ void UColorControllerComponent::AdjustColor(float Delta)
     if (Hue < 0.f)
         Hue += 360.f;
 
-    UE_LOG(LogTemp, Log, TEXT("Hue : : %f"), Hue);
+    //UE_LOG(LogTemp, Log, TEXT("Hue : : %f"), Hue);
 
     // ColorTankMapから有効な色カテゴリを取得（値が1以上のもの）
     TArray<EColorCategory> ValidCategories;
@@ -83,7 +79,7 @@ void UColorControllerComponent::AdjustColor(float Delta)
     // 有効なカテゴリがない場合は処理を中断
     if (ValidCategories.Num() == 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("No valid color categories available"));
+        //UE_LOG(LogTemp, Warning, TEXT("No valid color categories available"));
         return;
     }
 
@@ -121,14 +117,22 @@ UObjectColorComponent* UColorControllerComponent::GetHitColorComponent(float Dis
     FVector Direction = GetOwner()->GetActorRightVector().GetSafeNormal();
     FVector End = Start + Direction * Distance;
 
+    // Box の半径（必要に応じて調整）
+    FVector BoxExtent = FVector(50.f, 50.f, 50.f);
+
+    // Box の向き（Actorの向きに合わせる）
+    FRotator BoxRotation = GetOwner()->GetActorRotation();
+
     FHitResult HitResult;
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(GetOwner());
 
-    bool bHit = UKismetSystemLibrary::LineTraceSingle(
+    bool bHit = UKismetSystemLibrary::BoxTraceSingle(
         this,
         Start,
         End,
+        BoxExtent,
+        BoxRotation,
         UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_WorldStatic),
         false,
         ActorsToIgnore,
@@ -162,6 +166,13 @@ void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetCom
 {
     if (!TargetComp) return;
 
+    // 対象が変化中なら吸収できない
+    if (TargetComp->IsPainting())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Target is currently painting, cannot absorb"));
+        return;
+    }
+
     // ヒットした色を取得
     FLinearColor HitColor = TargetComp->GetCurrentColor();
 
@@ -173,7 +184,11 @@ void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetCom
     // 無彩色（ほぼ白や灰色）は White に加算
     if (Saturation < 0.01f)
     {
-        ColorTankMap.FindOrAdd(EColorCategory::White) += 1;
+        int32& WhiteTank = ColorTankMap.FindOrAdd(EColorCategory::White);
+        WhiteTank = FMath::Min(WhiteTank + ABSORB_AMOUNT, MAX_TANK_CAPACITY);
+
+        TargetComp->SetTargetColor(FLinearColor::White);
+        UE_LOG(LogTemp, Log, TEXT("Absorbed White: %d"), WhiteTank);
         return;
     }
 
@@ -181,22 +196,52 @@ void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetCom
     TArray<TPair<EColorCategory, float>> Components;
 
     // 赤・緑・青のみTankに加算
-    if (HitColor.R > 0.5f) Components.Add({ EColorCategory::Red, HitColor.R });
-    if (HitColor.G > 0.5f) Components.Add({ EColorCategory::Green, HitColor.G });
-    if (HitColor.B > 0.5f) Components.Add({ EColorCategory::Blue, HitColor.B });
+    if (HitColor.R > 0.7f) 
+    {
+        Components.Add({ EColorCategory::Red, HitColor.R });
+        UE_LOG(LogTemp, Log, TEXT("Copy_Red"));
+    }
+    if (HitColor.G > 0.7f) 
+    {
+        Components.Add({ EColorCategory::Green, HitColor.G });
+        UE_LOG(LogTemp, Log, TEXT("Copy_Green"));
+    }
+    if (HitColor.B > 0.7f) 
+    {
+        Components.Add({ EColorCategory::Blue, HitColor.B });
+        UE_LOG(LogTemp, Log, TEXT("Copy_Blue"));
+    }
 
     // 明るい色や薄い色は White も加算
     if (Lightness > 0.8f || HSL.Y < 0.2f)
     {
-        Components.Add({ EColorCategory::White, 0.5f }); // 半分くらいをWhiteに分配
+        Components.Add({ EColorCategory::White, 0.5f });
     }
 
-    // Tankに加算（正規化して整数化も可）
-    for (auto& Comp : Components)
+    // 合計の重みを計算
+    float TotalWeight = 0.0f;
+    for (const auto& Comp : Components)
     {
-        int32 AddAmount = FMath::RoundToInt(Comp.Value * 1); // 1にスケール調整可
-        ColorTankMap.FindOrAdd(Comp.Key) += AddAmount;
+        TotalWeight += Comp.Value;
     }
 
-    TargetComp->ApplyColorWithMatching(FLinearColor::White);
+    // Tankに加算（容量制限あり）
+    if (TotalWeight > 0.0f)
+    {
+        for (const auto& Comp : Components)
+        {
+            // 重みに応じて ABSORB_AMOUNT を分配
+            float Ratio = Comp.Value / TotalWeight;
+            int32 AddAmount = FMath::RoundToInt(ABSORB_AMOUNT * Ratio);
+
+            int32& TankValue = ColorTankMap.FindOrAdd(Comp.Key);
+            int32 OldValue = TankValue;
+            TankValue = FMath::Min(TankValue + AddAmount, MAX_TANK_CAPACITY);
+
+            UE_LOG(LogTemp, Log, TEXT("Absorbed %d to tank (was %d, now %d, max %d)"),
+                AddAmount, OldValue, TankValue, MAX_TANK_CAPACITY);
+        }
+    }
+
+    TargetComp->SetTargetColor(FLinearColor::White);
 }

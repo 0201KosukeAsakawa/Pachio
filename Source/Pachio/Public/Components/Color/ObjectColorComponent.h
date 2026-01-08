@@ -37,10 +37,19 @@ public:
      */
     virtual void BeginPlay() override;
 
+    /**
+     * @brief フレーム毎の更新処理
+     *
+     * 毎フレーム呼び出され、色の段階的な変化などを処理します。
+     *
+     * @param DeltaTime 前フレームからの経過時間
+     * @param TickType Tickの種類
+     * @param ThisTickFunction このTickの関数情報
+     */
     void TickComponent(
         float DeltaTime,
         ELevelTick TickType,
-        FActorComponentTickFunction* ThisTickFunction)override;
+        FActorComponentTickFunction* ThisTickFunction) override;
 
 #if WITH_EDITOR
     /**
@@ -66,11 +75,22 @@ public:
 
     /**
      * 指定された色を適用し、必要に応じてマッチング処理を行う
+     * 既存の色変更システム（90度/秒で変化）
      *
      * @param NewColor - 適用する新しい色
      */
-    virtual void ApplyColorWithMatching(const FLinearColor& NewColor)override;
+    virtual void ApplyColorWithMatching(const FLinearColor& NewColor) override;
 
+    /**
+     * 新しい色塗り方式（30度/秒でTick駆動、時間制限付き）
+     * 目標色を設定する
+     * AColorProjectileから呼び出される
+     *
+     * @param NewColor 目標とする色
+     * @param Duration 色変更を続ける時間（秒）デフォルトは COLOR_CHANGE_DURATION
+     */
+    UFUNCTION(BlueprintCallable, Category = "Color")
+    void SetTargetColor(const FLinearColor& NewColor, const float Duration = 30.f);
     // =======================
     // 色の操作
     // =======================
@@ -84,8 +104,6 @@ public:
 
     /**
      * 色を初期状態にリセット
-     *
-     * @param MatchResult エフェクトマッチング結果
      */
     void ResetColor();
 
@@ -116,10 +134,10 @@ public:
     void SetColorMatched(bool bMatched);
 
     /**
-    * 色が変更可能かを判定する
-    *
-    * @return 変更可能であれば true
-    */
+     * 色が変更可能かを判定する
+     *
+     * @return 変更可能であれば true
+     */
     FORCEINLINE bool IsChangeable() const final override { return bColorChangeable; }
 
     /** 現在の色を取得 */
@@ -136,17 +154,6 @@ public:
     FORCEINLINE FName GetColorEventID() const final override { return ColorEventID; }
 
     // =======================
-    // 色の判定
-    // =======================
-
-    /**
-     * 初期色から変更されているかを判定
-     *
-     * @return 変更されている場合true
-     */
-    bool HasColorChanged(const  float Tolerance = 30.f) const;
-
-    // =======================
     // エフェクト処理
     // =======================
 
@@ -157,7 +164,17 @@ public:
      * @param Color 適用する色
      */
     void ApplyColorToMaterial(const FLinearColor& Color);
+
+    /**
+     * マテリアルにアルファブレンドで色を適用
+     *
+     * @param Alpha ブレンド係数（0.0〜1.0）
+     * @param InColor 適用する色
+     */
     void ApplyColorToMaterialAlpha(const float Alpha, const FLinearColor& InColor);
+
+
+    bool IsPainting()const { return bIsPainting; }
 protected:
     // =======================
     // 内部初期化処理
@@ -181,16 +198,23 @@ protected:
      */
     void SetupMaterial();
 
+    /**
+     * Tick内で呼ばれる色更新処理（30度/秒で段階的に変化）
+     *
+     * @param DeltaTime フレーム時間
+     */
+    void UpdateColorGradually(float DeltaTime);
+
     // =======================
     // ヘルパー関数
     // =======================
 
     /**
-    * SkeletalMeshComponentを取得
-    * オーナーアクターから"Mesh"という名前のコンポーネントを検索
-    *
-    * @return SkeletalMeshComponent（見つからない場合はnullptr）
-    */
+     * SkeletalMeshComponentを取得
+     * オーナーアクターから"Mesh"という名前のコンポーネントを検索
+     *
+     * @return SkeletalMeshComponent（見つからない場合はnullptr）
+     */
     UStaticMeshComponent* GetMeshComponent() const;
 
     /**
@@ -208,14 +232,11 @@ protected:
      */
     UColorManager* GetColorManager() const;
 
-
-    void UpdateHitColorTransition(FLinearColor);
-
     // =======================
     // コンポーネントとプロパティ
     // =======================
 public:
-    // グローバルやクラスメンバとしてデリゲートを宣言
+    /** 色カテゴリ変更時のデリゲート */
     FOnColorCategoryChanged OnColorChanged;
 
 protected:
@@ -227,9 +248,21 @@ protected:
     UPROPERTY(VisibleAnywhere, Category = "Color|State")
     FLinearColor CurrentColor;
 
+    /** ヒット時の色（補間用） */
     FLinearColor HitColor;
+
     /** 初期色 */
     FLinearColor InitialColor;
+
+    /** 目標色（30度/秒の段階的変化用） */
+    FLinearColor TargetColor;
+
+
+    /** 補間開始時の色 */
+    FLinearColor StartColor;
+
+    /** 前回の目標色 */
+    FLinearColor LastColor;
 
     // =======================
     // エフェクト設定
@@ -238,6 +271,9 @@ protected:
     /** エフェクトタイプ */
     UPROPERTY(EditAnywhere, Category = "Category")
     EColorCategory ColorCategory;
+
+    UPROPERTY(EditAnywhere, Category = "Category")
+    EColorCategory StartMaterialColorCategory;
 
     /**
      * ダイナミックマテリアル
@@ -260,9 +296,14 @@ protected:
     /** ビート演出を有効化 */
     UPROPERTY(EditAnywhere, Category = "Effects|Behavior")
     bool bEnableBeatEffect;
+
     /** 補色を使用する */
     UPROPERTY(EditAnywhere, Category = "Color|Matching")
     bool bUseComplementaryColor;
+
+    /** 色変更が可能か */
+    UPROPERTY(EditAnywhere, Category = "Color|State")
+    bool bColorChangeable;
 
     // =======================
     // 登録設定
@@ -271,9 +312,10 @@ protected:
     /** 色イベントID（イベントトリガー用） */
     UPROPERTY(EditAnywhere, Category = "Color|Events")
     FName ColorEventID;
+
 private:
     // =======================
-    // 内部状態
+    // 内部状態フラグ
     // =======================
 
     /** 色が一致しているか */
@@ -282,20 +324,29 @@ private:
     /** 選択されているか */
     bool bSelected;
 
-    /** 色変更が可能か */
-    UPROPERTY(EditAnywhere, Category = "Color|State")
-    bool bColorChangeable;
-
     /** 初期化済みであるか */
     bool bInitialized;
 
+    /** ペイント演出が再生済みか */
+    bool bIsPlayedPaint;
+
+    /** ペイント中か */
+    bool bIsPainting;
+
+    /** 目標色が設定されているか（30度/秒変化用） */
+    bool bHasTargetColor;
+
+    // =======================
+    // タイマー
+    // =======================
+
+    /** ヒット時の経過時間 */
     float HitTimer;
 
-    float LastPaintTime = 0;
+    /** 最後のペイント時刻からの経過時間 */
+    float LastPaintTime;
 
-    FLinearColor StartColor;
-    FLinearColor LastColor;
-
-    bool bIsPlayedPaint = false;
-    bool bIsPainting = false;
+    float ColorChangeTimer;      // 色変更の経過時間
+    float ColorChangeDuration;   // 色変更の持続時間
 };
+

@@ -7,6 +7,7 @@
 
 UColorReactiveMeshComponent::UColorReactiveMeshComponent()
 {
+    PrimaryComponentTick.bCanEverTick = true;
 }
 
 void UColorReactiveMeshComponent::ApplyColorWithMatching(const FLinearColor& NewColor)

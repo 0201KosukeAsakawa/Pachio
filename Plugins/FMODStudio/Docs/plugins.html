@@ -19,6 +19,13 @@
 </ul>
 </li>
 <li><a href="#deploying-fmod-plugins">Deploying FMOD plugins</a></li>
+<li><a href="#fmod-haptics-setup">FMOD Haptics Setup</a><ul>
+<li><a href="#supported-devices">Supported Devices</a></li>
+<li><a href="#dependencies">Dependencies</a></li>
+<li><a href="#enable-fmod-studio-openxr">Enable FMOD Studio OpenXR</a></li>
+<li><a href="#apl-configuration">APL Configuration</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="niagara.html">Niagara Integration</a></li>
@@ -168,10 +175,51 @@
 <div class="highlight language-text"><pre><span></span>fmod_gain
 </pre></div>
 
-<p>Check the <a href="platform-specifics.html">Platform Specifics</a> for information relating to plugins on specific platforms.</p></div>
+<p>Check the <a href="platform-specifics.html">Platform Specifics</a> for information relating to plugins on specific platforms.</p>
+<h2 id="fmod-haptics-setup"><a href="#fmod-haptics-setup">4.3 FMOD Haptics Setup</a></h2>
+<p>The FMOD haptics plugin can be used to generate haptic vibrations authored in <a href="https://developers.meta.com/horizon/resources/haptics-studio">Meta Haptics Studio</a>. If you have an Xbox or PS5 controller connected to your computer you can audition <a href="https://fmod.com/docs/2.03/studio/glossary.html#event">events</a> containing the <a href="https://fmod.com/docs/2.03/studio/instrument-reference.html#haptics-instrument">Haptics Instrument</a> in-editor. Meta Quest controllers cannot be auditioned in-editor, and require additional configuration for use in a built application. The above setup is sufficient for haptic vibrations on all other supported devices. Please ensure you have completed the above <a href="plugins.html#dynamic-plugins">Dynamic Plugin</a> setup before proceeding.</p>
+<h3 id="supported-devices"><a href="#supported-devices">4.3.1 Supported Devices</a></h3>
+<ul>
+<li>PS5 DualSense Wireless Controller</li>
+<li>Xbox Wireless Controller</li>
+<li>Meta Quest 2 Controllers</li>
+<li>Meta Quest Plus/Pro Controllers</li>
+</ul>
+<h3 id="dependencies"><a href="#dependencies">4.3.2 Dependencies</a></h3>
+<ul>
+<li>Unreal Engine 5.4 or above</li>
+<li>OpenXR Unreal Plugin</li>
+</ul>
+<h3 id="enable-fmod-studio-openxr"><a href="#enable-fmod-studio-openxr">4.3.3 Enable FMOD Studio OpenXR</a></h3>
+<p>The FMOD Studio OpenXR Integration is disabled by default, and must be enabled for FMOD haptics to operate on Quest. To enable it, navigate to "Edit &gt; Plugins", and search for "FMOD Studio OpenXR Integration". Tick the plugin to enable it, and restart the Unreal Editor for changes to take effect.</p>
+<p><img alt="FMOD Studio OpenXR Integration" src="images/fmod-studio-openxr-integration.png" /></p>
+<h3 id="apl-configuration"><a href="#apl-configuration">4.3.4 APL Configuration</a></h3>
+<p>A specific <a href="platform-specifics.html#deployment-of-android-plugins">APL file</a> is required for packaging on Meta Quest. Please create a new file in <code>Plugins/FMODStudio/Binaries/Android</code> called "fmod_haptics_APL.xml" with the following contents:</p>
+<div class="highlight language-xml"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="c">&lt;!--Plugin additions--&gt;</span>
+<span class="nt">&lt;root</span> <span class="na">xmlns:android=</span><span class="s">&quot;http://schemas.android.com/apk/res/android&quot;</span><span class="nt">&gt;</span>
+    <span class="c">&lt;!-- init section is always evaluated once per architecture --&gt;</span>
+    <span class="nt">&lt;init&gt;</span>
+        <span class="nt">&lt;log</span> <span class="na">text=</span><span class="s">&quot;fmod_haptics APL init&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/init&gt;</span>
 
-<p class="manual-footer">Unreal Integration 2.03.09 (2025-08-05). &copy; 2025 Firelight Technologies Pty Ltd.</p>
+    <span class="c">&lt;!-- optional files or directories to copy to Intermediate/Android/APK --&gt;</span>
+    <span class="nt">&lt;resourceCopies&gt;</span>
+        <span class="nt">&lt;log</span> <span class="na">text=</span><span class="s">&quot;fmod_haptics APL copying files for $S(Architecture)/&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;copyFile</span> <span class="na">src=</span><span class="s">&quot;$S(PluginDir)/quest/libfmod_haptics.so&quot;</span>
+                    <span class="na">dst=</span><span class="s">&quot;$S(BuildDir)/libs/$S(Architecture)/libfmod_haptics.so&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/resourceCopies&gt;</span>
+
+    <span class="c">&lt;!-- optional libraries to load in GameActivity.java before libUE4.so --&gt;</span>
+    <span class="nt">&lt;soLoadLibrary&gt;</span>
+        <span class="nt">&lt;log</span> <span class="na">text=</span><span class="s">&quot;fmod_haptics APL adding loadLibrary references&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;loadLibrary</span> <span class="na">name=</span><span class="s">&quot;fmod_haptics&quot;</span> <span class="na">failmsg=</span><span class="s">&quot;fmod_haptics not loaded and required!&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/soLoadLibrary&gt;</span>
+<span class="nt">&lt;/root&gt;</span>
+</pre></div></div>
+
+<p class="manual-footer">Unreal Integration 2.03.11 (2025-11-18). &copy; 2025 Firelight Technologies Pty Ltd.</p>
+</div>
 </body>
 </html>
 
-</div>

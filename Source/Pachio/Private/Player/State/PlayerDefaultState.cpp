@@ -22,6 +22,7 @@
 #include "Objects/ColorProjectile.h"
 #include "Objects/Color/LadderActor.h"
 #include "Components/Color/ColorControllerComponent.h"
+#include "ColorUtilityLibrary.h"
 
 namespace Player_DEFAULT_Constants
 {
@@ -32,9 +33,13 @@ namespace Player_DEFAULT_Constants
     constexpr float JUMP_START_IGNORE_DURATION = 0.1f;
     constexpr float AIR_CONTROL = 0.2f;
     constexpr float FALLING_LATERAL_FRICTION = 0.5f;
+
+
 }
 
 UPlayerDefaultState::UPlayerDefaultState()
+    :LaunchAngle(30.f)
+    , LaunchSpeed(1000.f)
 {
 }
 
@@ -150,105 +155,118 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
 
     return true;
 }
-// ステートを離脱するときの処理（現時点では何もしない）
-bool UPlayerDefaultState::OnExit(APawn*)
+bool UPlayerDefaultState::OnExit(APawn* owner)
 {
     return true;
 }
-
-// スキルボタン入力時の処理（現時点では何もしない）
 bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
-    if (!ProjectileClass)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ProjectileClass is not set in PlayerDefaultState"));
-        return false;
-    }
-
     ACharacter* Character = Cast<ACharacter>(GetOwner());
-    if (!Character)
+    if (!Character) return false;
+    UColorControllerComponent* ColorComp = GetOwner()->GetComponentByClass<UColorControllerComponent>();
+    if (!ColorComp) return false;
+    // モード判定
+    if (mode == EColorAbsorbMode::Paint)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Character is null"));
-        return false;
+        if (!ProjectileClass)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("ProjectileClass is not set in PlayerDefaultState"));
+            return false;
+        }
+
+        // 現在選択中の色を取得
+        CurrentSelectedColor = ColorComp->GetCurrentColor();
+
+        // 現在の色カテゴリを取得
+        EColorCategory CurrentCategory = UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentSelectedColor);
+
+        // タンクに十分な色があるかチェック
+        int32* TankValue = ColorComp->ColorTankMap.Find(CurrentCategory);
+        if (!TankValue || *TankValue <= 0)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Not enough color in tank to fire projectile"));
+            return false;
+        }
+
+        UWorld* World = GetWorld();
+        if (!World)
+        {
+            return false;
+        }
+        // プレイヤーの位置と回転
+        const FVector PlayerLocation = Character->GetActorLocation();
+        const FRotator PlayerRotation = Character->GetActorRotation();
+        // 発射位置（前方 + 少し上）
+        const FVector LaunchLocation = PlayerLocation + FVector(0.0f, 0.0f, 50.0f);
+        // ----------------------------
+        // 発射方向の決定
+        // Yaw == 0 → +Y
+        // Yaw == 180 → -Y
+        // ----------------------------
+        FVector LaunchDirection = FVector::ZeroVector;
+        if (FMath::IsNearlyEqual(PlayerRotation.Yaw, 0.0f, 1.0f))
+        {
+            LaunchDirection = FVector(0.0f, 1.0f, 0.0f);
+        }
+        else if (FMath::IsNearlyEqual(PlayerRotation.Yaw, 180.0f, 1.0f) || FMath::IsNearlyEqual(PlayerRotation.Yaw, -180.0f, 1.0f))
+        {
+            LaunchDirection = FVector(0.0f, -1.0f, 0.0f);
+        }
+        else
+        {
+            // 想定外の向きの場合の保険
+            LaunchDirection = Character->GetActorForwardVector();
+        }
+        // 発射角度（Pitch）を加味
+        FRotator LaunchRotation = LaunchDirection.Rotation();
+        LaunchRotation.Pitch += LaunchAngle;
+        LaunchDirection = LaunchRotation.Vector();
+        UE_LOG(LogTemp, Warning, TEXT("PlayerYaw: %.1f"), PlayerRotation.Yaw);
+
+        // スポーン設定
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = Character;
+        SpawnParams.Instigator = Character;
+        // 投射物スポーン
+        AColorProjectile* Projectile = World->SpawnActor<AColorProjectile>(
+            ProjectileClass,
+            LaunchLocation,
+            LaunchDirection.Rotation(),
+            SpawnParams
+        );
+        if (Projectile)
+        {
+            // 弾の生成に成功したらタンクから1消費
+            (*TankValue)--;
+
+            Projectile->Launch(LaunchDirection, LaunchSpeed, CurrentSelectedColor);
+            UE_LOG(
+                LogTemp,
+                Log,
+                TEXT("ColorProjectile fired: Angle=%.1f Speed=%.1f Color(R=%.2f G=%.2f B=%.2f) Tank remaining: %d"),
+                LaunchAngle,
+                LaunchSpeed,
+                CurrentSelectedColor.R,
+                CurrentSelectedColor.G,
+                CurrentSelectedColor.B,
+                *TankValue
+            );
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to spawn projectile"));
+            return false;
+        }
     }
-
-    UWorld* World = GetWorld();
-    if (!World)
-        return false;
-
-    // プレイヤーの向きと位置を取得
-    FVector PlayerLocation = Character->GetActorLocation();
-    FRotator PlayerRotation = Character->GetActorRotation();
-    FVector PlayerForward = Character->GetActorForwardVector();
-    // 発射位置（プレイヤーの前方 + 少し上）
-    FVector LaunchLocation = PlayerLocation + (PlayerForward ) + FVector(0, 0, 50.0f);
-
-    // 発射方向を計算（プレイヤーの向き + 発射角度）
-    FRotator LaunchRotation = PlayerRotation;
-    LaunchRotation.Pitch += LaunchAngle; // 上向きに角度を追加
-    FVector LaunchDirection = LaunchRotation.Vector();
-
-    // 現在選択中の色を取得（ColorManagerから取得する場合）
-    UColorControllerComponent* comp = GetOwner()->GetComponentByClass<UColorControllerComponent>();
-     if (comp)
-     {
-         CurrentSelectedColor = comp->GetCurrentColor();
-     }
-
-    // 投射物をスポーン
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = Character;
-    SpawnParams.Instigator = Character;
-
-    AColorProjectile* Projectile = World->SpawnActor<AColorProjectile>(
-        ProjectileClass,
-        LaunchLocation,
-        LaunchDirection.Rotation(),
-        SpawnParams
-    );
-
-    if (Projectile)
+    else if (mode == EColorAbsorbMode::Absorb)
     {
-        // 球を発射
-        Projectile->Launch(LaunchDirection, LaunchSpeed, CurrentSelectedColor);
-
-        UE_LOG(LogTemp, Log, TEXT("ColorProjectile fired: Angle=%.1f°, Speed=%.1f, Color(R=%.2f G=%.2f B=%.2f)"),
-            LaunchAngle, LaunchSpeed,
-            CurrentSelectedColor.R, CurrentSelectedColor.G, CurrentSelectedColor.B);
+        // 吸うモード → 近くのオブジェクトを吸収
+        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f); // 距離100を例
+        if (TargetComp)
+        {
+            ColorComp->AbsorbHitObject(TargetComp);
+        }
     }
-    //if (!Value.Get<bool>())
-    //    return false;
-
-    //// 目の前に持てるオブジェクトがあるか判定
-    //FVector Start = mOwner->GetActorLocation();
-    //FVector End = Start + CurrentDirection * 200.f; // 2m先まで
-
-    //FHitResult Hit;
-    //FCollisionQueryParams Params;
-    //Params.AddIgnoredActor(mOwner);
-    //bool bIsHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
-    //if (!bIsHit)
-    //    return false;
-
-    //AActor* Target = Hit.GetActor();
-    //if (Target == nullptr || !Target->ActorHasTag("Holdable")) // 持てるオブジェクトにタグを付けておく
-    //    return false;
-
-    //IStateControllable* Player = Cast<IStateControllable>(mOwner);
-    //if (Player == nullptr)
-    //    return false;
-    //UPlayerStateComponent* NewState = Player->ChangeState(EPlayerStateType::Hold);
-    //if (NewState == nullptr)
-    //    return false;
-
-    //if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
-    //{
-    //    if (CurrentDirection.Y > 0)
-    //        HoldState->SetUp(Target, true);
-    //    else
-    //        HoldState->SetUp(Target, false);
-    //}
-
     return true;
 }
 
