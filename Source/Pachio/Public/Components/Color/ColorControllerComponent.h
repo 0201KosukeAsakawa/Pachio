@@ -57,6 +57,7 @@ public:
     FLinearColor GetCurrentColor() const;
 
     UObjectColorComponent* GetHitColorComponent(float Distance);
+
 public:
     // ====== デリゲート ======
 
@@ -78,6 +79,6 @@ private:
      * 各モードごとに保持する色のマップ
      */
     FLinearColor CurrentColor;
-
-    TMap<EColorCategory, float>ColorTankMap;
+public:
+    TMap<EColorCategory, int32>ColorTankMap;
 };
