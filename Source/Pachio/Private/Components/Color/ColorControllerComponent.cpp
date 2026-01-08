@@ -117,14 +117,22 @@ UObjectColorComponent* UColorControllerComponent::GetHitColorComponent(float Dis
     FVector Direction = GetOwner()->GetActorRightVector().GetSafeNormal();
     FVector End = Start + Direction * Distance;
 
+    // Box の半径（必要に応じて調整）
+    FVector BoxExtent = FVector(50.f, 50.f, 50.f);
+
+    // Box の向き（Actorの向きに合わせる）
+    FRotator BoxRotation = GetOwner()->GetActorRotation();
+
     FHitResult HitResult;
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(GetOwner());
 
-    bool bHit = UKismetSystemLibrary::LineTraceSingle(
+    bool bHit = UKismetSystemLibrary::BoxTraceSingle(
         this,
         Start,
         End,
+        BoxExtent,
+        BoxRotation,
         UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_WorldStatic),
         false,
         ActorsToIgnore,

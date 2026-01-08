@@ -19,6 +19,7 @@ public class Pachio : ModuleRules
             "JsonUtilities",
             "FMODStudio",
             "Niagara"   ,
+            "ProceduralMeshComponent",
             //"GameplayMessageRuntime"
         });
     }

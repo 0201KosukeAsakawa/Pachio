@@ -83,29 +83,11 @@ void UObjectColorComponent::BeginPlay()
 void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-    //// 既存のペイント処理（ApplyColorWithMatching用）
-    //if (bIsPainting && !bIsPlayedPaint)
-    //{
-    //    HitTimer += GetWorld()->DeltaTimeSeconds;
-    //    ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(HitTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
-    //}
-
-    //if (bIsPlayedPaint)
-    //{
-    //    LastPaintTime += GetWorld()->DeltaTimeSeconds;
-    //    if (LastPaintTime > 1.f)
-    //    {
-    //        bIsPlayedPaint = false;
-    //        HitTimer = 0.f;
-    //    }
-    //}
-
     // ===== 新規追加：目標色への段階的変化（SetTargetColor用） =====
     if (bHasTargetColor && bColorChangeable)
     {
         UpdateColorGradually(DeltaTime);
-        ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(ColorChangeTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
+        //ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(ColorChangeTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
     }
 }
 
