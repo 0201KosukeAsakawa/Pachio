@@ -21,7 +21,7 @@ void USlimeFluidComponent::BeginPlay()
 
     GenerateSphere();
 
-    /* ˆÀ’è‚µ‚½‹^—‘ÌÏ */
+    /* ï¿½ï¿½ï¿½è‚µï¿½ï¿½ï¿½^ï¿½ï¿½ï¿½Ìï¿½ */
     TargetVolume = Radius * Vertices.Num();
 }
 
@@ -130,12 +130,12 @@ void USlimeFluidComponent::DetectAllContacts()
 {
     FVector Center = GetComponentLocation();
 
-    // •¡”•ûŒü‚©‚ç‚ÌÚGŒŸo (‹…ó‚ÉƒŒƒCƒLƒƒƒXƒg)
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÌÚGï¿½ï¿½ï¿½o (ï¿½ï¿½ï¿½ï¿½Éƒï¿½ï¿½Cï¿½Lï¿½ï¿½ï¿½Xï¿½g)
     TArray<FVector> Directions = {
-        FVector(0, 0, -1),  // ‰º
-        FVector(1, 0, -0.5), FVector(-1, 0, -0.5),  // Î‚ß‰º
+        FVector(0, 0, -1),  // ï¿½ï¿½
+        FVector(1, 0, -0.5), FVector(-1, 0, -0.5),  // ï¿½Î‚ß‰ï¿½
         FVector(0, 1, -0.5), FVector(0, -1, -0.5),
-        FVector(1, 0, 0), FVector(-1, 0, 0),  // ‰¡
+        FVector(1, 0, 0), FVector(-1, 0, 0),  // ï¿½ï¿½
         FVector(0, 1, 0), FVector(0, -1, 0)
     };
 
@@ -156,7 +156,7 @@ void USlimeFluidComponent::DetectAllContacts()
             Params
         ))
         {
-            // ÚG‚Ì‹­“x‚ğ‹——£‚É‰‚¶‚Ä’²®
+            // ï¿½ÚGï¿½Ì‹ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É‰ï¿½ï¿½ï¿½ï¿½Ä’ï¿½ï¿½ï¿½
             float Distance = (Hit.ImpactPoint - Center).Size();
             float Penetration = FMath::Max(0.f, Radius - Distance);
             float ContactStrength = 200.f + Penetration * 50.f;
@@ -178,7 +178,7 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
 {
     const FVector Center = FVector::ZeroVector;
 
-    // ‘ÌÏ•Û‘¶‚ÌŒvZ
+    // ï¿½ÌÏ•Û‘ï¿½ï¿½ÌŒvï¿½Z
     float CurrentVolume = 0.f;
     for (const FSlimeVertex& V : Vertices)
     {
@@ -196,10 +196,10 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
 
         FVector Force = (Center - V.Position) * Stiffness;
 
-        // ‘ÌÏ•Û‘¶‚Ì—Í
+        // ï¿½ÌÏ•Û‘ï¿½ï¿½Ì—ï¿½
         Force += V.Normal * VolumeError * 0.6f;
 
-        // ƒmƒCƒY
+        // ï¿½mï¿½Cï¿½Y
         FVector Noise(
             FMath::PerlinNoise1D(GetWorld()->TimeSeconds + V.Position.X),
             FMath::PerlinNoise1D(GetWorld()->TimeSeconds + V.Position.Y),
@@ -207,42 +207,42 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
         );
         Force += Noise * NoiseStrength * V.SurfaceWeight;
 
-        // ÚG‚É‚æ‚é•ÏŒ`
+        // ï¿½ÚGï¿½É‚ï¿½ï¿½ÏŒ`
         for (const FSlimeContact& C : Contacts)
         {
             FVector ToV = V.Position - C.LocalPosition;
             float Dist = ToV.Size();
 
-            // ‰e‹¿”ÍˆÍ
+            // ï¿½eï¿½ï¿½ï¿½Íˆï¿½
             float InfluenceRadius = Radius * ContactInfluenceRadius;
 
             if (Dist < InfluenceRadius)
             {
                 float Falloff = 1.f - (Dist / InfluenceRadius);
-                Falloff = FMath::Pow(Falloff, 1.5f); // ‚æ‚è‹}Œƒ‚ÈŒ¸Š
+                Falloff = FMath::Pow(Falloff, 1.5f); // ï¿½ï¿½ï¿½}ï¿½ï¿½ï¿½ÈŒï¿½ï¿½ï¿½
 
-                // –@ü•ûŒü‚Ö‚Ì‰Ÿ‚µ‚İ (‚Â‚Ô‚ê)
+                // ï¿½@ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö‚Ì‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½Â‚Ô‚ï¿½)
                 float NormalDot = FVector::DotProduct(ToV.GetSafeNormal(), C.Normal);
                 float CompressionForce = C.Strength * Falloff * V.SurfaceWeight;
 
-                if (NormalDot < 0.f) // ÚG–Ê‚ÉŒü‚©‚¤’¸“_
+                if (NormalDot < 0.f) // ï¿½ÚGï¿½Ê‚ÉŒï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½_
                 {
                     Force += -C.Normal * CompressionForce * 1.5f;
                 }
 
-                // ÚG–Ê‚É‰ˆ‚Á‚½‰¡•ûŒü‚Ö‚ÌL‚ª‚è (ƒxƒ^ƒb‚ÆL‚ª‚éŒø‰Ê)
+                // ï¿½ÚGï¿½Ê‚É‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö‚ÌLï¿½ï¿½ï¿½ï¿½ (ï¿½xï¿½^ï¿½bï¿½ÆLï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
                 FVector Tangent = ToV - C.Normal * FVector::DotProduct(ToV, C.Normal);
                 float TangentLength = Tangent.Size();
 
                 if (TangentLength > 0.01f)
                 {
                     Tangent.Normalize();
-                    // ÚG“_‚©‚ç‰“‚¢’¸“_‚Ù‚ÇŠO‘¤‚É‰Ÿ‚µo‚·
+                    // ï¿½ÚGï¿½_ï¿½ï¿½ï¿½ç‰“ï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½Ù‚ÇŠOï¿½ï¿½ï¿½É‰ï¿½ï¿½ï¿½ï¿½oï¿½ï¿½
                     float SpreadForce = CompressionForce * SpreadStrength * (1.f - Falloff);
                     Force += Tangent * SpreadForce;
                 }
 
-                // ÚG–Ê‚É’£‚è•t‚­Œø‰Ê (”S’…«)
+                // ï¿½ÚGï¿½Ê‚É’ï¿½ï¿½ï¿½tï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½Sï¿½ï¿½ï¿½ï¿½)
                 if (Dist < Radius * 0.3f)
                 {
                     FVector ToContact = C.LocalPosition - V.Position;
@@ -258,7 +258,7 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
         NewPositions.Add(V.Position);
     }
 
-    // ÚG‚ÌŒ¸Š
+    // ï¿½ÚGï¿½ÌŒï¿½ï¿½ï¿½
     for (FSlimeContact& C : Contacts)
     {
         C.Strength *= ContactDecayRate;
