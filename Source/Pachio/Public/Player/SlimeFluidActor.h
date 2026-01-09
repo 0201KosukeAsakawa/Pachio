@@ -6,6 +6,7 @@
 #include "ProceduralMeshComponent.h"
 #include "SlimeFluidActor.generated.h"
 
+
 USTRUCT(BlueprintType)
 struct FSlimeVertex
 {
@@ -50,10 +51,27 @@ struct FSlimeContact
     UPROPERTY()
     float Strength;
 
+    UPROPERTY()
+    bool bIsGround; // 地面接触かどうか
+
     FSlimeContact()
         : LocalPosition(FVector::ZeroVector)
         , Normal(FVector::UpVector)
         , Strength(0.0f)
+        , bIsGround(false)
+    {
+    }
+};
+
+USTRUCT(BlueprintType)
+struct FVertexNeighborData
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    TArray<int32> Neighbors;
+
+    FVertexNeighborData()
     {
     }
 };
@@ -91,6 +109,8 @@ protected:
     void UpdateFluid(float DeltaTime);
     void DrawDebugVisualization();
     void UpdateCoreCenter(float DeltaTime);
+    void PropagateForces(TArray<FVector>& Forces, float DeltaTime);
+    void BuildVertexNeighbors();
 
 public:
     // Components
@@ -146,14 +166,28 @@ public:
     float NoiseStrength = 2.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
+    float JiggleAmount = 5.0f; // ぷるぷる揺れの強さ
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
+    float BounceFactor = 1.2f; // 弾む感じの強さ
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     float DeformationSpeed = 1.0f; // 変形速度（1.0 = 通常, 2.0 = 2倍速, 0.5 = 半分）
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     float RecoverySpeed = 1.0f; // 復元速度（元の形に戻る速さ）
 
-    // Volume Preservation (体積保存)
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume")
-    bool bPreserveVolume = true; // 体積保存を有効にするか
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
+    bool bEnableForcePropagate = true; // 力の伝播を有効にするか
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
+    float PropagationStrength = 5.0f; // 力の伝播の強さ
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
+    float PropagationDamping = 0.7f; // 伝播時の減衰（0.7 = 30%減衰）
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
+    int32 PropagationIterations = 2; // 伝播の反復回数（1=隣接のみ、2=隣接の隣接まで）
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume", meta = (EditCondition = "bPreserveVolume"))
     float VolumeStiffness = 20.0f;
@@ -161,8 +195,6 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume", meta = (EditCondition = "bPreserveVolume"))
     float SurfaceTension = 8.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume")
-    bool bPreventPenetration = true; // めり込み防止
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume", meta = (EditCondition = "bPreventPenetration"))
     float PenetrationResistance = 50.0f; // めり込み抵抗力
@@ -183,7 +215,45 @@ public:
     bool bUseMeshBasedCollision = true; // メッシュ形状に基づいた接触検出
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
+    int32 CollisionCheckVertexStep = 3; // 何頂点ごとに接触チェックするか（1=全頂点、3=3頂点ごと）
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
+    float CollisionCheckDistance = 15.0f; // 接触チェックの距離
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
     float ContactPenetrationOffset = 5.0f; // 接触点を表面からこの距離だけ外側に配置
+
+    // Ground Contact (地面接触専用)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground")
+    bool bEnableGroundSpecialHandling = false; // 地面接触を特別に処理するか
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bEnableGroundSpecialHandling"))
+    float GroundSquashMultiplier = 1.5f; // 地面接触時の潰れ倍率
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bEnableGroundSpecialHandling"))
+    float GroundStickiness = 0.3f; // 地面への粘着力 (0=なし, 1=強い)
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bEnableGroundSpecialHandling"))
+    float GroundAngleThreshold = 45.0f; // この角度以下を地面として扱う（度数）
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bEnableGroundSpecialHandling"))
+    bool bFlattenBottomOnGround = true; // 地面接触時に底面を平らにするか
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bFlattenBottomOnGround"))
+    float BottomFlattenStrength = 10.0f; // 底面平面化の強さ
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bFlattenBottomOnGround"))
+    float BottomFlattenRadius = 0.7f; // 底面と判定する範囲（0.5=下半分, 0.7=下70%）
+
+    // Volume Preservation (体積保存)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume")
+    bool bPreserveVolume = true; // 体積保存を有効にするか
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume")
+    bool bPreventPenetration = true; // めり込み防止
+
+    UPROPERTY(EditAnywhere, Category = "Slime|Contact")
+    float ContactInfluenceRadius = 1.2f;
 
     // Material
     UPROPERTY(EditAnywhere, Category = "Slime|Material")
@@ -217,9 +287,6 @@ public:
     UPROPERTY(EditAnywhere, Category = "Slime|Debug")
     float DebugPointSize = 5.0f;
 
-        // Contact Parameters
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
-    float ContactInfluenceRadius = 1.2f;
 protected:
     UPROPERTY()
     TArray<FSlimeVertex> Vertices;
@@ -239,4 +306,8 @@ protected:
     // 初期形状の保存（デバッグ用）
     UPROPERTY()
     TArray<FVector> InitialVertexPositions;
+
+    // 頂点の隣接情報（力の伝播用）
+    UPROPERTY()
+    TArray<FVertexNeighborData> VertexNeighbors;
 };

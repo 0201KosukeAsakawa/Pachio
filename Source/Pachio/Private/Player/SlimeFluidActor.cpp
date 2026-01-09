@@ -5,7 +5,6 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"
 
-
 USlimeFluidComponent::USlimeFluidComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
@@ -132,6 +131,9 @@ void USlimeFluidComponent::GenerateSphere()
         }
     }
 
+    // 頂点の隣接情報を構築（力の伝播用）
+    BuildVertexNeighbors();
+
     Mesh->CreateMeshSection(
         0,
         Positions,
@@ -142,6 +144,44 @@ void USlimeFluidComponent::GenerateSphere()
         {},
         true
     );
+}
+
+/* ===============================
+   Build Vertex Neighbors
+================================ */
+
+void USlimeFluidComponent::BuildVertexNeighbors()
+{
+    VertexNeighbors.Empty();
+    VertexNeighbors.SetNum(Vertices.Num());
+
+    // 各三角形から隣接情報を構築
+    for (int32 i = 0; i < Triangles.Num(); i += 3)
+    {
+        int32 v0 = Triangles[i];
+        int32 v1 = Triangles[i + 1];
+        int32 v2 = Triangles[i + 2];
+
+        // 各頂点に隣接頂点を追加（重複チェック付き）
+        auto AddNeighbor = [this](int32 Vertex, int32 Neighbor)
+            {
+                if (Vertex >= 0 && Vertex < VertexNeighbors.Num())
+                {
+                    if (!VertexNeighbors[Vertex].Neighbors.Contains(Neighbor))
+                    {
+                        VertexNeighbors[Vertex].Neighbors.Add(Neighbor);
+                    }
+                }
+            };
+
+        // 三角形の各辺を隣接関係として記録
+        AddNeighbor(v0, v1);
+        AddNeighbor(v0, v2);
+        AddNeighbor(v1, v0);
+        AddNeighbor(v1, v2);
+        AddNeighbor(v2, v0);
+        AddNeighbor(v2, v1);
+    }
 }
 
 /* ===============================
@@ -160,6 +200,18 @@ void USlimeFluidComponent::AddContact(
     C.LocalPosition = T.InverseTransformPosition(WorldPos);
     C.Normal = T.InverseTransformVector(WorldNormal).GetSafeNormal();
     C.Strength = Strength;
+
+    // 地面判定：法線が上向き（ワールド座標でZ > 0）
+    if (bEnableGroundSpecialHandling)
+    {
+        float UpDot = FVector::DotProduct(WorldNormal, FVector::UpVector);
+        float AngleFromUp = FMath::Acos(UpDot) * 180.0f / PI;
+        C.bIsGround = (AngleFromUp <= GroundAngleThreshold);
+    }
+    else
+    {
+        C.bIsGround = false;
+    }
 
     Contacts.Add(C);
 }
@@ -255,6 +307,10 @@ void USlimeFluidComponent::DetectAllContacts()
 
 void USlimeFluidComponent::UpdateFluid(float DeltaTime)
 {
+
+    if (!Mesh)
+        return;
+
     /* =====================
        動的コア中心の更新
     ===================== */
@@ -273,13 +329,38 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
     float RadiusError = TargetAverageRadius - CurrentAverageRadius;
 
     /* =====================
+       地面接触の検出
+    ===================== */
+    bool bHasGroundContact = false;
+    FVector GroundPlanePosition = FVector::ZeroVector;
+    FVector GroundPlaneNormal = FVector::UpVector;
+
+    if (bEnableGroundSpecialHandling && bFlattenBottomOnGround)
+    {
+        for (const FSlimeContact& C : Contacts)
+        {
+            if (C.bIsGround)
+            {
+                bHasGroundContact = true;
+                GroundPlanePosition = C.LocalPosition;
+                GroundPlaneNormal = C.Normal;
+                break; // 最初の地面接触を使用
+            }
+        }
+    }
+
+    /* =====================
        頂点ごとのシミュレーション
     ===================== */
+    TArray<FVector> Forces;
+    Forces.SetNum(Vertices.Num());
+
     TArray<FVector> NewPositions;
     NewPositions.Reserve(Vertices.Num());
 
-    for (FSlimeVertex& V : Vertices)
+    for (int32 i = 0; i < Vertices.Num(); i++)
     {
+        FSlimeVertex& V = Vertices[i];
         FVector Force = FVector::ZeroVector;
 
         // コア頂点は変形しない（剛体として扱う）
@@ -317,11 +398,22 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
 
             /* ノイズ（表面のみ） */
             FVector Noise(
-                FMath::PerlinNoise1D(GetWorld()->TimeSeconds + V.Position.X),
-                FMath::PerlinNoise1D(GetWorld()->TimeSeconds + V.Position.Y),
-                FMath::PerlinNoise1D(GetWorld()->TimeSeconds + V.Position.Z)
+                FMath::PerlinNoise1D(GetWorld()->TimeSeconds * 3.0f + V.Position.X * 0.1f),
+                FMath::PerlinNoise1D(GetWorld()->TimeSeconds * 3.0f + V.Position.Y * 0.1f),
+                FMath::PerlinNoise1D(GetWorld()->TimeSeconds * 3.0f + V.Position.Z * 0.1f)
             );
             Force += Noise * NoiseStrength * V.SurfaceWeight;
+
+            /* ジグル（ぷるぷる揺れ） */
+            FVector JiggleForce = V.Velocity * JiggleAmount * V.SurfaceWeight;
+            Force += JiggleForce;
+
+            /* バウンス効果（弾む感じ） */
+            if (V.Velocity.Size() > 1.0f)
+            {
+                FVector BounceForce = V.Velocity.GetSafeNormal() * V.Velocity.SizeSquared() * 0.01f * BounceFactor;
+                Force += BounceForce * V.SurfaceWeight;
+            }
 
             /* めり込み防止 */
             if (bPreventPenetration)
@@ -378,13 +470,25 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
                     Falloff = FMath::Pow(Falloff, 1.5f);
                     Falloff *= DirectionalWeight; // 方向性を加味
 
-                    float Compression = C.Strength * Falloff * V.SurfaceWeight * DeformationSpeed;
+                    // 地面接触時の特殊処理
+                    float FinalDeformationSpeed = DeformationSpeed;
+                    if (C.bIsGround && bEnableGroundSpecialHandling)
+                    {
+                        FinalDeformationSpeed *= GroundSquashMultiplier; // 地面でより潰れる
+                    }
+
+                    float Compression = C.Strength * Falloff * V.SurfaceWeight * FinalDeformationSpeed;
 
                     // 押し潰し（接触法線方向のみ）
                     Force += -C.Normal * Compression;
 
                     // 接触面方向の速度を減衰
-                    V.Velocity -= FVector::DotProduct(V.Velocity, C.Normal) * C.Normal * 0.7f;
+                    float VelocityDamping = 0.7f;
+                    if (C.bIsGround && bEnableGroundSpecialHandling)
+                    {
+                        VelocityDamping = 0.9f; // 地面では速度をより減衰（粘着）
+                    }
+                    V.Velocity -= FVector::DotProduct(V.Velocity, C.Normal) * C.Normal * VelocityDamping;
 
                     // 横へ広がる（接触面に沿って）
                     FVector Tangent = Dir - C.Normal * FVector::DotProduct(Dir, C.Normal);
@@ -392,14 +496,67 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
                     {
                         // 接触側の頂点ほど横に広がる
                         float SpreadWeight = FMath::Max(0.0f, DirectionDot);
-                        Force += Tangent.GetSafeNormal() * Compression * SpreadStrength * SpreadWeight;
+                        float FinalSpreadStrength = SpreadStrength;
+
+                        if (C.bIsGround && bEnableGroundSpecialHandling)
+                        {
+                            FinalSpreadStrength *= 1.3f; // 地面でより広がる
+                        }
+
+                        Force += Tangent.GetSafeNormal() * Compression * FinalSpreadStrength * SpreadWeight;
+                    }
+
+                    // 地面への粘着力
+                    if (C.bIsGround && bEnableGroundSpecialHandling && GroundStickiness > 0.0f)
+                    {
+                        FVector ToContact = C.LocalPosition - V.Position;
+                        Force += ToContact * GroundStickiness * Falloff;
                     }
                 }
             }
         }
 
+        /* =====================
+           底面の平面化（地面接触時）
+        ===================== */
+        if (bHasGroundContact && bFlattenBottomOnGround && !V.bIsCore)
+        {
+            // 頂点が地面に近い（下側の）頂点かチェック
+            float DistToGround = FVector::DotProduct(V.Position - GroundPlanePosition, GroundPlaneNormal);
+
+            // 下側の頂点（地面から一定範囲内）を平面化
+            if (DistToGround < Radius * BottomFlattenRadius)
+            {
+                // 頂点を地面の平面に押し付ける
+                FVector ProjectedPos = V.Position - GroundPlaneNormal * DistToGround;
+                FVector FlattenForce = (ProjectedPos - V.Position) * BottomFlattenStrength;
+
+                // 地面に近いほど強く平面化
+                float FlattenWeight = 1.0f - (DistToGround / (Radius * BottomFlattenRadius));
+                FlattenWeight = FMath::Clamp(FlattenWeight, 0.0f, 1.0f);
+                FlattenWeight = FMath::Pow(FlattenWeight, 2.0f); // 非線形な減衰
+
+                Force += FlattenForce * FlattenWeight * V.SurfaceWeight;
+            }
+        }
+
+        // 力を保存（伝播処理用）
+        Forces[i] = Force;
+    }
+
+    // 力の伝播処理
+    if (bEnableForcePropagate)
+    {
+        PropagateForces(Forces, DeltaTime);
+    }
+
+    // 力を適用して位置を更新
+    for (int32 i = 0; i < Vertices.Num(); i++)
+    {
+        FSlimeVertex& V = Vertices[i];
+
         /* 積分 */
-        V.Velocity += Force * DeltaTime;
+        V.Velocity += Forces[i] * DeltaTime;
         V.Velocity *= Damping;
         V.Position += V.Velocity * DeltaTime;
 
@@ -420,6 +577,72 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
     );
 
     Mesh->UpdateMeshSection(0, NewPositions, {}, {}, {}, {});
+}
+
+/* ===============================
+   Force Propagation
+================================ */
+
+void USlimeFluidComponent::PropagateForces(TArray<FVector>& Forces, float DeltaTime)
+{
+    // 力の伝播を複数回反復
+    for (int32 Iteration = 0; Iteration < PropagationIterations; Iteration++)
+    {
+        TArray<FVector> PropagatedForces = Forces; // コピーを作成
+
+        for (int32 i = 0; i < Vertices.Num(); i++)
+        {
+            const FSlimeVertex& V = Vertices[i];
+
+            // コア頂点は伝播しない
+            if (V.bIsCore)
+            {
+                continue;
+            }
+
+            // 隣接頂点が存在しない場合はスキップ
+            if (i >= VertexNeighbors.Num() || VertexNeighbors[i].Neighbors.Num() == 0)
+            {
+                continue;
+            }
+
+            const TArray<int32>& Neighbors = VertexNeighbors[i].Neighbors;
+            FVector AccumulatedForce = FVector::ZeroVector;
+            int32 ValidNeighborCount = 0;
+
+            // 隣接頂点から力を集める
+            for (int32 NeighborIdx : Neighbors)
+            {
+                if (NeighborIdx >= 0 && NeighborIdx < Vertices.Num())
+                {
+                    const FSlimeVertex& NeighborV = Vertices[NeighborIdx];
+
+                    // 隣接頂点の力を取得
+                    FVector NeighborForce = Forces[NeighborIdx];
+
+                    // 距離に応じた重み付け
+                    float Distance = (V.Position - NeighborV.Position).Size();
+                    float Weight = 1.0f / FMath::Max(Distance, 1.0f);
+
+                    AccumulatedForce += NeighborForce * Weight;
+                    ValidNeighborCount++;
+                }
+            }
+
+            // 平均化して伝播
+            if (ValidNeighborCount > 0)
+            {
+                FVector PropagatedForce = AccumulatedForce / ValidNeighborCount;
+                PropagatedForce *= PropagationDamping; // 減衰
+
+                // 元の力に伝播した力を追加
+                PropagatedForces[i] += PropagatedForce * PropagationStrength * V.SurfaceWeight;
+            }
+        }
+
+        // 更新された力を反映
+        Forces = PropagatedForces;
+    }
 }
 
 /* ===============================
@@ -771,21 +994,31 @@ void USlimeFluidComponent::DrawDebugVisualization()
     FString CollisionMode = bUseMeshBasedCollision ? TEXT("Mesh-Based") : TEXT("Fixed-Direction");
     FString VolumeMode = bPreserveVolume ? TEXT("ON") : TEXT("OFF");
     FString PenetrationMode = bPreventPenetration ? TEXT("ON") : TEXT("OFF");
+    FString GroundHandlingMode = bEnableGroundSpecialHandling ? TEXT("ON") : TEXT("OFF");
+
+    // 地面接触数をカウント
+    int32 GroundContactCount = 0;
+    for (const FSlimeContact& C : Contacts)
+    {
+        if (C.bIsGround) GroundContactCount++;
+    }
 
     DrawDebugString(
         GetWorld(),
         InfoPos,
-        FString::Printf(TEXT("=== Slime Debug Info ===\nCoordinate System: %s\n%s\n%s\nCollision: %s\nVolume Preservation: %s\nPenetration Prevention: %s\nTotal Vertices: %d\nCore Vertices: %d\nSurface Vertices: %d\nActive Contacts: %d\nAvg Radius: %.1f\nTarget Radius: %.1f"),
+        FString::Printf(TEXT("=== Slime Debug Info ===\nCoordinate System: %s\n%s\n%s\nCollision: %s\nVolume Preservation: %s\nPenetration Prevention: %s\nGround Special Handling: %s\nTotal Vertices: %d\nCore Vertices: %d\nSurface Vertices: %d\nActive Contacts: %d (Ground: %d)\nAvg Radius: %.1f\nTarget Radius: %.1f"),
             *CoordSystemText,
             *CenterControlText,
             *ResetText,
             *CollisionMode,
             *VolumeMode,
             *PenetrationMode,
+            *GroundHandlingMode,
             Vertices.Num(),
             Vertices.FilterByPredicate([](const FSlimeVertex& V) { return V.bIsCore; }).Num(),
             Vertices.FilterByPredicate([](const FSlimeVertex& V) { return !V.bIsCore; }).Num(),
             Contacts.Num(),
+            GroundContactCount,
             [this]() {
                 float Sum = 0.f;
                 for (const FSlimeVertex& V : Vertices) Sum += V.Position.Size();
