@@ -48,6 +48,13 @@ void USlimeFluidComponent::BeginPlay()
     {
         Mesh->SetMaterial(0, SlimeMaterial);
     }
+
+    // 慣性システムの初期化
+    PreviousWorldLocation = GetComponentLocation();
+    PreviousWorldVelocity = FVector::ZeroVector;
+    PreviousPreviousWorldVelocity = FVector::ZeroVector;
+    CurrentAcceleration = FVector::ZeroVector;
+    AccelerationHistory.Init(FVector::ZeroVector, AccelerationHistorySize);
 }
 
 void USlimeFluidComponent::TickComponent(
@@ -64,9 +71,47 @@ void USlimeFluidComponent::TickComponent(
         return; // 初期安定化
     }
 
+    // === 加速度の計算（最優先） ===
+    UpdateAcceleration(DeltaTime);
+
     DetectAllContacts();
     UpdateFluid(DeltaTime);
     DrawDebugVisualization();
+}
+
+void USlimeFluidComponent::UpdateAcceleration(float DeltaTime)
+{
+    if (DeltaTime <= 0.0f || DeltaTime > 0.1f) return; // 異常なDeltaTimeを除外
+
+    // 現在のワールド位置
+    FVector CurrentWorldLocation = GetComponentLocation();
+
+    // 速度を計算（位置の変化率）
+    FVector CurrentWorldVelocity = (CurrentWorldLocation - PreviousWorldLocation) / DeltaTime;
+
+    // 加速度を計算（速度の変化率）
+    // より正確にするため、前フレームと前々フレームの速度も考慮
+    FVector InstantAcceleration = (CurrentWorldVelocity - PreviousWorldVelocity) / DeltaTime;
+
+    // 加速度履歴に追加
+    AccelerationHistory.RemoveAt(0);
+    AccelerationHistory.Add(InstantAcceleration);
+
+    // 平均加速度を計算（ノイズ除去）
+    FVector AverageAcceleration = FVector::ZeroVector;
+    for (const FVector& Accel : AccelerationHistory)
+    {
+        AverageAcceleration += Accel;
+    }
+    AverageAcceleration /= AccelerationHistory.Num();
+
+    // 現在の加速度として保存
+    CurrentAcceleration = AverageAcceleration;
+
+    // 次フレーム用に保存
+    PreviousWorldLocation = CurrentWorldLocation;
+    PreviousPreviousWorldVelocity = PreviousWorldVelocity;
+    PreviousWorldVelocity = CurrentWorldVelocity;
 }
 
 /* ===============================
@@ -316,26 +361,72 @@ void USlimeFluidComponent::DetectAllContacts()
 
 void USlimeFluidComponent::UpdateFluid(float DeltaTime)
 {
-    /* =====================
-       動的コア中心の更新
-    ===================== */
     UpdateCoreCenter(DeltaTime);
 
-    /* =====================
-       平均半径の計算と誤差
-    ===================== */
+    // 平均半径の計算
     float CurrentAverageRadius = 0.f;
     for (const FSlimeVertex& V : Vertices)
     {
         CurrentAverageRadius += V.Position.Size();
     }
     CurrentAverageRadius /= Vertices.Num();
-
     float RadiusError = TargetAverageRadius - CurrentAverageRadius;
 
-    /* =====================
-       地面接触の検出
-    ===================== */
+    // === 速度と加速度の分析 ===
+    FTransform T = GetComponentTransform();
+
+    // ローカル空間に変換
+    FVector LocalVelocity = T.InverseTransformVector(PreviousWorldVelocity);
+    FVector LocalAcceleration = T.InverseTransformVector(CurrentAcceleration);
+
+    // 各成分を分析
+    float VerticalVelocity = LocalVelocity.Z;
+    float VerticalAccel = LocalAcceleration.Z;
+
+    FVector HorizontalVelocity = FVector(LocalVelocity.X, LocalVelocity.Y, 0.0f);
+    float HorizontalSpeed = HorizontalVelocity.Size();
+
+    FVector HorizontalAccel = FVector(LocalAcceleration.X, LocalAcceleration.Y, 0.0f);
+    float HorizontalAccelMag = HorizontalAccel.Size();
+
+    // === 状態判定（修正版） ===
+
+    // 落下中：下向きの速度がある
+     bIsFalling = (VerticalVelocity < -FallingVelocityThreshold);
+
+    // 着地：落下中に突然上向きの加速度（地面からの反発）
+     bIsLanding = bIsFalling && (VerticalAccel > LandingAccelerationThreshold);
+
+    // ジャンプ開始：地上から上向きの加速度
+     bIsJumping = (!bIsFalling) && (VerticalAccel > JumpAccelerationThreshold);
+
+    // 横方向に加速中
+    bool bIsAccelerating = (HorizontalAccelMag > 200.0f);
+
+    // 高速移動中
+    bool bIsMovingFast = (HorizontalSpeed > 300.0f);
+
+    // デバッグログ（開発中のみ）
+    if (bShowAccelerationDebug && GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(
+            1, 0.0f, FColor::Yellow,
+            FString::Printf(TEXT("Vel: %.1f, %.1f, %.1f | Accel: %.1f, %.1f, %.1f"),
+                LocalVelocity.X, LocalVelocity.Y, LocalVelocity.Z,
+                LocalAcceleration.X, LocalAcceleration.Y, LocalAcceleration.Z)
+        );
+
+        GEngine->AddOnScreenDebugMessage(
+            2, 0.0f, FColor::Cyan,
+            FString::Printf(TEXT("State: %s%s%s%s"),
+                bIsJumping ? TEXT("[JUMP] ") : TEXT(""),
+                bIsFalling ? TEXT("[FALL] ") : TEXT(""),
+                bIsLanding ? TEXT("[LAND] ") : TEXT(""),
+                bIsAccelerating ? TEXT("[ACCEL]") : TEXT(""))
+        );
+    }
+
+    // 地面接触の検出
     bool bHasGroundContact = false;
     FVector GroundPlanePosition = FVector::ZeroVector;
     FVector GroundPlaneNormal = FVector::UpVector;
@@ -349,17 +440,14 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
                 bHasGroundContact = true;
                 GroundPlanePosition = C.LocalPosition;
                 GroundPlaneNormal = C.Normal;
-                break; // 最初の地面接触を使用
+                break;
             }
         }
     }
 
-    /* =====================
-       頂点ごとのシミュレーション
-    ===================== */
+    // === 頂点ごとのシミュレーション ===
     TArray<FVector> Forces;
     Forces.SetNum(Vertices.Num());
-
     TArray<FVector> NewPositions;
     NewPositions.Reserve(Vertices.Num());
 
@@ -368,59 +456,139 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
         FSlimeVertex& V = Vertices[i];
         FVector Force = FVector::ZeroVector;
 
-        // コア頂点は変形しない（剛体として扱う）
         if (V.bIsCore)
         {
-            // コア中心への強い拘束
+            // コア頂点も慣性の影響を受ける（ただし弱め）
             Force += (LocalCoreCenter - V.Position) * CoreStiffness;
 
-            // コア頂点の速度減衰（ほぼ静止）
+            // 慣性力（コアは20%の影響）
+            Force += -LocalAcceleration * InertiaDeformationStrength * 0.2f;
+
             V.Velocity *= 0.5f;
         }
-        else // 表面頂点は変形可能
+        else // 表面頂点
         {
             float Stiffness = FMath::Lerp(SurfaceStiffness, SurfaceSoftness, V.SurfaceWeight);
 
-            /* コア中心への拘束 */
+            // === 1. 速度ベースの変形（常時適用） ===
+
+            // 速度による変形（進行方向と逆に変形）
+            FVector VelocityDeformation = -LocalVelocity * VelocityDeformationStrength * 0.01f * V.SurfaceWeight;
+            Force += VelocityDeformation;
+
+            // === 2. 加速度ベースの変形（瞬間的な力） ===
+
+            // 基本の慣性力
+            FVector InertiaForce = -LocalAcceleration * InertiaDeformationStrength * 0.1f * V.SurfaceWeight;
+
+            // === 3. 状態別の特殊変形 ===
+
+            if (bIsJumping)
+            {
+                // ジャンプ開始：縦に潰れる＋横に広がる
+                float JumpForce = VerticalAccel * StartMovementSquashMultiplier * 0.01f;
+                InertiaForce.Z -= JumpForce * V.SurfaceWeight;
+
+                // 横方向に広がる（放射状）
+                FVector RadialDir = FVector(V.Position.X, V.Position.Y, 0.0f).GetSafeNormal();
+                InertiaForce += RadialDir * JumpForce * 0.6f * V.SurfaceWeight;
+            }
+
+            if (bIsFalling)
+            {
+                // 落下中：縦に伸びる＋横に縮む
+                float FallSpeed = FMath::Abs(VerticalVelocity);
+                float StretchForce = FallSpeed * FallingStretchMultiplier * 0.01f;
+
+                InertiaForce.Z += StretchForce * V.SurfaceWeight;
+
+                // 横方向に縮む
+                FVector RadialDir = FVector(V.Position.X, V.Position.Y, 0.0f).GetSafeNormal();
+                InertiaForce -= RadialDir * StretchForce * 0.4f * V.SurfaceWeight;
+            }
+
+            if (bIsLanding)
+            {
+                // 着地：激しく潰れる＋横に大きく広がる
+                float ImpactForce = FMath::Abs(VerticalAccel) * LandingSquashMultiplier * 0.01f;
+                InertiaForce.Z -= ImpactForce * V.SurfaceWeight;
+
+                // 横に激しく広がる
+                FVector RadialDir = FVector(V.Position.X, V.Position.Y, 0.0f).GetSafeNormal();
+                InertiaForce += RadialDir * ImpactForce * 1.2f * V.SurfaceWeight;
+
+                // 着地時は速度も大きく減衰
+                V.Velocity *= 0.3f;
+            }
+
+            if (bIsAccelerating)
+            {
+                // 横方向の加速：加速方向と逆に変形
+                FVector LateralInertia = -HorizontalAccel * LateralInertiaStrength * 0.1f * V.SurfaceWeight;
+                InertiaForce += LateralInertia;
+            }
+
+            if (bIsMovingFast)
+            {
+                // 高速移動中：進行方向に伸びる（空気抵抗的な）
+                FVector MotionDirection = HorizontalVelocity.GetSafeNormal();
+                float MotionForce = HorizontalSpeed * 0.05f;
+
+                // 進行方向の成分を強調
+                float AlignmentWithMotion = FVector::DotProduct(
+                    FVector(V.Position.X, V.Position.Y, 0.0f).GetSafeNormal(),
+                    MotionDirection
+                );
+
+                InertiaForce += MotionDirection * MotionForce * AlignmentWithMotion * V.SurfaceWeight;
+            }
+
+            // 重力による常時の下方向への力（弱め）
+            FVector WorldGravity = FVector(0, 0, -980.0f);
+            FVector LocalGravity = T.InverseTransformVector(WorldGravity);
+            InertiaForce += LocalGravity * GravityInfluence * 0.0001f * V.SurfaceWeight;
+
+            // 慣性力の上限
+            if (InertiaForce.SizeSquared() > MaxInertiaDeformation * MaxInertiaDeformation)
+            {
+                InertiaForce = InertiaForce.GetSafeNormal() * MaxInertiaDeformation;
+            }
+
+            Force += InertiaForce;
+
+            // === 4. 基本の復元力 ===
             if (bPreserveVolume)
             {
                 Force += (LocalCoreCenter - V.Position) * Stiffness * RecoverySpeed;
+                Force += V.Normal * RadiusError * 0.6f * RecoverySpeed;
             }
             else
             {
-                // 体積保存なしの場合は弱い拘束のみ
                 Force += (LocalCoreCenter - V.Position) * Stiffness * 0.3f;
             }
 
-            /* 半径保持 */
-            if (bPreserveVolume)
-            {
-                Force += V.Normal * RadiusError * 0.6f * RecoverySpeed;
-            }
+            // === 5. 追従ラグ（弱め） ===
+            Force += -V.Velocity * FollowLagStrength * V.SurfaceWeight * 0.3f;
 
-            /* 追従ラグ（表面の遅れ効果） */
-            Force += -V.Velocity * FollowLagStrength * V.SurfaceWeight;
-
-            /* ノイズ（表面のみ） */
+            // === 6. ノイズとジグル（さらに弱め） ===
             FVector Noise(
                 FMath::PerlinNoise1D(GetWorld()->TimeSeconds * 3.0f + V.Position.X * 0.1f),
                 FMath::PerlinNoise1D(GetWorld()->TimeSeconds * 3.0f + V.Position.Y * 0.1f),
                 FMath::PerlinNoise1D(GetWorld()->TimeSeconds * 3.0f + V.Position.Z * 0.1f)
             );
-            Force += Noise * NoiseStrength * V.SurfaceWeight;
+            Force += Noise * NoiseStrength * V.SurfaceWeight * 0.2f;
 
-            /* ジグル（ぷるぷる揺れ） */
-            FVector JiggleForce = V.Velocity * JiggleAmount * V.SurfaceWeight;
+            FVector JiggleForce = V.Velocity * JiggleAmount * V.SurfaceWeight * 0.3f;
             Force += JiggleForce;
 
-            /* バウンス効果（弾む感じ） */
+            // === 7. バウンス ===
             if (V.Velocity.Size() > 1.0f)
             {
-                FVector BounceForce = V.Velocity.GetSafeNormal() * V.Velocity.SizeSquared() * 0.01f * BounceFactor;
+                FVector BounceForce = V.Velocity.GetSafeNormal() * V.Velocity.SizeSquared() * 0.005f * BounceFactor;
                 Force += BounceForce * V.SurfaceWeight;
             }
 
-            /* めり込み防止 */
+            // === 8. めり込み防止 ===
             if (bPreventPenetration)
             {
                 for (const FSlimeContact& C : Contacts)
@@ -428,16 +596,14 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
                     FVector ToV = V.Position - C.LocalPosition;
                     float DistToContact = FVector::DotProduct(ToV, C.Normal);
 
-                    // 接触面より内側（めり込み）の場合
                     if (DistToContact < 0.0f)
                     {
-                        // 強い押し戻し力
                         Force += C.Normal * (-DistToContact) * PenetrationResistance;
                     }
                 }
             }
 
-            /* 接触による変形（表面のみ） */
+            // === 9. 接触による変形（弱め） ===
             for (const FSlimeContact& C : Contacts)
             {
                 FVector ToV = V.Position - C.LocalPosition;
@@ -447,24 +613,19 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
                 if (Dist < InfluenceRadius && Dist > KINDA_SMALL_NUMBER)
                 {
                     FVector Dir = ToV / Dist;
-
-                    // 接触方向との内積を計算（-1=反対側, 0=横, 1=接触側）
                     float DirectionDot = FVector::DotProduct(Dir, -C.Normal);
 
-                    // 反対側の変形を防ぐ
                     if (bPreventOppositeSideDeformation && DirectionDot < -0.1f)
                     {
                         continue;
                     }
 
-                    // 接触面より外側の頂点のみ変形（めり込み防止）
                     float DistToContactPlane = FVector::DotProduct(ToV, C.Normal);
                     if (bPreventPenetration && DistToContactPlane < 0.0f)
                     {
-                        continue; // 接触面より内側の頂点はスキップ
+                        continue;
                     }
 
-                    // 接触方向に応じた影響度（接触方向ほど影響大）
                     float DirectionalWeight = FMath::Lerp(
                         1.0f,
                         FMath::Max(0.0f, DirectionDot),
@@ -473,45 +634,39 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
 
                     float Falloff = 1.f - (Dist / InfluenceRadius);
                     Falloff = FMath::Pow(Falloff, 1.5f);
-                    Falloff *= DirectionalWeight; // 方向性を加味
+                    Falloff *= DirectionalWeight;
 
-                    // 地面接触時の特殊処理
-                    float FinalDeformationSpeed = DeformationSpeed;
+                    float FinalDeformationSpeed = DeformationSpeed * 0.3f;
                     if (C.bIsGround && bEnableGroundSpecialHandling)
                     {
-                        FinalDeformationSpeed *= GroundSquashMultiplier; // 地面でより潰れる
+                        FinalDeformationSpeed *= GroundSquashMultiplier;
                     }
 
                     float Compression = C.Strength * Falloff * V.SurfaceWeight * FinalDeformationSpeed;
 
-                    // 押し潰し（接触法線方向のみ）
                     Force += -C.Normal * Compression;
 
-                    // 接触面方向の速度を減衰
                     float VelocityDamping = 0.7f;
                     if (C.bIsGround && bEnableGroundSpecialHandling)
                     {
-                        VelocityDamping = 0.9f; // 地面では速度をより減衰（粘着）
+                        VelocityDamping = 0.9f;
                     }
                     V.Velocity -= FVector::DotProduct(V.Velocity, C.Normal) * C.Normal * VelocityDamping;
 
-                    // 横へ広がる（接触面に沿って）
                     FVector Tangent = Dir - C.Normal * FVector::DotProduct(Dir, C.Normal);
                     if (!Tangent.IsNearlyZero())
                     {
-                        // 接触側の頂点ほど横に広がる
                         float SpreadWeight = FMath::Max(0.0f, DirectionDot);
                         float FinalSpreadStrength = SpreadStrength;
 
                         if (C.bIsGround && bEnableGroundSpecialHandling)
                         {
-                            FinalSpreadStrength *= 1.3f; // 地面でより広がる
+                            FinalSpreadStrength *= 1.3f;
                         }
 
                         Force += Tangent.GetSafeNormal() * Compression * FinalSpreadStrength * SpreadWeight;
                     }
 
-                    // 地面への粘着力
                     if (C.bIsGround && bEnableGroundSpecialHandling && GroundStickiness > 0.0f)
                     {
                         FVector ToContact = C.LocalPosition - V.Position;
@@ -521,34 +676,27 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
             }
         }
 
-        /* =====================
-           底面の平面化（地面接触時）
-        ===================== */
+        // === 底面の平面化 ===
         if (bHasGroundContact && bFlattenBottomOnGround && !V.bIsCore)
         {
-            // 頂点が地面に近い（下側の）頂点かチェック
             float DistToGround = FVector::DotProduct(V.Position - GroundPlanePosition, GroundPlaneNormal);
 
-            // 下側の頂点（地面から一定範囲内）を平面化
             if (DistToGround < Radius * BottomFlattenRadius)
             {
-                // 頂点を地面の平面に押し付ける
                 FVector ProjectedPos = V.Position - GroundPlaneNormal * DistToGround;
                 FVector FlattenForce = (ProjectedPos - V.Position) * BottomFlattenStrength;
 
-                // 地面に近いほど強く平面化
                 float FlattenWeight = 1.0f - (DistToGround / (Radius * BottomFlattenRadius));
                 FlattenWeight = FMath::Clamp(FlattenWeight, 0.0f, 1.0f);
-                FlattenWeight = FMath::Pow(FlattenWeight, 2.0f); // 非線形な減衰
+                FlattenWeight = FMath::Pow(FlattenWeight, 2.0f);
 
                 Force += FlattenForce * FlattenWeight * V.SurfaceWeight;
             }
         }
 
-        // 力を保存（伝播処理用）
         Forces[i] = Force;
 
-        // 力の上限を適用（安全リミッター）
+        // 力の上限
         float MaxForce = V.bIsCore ? MaxCoreForce : MaxForcePerVertex;
         if (Forces[i].SizeSquared() > MaxForce * MaxForce)
         {
@@ -556,18 +704,17 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
         }
     }
 
-    // 力の伝播処理
-    if (bEnableForcePropagate && Contacts.Num() > 0)  // 接触がある時だけ伝播
+    // 力の伝播
+    if (bEnableForcePropagate && Contacts.Num() > 0)
     {
         PropagateForces(Forces, DeltaTime);
     }
 
-    // 力を適用して位置を更新
+    // 位置更新
     for (int32 i = 0; i < Vertices.Num(); i++)
     {
         FSlimeVertex& V = Vertices[i];
 
-        /* 積分 */
         V.Velocity += Forces[i] * DeltaTime;
         V.Velocity *= Damping;
         V.Position += V.Velocity * DeltaTime;
@@ -575,21 +722,15 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
         NewPositions.Add(V.Position);
     }
 
-    /* 接触の減衰 */
+    // 接触の減衰
     for (FSlimeContact& C : Contacts)
     {
         C.Strength *= ContactDecayRate;
     }
 
-    Contacts.RemoveAll(
-        [](const FSlimeContact& C)
-        {
-            return C.Strength < 1.f;
-        }
-    );
+    Contacts.RemoveAll([](const FSlimeContact& C) { return C.Strength < 1.f; });
 
     Mesh->UpdateMeshSection(0, NewPositions, {}, {}, {}, {});
-    //Mesh->UpdateCollision();
 }
 
 /* ===============================
@@ -1044,4 +1185,33 @@ void USlimeFluidComponent::DrawDebugVisualization()
         true,
         1.2f
     );
+
+    if (bShowVertexDebug)
+    {
+        // 加速度の表示
+        FVector WorldAccel = T.TransformVector(CurrentAcceleration);
+        DrawDebugDirectionalArrow(
+            GetWorld(),
+            InfoPos,
+            InfoPos + WorldAccel * 0.1f,
+            30.0f,
+            FColor::Orange,
+            false, -1.0f, 0, 5.0f
+        );
+
+        // 状態表示
+        FString StateText = FString::Printf(
+            TEXT("Acceleration: %.1f\nState: %s"),
+            CurrentAcceleration.Size(),
+            bIsLanding ? TEXT("LANDING!") :
+            bIsJumping ? TEXT("JUMPING!") :
+            bIsFalling ? TEXT("FALLING") : TEXT("Normal")
+        );
+        //UE_LOG(LogTemp, Log, TEXT("CurrentAcceleration.x=%f,CurrentAcceleration.y=%f ,CurrentAcceleration.z=%f"), CurrentAcceleration.X, CurrentAcceleration.Y, CurrentAcceleration.Z);
+    
+        //UE_LOG(LogTemp, Warning, TEXT("The boolean value is %s"), (bIsLanding ? TEXT("bIsLanding::true") : TEXT("bIsLanding::false")));
+        //UE_LOG(LogTemp, Warning, TEXT("The boolean value is %s"), (bIsJumping ? TEXT("bIsJumping::true") : TEXT("bIsJumping::false")));
+        //UE_LOG(LogTemp, Warning, TEXT("The boolean value is %s"), (bIsFalling ? TEXT("bIsFalling::true") : TEXT("bIsFalling::false")));
+
+    }
 }
