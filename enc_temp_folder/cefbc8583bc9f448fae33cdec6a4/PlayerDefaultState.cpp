@@ -273,34 +273,58 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 {
     FVector2D MoveInput = Value.Get<FVector2D>();
-    constexpr float DeadZone = 0.2f;
+    float DeadZone = 0.2f;
 
-    UCharacterMovementComponent* CharMovement =
-        Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
+    UCharacterMovementComponent* CharMovement = Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
 
-    // はしご遷移判定（そのまま維持）
     if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
     {
-        Physics->AddForce(FVector::ZeroVector, 0.f);
+        Physics->AddForce(FVector(0, 0, 0), 0.f);
         Physics->SetGravityScale(false);
         return;
     }
 
-    // 入力から移動方向を取得
-    FVector Direction = MoveComp->Movement(0, mOwner, Value);
-    Direction.Normalize();
+    FVector direction = MoveComp->Movement(0, mOwner, Value);
+    direction.Normalize();
 
-    // アニメーション用の移動量
-    MoveDelta = Direction * 100.f * GetWorld()->GetDeltaSeconds();
+    if (direction != FVector::ZeroVector)
+    {
+        FRotator CurrentRotation = mOwner->GetActorRotation();
+        float TargetYaw;
 
-    // 空中では入力スケールを小さくする
-    const bool bIsInAir = CharMovement && CharMovement->IsFalling();
-    const float InputScale = bIsInAir ? 0.3f : 1.0f;
+        if (MoveInput.Y > 0)
+        {
+            TargetYaw = 0.f;
+        }
+        else if (MoveInput.Y < 0)
+        {
+            TargetYaw = 180.f;
+            direction *= -1;
+        }
+        else
+        {
+            TargetYaw = direction.Rotation().Yaw;
+        }
 
-    // ★回転は一切行わず、移動のみ
-    mOwner->AddMovementInput(Direction, InputScale);
+        CurrentDirection = FVector(0, direction.Y, 0);
+
+        if (!FMath::IsNearlyEqual(CurrentRotation.Yaw, TargetYaw, 1.f))
+        {
+            FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll);
+            mOwner->SetActorRotation(NewRotation);
+        }
+    }
+
+    // MoveDeltaを計算（アニメーション用）
+    MoveDelta = direction * 100* GetWorld()->GetDeltaSeconds();
+    //UE_LOG(LogTemp, Log, TEXT("MoveDelta: X=%f, Y=%f, Z=%f "),
+    //    MoveDelta.X, MoveDelta.Y, MoveDelta.Z);
+    // ★空中では入力スケールを小さくする
+    bool bIsInAir = CharMovement && CharMovement->IsFalling();
+    float InputScale = bIsInAir ? 0.3f : 1.0f;  // 空中では30%の入力
+
+    mOwner->AddMovementInput(direction, InputScale);
 }
-
 
 
 bool UPlayerDefaultState::Jump(float jumpForce)
