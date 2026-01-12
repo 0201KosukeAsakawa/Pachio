@@ -65,9 +65,6 @@ APlayerCharacter::APlayerCharacter()
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
 	StateManagerComponent = CreateDefaultSubobject<UStateManagerComponent>(TEXT("StateManager"));
-	
-	water = CreateDefaultSubobject<UNiagaraComponent>(TEXT("water"));
-	water->SetupAttachment(RootComponent);
 }
 
 // ゲーム開始時の初期化処理
@@ -472,12 +469,7 @@ float APlayerCharacter::GetYaw() const
 
 void APlayerCharacter::ApplayColorToEffect(FLinearColor NewColor)
 {
-	const FLinearColor EnhancedColor = UColorUtilityLibrary::EnhanceMaxComponent(
-		NewColor,
-		50.0f
-	);
 
-	water->SetVariableLinearColor(FName("Color"), EnhancedColor);
 }
 
 void APlayerCharacter::UpdateGlowTarget()

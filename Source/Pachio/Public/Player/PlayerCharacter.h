@@ -284,7 +284,4 @@ private:
     /** 現在光らせている対象Actor */
     UPROPERTY()
     AActor* CurrentGlowTarget;
-
-    UPROPERTY(EditAnywhere)
-    class UNiagaraComponent* water;
 };
