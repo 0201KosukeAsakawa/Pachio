@@ -11,9 +11,16 @@ USlimeFluidComponent::USlimeFluidComponent()
 
     Mesh = CreateDefaultSubobject<UProceduralMeshComponent>("SlimeMesh");
     Mesh->SetupAttachment(this);
-    Mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+    Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    Mesh->SetCollisionObjectType(ECC_WorldDynamic);
+    Mesh->SetCollisionResponseToAllChannels(ECR_Block);
+
+    Mesh->bUseComplexAsSimpleCollision = true;
+
     Mesh->SetSimulatePhysics(false);
 }
+
 
 void USlimeFluidComponent::BeginPlay()
 {
@@ -167,6 +174,8 @@ void USlimeFluidComponent::BuildVertexNeighbors()
             {
                 if (Vertex >= 0 && Vertex < VertexNeighbors.Num())
                 {
+                    // VertexNeighbors[Vertex] は FVertexNeighborData 型
+                    // その中の Neighbors (TArray<int32>) にアクセス
                     if (!VertexNeighbors[Vertex].Neighbors.Contains(Neighbor))
                     {
                         VertexNeighbors[Vertex].Neighbors.Add(Neighbor);
@@ -307,10 +316,6 @@ void USlimeFluidComponent::DetectAllContacts()
 
 void USlimeFluidComponent::UpdateFluid(float DeltaTime)
 {
-
-    if (!Mesh)
-        return;
-
     /* =====================
        動的コア中心の更新
     ===================== */
@@ -542,10 +547,17 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
 
         // 力を保存（伝播処理用）
         Forces[i] = Force;
+
+        // 力の上限を適用（安全リミッター）
+        float MaxForce = V.bIsCore ? MaxCoreForce : MaxForcePerVertex;
+        if (Forces[i].SizeSquared() > MaxForce * MaxForce)
+        {
+            Forces[i] = Forces[i].GetSafeNormal() * MaxForce;
+        }
     }
 
     // 力の伝播処理
-    if (bEnableForcePropagate)
+    if (bEnableForcePropagate && Contacts.Num() > 0)  // 接触がある時だけ伝播
     {
         PropagateForces(Forces, DeltaTime);
     }
@@ -577,6 +589,7 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
     );
 
     Mesh->UpdateMeshSection(0, NewPositions, {}, {}, {}, {});
+    //Mesh->UpdateCollision();
 }
 
 /* ===============================

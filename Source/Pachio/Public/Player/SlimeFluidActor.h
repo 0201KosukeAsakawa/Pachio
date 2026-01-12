@@ -6,11 +6,11 @@
 #include "ProceduralMeshComponent.h"
 #include "SlimeFluidActor.generated.h"
 
-
 /**
- * スライムを構成する1頂点の物理データ
- * - 表面 / コアの区別
- * - 物理挙動（速度・法線）
+ * スライムを構成する単一頂点データ
+ * - 物理挙動
+ * - 表面／コア判定
+ * - 法線管理
  */
 USTRUCT(BlueprintType)
 struct FSlimeVertex
@@ -21,23 +21,19 @@ struct FSlimeVertex
     UPROPERTY()
     FVector Position;
 
-    /** 頂点に加算される速度（物理シミュレーション用） */
+    /** 頂点の速度（物理計算用） */
     UPROPERTY()
     FVector Velocity;
 
-    /** 表面法線（主に表面張力・押し戻し計算に使用） */
+    /** 頂点の法線（描画・表面方向判定用） */
     UPROPERTY()
     FVector Normal;
 
-    /**
-     * 表面ウェイト
-     * 0.0 = 完全なコア
-     * 1.0 = 完全な表面
-     */
+    /** 表面重み（0=完全コア, 1=完全表面） */
     UPROPERTY()
     float SurfaceWeight;
 
-    /** true の場合、この頂点はコアに属する */
+    /** コア頂点かどうかのフラグ */
     UPROPERTY()
     bool bIsCore;
 
@@ -52,17 +48,17 @@ struct FSlimeVertex
 };
 
 /**
- * スライムと外部オブジェクトの接触情報
- * - 接触位置
- * - 接触方向
- * - 影響の強さ
+ * スライムへの接触情報
+ * - 外力
+ * - 押し込み
+ * - 地面判定
  */
 USTRUCT(BlueprintType)
 struct FSlimeContact
 {
     GENERATED_BODY()
 
-    /** 接触位置（スライムローカル座標） */
+    /** 接触点のローカル座標 */
     UPROPERTY()
     FVector LocalPosition;
 
@@ -70,11 +66,11 @@ struct FSlimeContact
     UPROPERTY()
     FVector Normal;
 
-    /** 接触の強さ（押し込み量・衝撃量など） */
+    /** 接触の強さ */
     UPROPERTY()
     float Strength;
 
-    /** true の場合、地面として扱う接触 */
+    /** 地面接触かどうか */
     UPROPERTY()
     bool bIsGround;
 
@@ -89,15 +85,14 @@ struct FSlimeContact
 
 /**
  * 頂点の隣接情報
- * - 力の伝播
- * - 変形の拡散
+ * - 力の伝播計算用
  */
 USTRUCT(BlueprintType)
 struct FVertexNeighborData
 {
     GENERATED_BODY()
 
-    /** 隣接している頂点インデックス配列 */
+    /** 隣接頂点のインデックス配列 */
     UPROPERTY()
     TArray<int32> Neighbors;
 
@@ -106,38 +101,34 @@ struct FVertexNeighborData
     }
 };
 
-
- /**
-  * スライムの流体挙動を制御するコンポーネント
-  * ・プロシージャルメッシュ生成
-  * ・頂点ベース疑似流体シミュレーション
-  * ・接触・体積保持・地面処理
-  */
+/*
+ * スライムの流体挙動・変形・接触処理を管理するコンポーネント
+ */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API USlimeFluidComponent : public USceneComponent
 {
     GENERATED_BODY()
 
 public:
-    /**
-     * コンストラクタ
-     */
     USlimeFluidComponent();
 
 protected:
-    /**
-     * ゲーム開始時の初期化処理
+    /*
+     * コンポーネント初期化処理
+     *
+     * @return void
      */
     virtual void BeginPlay() override;
 
 public:
-    /**
-     * 毎フレーム呼ばれる更新処理
+    /*
+     * 毎フレーム更新処理
      *
-     * @param DeltaTime フレーム間の経過時間
-     * @param TickType Tickの種類
-     * @param ThisTickFunction Tick関数情報
-     * @return なし
+     * @param DeltaTime フレーム時間
+     * @param TickType Tick種別
+     * @param ThisTickFunction Tick関数
+     *
+     * @return void
      */
     virtual void TickComponent(
         float DeltaTime,
@@ -145,22 +136,22 @@ public:
         FActorComponentTickFunction* ThisTickFunction
     ) override;
 
-    /**
-     * スライムの初期形状（球体）を生成する
+    /*
+     * 初期球形メッシュを生成する
      *
-     * @param なし
-     * @return なし
+     * @return void
      */
     UFUNCTION(BlueprintCallable, Category = "Slime")
     void GenerateSphere();
 
-    /**
+    /*
      * 外部から接触情報を追加する
      *
      * @param WorldPos 接触位置（ワールド座標）
-     * @param WorldNormal 接触面法線（ワールド）
-     * @param Strength 接触の強さ
-     * @return なし
+     * @param WorldNormal 接触法線
+     * @param Strength 接触強度
+     *
+     * @return void
      */
     UFUNCTION(BlueprintCallable, Category = "Slime")
     void AddContact(
@@ -170,97 +161,97 @@ public:
     );
 
 protected:
-    /**
-     * 全頂点に対して接触判定を行う
+    /*
+     * 全頂点に対する接触検出
      *
-     * @param なし
-     * @return なし
+     * @return void
      */
     void DetectAllContacts();
 
-    /**
-     * 流体シミュレーションの更新処理
+    /*
+     * スライムの物理挙動更新
      *
-     * @param DeltaTime 経過時間
-     * @return なし
+     * @param DeltaTime フレーム時間
+     *
+     * @return void
      */
     void UpdateFluid(float DeltaTime);
 
-    /**
-     * デバッグ描画を行う
+    /*
+     * デバッグ可視化描画
      *
-     * @param なし
-     * @return なし
+     * @return void
      */
     void DrawDebugVisualization();
 
-    /**
-     * コア中心位置を更新する
+    /*
+     * コア中心位置の更新
      *
-     * @param DeltaTime 経過時間
-     * @return なし
+     * @param DeltaTime フレーム時間
+     *
+     * @return void
      */
     void UpdateCoreCenter(float DeltaTime);
 
-    /**
+    /*
      * 力を隣接頂点へ伝播させる
      *
-     * @param Forces 各頂点にかかる力
-     * @param DeltaTime 経過時間
-     * @return なし
+     * @param Forces 頂点ごとの力配列
+     * @param DeltaTime フレーム時間
+     *
+     * @return void
      */
     void PropagateForces(TArray<FVector>& Forces, float DeltaTime);
 
-    /**
-     * 頂点の隣接関係を構築する
+    /*
+     * 頂点の隣接情報を構築する
      *
-     * @param なし
-     * @return なし
+     * @return void
      */
     void BuildVertexNeighbors();
 
 public:
-    /** プロシージャルメッシュ本体 */
+    /** スライム描画用プロシージャルメッシュ */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Slime")
     UProceduralMeshComponent* Mesh;
 
-    /** スライムの基本半径 */
+    /** スライム半径 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Mesh")
     float Radius = 50.0f;
 
-    /** メッシュの横分割数 */
+    /** 経度方向分割数 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Mesh")
     int32 Segments = 16;
 
-    /** メッシュの縦分割数 */
+    /** 緯度方向分割数 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Mesh")
     int32 Rings = 12;
 
-    /** コア領域の半径比率 */
+    /** コア半径比率 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Core", meta = (ClampMin = "0.0", ClampMax = "1.0"))
     float CoreRadiusRatio = 0.5f;
 
-    /** コアの変形しにくさ */
+    /** コアの剛性 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Core")
     float CoreStiffness = 15.0f;
 
-    /** コアが重心へ追従する強さ */
+    /** コアの重心追従強度 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Core")
     float CoreFollowStrength = 6.0f;
 
-    /** 変形時にコア中心を動かすか */
+    /** 変形時にコア中心を移動させるか */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Core")
     bool bAllowCenterMovement = true;
 
-    /** 復元時に中心を元に戻すか */
+    /** 復元時にコア中心を戻すか */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Core")
     bool bResetCenterToOrigin = true;
 
-    /** 中心が戻る速度 */
+    /** コア中心の復元速度 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Core", meta = (EditCondition = "bResetCenterToOrigin"))
     float CenterResetSpeed = 2.0f;
 
-    /** ワールド座標で原点復帰するか */
+    /** ワールド基準で中心を戻すか */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Core", meta = (EditCondition = "bResetCenterToOrigin"))
     bool bUseWorldOrigin = false;
 
@@ -276,27 +267,27 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     float Damping = 0.85f;
 
-    /** 追従遅延の強さ */
+    /** 追従ラグ強度 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     float FollowLagStrength = 12.0f;
 
-    /** ノイズ変形量 */
+    /** ノイズ強度 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     float NoiseStrength = 2.0f;
 
-    /** 揺れの強さ */
+    /** ぷるぷる揺れ量 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     float JiggleAmount = 5.0f;
 
-    /** バウンド強度 */
+    /** 弾性倍率 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     float BounceFactor = 1.2f;
 
-    /** 変形速度倍率 */
+    /** 変形速度 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     float DeformationSpeed = 1.0f;
 
-    /** 復元速度倍率 */
+    /** 復元速度 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     float RecoverySpeed = 1.0f;
 
@@ -304,11 +295,11 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     bool bEnableForcePropagate = true;
 
-    /** 伝播の強さ */
+    /** 伝播強度 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
     float PropagationStrength = 5.0f;
 
-    /** 伝播時の減衰率 */
+    /** 伝播減衰率 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
     float PropagationDamping = 0.7f;
 
@@ -316,136 +307,24 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
     int32 PropagationIterations = 2;
 
-    /** 体積保存を行うか */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume")
-    bool bPreserveVolume = true;
-
-    /** 体積保持の剛性 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume", meta = (EditCondition = "bPreserveVolume"))
-    float VolumeStiffness = 20.0f;
-
-    /** 表面張力 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume", meta = (EditCondition = "bPreserveVolume"))
-    float SurfaceTension = 8.0f;
-
-    /** めり込み防止を行うか */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume")
-    bool bPreventPenetration = true;
-
-    /** めり込み抵抗力 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Volume", meta = (EditCondition = "bPreventPenetration"))
-    float PenetrationResistance = 50.0f;
-
-    /** 接触の拡散率 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
-    float SpreadStrength = 0.8f;
-
-    /** 接触影響の減衰率 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
-    float ContactDecayRate = 0.92f;
-
-    /** 接触方向性の強さ */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
-    float ContactDirectionality = 0.8f;
-
-    /** 反対側変形を防ぐか */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
-    bool bPreventOppositeSideDeformation = true;
-
-    /** メッシュベース衝突判定を使うか */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
-    bool bUseMeshBasedCollision = true;
-
-    /** 接触チェック間隔 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact", meta = (EditCondition = "bUseMeshBasedCollision"))
-    int32 CollisionCheckVertexStep = 3;
-
-    /** 接触判定距離 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact", meta = (EditCondition = "bUseMeshBasedCollision"))
-    float CollisionCheckDistance = 15.0f;
-
-    /** 接触位置オフセット */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Contact")
-    float ContactPenetrationOffset = 5.0f;
-
-    /** 地面特別処理を有効にするか */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground")
-    bool bEnableGroundSpecialHandling = false;
-
-    /** 地面潰れ倍率 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bEnableGroundSpecialHandling"))
-    float GroundSquashMultiplier = 1.5f;
-
-    /** 地面粘着力 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bEnableGroundSpecialHandling"))
-    float GroundStickiness = 0.3f;
-
-    /** 地面と判定する角度 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bEnableGroundSpecialHandling"))
-    float GroundAngleThreshold = 45.0f;
-
-    /** 底面を平らにするか */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bEnableGroundSpecialHandling"))
-    bool bFlattenBottomOnGround = true;
-
-    /** 平面化の強さ */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bFlattenBottomOnGround"))
-    float BottomFlattenStrength = 10.0f;
-
-    /** 平面判定範囲 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Ground", meta = (EditCondition = "bFlattenBottomOnGround"))
-    float BottomFlattenRadius = 0.7f;
-
-    /** スライム用マテリアル */
-    UPROPERTY(EditAnywhere, Category = "Slime|Material")
-    UMaterialInterface* SlimeMaterial;
-
-    /** 頂点デバッグ表示 */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
-    bool bShowVertexDebug = false;
-
-    /** コア頂点表示 */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
-    bool bShowCoreVertices = true;
-
-    /** 表面頂点表示 */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
-    bool bShowSurfaceVertices = true;
-
-    /** コア中心表示 */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
-    bool bShowCoreCenter = true;
-
-    /** 接触点表示 */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
-    bool bShowContactPoints = true;
-
-    /** 実メッシュ形状表示 */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
-    bool bShowActualMeshShape = true;
-
-    /** 初期形状表示 */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
-    bool bShowInitialShape = false;
-
-    /** ワールド座標表示 */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
-    bool bShowWorldCoordinates = false;
-
-    /** デバッグ点サイズ */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
-    float DebugPointSize = 5.0f;
-
-    /** 接触影響範囲 */
-    UPROPERTY(EditAnywhere, Category = "Slime|Debug")
+    /** 接触影響半径 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
     float ContactInfluenceRadius;
+
+    /** コアに加わる最大力 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
+    float MaxCoreForce = 500.0f;
+
+    /** 頂点ごとの最大力 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
+    float MaxForcePerVertex = 1000.0f;
 
 protected:
     /** スライム頂点配列 */
     UPROPERTY()
     TArray<FSlimeVertex> Vertices;
 
-    /** メッシュ三角形インデックス */
+    /** 三角形インデックス */
     UPROPERTY()
     TArray<int32> Triangles;
 
