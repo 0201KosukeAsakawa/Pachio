@@ -181,6 +181,9 @@ protected:
     /** 加速度の計算と状態判定 */
     void UpdateAcceleration(float DeltaTime);
 
+    /** 慣性システムの更新 */
+    void UpdateInertialSystem(float DeltaTime);
+
 public:
     // Components
     /** プロシージャルメッシュコンポーネント（スライムの形状を描画） */
@@ -400,9 +403,49 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia|Advanced")
     int32 AccelerationHistorySize = 3;
 
-    /** 慣性による変形の強さ（高いほど動きに敏感） */
+    /** 慣性による"目標コア位置"のオフセット */
+    UPROPERTY()
+    FVector InertialCoreOffset;
+
+    /** 慣性オフセットの速度 */
+    UPROPERTY()
+    FVector InertialOffsetVelocity;
+
+    /** 慣性による変形の強さ */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia", meta = (ClampMin = "0.0", ClampMax = "100.0"))
+    float InertiaDeformationStrength = 8.0f;
+
+    /** 慣性オフセットの最大距離（コアが動ける範囲） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia", meta = (ClampMin = "0.0"))
+    float MaxInertialOffset = 30.0f;
+
+    /** 慣性オフセットの減衰（元に戻る速さ） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+    float InertialOffsetDamping = 0.92f;
+
+    /** ジャンプ着地時の潰れ倍率 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia")
-    float InertiaDeformationStrength = 50.0f;
+    float LandingSquashMultiplier = 1.5f;
+
+    /** 落下時の伸び倍率 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia")
+    float FallingStretchMultiplier = 1.2f;
+
+    /** 移動時の変形倍率 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia")
+    float MovementDeformMultiplier = 1.0f;
+
+    /** 速度しきい値：落下判定 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia|Advanced")
+    float FallingVelocityThreshold = 200.0f;
+
+    /** 加速度しきい値：着地判定 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia|Advanced")
+    float LandingAccelerationThreshold = 800.0f;
+
+    /** デバッグ：加速度情報を表示 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Debug")
+    bool bShowAccelerationDebug = true;
 
     /** 重力の影響度（ジャンプ時の潰れ/伸び） */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia")
@@ -420,14 +463,6 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia")
     float MaxInertiaDeformation = 200.0f;
 
-    /** ジャンプ着地時の潰れ倍率 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia")
-    float LandingSquashMultiplier = 3.0f;
-
-    /** 落下時の伸び倍率 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia")
-    float FallingStretchMultiplier = 2.5f;
-
     /** 移動開始時の潰れ倍率 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia")
     float StartMovementSquashMultiplier = 2.0f;
@@ -436,21 +471,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia|Advanced")
     float VelocityThreshold = 5.0f;
 
-    /** 加速度しきい値：着地判定 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia|Advanced")
-    float LandingAccelerationThreshold = 800.0f;
-
     /** 加速度しきい値：ジャンプ判定 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia|Advanced")
     float JumpAccelerationThreshold = 500.0f;
-
-    /** 速度しきい値：落下判定 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Inertia|Advanced")
-    float FallingVelocityThreshold = 200.0f;
-
-    /** デバッグ：加速度情報を表示 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Debug")
-    bool bShowAccelerationDebug = true;
 
     // Material
     /** スライムに適用するマテリアル */
