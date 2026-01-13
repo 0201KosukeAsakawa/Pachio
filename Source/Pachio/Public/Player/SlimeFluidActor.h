@@ -553,10 +553,6 @@ public:
     UPROPERTY(EditAnywhere, Category = "Slime|Debug")
     float DebugPointSize = 5.0f;
 
-    bool bIsLanding;
-    bool bIsJumping;
-    bool bIsFalling;
-
 protected:
     /** 全頂点データの配列 */
     UPROPERTY()
