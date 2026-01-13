@@ -23,7 +23,7 @@
 #include "Objects/Color/LadderActor.h"
 #include "Components/Color/ColorControllerComponent.h"
 #include "ColorUtilityLibrary.h"
-
+#include "Components/Color/ObjectColorComponent.h"
 namespace Player_DEFAULT_Constants
 {
     constexpr float DEAD_ZONE = 0.2f;
@@ -168,94 +168,24 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
     // モード判定
     if (mode == EColorAbsorbMode::Paint)
     {
-        if (!ProjectileClass)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("ProjectileClass is not set in PlayerDefaultState"));
-            return false;
-        }
-
-        // 現在選択中の色を取得
         CurrentSelectedColor = ColorComp->GetCurrentColor();
+        EColorCategory Category =
+            UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentSelectedColor);
 
-        // 現在の色カテゴリを取得
-        EColorCategory CurrentCategory = UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentSelectedColor);
-
-        // タンクに十分な色があるかチェック
-        int32* TankValue = ColorComp->ColorTankMap.Find(CurrentCategory);
+        int32* TankValue = ColorComp->ColorTankMap.Find(Category);
         if (!TankValue || *TankValue <= 0)
         {
-            UE_LOG(LogTemp, Warning, TEXT("Not enough color in tank to fire projectile"));
+            UE_LOG(LogTemp, Warning, TEXT("Not enough color in tank"));
             return false;
         }
 
-        UWorld* World = GetWorld();
-        if (!World)
+        // 吸うモード → 近くのオブジェクトを吸収
+        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f); // 距離100を例
+        if (TargetComp)
         {
-            return false;
-        }
-        // プレイヤーの位置と回転
-        const FVector PlayerLocation = Character->GetActorLocation();
-        const FRotator PlayerRotation = Character->GetActorRotation();
-        // 発射位置（前方 + 少し上）
-        const FVector LaunchLocation = PlayerLocation + FVector(0.0f, 0.0f, 50.0f);
-        // ----------------------------
-        // 発射方向の決定
-        // Yaw == 0 → +Y
-        // Yaw == 180 → -Y
-        // ----------------------------
-        FVector LaunchDirection = FVector::ZeroVector;
-        if (FMath::IsNearlyEqual(PlayerRotation.Yaw, 0.0f, 1.0f))
-        {
-            LaunchDirection = FVector(0.0f, 1.0f, 0.0f);
-        }
-        else if (FMath::IsNearlyEqual(PlayerRotation.Yaw, 180.0f, 1.0f) || FMath::IsNearlyEqual(PlayerRotation.Yaw, -180.0f, 1.0f))
-        {
-            LaunchDirection = FVector(0.0f, -1.0f, 0.0f);
-        }
-        else
-        {
-            // 想定外の向きの場合の保険
-            LaunchDirection = Character->GetActorForwardVector();
-        }
-        // 発射角度（Pitch）を加味
-        FRotator LaunchRotation = LaunchDirection.Rotation();
-        LaunchRotation.Pitch += LaunchAngle;
-        LaunchDirection = LaunchRotation.Vector();
-        UE_LOG(LogTemp, Warning, TEXT("PlayerYaw: %.1f"), PlayerRotation.Yaw);
-
-        // スポーン設定
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.Owner = Character;
-        SpawnParams.Instigator = Character;
-        // 投射物スポーン
-        AColorProjectile* Projectile = World->SpawnActor<AColorProjectile>(
-            ProjectileClass,
-            LaunchLocation,
-            LaunchDirection.Rotation(),
-            SpawnParams
-        );
-        if (Projectile)
-        {
-            // 弾の生成に成功したらタンクから1消費
-            (*TankValue)--;
-
-            Projectile->Launch(LaunchDirection, LaunchSpeed, CurrentSelectedColor);
-            UE_LOG(
-                LogTemp,
-                Log,
-                TEXT("ColorProjectile fired: Angle=%.1f Speed=%.1f Color(R=%.2f G=%.2f B=%.2f) Tank remaining: %d"),
-                LaunchAngle,
-                LaunchSpeed,
-                CurrentSelectedColor.R,
-                CurrentSelectedColor.G,
-                CurrentSelectedColor.B,
-                *TankValue
-            );
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("Failed to spawn projectile"));
-            return false;
+            TargetComp->SetTargetColor(CurrentSelectedColor);
+            (*TankValue)--; // 成功時のみ消費
+            UE_LOG(LogTemp, Log, TEXT("Paint Hit! Tank remaining: %d"), *TankValue);
         }
     }
     else if (mode == EColorAbsorbMode::Absorb)
@@ -273,58 +203,34 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 {
     FVector2D MoveInput = Value.Get<FVector2D>();
-    float DeadZone = 0.2f;
+    constexpr float DeadZone = 0.2f;
 
-    UCharacterMovementComponent* CharMovement = Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
+    UCharacterMovementComponent* CharMovement =
+        Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
 
+    // はしご遷移判定（そのまま維持）
     if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
     {
-        Physics->AddForce(FVector(0, 0, 0), 0.f);
+        Physics->AddForce(FVector::ZeroVector, 0.f);
         Physics->SetGravityScale(false);
         return;
     }
 
-    FVector direction = MoveComp->Movement(0, mOwner, Value);
-    direction.Normalize();
+    // 入力から移動方向を取得
+    FVector Direction = MoveComp->Movement(0, mOwner, Value);
+    Direction.Normalize();
 
-    if (direction != FVector::ZeroVector)
-    {
-        FRotator CurrentRotation = mOwner->GetActorRotation();
-        float TargetYaw;
+    // アニメーション用の移動量
+    MoveDelta = Direction * 100.f * GetWorld()->GetDeltaSeconds();
 
-        if (MoveInput.Y > 0)
-        {
-            TargetYaw = 0.f;
-        }
-        else if (MoveInput.Y < 0)
-        {
-            TargetYaw = 180.f;
-            direction *= -1;
-        }
-        else
-        {
-            TargetYaw = direction.Rotation().Yaw;
-        }
+    // 空中では入力スケールを小さくする
+    const bool bIsInAir = CharMovement && CharMovement->IsFalling();
+    const float InputScale = bIsInAir ? 0.3f : 1.0f;
 
-        CurrentDirection = FVector(0, direction.Y, 0);
-
-        if (!FMath::IsNearlyEqual(CurrentRotation.Yaw, TargetYaw, 1.f))
-        {
-            FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll);
-            mOwner->SetActorRotation(NewRotation);
-        }
-    }
-
-    // MoveDeltaを計算（アニメーション用）
-    MoveDelta = direction * 100* GetWorld()->GetDeltaSeconds();
-    //UE_LOG(LogTemp, Log, TEXT("MoveDelta: X=%f, Y=%f, Z=%f "),
-    //    MoveDelta.X, MoveDelta.Y, MoveDelta.Z);
-    // ★空中では入力スケールを小さくする
-    bool bIsInAir = CharMovement && CharMovement->IsFalling();
-    float InputScale = bIsInAir ? 0.3f : 1.0f;  // 空中では30%の入力
-
-    mOwner->AddMovementInput(direction, InputScale);
+    // ★回転は一切行わず、移動のみ
+    mOwner->AddMovementInput(Direction, InputScale);
 }
+
 
 
 bool UPlayerDefaultState::Jump(float jumpForce)
