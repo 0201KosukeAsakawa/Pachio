@@ -187,7 +187,7 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
             (*TankValue)--; // 成功時のみ消費
             UE_LOG(LogTemp, Log, TEXT("Paint Hit! Tank remaining: %d"), *TankValue);
         }
-    }
+      }
     else if (mode == EColorAbsorbMode::Absorb)
     {
         // 吸うモード → 近くのオブジェクトを吸収
