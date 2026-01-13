@@ -273,6 +273,30 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
     bool bEnableForcePropagate = true;
 
+    /** 移動時の後方潰れ倍率 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
+    float BackSquashMultiplier = 1.5f;
+
+    /** 移動時の前方伸び倍率 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
+    float FrontStretchMultiplier = 1.2f;
+
+    /** 移動時の垂直方向への影響度 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics")
+    float MovementVerticalInfluence = 0.3f;
+
+    /** 移動変形の復元速度倍率 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (ClampMin = "1.0", ClampMax = "5.0"))
+    float MovementRecoverySpeedMultiplier = 2.0f;
+
+    /** 後方の縮小強度（後ろを小さくする） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (ClampMin = "0.0", ClampMax = "2.0"))
+    float BackShrinkMultiplier = 0.8f;
+
+    /** 前方・側面の膨張強度（体積補償） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (ClampMin = "0.0", ClampMax = "2.0"))
+    float FrontExpansionMultiplier = 0.5f;
+
     /** 力の伝播の強さ */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
     float PropagationStrength = 5.0f;
@@ -296,6 +320,18 @@ public:
     /** 1頂点あたりの最大力 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Physics", meta = (EditCondition = "bEnableForcePropagate"))
     float MaxForcePerVertex = 1000.0f;
+
+    /** ジャンプ時の縦伸び倍率 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Jump", meta = (ClampMin = "0.1", ClampMax = "3.0"))
+    float JumpStretchMultiplier = 1.0f;
+
+    /** ジャンプ時のXY縮小倍率（楕円化） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Jump", meta = (ClampMin = "0.1", ClampMax = "2.0"))
+    float JumpXYShrinkMultiplier = 1.0f;
+
+    /** ジャンプ中の復元速度倍率（移動変形を即座に消す） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Jump", meta = (ClampMin = "1.0", ClampMax = "10.0"))
+    float JumpRecoverySpeedMultiplier = 3.0f;
 
     // Volume Preservation (体積保存)
     /** 体積保存を有効にするか */
