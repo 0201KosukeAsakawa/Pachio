@@ -320,6 +320,25 @@ void USlimeFluidComponent::AddContact(
     Contacts.Add(C);
 }
 
+void USlimeFluidComponent::ChangeMaterialColor(const FLinearColor& InColor)
+{
+    if (!Mesh)
+    {
+        return;
+    }
+
+    // マテリアルスロット 0 を対象
+    UMaterialInstanceDynamic* MID =
+        Mesh->CreateAndSetMaterialInstanceDynamic(0);
+
+    if (!MID)
+    {
+        return;
+    }
+
+    MID->SetVectorParameterValue(TEXT("Reflection"), InColor);
+}
+
 void USlimeFluidComponent::DetectAllContacts()
 {
     FVector Center = GetComponentLocation();
