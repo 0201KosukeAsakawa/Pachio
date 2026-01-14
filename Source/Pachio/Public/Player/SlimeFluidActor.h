@@ -184,6 +184,8 @@ protected:
     /** 慣性システムの更新 */
     void UpdateInertialSystem(float DeltaTime);
 
+    /** 流体的な移動の更新 */
+    void UpdateFluidMovement(float DeltaTime, const FVector& LocalVelocity, float HorizontalSpeed);
 public:
     // Components
     /** プロシージャルメッシュコンポーネント（スライムの形状を描画） */
@@ -231,6 +233,56 @@ public:
     /** true=ワールド座標でオーナー位置に戻す, false=ローカル(0,0,0)に戻す */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Core", meta = (EditCondition = "bResetCenterToOrigin"))
     bool bUseWorldOrigin = false;
+
+    /** 各頂点の遅延位置オフセット */
+    UPROPERTY()
+    TArray<FVector> VertexLagOffsets;
+
+    /** 慣性による体全体の傾き（回転） */
+    UPROPERTY()
+    FRotator InertialTilt;
+
+    /** 慣性による重心のオフセット */
+    UPROPERTY()
+    FVector InertialCenterOffset;
+
+    /** 慣性の速度 */
+    UPROPERTY()
+    FVector InertialVelocity;
+
+    // パラメータ
+
+    /** 移動時の体の傾き強度 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Fluid Movement", meta = (ClampMin = "0.0", ClampMax = "90.0"))
+    float MovementTiltAngle = 15.0f;
+
+    /** 傾きの応答速度 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Fluid Movement", meta = (ClampMin = "1.0", ClampMax = "20.0"))
+    float TiltResponseSpeed = 8.0f;
+
+    /** 後方の遅延強度（引きずられ感） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Fluid Movement", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+    float BackwardLagStrength = 0.6f;
+
+    /** 遅延の伝播速度 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Fluid Movement", meta = (ClampMin = "1.0", ClampMax = "20.0"))
+    float LagPropagationSpeed = 10.0f;
+
+    /** 波打つ動きの強さ */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Fluid Movement", meta = (ClampMin = "0.0", ClampMax = "50.0"))
+    float WaveMotionStrength = 10.0f;
+
+    /** 波の周波数 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Fluid Movement", meta = (ClampMin = "0.1", ClampMax = "10.0"))
+    float WaveFrequency = 2.0f;
+
+    /** 重心の慣性移動強度 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Fluid Movement", meta = (ClampMin = "0.0", ClampMax = "100.0"))
+    float CenterInertiaStrength = 20.0f;
+
+    /** 重心の慣性減衰 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime|Fluid Movement", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+    float CenterInertiaDamping = 0.85f;
 
     // Physics Parameters
     /** 表面頂点の剛性（高いほど硬い） */
@@ -552,10 +604,6 @@ public:
     /** デバッグポイントのサイズ */
     UPROPERTY(EditAnywhere, Category = "Slime|Debug")
     float DebugPointSize = 5.0f;
-
-    bool bIsLanding;
-    bool bIsJumping;
-    bool bIsFalling;
 
 protected:
     /** 全頂点データの配列 */
