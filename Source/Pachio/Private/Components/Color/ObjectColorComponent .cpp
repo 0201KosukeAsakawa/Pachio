@@ -168,7 +168,8 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
         UE_LOG(LogTemp, Log, TEXT("[%s] Color change time expired (%.2f seconds)"),
             *GetOwner()->GetName(), ColorChangeTimer);
 
-        if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05,0.05)))
+        if(UColorUtilityLibrary::GetNearestColorCategory(CurrentColor) == ColorCategory)
+        //if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05,0.05)))
         {
             ApplyColorWithMatching(CurrentColor);
         }
