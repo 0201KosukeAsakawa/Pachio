@@ -25,7 +25,7 @@
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "UI/UIManager.h"
-
+#include "Player/SlimeFluidActor.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
@@ -294,6 +294,11 @@ void APlayerCharacter::ChangeColor(float value)
 		return;
 
 	colorController->AdjustColor(value);
+	USlimeFluidComponent* SlimeFluidComponent = GetComponentByClass<USlimeFluidComponent>();
+	if (SlimeFluidComponent)
+	{
+		SlimeFluidComponent->ChangeMaterialColor(colorController->GetCurrentColor());
+	}
 }
 
 

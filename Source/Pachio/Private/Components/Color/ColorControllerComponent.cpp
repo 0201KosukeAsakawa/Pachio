@@ -38,7 +38,7 @@ UColorControllerComponent::UColorControllerComponent()
     ColorTankMap.Add(EColorCategory::Red, 10);
     ColorTankMap.Add(EColorCategory::Green, 10);
     ColorTankMap.Add(EColorCategory::Blue, 10);
-    ColorTankMap.Add(EColorCategory::White, 10);
+    //ColorTankMap.Add(EColorCategory::White, 10);
 }
 
 // =======================
@@ -231,10 +231,10 @@ void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetCom
     }
 
     // 明るい色や薄い色は White も加算
-    if (Lightness > 0.8f || HSL.Y < 0.2f)
-    {
-        Components.Add({ EColorCategory::White, 0.5f });
-    }
+    //if (Lightness > 0.8f || HSL.Y < 0.2f)
+    //{
+    //    Components.Add({ EColorCategory::White, 0.5f });
+    //}
 
     // 合計の重みを計算
     float TotalWeight = 0.0f;

@@ -140,6 +140,8 @@ public:
         float Strength
     );
 
+    void ChangeMaterialColor(const FLinearColor&);
+
 protected:
     /**
      * 全頂点に対して接触検出を実行
