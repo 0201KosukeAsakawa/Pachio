@@ -44,7 +44,7 @@ UObjectColorComponent::UObjectColorComponent()
     , bEnableColorAction(true)               // 色変更アクションを有効化
     , bEnableBeatEffect(false)               // ビート演出を有効化
     , bUseComplementaryColor(false)          // 補色を使用するか
-    , bColorChangeable(false)                // 色変更が可能か
+    , bColorChangeable(true)                // 色変更が可能か
     , bColorMatched(false)                   // 色が一致しているか
     , bSelected(false)                       // 選択されているか
     , bInitialized(false)                    // 初期化済みであるか

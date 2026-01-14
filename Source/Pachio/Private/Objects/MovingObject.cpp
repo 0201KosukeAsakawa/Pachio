@@ -33,66 +33,74 @@ void UMoveOnColorComponent::Initialize()
     TargetLocation = OffLocation;
 }
 
-void UMoveOnColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UMoveOnColorComponent::TickComponent(
+    float DeltaTime,
+    ELevelTick TickType,
+    FActorComponentTickFunction* ThisTickFunction)
 {
-    if (bIsMoving)
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    if (!bIsMoving)
     {
-        ElapsedTime += DeltaTime;
-        float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
+        return;
+    }
 
-        FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
-        FVector DeltaMove = NewLocation - GetOwner()->GetActorLocation();
+    if (MoveDuration <= KINDA_SMALL_NUMBER)
+    {
+        GetOwner()->SetActorLocation(TargetLocation);
+        bIsMoving = false;
+        return;
+    }
 
-        GetOwner()->SetActorLocation(NewLocation);
-        TArray<AActor*> Actors = AttachedActors;
-        // 上に乗っているアクターも追従
-        for (AActor* ActorOnTop : Actors)
+    ElapsedTime += DeltaTime;
+    float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
+
+    FVector CurrentLocation = GetOwner()->GetActorLocation();
+    FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
+    FVector DeltaMove = NewLocation - CurrentLocation;
+
+    GetOwner()->SetActorLocation(NewLocation);
+
+    for (AActor* ActorOnTop : AttachedActors)
+    {
+        if (ActorOnTop)
         {
-            if (ActorOnTop)
-            {
-                ActorOnTop->AddActorWorldOffset(DeltaMove,true);
-            }
-        }
-
-        // 子オブジェクトも追従
-        for (AActor* ChildActor : Child)
-        {
-            if (ChildActor)
-            {
-                ChildActor->AddActorWorldOffset(DeltaMove,true);
-            }
-        }
-
-        // 移動完了判定
-        if (Alpha >= DEFAULT_DURATION)
-        {
-            bIsMoving = false;
+            ActorOnTop->AddActorWorldOffset(DeltaMove, true);
         }
     }
+
+    for (AActor* ChildActor : Child)
+    {
+        if (ChildActor)
+        {
+            ChildActor->AddActorWorldOffset(DeltaMove, true);
+        }
+    }
+
+    if (Alpha >= 1.0f)
+    {
+        bIsMoving = false;
+    }
 }
+
 
 void UMoveOnColorComponent::ApplyColorWithMatching(const FLinearColor& InColor)
 {
-   SetColor(InColor);
-
     StartLocation = GetOwner()->GetActorLocation();
-    ElapsedTime = 0.0f; // 経過時間リセット
-    //色の差を求める
-    float distance = UColorUtilityLibrary::GetColorRatioWithTolerance(InColor, GetCurrentColor());
-    
-    FVector Direction = OnLocation - OffLocation;  // On - Offの差分ベクトル
+    ElapsedTime = 0.0f;
+
     if (HasColorChanged())
     {
-        TargetLocation = OffLocation + Direction * distance;  // OffからOnへdistance割合だけ動く
+        TargetLocation = OnLocation;
     }
     else
     {
-        TargetLocation = OnLocation - Direction * distance;  // OnからOffへdistance割合だけ動く
+        TargetLocation = OffLocation;
     }
-
 
     bIsMoving = true;
 }
+
 
 void UMoveOnColorComponent::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,

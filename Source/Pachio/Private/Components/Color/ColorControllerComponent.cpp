@@ -111,46 +111,64 @@ FLinearColor UColorControllerComponent::GetCurrentColor() const
 }
 
 
-UObjectColorComponent* UColorControllerComponent::GetHitColorComponent(float Distance)
+UObjectColorComponent* UColorControllerComponent::GetHitColorComponent(float Range)
 {
-    FVector Start = GetOwner()->GetActorLocation();
-    FVector Direction = GetOwner()->GetActorRightVector().GetSafeNormal();
-    FVector End = Start + Direction * Distance;
+    FVector Center = GetOwner()->GetActorLocation();
 
-    // Box の半径（必要に応じて調整）
-    FVector BoxExtent = FVector(50.f, 50.f, 50.f);
+    // 半径（BoxOverlapは「半径」＝HalfExtent）
+    FVector BoxExtent(Range);
 
-    // Box の向き（Actorの向きに合わせる）
-    FRotator BoxRotation = GetOwner()->GetActorRotation();
-
-    FHitResult HitResult;
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(GetOwner());
 
-    bool bHit = UKismetSystemLibrary::BoxTraceSingle(
+    TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+    ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldDynamic));
+    ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldStatic));
+
+    TArray<AActor*> OverlappedActors;
+
+    bool bOverlapped = UKismetSystemLibrary::BoxOverlapActors(
         this,
-        Start,
-        End,
+        Center,
         BoxExtent,
-        BoxRotation,
-        UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_WorldStatic),
-        false,
+        ObjectTypes,
+        AActor::StaticClass(),
         ActorsToIgnore,
-        EDrawDebugTrace::ForDuration,
-        HitResult,
-        true,
-        CurrentColor,
-        CurrentColor,
-        0.5f
+        OverlappedActors
     );
 
-    if (bHit && HitResult.GetActor())
+    if (!bOverlapped)
     {
-        return HitResult.GetActor()->GetComponentByClass<UObjectColorComponent>();
+        return nullptr;
     }
 
-    return nullptr;
+    UObjectColorComponent* NearestComponent = nullptr;
+    float NearestDistanceSq = FLT_MAX;
+
+    for (AActor* Actor : OverlappedActors)
+    {
+        if (!Actor)
+        {
+            continue;
+        }
+
+        if (UObjectColorComponent* ColorComp =
+            Actor->GetComponentByClass<UObjectColorComponent>())
+        {
+            const float DistSq =
+                FVector::DistSquared(Center, Actor->GetActorLocation());
+
+            if (DistSq < NearestDistanceSq)
+            {
+                NearestDistanceSq = DistSq;
+                NearestComponent = ColorComp;
+            }
+        }
+    }
+
+    return NearestComponent;
 }
+
 void UColorControllerComponent::PaintHitObject(UObjectColorComponent* TargetComp)
 {
     if (!TargetComp) return;
