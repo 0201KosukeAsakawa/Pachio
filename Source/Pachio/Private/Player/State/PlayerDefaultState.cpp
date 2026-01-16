@@ -202,13 +202,13 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 
 void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 {
-    FVector2D MoveInput = Value.Get<FVector2D>();
+    const FVector2D MoveInput = Value.Get<FVector2D>();
     constexpr float DeadZone = 0.2f;
 
     UCharacterMovementComponent* CharMovement =
         Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
 
-    // はしご遷移判定（そのまま維持）
+    // はしご遷移判定
     if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
     {
         Physics->AddForce(FVector::ZeroVector, 0.f);
@@ -216,20 +216,27 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
         return;
     }
 
-    // 入力から移動方向を取得
-    FVector Direction = MoveComp->Movement(0, mOwner, Value);
-    Direction.Normalize();
+    // ★ ワールド軸直指定
+    FVector Direction(
+        MoveInput.X, // W / S → X
+        MoveInput.Y, // D / A → Y
+        0.f
+    );
 
-    // アニメーション用の移動量
+    if (!Direction.Normalize())
+    {
+        return;
+    }
+
+    // アニメーション用（XY）
     MoveDelta = Direction * 100.f * GetWorld()->GetDeltaSeconds();
 
-    // 空中では入力スケールを小さくする
     const bool bIsInAir = CharMovement && CharMovement->IsFalling();
     const float InputScale = bIsInAir ? 0.3f : 1.0f;
 
-    // ★回転は一切行わず、移動のみ
     mOwner->AddMovementInput(Direction, InputScale);
 }
+
 
 
 
