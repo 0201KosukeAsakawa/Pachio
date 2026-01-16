@@ -660,24 +660,26 @@ void USlimeFluidComponent::UpdateFluid(float DeltaTime)
             // === 移動による変形 ===
             FVector FinalRadiusScale = RadiusScale;
 
+            // UpdateFluid関数内の、頂点更新ループの中
             if (!MovementStretch.IsNearlyZero())
             {
-                float DirectionAlignment = FVector::DotProduct(
-                    FVector(InitialDir.X, InitialDir.Y, 0.0f).GetSafeNormal(),
-                    MovementStretch.GetSafeNormal()
-                );
+                FVector HorizontalDir = FVector(InitialDir.X, InitialDir.Y, 0.0f).GetSafeNormal();
+                float DirectionAlignment = FVector::DotProduct(HorizontalDir, MovementStretch.GetSafeNormal());
 
-                if (DirectionAlignment > 0.2f)
+                // 後方(負の方向)の変形を大幅に強化
+                if (DirectionAlignment < -0.05f)  // ← ここ！元は -0.1f
                 {
-                    float StretchFactor = DirectionAlignment * MovementStretch.Size() * 2.0f;
-                    FinalRadiusScale.X *= (1.0f + StretchFactor);
-                    FinalRadiusScale.Y *= (1.0f + StretchFactor);
+                    float ShrinkFactor = FMath::Abs(DirectionAlignment) * MovementStretch.Size() * BackSquashMultiplier;
+                    FinalRadiusScale.X *= (1.0f - ShrinkFactor * BackShrinkMultiplier);
+                    FinalRadiusScale.Y *= (1.0f - ShrinkFactor * BackShrinkMultiplier);
+                    FinalRadiusScale.Z *= (1.0f - ShrinkFactor * 0.4f);
                 }
-                else if (DirectionAlignment < -0.2f)
+                // 前方(正の方向)の変形
+                else if (DirectionAlignment > 0.05f)  // ← ここ！元は 0.1f
                 {
-                    float ShrinkFactor = FMath::Abs(DirectionAlignment) * MovementStretch.Size() * 1.5f;
-                    FinalRadiusScale.X *= (1.0f - ShrinkFactor);
-                    FinalRadiusScale.Y *= (1.0f - ShrinkFactor);
+                    float StretchFactor = DirectionAlignment * MovementStretch.Size() * FrontStretchMultiplier;
+                    FinalRadiusScale.X *= (1.0f + StretchFactor * FrontExpansionMultiplier);
+                    FinalRadiusScale.Y *= (1.0f + StretchFactor * FrontExpansionMultiplier);
                 }
             }
 
