@@ -7,7 +7,7 @@
 #include "DataContainer/ColorTargetTypes.h"
 #include "ColorManager.generated.h"
 
-class IColorReactiveInterface;
+class IColorReactive;
 class UEffectColorRegistry;
 class UColorTargetRegistry;
 
@@ -45,7 +45,7 @@ public:
      * 
      *  @param 登録する対象
      */
-    void RegisterTarget(TScriptInterface<IColorReactiveInterface> Target);
+    void RegisterTarget(TScriptInterface<IColorReactive> Target);
 
     /**
      *  色を角度を利用して差を返す関数
@@ -102,5 +102,5 @@ private:
     TSubclassOf<UColorTargetRegistry> ColorTargetRegistryClass;
     //色に反応するオブジェクトに現在の色を通知
     UPROPERTY()
-    TArray<TScriptInterface<IColorReactiveInterface>> ColorResponseTargets;
+    TArray<TScriptInterface<IColorReactive>> ColorResponseTargets;
 };

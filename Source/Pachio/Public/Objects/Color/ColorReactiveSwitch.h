@@ -35,27 +35,10 @@ public:
 	 * 指定された色に応じてスイッチの状態や動作を切り替える
 	 * @param InColor 新しく適用された色
 	 */
-	virtual void ApplyColorWithMatching(const FLinearColor& InColor);
-
-	/**
-	 * @brief コンポーネント登録時処理
-	 *
-	 * アクターにアタッチされた直後（エディタ・実行時とも）に呼ばれます。
-	 * 必要であれば、この段階で依存コンポーネントの取得や初期設定を行います。
-	 * @note BeginPlay よりも早いタイミングで呼び出されます。
-	 */
-	void OnRegister()override;
+	virtual void ActivateDirect(const FLinearColor& InColor)override;
 
 private:
-	/** スイッチの当たり判定用ボックス（必要なら） */
-	UPROPERTY(VisibleAnywhere, Category = "Color Switch")
-	TObjectPtr<UBoxComponent> BoxComponent;
-
 	/** 二次エフェクト（補助的な反応タイプを指定） */
 	UPROPERTY(EditAnywhere, Category = "Color Switch")
-	EColorCategory SecondaryEffect;
-
-	/** 二次エフェクトに対応する色 */
-	UPROPERTY(EditAnywhere, Category = "Color Switch")
-	FLinearColor SecondaryColor;
+	FName TargetEventID;
 };

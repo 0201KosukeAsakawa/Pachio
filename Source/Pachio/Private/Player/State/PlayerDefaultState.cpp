@@ -1,7 +1,6 @@
 // プロジェクト設定の Description ページに著作権情報を記入
 
 #include "Player/State/PlayerDefaultState.h"
-#include "Player/State/LadderClimberState.h"
 #include "Player/State/PlayerHoldState.h"
 #include "Player/PlayerCharacter.h"
 #include "Player/InGameController.h"
@@ -20,7 +19,6 @@
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
 #include "Objects/ColorProjectile.h"
-#include "Objects/Color/LadderActor.h"
 #include "Components/Color/ColorControllerComponent.h"
 #include "ColorUtilityLibrary.h"
 #include "Components/Color/ObjectColorComponent.h"
@@ -208,14 +206,6 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
     UCharacterMovementComponent* CharMovement =
         Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
 
-    // はしご遷移判定
-    if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
-    {
-        Physics->AddForce(FVector::ZeroVector, 0.f);
-        Physics->SetGravityScale(false);
-        return;
-    }
-
     // ★ ワールド軸直指定
     FVector Direction(
         MoveInput.X, // W / S → X
@@ -265,48 +255,4 @@ bool UPlayerDefaultState::Jump(float jumpForce)
     if (sound)
         sound->PlaySound("SE", "Jump");
     return true;
-}
-
-bool UPlayerDefaultState::TryEnterLadderOnJump() const
-{
-    if (mOwner == nullptr)
-        return false;
-
-    // プレイヤーにアタッチされたBoxComponentを用意している想定
-    // 例えば LadderCheckTrigger として UBoxComponent* を保持している
-    if (HitBox == nullptr)
-        return false;
-
-    TArray<AActor*> OverlappingActors;
-    HitBox->GetOverlappingActors(OverlappingActors, ALadderActor::StaticClass());
-
-    if (OverlappingActors.Num() == 0)
-        return false;
-
-    IStateControllable* player = Cast<IStateControllable>(GetOwner());
-    if (player == nullptr)
-        return false;
-
-    for (AActor* Actor : OverlappingActors)
-    {
-        if (!Actor->ActorHasTag("Ladder"))
-            continue;
-
-        ALadderActor* Ladder = Cast<ALadderActor>(Actor);
-        if (!Ladder)
-            continue;
-
-        // ステート切り替え
-        if (UPlayerStateComponent* NewState = player->ChangeState(EPlayerStateType::Climb))
-        {
-            if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
-            {
-                ClimbState->SetTargetLadder(Ladder);
-                return true;
-            }
-        }
-    }
-
-    return false;
-
 }

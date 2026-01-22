@@ -1,5 +1,4 @@
 #include "UI/UIManager.h"
-#include "UI/ColorLens.h"
 #include "UI/LockonWidget.h"
 #include "UI/ClearResultWidget.h"
 #include "UI/PlayAnimationWidget.h"
@@ -26,10 +25,6 @@ void UUIManager::Init(const AActor*)
     {
         MyHUD->SetUIManager(this);
     }
-
-    // カラーレンズのUIが存在すれば表示
-    if (ColorLens)
-        ColorLens->AddToViewport();
 
     // Markerカテゴリのウィジェットを専用マップに登録
     if (FWidgetData* WidgetSet = WidgetDataMap.Find(EWidgetCategory::Marker))
