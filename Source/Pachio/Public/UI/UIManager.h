@@ -10,8 +10,6 @@
 
 class UWidgetComponent;
 class ULockonWidget;
-class UColorLens;
-
 
  /**
   * @brief ゲーム全体で UI を一元管理するクラス
@@ -78,10 +76,6 @@ public:
      */
     UFUNCTION()
     bool PlayWidgetAnimation(EWidgetCategory CategoryName, FName WidgetName, FName AnimationName);
-
-    /** @brief カラー関連エフェクトを取得 */
-    UFUNCTION()
-    UColorLens* GetColorLens() { return ColorLens; }
 
     /**
      * @brief 結果表示用ウィジェットを表示
@@ -153,10 +147,6 @@ private:
     /** @brief ウィジェットカテゴリごとのデータマップ */
     UPROPERTY(EditAnywhere, Category = "UI")
     TMap<EWidgetCategory, FWidgetData> WidgetDataMap;
-
-    /** @brief 色関連エフェクト管理 */
-    UPROPERTY(EditAnywhere)
-    UColorLens* ColorLens;
 
     /** @brief 登録済みマーカーウィジェット */
     TMap<FName, ULockonWidget*> MarkerWidgets;

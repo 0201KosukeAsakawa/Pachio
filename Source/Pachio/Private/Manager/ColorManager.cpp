@@ -2,7 +2,6 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
-#include "UI/ColorLens.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/PostProcessVolume.h"
 #include "Interface/ColorFilterInterface.h"
@@ -51,7 +50,7 @@ void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
 }
 
 // 色変化に反応するターゲットを登録
-void UColorManager::RegisterTarget(TScriptInterface<IColorReactiveInterface> Target)
+void UColorManager::RegisterTarget(TScriptInterface<IColorReactive> Target)
 {
     if (!this || !ColorTargetRegistry)
         return;

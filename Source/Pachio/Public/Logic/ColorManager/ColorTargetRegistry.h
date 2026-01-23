@@ -7,7 +7,7 @@
 #include "DataContainer/ColorTargetTypes.h"
 #include "ColorTargetRegistry.generated.h"
 
-class IColorReactiveInterface;
+class IColorReactive;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnColorAppliedDelegate, FLinearColor, NewColor);
 
@@ -39,7 +39,7 @@ public:
      *
      * @param Target - 登録するインターフェース
      */
-    void RegisterTarget(TScriptInterface<IColorReactiveInterface> Target);
+    void RegisterTarget(TScriptInterface<IColorReactive> Target);
 
     /**
      * ポストエフェクト用マテリアルを初期化する
@@ -72,7 +72,7 @@ private:
      * （EColorTargetType ごとに IColorReactiveInterface 実装オブジェクトを保持）
      */
     UPROPERTY()
-    TArray<TScriptInterface<IColorReactiveInterface>> Instances;
+    TArray<TScriptInterface<IColorReactive>> Instances;
 
     /**
      * ポストプロセスマテリアルの動的インスタンス

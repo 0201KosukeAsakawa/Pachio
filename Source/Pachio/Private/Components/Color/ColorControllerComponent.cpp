@@ -9,7 +9,6 @@
 #include "FunctionLibrary.h"
 #include "ColorUtilityLibrary.h"
 
-#include "UI/ColorLens.h"
 #include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
@@ -177,7 +176,7 @@ void UColorControllerComponent::PaintHitObject(UObjectColorComponent* TargetComp
         UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentColor)
     );
 
-    TargetComp->ApplyColorWithMatching(TraceColor);
+    TargetComp->ActivateDirect(TraceColor);
 }
 
 void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetComp)

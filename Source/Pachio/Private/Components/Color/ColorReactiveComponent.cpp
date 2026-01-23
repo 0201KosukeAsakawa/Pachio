@@ -37,9 +37,9 @@ UColorReactiveComponent::UColorReactiveComponent()
         LightCubeNiagaraSystem = LightCube.Object;
 }
 
-void UColorReactiveComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
+void UColorReactiveComponent::ActivateDirect(const FLinearColor& NewColor)
 {
-    UObjectColorComponent::ApplyColorWithMatching(NewColor);
+    UObjectColorComponent::ActivateDirect(NewColor);
     if (UColorUtilityLibrary::IsHueSimilar(GetCurrentColor(), NewColor))
     {
         OnColorMatched(NewColor);
