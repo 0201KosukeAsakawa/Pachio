@@ -50,7 +50,7 @@ bool UDeadPlayerState::OnEnter(APawn* Owner)
     if (levelManager == nullptr)
         return false;
 
-    levelManager->GetSoundManager()->PlaySound(TEXT("SE"), TEXT("Dead"));
+    levelManager->GetSoundManager()->PlaySound(ESoundKinds::SE, TEXT("Dead"));
 
     return true;
 }

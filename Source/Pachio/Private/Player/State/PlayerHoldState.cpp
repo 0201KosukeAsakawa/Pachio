@@ -60,7 +60,7 @@ bool UPlayerHoldState::OnExit(APawn* owner)
 {
     HoldTarget = nullptr;
    // targetComp = nullptr;
-    ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE", "Put");
+    ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound(ESoundKinds::SE, "Put");
     return true;
 }
 
