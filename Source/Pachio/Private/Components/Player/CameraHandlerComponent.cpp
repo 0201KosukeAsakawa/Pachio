@@ -6,7 +6,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/SpringArmComponent.h"
 
-
 // コンストラクタ: 初期化
 UCameraHandlerComponent::UCameraHandlerComponent()
 {
@@ -19,6 +18,44 @@ UCameraHandlerComponent::UCameraHandlerComponent()
 	InterpSpeed = 3.0f;
 }
 
+UE5Coro::TCoroutine<> UCameraHandlerComponent::TestEventCameraCoroutine()
+{
+	if (!GetOwner() || !Camera)
+		co_return;
+
+	UWorld* World = GetWorld();
+	if (!World)
+		co_return;
+
+	// 1. Time Dilation でほぼ停止
+	//UGameplayStatics::SetGlobalTimeDilation(World, 0.01f);
+
+	// 2. n 秒待機（リアルタイムで待つ）
+	float RealTimeWait = 1.0f;
+	float Elapsed = 0.0f;
+	while (Elapsed < RealTimeWait)
+	{
+		Elapsed += World->GetDeltaSeconds() / 0.01f; // time dilation を補正
+		co_await UE5Coro::Latent::NextTick();
+	}
+
+	// 3. カメラ移動先
+	FVector TestLocation;
+	TestLocation.X = -CameraDistance;
+	TestLocation.Y = GetOwner()->GetActorLocation().Y + 1500.f;
+	TestLocation.Z = GetOwner()->GetActorLocation().Z + 800.f;
+
+	// 4. FocusOnLocation を呼んで完了待機
+	co_await FocusOnLocation(TestLocation, 2.0f, 3.0f, true);
+
+	// 5. 時間を元に戻す
+	UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
+
+	co_return;
+}
+
+
+
 // 初期化: カメラの位置を設定
 void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 {
@@ -26,19 +63,21 @@ void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 		return;
 
 	// カメラをルートにアタッチ
-	if (RootComponent)
+	if (Camera && RootComponent)
 	{
-		Camera->SetupAttachment(RootComponent);
+		if (Camera->GetAttachParent() == nullptr)
+		{
+			Camera->SetupAttachment(RootComponent);
+		}
 	}
 
 	// 初期位置を設定
 	SetCameraLocation(CameraViewType);
 
-	// 初期FOVと回転を保存
+	// 初期FOVを保存
 	if (Camera)
 	{
 		OriginalFOV = Camera->FieldOfView;
-		PreEventCameraRotation = Camera->GetComponentRotation();
 	}
 }
 
@@ -222,8 +261,7 @@ UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnLocation(
 	FVector EventLocation,
 	float FocusDuration,
 	float MoveSpeed,
-	bool bWaitForComplete,
-	bool bLookAtTarget)
+	bool bWaitForComplete)
 {
 	using namespace UE5Coro;
 
@@ -233,26 +271,16 @@ UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnLocation(
 	// イベントモード開始
 	bIsInEventMode = true;
 	PreEventTargetLocation = TargetCameraLocation;
-	PreEventCameraRotation = Camera->GetComponentRotation();
 
 	// イベント位置を設定（X座標は固定）
 	FVector TargetLocation = EventLocation;
 	TargetLocation.X = -CameraDistance;
 
-	// ターゲットへの回転を計算
-	FRotator TargetRotation = PreEventCameraRotation;
-	if (bLookAtTarget)
-	{
-		FVector LookDirection = (EventLocation - TargetLocation).GetSafeNormal();
-		TargetRotation = LookDirection.Rotation();
-	}
-
 	// カメラを目標位置まで移動
 	if (bWaitForComplete)
 	{
 		// 移動完了まで待つ
-		while (FVector::Dist(Camera->GetComponentLocation(), TargetLocation) > 50.0f ||
-			(bLookAtTarget && !Camera->GetComponentRotation().Equals(TargetRotation, 1.0f)))
+		while (FVector::Dist(Camera->GetComponentLocation(), TargetLocation) > 50.0f)
 		{
 			FVector CurrentLocation = Camera->GetComponentLocation();
 			FVector NewLocation = FMath::VInterpTo(
@@ -262,19 +290,6 @@ UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnLocation(
 				MoveSpeed
 			);
 			Camera->SetWorldLocation(NewLocation);
-
-			// カメラの向きも補間
-			if (bLookAtTarget)
-			{
-				FRotator CurrentRotation = Camera->GetComponentRotation();
-				FRotator NewRotation = FMath::RInterpTo(
-					CurrentRotation,
-					TargetRotation,
-					GetWorld()->GetDeltaSeconds(),
-					MoveSpeed
-				);
-				Camera->SetWorldRotation(NewRotation);
-			}
 
 			co_await Latent::NextTick();
 		}
@@ -283,10 +298,6 @@ UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnLocation(
 	{
 		// 即座に設定
 		Camera->SetWorldLocation(TargetLocation);
-		if (bLookAtTarget)
-		{
-			Camera->SetWorldRotation(TargetRotation);
-		}
 	}
 
 	// 指定時間待機
@@ -295,32 +306,6 @@ UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnLocation(
 	// プレイヤー位置に戻る
 	co_await ReturnToPlayer(MoveSpeed);
 
-	// 元の回転に戻す
-	if (bLookAtTarget)
-	{
-		float ElapsedTime = 0.0f;
-		float ReturnDuration = 1.0f / MoveSpeed;
-
-		while (ElapsedTime < ReturnDuration)
-		{
-			ElapsedTime += GetWorld()->GetDeltaSeconds();
-			float Alpha = FMath::Clamp(ElapsedTime / ReturnDuration, 0.0f, 1.0f);
-
-			FRotator CurrentRotation = Camera->GetComponentRotation();
-			FRotator NewRotation = FMath::RInterpTo(
-				CurrentRotation,
-				PreEventCameraRotation,
-				GetWorld()->GetDeltaSeconds(),
-				MoveSpeed
-			);
-			Camera->SetWorldRotation(NewRotation);
-
-			co_await Latent::NextTick();
-		}
-
-		Camera->SetWorldRotation(PreEventCameraRotation);
-	}
-
 	bIsInEventMode = false;
 }
 
@@ -328,8 +313,7 @@ UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnLocation(
 UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnMultipleLocations(
 	TArray<FVector> Locations,
 	float DurationPerLocation,
-	float MoveSpeed,
-	bool bLookAtTarget)
+	float MoveSpeed)
 {
 	using namespace UE5Coro;
 
@@ -338,24 +322,14 @@ UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnMultipleLocations(
 
 	bIsInEventMode = true;
 	PreEventTargetLocation = TargetCameraLocation;
-	PreEventCameraRotation = Camera->GetComponentRotation();
 
 	for (const FVector& Location : Locations)
 	{
 		FVector TargetLocation = Location;
 		TargetLocation.X = -CameraDistance;
 
-		// ターゲットへの回転を計算
-		FRotator TargetRotation = PreEventCameraRotation;
-		if (bLookAtTarget)
-		{
-			FVector LookDirection = (Location - TargetLocation).GetSafeNormal();
-			TargetRotation = LookDirection.Rotation();
-		}
-
 		// 各地点まで移動
-		while (FVector::Dist(Camera->GetComponentLocation(), TargetLocation) > 50.0f ||
-			(bLookAtTarget && !Camera->GetComponentRotation().Equals(TargetRotation, 1.0f)))
+		while (FVector::Dist(Camera->GetComponentLocation(), TargetLocation) > 50.0f)
 		{
 			FVector CurrentLocation = Camera->GetComponentLocation();
 			FVector NewLocation = FMath::VInterpTo(
@@ -365,19 +339,6 @@ UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnMultipleLocations(
 				MoveSpeed
 			);
 			Camera->SetWorldLocation(NewLocation);
-
-			// カメラの向きも補間
-			if (bLookAtTarget)
-			{
-				FRotator CurrentRotation = Camera->GetComponentRotation();
-				FRotator NewRotation = FMath::RInterpTo(
-					CurrentRotation,
-					TargetRotation,
-					GetWorld()->GetDeltaSeconds(),
-					MoveSpeed
-				);
-				Camera->SetWorldRotation(NewRotation);
-			}
 
 			co_await Latent::NextTick();
 		}
@@ -388,32 +349,6 @@ UE5Coro::TCoroutine<> UCameraHandlerComponent::FocusOnMultipleLocations(
 
 	// プレイヤー位置に戻る
 	co_await ReturnToPlayer(MoveSpeed);
-
-	// 元の回転に戻す
-	if (bLookAtTarget)
-	{
-		float ElapsedTime = 0.0f;
-		float ReturnDuration = 1.0f / MoveSpeed;
-
-		while (ElapsedTime < ReturnDuration)
-		{
-			ElapsedTime += GetWorld()->GetDeltaSeconds();
-			float Alpha = FMath::Clamp(ElapsedTime / ReturnDuration, 0.0f, 1.0f);
-
-			FRotator CurrentRotation = Camera->GetComponentRotation();
-			FRotator NewRotation = FMath::RInterpTo(
-				CurrentRotation,
-				PreEventCameraRotation,
-				GetWorld()->GetDeltaSeconds(),
-				MoveSpeed
-			);
-			Camera->SetWorldRotation(NewRotation);
-
-			co_await Latent::NextTick();
-		}
-
-		Camera->SetWorldRotation(PreEventCameraRotation);
-	}
 
 	bIsInEventMode = false;
 }

@@ -26,7 +26,7 @@ void AInGameController::TogglePossession(AActor* HitActor)
     {
         Possess(OriginalPawn);        // 元のPawnに所有権を戻す
         bIsPossessing = false;        // 所有状態フラグをリセット
-        ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound(ESoundKinds::SE,"PlayChange");
+        ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE","PlayChange");
         return;
     }
 }

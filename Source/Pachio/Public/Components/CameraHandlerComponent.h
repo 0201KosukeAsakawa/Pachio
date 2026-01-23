@@ -1,3 +1,12 @@
+/**
+ * カメラ制御を担当するコンポーネント。
+ *
+ * グリッド単位でのカメラ移動や、ビュータイプ（CharacterView／GridView）の切り替えを管理する。
+ * スムーズな補間移動やズーム設定、カメラ追従処理、イベント演出などを行う。
+ */
+
+#pragma once
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,6 +16,8 @@
 #include "CameraHandlerComponent.generated.h"
 
 class UCameraComponent;
+
+using namespace UE5Coro;
 /**
  * カメラのビュータイプ
  */
@@ -34,6 +45,11 @@ class PACHIO_API UCameraHandlerComponent : public UActorComponent
 public:
 	/** コンストラクタ：初期値の設定 */
 	UCameraHandlerComponent();
+
+	UFUNCTION(BlueprintCallable, Category = "Camera Test")
+	void TestEventCamera() { TestEventCameraCoroutine(); }
+
+	UE5Coro::TCoroutine<> TestEventCameraCoroutine();
 
 	/**
 	 * カメラ初期化処理
@@ -102,14 +118,12 @@ public:
 	 * @param FocusDuration 注視時間(秒)
 	 * @param MoveSpeed 移動速度
 	 * @param bWaitForComplete 移動完了を待つか
-	 * @param bLookAtTarget ターゲット位置を注視するか
 	 */
-	UE5Coro::TCoroutine<> FocusOnLocation(
+	TCoroutine<> FocusOnLocation(
 		FVector EventLocation,
 		float FocusDuration = 2.0f,
 		float MoveSpeed = 3.0f,
-		bool bWaitForComplete = true,
-		bool bLookAtTarget = false
+		bool bWaitForComplete = true
 	);
 
 	/**
@@ -118,13 +132,11 @@ public:
 	 * @param Locations フォーカス位置の配列
 	 * @param DurationPerLocation 各地点の注視時間
 	 * @param MoveSpeed 移動速度
-	 * @param bLookAtTarget ターゲット位置を注視するか
 	 */
-	UE5Coro::TCoroutine<> FocusOnMultipleLocations(
+	TCoroutine<> FocusOnMultipleLocations(
 		TArray<FVector> Locations,
 		float DurationPerLocation = 2.0f,
-		float MoveSpeed = 3.0f,
-		bool bLookAtTarget = false
+		float MoveSpeed = 3.0f
 	);
 
 	/**
@@ -132,7 +144,7 @@ public:
 	 *
 	 * @param MoveSpeed 移動速度
 	 */
-	UE5Coro::TCoroutine<> ReturnToPlayer(float MoveSpeed = 3.0f);
+	TCoroutine<> ReturnToPlayer(float MoveSpeed = 3.0f);
 
 	/**
 	 * カメラズーム演出
@@ -140,7 +152,7 @@ public:
 	 * @param TargetFOV 目標FOV
 	 * @param Duration ズーム時間
 	 */
-	UE5Coro::TCoroutine<> ZoomCamera(float TargetFOV, float Duration = 1.0f);
+	TCoroutine<> ZoomCamera(float TargetFOV, float Duration = 1.0f);
 
 	/**
 	 * カメラシェイク演出
@@ -148,7 +160,7 @@ public:
 	 * @param Intensity 揺れの強さ
 	 * @param Duration 揺れの時間
 	 */
-	UE5Coro::TCoroutine<> ShakeCamera(float Intensity = 10.0f, float Duration = 0.5f);
+	TCoroutine<> ShakeCamera(float Intensity = 10.0f, float Duration = 0.5f);
 
 	/**
 	 * イベント演出中かどうか
@@ -210,7 +222,4 @@ private:
 
 	/** イベント前のターゲット位置 */
 	FVector PreEventTargetLocation;
-
-	/** イベント前のカメラ回転 */
-	FRotator PreEventCameraRotation;
 };

@@ -132,7 +132,7 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
             if (sound)
             {
                 UE_LOG(LogTemp, Warning, TEXT("Landed after jump!"));
-                sound->PlaySound(ESoundKinds::SE, "Land");
+                sound->PlaySound("SE", "Land");
             }
 
             bIsJumping = false;
@@ -147,7 +147,7 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
         if (sound)
         {
             UE_LOG(LogTemp, Warning, TEXT("HasLanded returned true, entering if-block!"));
-            sound->PlaySound(ESoundKinds::SE, "Land");
+            sound->PlaySound("SE", "Land");
         }
     }
 
@@ -253,6 +253,6 @@ bool UPlayerDefaultState::Jump(float jumpForce)
 
     ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
     if (sound)
-        sound->PlaySound(ESoundKinds::SE, "Jump");
+        sound->PlaySound("SE", "Jump");
     return true;
 }

@@ -15,12 +15,11 @@ class UUIManager;
 
 class UWeatherEffectManager;
 class UDataTable;
-class ISoundManagerProvider;
+class ISoundable;
 class UBlockDataContainer;
 class UAttackDataContainer;
 class UItemDataContainer;
 class UEnemyDataContainer;
-enum class ESoundKinds : uint8;
 
 /**
  * レベル全体を統括・管理するクラス。
@@ -34,7 +33,7 @@ class PACHIO_API ALevelManager : public AActor
 	GENERATED_BODY()
 
 public:
-	/** コンストラクタ:初期化フラグなどを設定 */
+	/** コンストラクタ：初期化フラグなどを設定 */
 	ALevelManager();
 
 protected:
@@ -53,7 +52,7 @@ public:
 	/**
 	 * 毎フレーム呼ばれる処理
 	 *
-	 * @param DeltaTime 経過時間(秒)
+	 * @param DeltaTime 経過時間（秒）
 	 */
 	virtual void Tick(float DeltaTime) override;
 
@@ -61,15 +60,23 @@ public:
 	void HandlePlayerGoalReached();
 
 	/**
-	 * サウンドマネージャーを取得
+	 * サウンドの再生を指示
 	 *
-	 * @return ISoundManagerProvider インターフェースを実装したサウンド管理クラス
+	 * @param Category サウンドカテゴリ名
+	 * @param CueName  再生するサウンドキュー名
 	 */
-	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	TScriptInterface<ISoundManagerProvider> GetSoundManager() const;
+	void PlaySound(FName Category, FName CueName);
 
 	/**
-	 * グローバルアクセス用のレベルマネージャーを取得(シングルトン)
+	 * サウンドマネージャーを取得
+	 *
+	 * @return ISoundable インターフェースを実装したサウンド管理クラス
+	 */
+	UFUNCTION(BlueprintCallable, Category = "LevelManager")
+	TScriptInterface<ISoundable> GetSoundManager() const;
+
+	/**
+	 * グローバルアクセス用のレベルマネージャーを取得（シングルトン）
 	 *
 	 * @param WorldContext 現在のワールドコンテキスト
 	 * @return ALevelManager のインスタンス
@@ -127,23 +134,19 @@ private:
 	UPROPERTY(EditAnywhere)
 	FString NextStageName;
 
-	/** スコアマネージャークラス(Blueprintで指定) */
+	/** スコアマネージャークラス（Blueprintで指定） */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UScoreManager> ScoreManagerClass;
 
-	/** UIマネージャークラス(Blueprintで指定) */
+	/** UIマネージャークラス（Blueprintで指定） */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUIManager> UIManagerClass;
 
-	/** カラーマネージャークラス(Blueprintで指定) */
+	/** カラーマネージャークラス（Blueprintで指定） */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UColorManager> ColorManagerClass;
 
-	/** サウンドマネージャークラス(Blueprintで指定) - UObject派生 */
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<USoundManager> SoundManagerClass;
-
-	/** 実行時に生成されたサウンドマネージャー - UObject版 */
+	/** 実行時に生成されたサウンドマネージャー */
 	UPROPERTY()
 	TObjectPtr<USoundManager> SoundManager;
 
