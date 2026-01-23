@@ -128,7 +128,7 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
             // 移動モードをWalkingに戻す
             CharMovement->SetMovementMode(MOVE_Walking);
 
-            ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+            ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
             if (sound)
             {
                 UE_LOG(LogTemp, Warning, TEXT("Landed after jump!"));
@@ -143,7 +143,7 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
         // 通常の着地処理（ジャンプ以外で落下した場合）
         CharMovement->SetMovementMode(MOVE_Walking);
 
-        ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+        ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
         if (sound)
         {
             UE_LOG(LogTemp, Warning, TEXT("HasLanded returned true, entering if-block!"));
@@ -251,7 +251,7 @@ bool UPlayerDefaultState::Jump(float jumpForce)
     bIsJumping = true;
     JumpStartTime = GetWorld()->GetTimeSeconds();
 
-    ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+    ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
     if (sound)
         sound->PlaySound("SE", "Jump");
     return true;
