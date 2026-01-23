@@ -5,6 +5,7 @@
 #include "Manager/WeatherEffectManager.h"
 #include "Kismet/GameplayStatics.h" 
 #include "UI/UIManager.h"
+#include "SoundHandle.h"
 #include "EngineUtils.h"
 #include "Engine/DataTable.h"
 #include "Sound/SoundManager.h"
@@ -20,11 +21,12 @@ TWeakObjectPtr<ALevelManager> ALevelManager::Instance = nullptr;
 // コンストラクタ・初期化
 // =======================
 
-// コンストラクタ：Tickの有効化
+// コンストラクタ:Tickの有効化
 ALevelManager::ALevelManager()
 {
 	// Tick処理を有効化
 	PrimaryActorTick.bCanEverTick = true;
+	bInitialize = false;
 }
 
 void ALevelManager::BeginPlay()
@@ -55,13 +57,16 @@ void ALevelManager::InitializeComponents()
 	if (ScoreManager)
 		ScoreManager->Init();
 
-	// SoundManager をコンポーネントから取得・初期化
-	SoundManager = GetComponentByClass<USoundManager>();
-	if (SoundManager)
+	// SoundManager を生成・初期化 (UObject版)
+	if (SoundManagerClass)
 	{
-		SoundManager->Init();
-		// デフォルトBGMを再生
-		SoundManager->PlaySound(ESoundKinds::BGM, "Default", true, true,SoundManager->GetBGMVolume());
+		SoundManager = NewObject<USoundManager>(this, SoundManagerClass);
+		if (SoundManager)
+		{
+			SoundManager->Init();
+			// デフォルトBGMを再生
+			SoundManager->PlaySound(ESoundKinds::BGM, "Default", true, true, SoundManager->GetBGMVolume());
+		}
 	}
 
 	// UIManager を生成・初期化
@@ -109,7 +114,7 @@ ALevelManager* ALevelManager::GetInstance(UObject* WorldContext)
 
 		// 見つからなければ新規生成
 		ALevelManager* NewInstance = World->SpawnActor<ALevelManager>();
-		if (!Instance.IsValid())
+		if (!NewInstance)
 			return nullptr;
 		Instance = NewInstance;
 		Instance->InitializeComponents();
@@ -122,22 +127,10 @@ ALevelManager* ALevelManager::GetInstance(UObject* WorldContext)
 // サウンド制御
 // =======================
 
-// サウンドを再生
-void ALevelManager::PlaySound(ESoundKinds WaveName, FName SoundName)
+// サウンドマネージャを取得(ISoundManagerProviderインターフェースで返す)
+TScriptInterface<ISoundManagerProvider> ALevelManager::GetSoundManager() const
 {
-	if (!SoundManager)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SoundManager is null when trying to play sound."));
-		return;
-	}
-
-	SoundManager->PlaySound(WaveName, SoundName);
-}
-
-// サウンドマネージャを取得（ISoundableインターフェースで返す）
-TScriptInterface<ISoundable> ALevelManager::GetSoundManager() const
-{
-	return TScriptInterface<ISoundable>(SoundManager);
+	return TScriptInterface<ISoundManagerProvider>(SoundManager);
 }
 
 // =======================
@@ -156,9 +149,9 @@ void ALevelManager::HandlePlayerGoalReached()
 	// リザルト画面を表示
 	UUserWidget* ResultWidget = UIManager->ShowResultWidget(ClearTime, Rank);
 
-	// BGMを止め、ファンファーレを再生
-	SoundManager->StopBGM();
-	SoundManager->PlaySound(ESoundKinds::SE, "Fanfare");
+	// USoundHandleを使ってBGMを止め、ファンファーレを再生
+	USoundHandle::StopBGM(this);
+	USoundHandle::PlaySE(this, "Fanfare", false);
 
 	// UI入力専用モードにする場合はここで呼ぶ
 	// PauseGameAndShowUI(ResultWidget);

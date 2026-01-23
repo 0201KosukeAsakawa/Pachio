@@ -18,7 +18,7 @@ enum class ESoundKinds : uint8
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class USoundable : public UInterface
+class USoundManagerProvider : public UInterface
 {
     GENERATED_BODY()
 };
@@ -26,7 +26,7 @@ class USoundable : public UInterface
 /**
  *
  */
-class PACHIO_API ISoundable
+class PACHIO_API ISoundManagerProvider
 {
     GENERATED_BODY()
 public:

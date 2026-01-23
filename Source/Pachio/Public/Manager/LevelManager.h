@@ -15,7 +15,7 @@ class UUIManager;
 
 class UWeatherEffectManager;
 class UDataTable;
-class ISoundable;
+class ISoundManagerProvider;
 class UBlockDataContainer;
 class UAttackDataContainer;
 class UItemDataContainer;
@@ -34,7 +34,7 @@ class PACHIO_API ALevelManager : public AActor
 	GENERATED_BODY()
 
 public:
-	/** コンストラクタ：初期化フラグなどを設定 */
+	/** コンストラクタ:初期化フラグなどを設定 */
 	ALevelManager();
 
 protected:
@@ -53,7 +53,7 @@ public:
 	/**
 	 * 毎フレーム呼ばれる処理
 	 *
-	 * @param DeltaTime 経過時間（秒）
+	 * @param DeltaTime 経過時間(秒)
 	 */
 	virtual void Tick(float DeltaTime) override;
 
@@ -61,23 +61,15 @@ public:
 	void HandlePlayerGoalReached();
 
 	/**
-	 * サウンドの再生を指示
-	 *
-	 * @param Category サウンドカテゴリ名
-	 * @param CueName  再生するサウンドキュー名
-	 */
-	void PlaySound(ESoundKinds Category, FName CueName);
-
-	/**
 	 * サウンドマネージャーを取得
 	 *
-	 * @return ISoundable インターフェースを実装したサウンド管理クラス
+	 * @return ISoundManagerProvider インターフェースを実装したサウンド管理クラス
 	 */
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	TScriptInterface<ISoundable> GetSoundManager() const;
+	TScriptInterface<ISoundManagerProvider> GetSoundManager() const;
 
 	/**
-	 * グローバルアクセス用のレベルマネージャーを取得（シングルトン）
+	 * グローバルアクセス用のレベルマネージャーを取得(シングルトン)
 	 *
 	 * @param WorldContext 現在のワールドコンテキスト
 	 * @return ALevelManager のインスタンス
@@ -135,19 +127,23 @@ private:
 	UPROPERTY(EditAnywhere)
 	FString NextStageName;
 
-	/** スコアマネージャークラス（Blueprintで指定） */
+	/** スコアマネージャークラス(Blueprintで指定) */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UScoreManager> ScoreManagerClass;
 
-	/** UIマネージャークラス（Blueprintで指定） */
+	/** UIマネージャークラス(Blueprintで指定) */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUIManager> UIManagerClass;
 
-	/** カラーマネージャークラス（Blueprintで指定） */
+	/** カラーマネージャークラス(Blueprintで指定) */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UColorManager> ColorManagerClass;
 
-	/** 実行時に生成されたサウンドマネージャー */
+	/** サウンドマネージャークラス(Blueprintで指定) - UObject派生 */
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<USoundManager> SoundManagerClass;
+
+	/** 実行時に生成されたサウンドマネージャー - UObject版 */
 	UPROPERTY()
 	TObjectPtr<USoundManager> SoundManager;
 
