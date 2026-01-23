@@ -132,11 +132,11 @@ void APachioCharacter::Look(const FInputActionValue& Value)
 
 void APachioCharacter::Jump()
 {
-	ALevelManager* SoundMgr = ALevelManager::GetInstance(this);
-	if (SoundMgr && !bPressedJump)
-	{
-		SoundMgr->PlaySound("SE", "Jump");
-	}
+	//ALevelManager* SoundMgr = ALevelManager::GetInstance(this);
+	//if (SoundMgr && !bPressedJump)
+	//{
+	//	SoundMgr->PlaySound(ESoundKinds::BGM, "Jump");
+	//}
 	bPressedJump = true;
 	JumpKeyHoldTime = 0.0f;
 }

@@ -61,7 +61,7 @@ void ALevelManager::InitializeComponents()
 	{
 		SoundManager->Init();
 		// デフォルトBGMを再生
-		SoundManager->PlaySound("BGM", "Default", true, SoundManager->GetBGMVolume());
+		SoundManager->PlaySound(ESoundKinds::BGM, "Default", true, true,SoundManager->GetBGMVolume());
 	}
 
 	// UIManager を生成・初期化
@@ -123,7 +123,7 @@ ALevelManager* ALevelManager::GetInstance(UObject* WorldContext)
 // =======================
 
 // サウンドを再生
-void ALevelManager::PlaySound(FName WaveName, FName SoundName)
+void ALevelManager::PlaySound(ESoundKinds WaveName, FName SoundName)
 {
 	if (!SoundManager)
 	{
@@ -158,7 +158,7 @@ void ALevelManager::HandlePlayerGoalReached()
 
 	// BGMを止め、ファンファーレを再生
 	SoundManager->StopBGM();
-	SoundManager->PlaySound("SE", "Fanfare");
+	SoundManager->PlaySound(ESoundKinds::SE, "Fanfare");
 
 	// UI入力専用モードにする場合はここで呼ぶ
 	// PauseGameAndShowUI(ResultWidget);

@@ -20,6 +20,7 @@ class UBlockDataContainer;
 class UAttackDataContainer;
 class UItemDataContainer;
 class UEnemyDataContainer;
+enum class ESoundKinds : uint8;
 
 /**
  * レベル全体を統括・管理するクラス。
@@ -65,7 +66,7 @@ public:
 	 * @param Category サウンドカテゴリ名
 	 * @param CueName  再生するサウンドキュー名
 	 */
-	void PlaySound(FName Category, FName CueName);
+	void PlaySound(ESoundKinds Category, FName CueName);
 
 	/**
 	 * サウンドマネージャーを取得
