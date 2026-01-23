@@ -106,8 +106,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	StateManagerComponent->Update(DeltaTime);
 	UpdateGlowTarget();
-	if (GetActorLocation().X != FixedXLocation)
-		SetActorLocation(FVector(FixedXLocation, GetActorLocation().Y, GetActorLocation().Z));
+	//if (GetActorLocation().X != FixedXLocation)
+	//	SetActorLocation(FVector(FixedXLocation, GetActorLocation().Y, GetActorLocation().Z));
 }
 
 // プレイヤー入力バインド処理

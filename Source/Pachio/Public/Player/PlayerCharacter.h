@@ -252,9 +252,9 @@ private:
     // ============================
     // ==== コンポーネント ========
     // ============================
-
+    public:
     /** カメラ制御用コンポーネント */
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Camera")
     UCameraHandlerComponent* CameraHandleComponent;
 
     // 実際に生成したステートマネージャーのUObject保持

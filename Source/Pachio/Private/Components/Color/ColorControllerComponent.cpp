@@ -9,7 +9,6 @@
 #include "FunctionLibrary.h"
 #include "ColorUtilityLibrary.h"
 
-#include "UI/ColorLens.h"
 #include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
@@ -33,11 +32,11 @@ UColorControllerComponent::UColorControllerComponent()
     PrimaryComponentTick.bCanEverTick = true;
 
     // 初期色は白
-    CurrentColor = FLinearColor::White;
+    CurrentColor = FLinearColor::Red;
 
-    ColorTankMap.Add(EColorCategory::Red, 10);
-    ColorTankMap.Add(EColorCategory::Green, 10);
-    ColorTankMap.Add(EColorCategory::Blue, 10);
+    ColorTankMap.Add(EColorCategory::Red, 0);
+    ColorTankMap.Add(EColorCategory::Green, 0);
+    ColorTankMap.Add(EColorCategory::Blue, 0);
     //ColorTankMap.Add(EColorCategory::White, 10);
 }
 
@@ -177,7 +176,7 @@ void UColorControllerComponent::PaintHitObject(UObjectColorComponent* TargetComp
         UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentColor)
     );
 
-    TargetComp->ApplyColorWithMatching(TraceColor);
+    TargetComp->ActivateDirect(TraceColor);
 }
 
 void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetComp)

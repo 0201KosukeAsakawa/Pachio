@@ -120,7 +120,7 @@ void UColorReactiveBeltConveyorComponent::TickComponent(float DeltaTime, ELevelT
 }
 
 // 指定された色に反応する処理
-void UColorReactiveBeltConveyorComponent::ApplyColorWithMatching(const FLinearColor& InColor)
+void UColorReactiveBeltConveyorComponent::ActivateDirect(const FLinearColor& InColor)
 {
     SetColor(InColor);
 

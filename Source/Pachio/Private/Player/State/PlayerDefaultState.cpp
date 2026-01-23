@@ -1,7 +1,6 @@
 // プロジェクト設定の Description ページに著作権情報を記入
 
 #include "Player/State/PlayerDefaultState.h"
-#include "Player/State/LadderClimberState.h"
 #include "Player/State/PlayerHoldState.h"
 #include "Player/PlayerCharacter.h"
 #include "Player/InGameController.h"
@@ -20,7 +19,6 @@
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
 #include "Objects/ColorProjectile.h"
-#include "Objects/Color/LadderActor.h"
 #include "Components/Color/ColorControllerComponent.h"
 #include "ColorUtilityLibrary.h"
 #include "Components/Color/ObjectColorComponent.h"
@@ -202,34 +200,33 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 
 void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 {
-    FVector2D MoveInput = Value.Get<FVector2D>();
+    const FVector2D MoveInput = Value.Get<FVector2D>();
     constexpr float DeadZone = 0.2f;
 
     UCharacterMovementComponent* CharMovement =
         Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
 
-    // はしご遷移判定（そのまま維持）
-    if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
+    // ★ ワールド軸直指定
+    FVector Direction(
+        MoveInput.X, // W / S → X
+        MoveInput.Y, // D / A → Y
+        0.f
+    );
+
+    if (!Direction.Normalize())
     {
-        Physics->AddForce(FVector::ZeroVector, 0.f);
-        Physics->SetGravityScale(false);
         return;
     }
 
-    // 入力から移動方向を取得
-    FVector Direction = MoveComp->Movement(0, mOwner, Value);
-    Direction.Normalize();
-
-    // アニメーション用の移動量
+    // アニメーション用（XY）
     MoveDelta = Direction * 100.f * GetWorld()->GetDeltaSeconds();
 
-    // 空中では入力スケールを小さくする
     const bool bIsInAir = CharMovement && CharMovement->IsFalling();
     const float InputScale = bIsInAir ? 0.3f : 1.0f;
 
-    // ★回転は一切行わず、移動のみ
     mOwner->AddMovementInput(Direction, InputScale);
 }
+
 
 
 
@@ -255,50 +252,7 @@ bool UPlayerDefaultState::Jump(float jumpForce)
     JumpStartTime = GetWorld()->GetTimeSeconds();
 
     ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-    sound->PlaySound("SE", "Jump");
+    if (sound)
+        sound->PlaySound("SE", "Jump");
     return true;
-}
-
-bool UPlayerDefaultState::TryEnterLadderOnJump() const
-{
-    if (mOwner == nullptr)
-        return false;
-
-    // プレイヤーにアタッチされたBoxComponentを用意している想定
-    // 例えば LadderCheckTrigger として UBoxComponent* を保持している
-    if (HitBox == nullptr)
-        return false;
-
-    TArray<AActor*> OverlappingActors;
-    HitBox->GetOverlappingActors(OverlappingActors, ALadderActor::StaticClass());
-
-    if (OverlappingActors.Num() == 0)
-        return false;
-
-    IStateControllable* player = Cast<IStateControllable>(GetOwner());
-    if (player == nullptr)
-        return false;
-
-    for (AActor* Actor : OverlappingActors)
-    {
-        if (!Actor->ActorHasTag("Ladder"))
-            continue;
-
-        ALadderActor* Ladder = Cast<ALadderActor>(Actor);
-        if (!Ladder)
-            continue;
-
-        // ステート切り替え
-        if (UPlayerStateComponent* NewState = player->ChangeState(EPlayerStateType::Climb))
-        {
-            if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
-            {
-                ClimbState->SetTargetLadder(Ladder);
-                return true;
-            }
-        }
-    }
-
-    return false;
-
 }

@@ -42,9 +42,8 @@ UObjectColorComponent::UObjectColorComponent()
     , LastColor(FLinearColor::White)         // 前回の目標色
     , bApplyColorToMaterial(true)            // マテリアルに色を適用するか
     , bEnableColorAction(true)               // 色変更アクションを有効化
-    , bEnableBeatEffect(false)               // ビート演出を有効化
     , bUseComplementaryColor(false)          // 補色を使用するか
-    , bColorChangeable(true)                // 色変更が可能か
+    , bColorChangeable(true)                 // 色変更が可能か
     , bColorMatched(false)                   // 色が一致しているか
     , bSelected(false)                       // 選択されているか
     , bInitialized(false)                    // 初期化済みであるか
@@ -129,7 +128,7 @@ void UObjectColorComponent::Initialize()
  * 従来の色塗り方式（90度/秒で変化）
  * PaintHitObjectなどから呼び出される
  */
-void UObjectColorComponent::ApplyColorWithMatching(const FLinearColor& NewColor)
+void UObjectColorComponent::ActivateDirect(const FLinearColor& NewColor)
 {
     
 }
@@ -168,10 +167,10 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
         UE_LOG(LogTemp, Log, TEXT("[%s] Color change time expired (%.2f seconds)"),
             *GetOwner()->GetName(), ColorChangeTimer);
 
-        if(UColorUtilityLibrary::GetNearestColorCategory(CurrentColor) == ColorCategory)
-        //if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05,0.05)))
+        //if(UColorUtilityLibrary::GetNearestColorCategory(CurrentColor) == ColorCategory)
+        if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor))
         {
-            ApplyColorWithMatching(CurrentColor);
+            ActivateDirect(CurrentColor);
         }
         return;
     }
@@ -214,7 +213,7 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
         bHasTargetColor = false;
         if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05, 0.05)))
         {
-            ApplyColorWithMatching(CurrentColor);
+            ActivateDirect(CurrentColor);
         }
         UE_LOG(LogTemp, Log, TEXT("[%s] Reached target color in %.2f seconds"),
             *GetOwner()->GetName(), ColorChangeTimer);

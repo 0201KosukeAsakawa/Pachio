@@ -10,7 +10,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnColorChanged, FLinearColor, NewCo
 // モード切替時などの演出用デリゲート
 DECLARE_DELEGATE_OneParam(FColorAnimationDelegate, float);
 
-class IColorReactiveInterface;
+class IColorReactive;
 class UColorUtilityLibrary;
 class UObjectColorComponent;
 enum class EColorCategory : uint8;

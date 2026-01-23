@@ -140,8 +140,10 @@ bool UColorUtilityLibrary::IsHueSimilar(const FLinearColor& ColorA,
     const FLinearColor& ColorB,
     FVector ThresholdHSL)
 {
+    if (ColorA == FLinearColor::White)
+        return false;
     const FVector Distance = GetHSLDistance(ColorA, ColorB);
-    return Distance.X <= ThresholdHSL.X && Distance.Y <= ThresholdHSL.Y && Distance.Z <= ThresholdHSL.Z;
+    return Distance.X <= ThresholdHSL.X /*&& Distance.Y <= ThresholdHSL.Y && Distance.Z <= ThresholdHSL.Z*/;
 }
 
 bool UColorUtilityLibrary::IsHueInRange(const FLinearColor& Color,

@@ -72,14 +72,7 @@ public:
     bool Jump(float jumpForce);
 
     void ChangePaintMode(EColorAbsorbMode m)override { mode = m; };
-private:
-    // ===== はしご関連 =====
-    /**
-     * ジャンプ中に梯子へ掴まれるかを判定する
-     *
-     * @return 掴まれる場合はtrue
-     */
-    bool TryEnterLadderOnJump() const;
+
 private:
     // ===== メンバ変数 =====
 
