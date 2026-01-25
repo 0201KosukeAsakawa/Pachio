@@ -3,108 +3,120 @@
 
 #include "Objects/MovingObject.h"
 #include "Sound/SoundManager.h"
+#include "ColorUtilityLibrary.h"
 #include "Components/BoxComponent.h"
-#include "Components/Color/ColorConfigurator.h"
-#include"Manager/LevelManager.h"
+#include "Components/Color/ObjectColorComponent.h"
+#include "Manager/LevelManager.h"
 
 // Sets default values
-AMovingObject::AMovingObject()
+UMoveOnColorComponent::UMoveOnColorComponent():
+                                MoveDuration(DEFAULT_DURATION)
+                                ,ElapsedTime(0.f)
 {
-    PrimaryActorTick.bCanEverTick = true;
-
+    PrimaryComponentTick.bCanEverTick = true;
     FootTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("FootTrigger"));
-    RootComponent = FootTrigger;
+    FootTrigger->SetupAttachment(this);
 
     FootTrigger->SetGenerateOverlapEvents(true);
     FootTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     FootTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
     FootTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-    FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &AMovingObject::OnFootBeginOverlap);
-    FootTrigger->OnComponentEndOverlap.AddDynamic(this, &AMovingObject::OnFootEndOverlap);
+    FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &UMoveOnColorComponent::OnFootBeginOverlap);
+    FootTrigger->OnComponentEndOverlap.AddDynamic(this, &UMoveOnColorComponent::OnFootEndOverlap);
 }
 
 
-void AMovingObject::Init()
+void UMoveOnColorComponent::Initialize()
 {
-    AColorReactiveObject::Init();
+    UObjectColorComponent::Initialize();
     TargetLocation = OffLocation;
 }
 
-void AMovingObject::Tick(float DeltaTime)
+void UMoveOnColorComponent::TickComponent(
+    float DeltaTime,
+    ELevelTick TickType,
+    FActorComponentTickFunction* ThisTickFunction)
 {
-    Super::Tick(DeltaTime);
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    if (bIsMoving)
+    if (!bIsMoving)
     {
-        ElapsedTime += DeltaTime;
-        float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
+        return;
+    }
 
-        FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
-        FVector DeltaMove = NewLocation - GetActorLocation();
+    if (MoveDuration <= KINDA_SMALL_NUMBER)
+    {
+        GetOwner()->SetActorLocation(TargetLocation);
+        bIsMoving = false;
+        return;
+    }
 
-        SetActorLocation(NewLocation);
-        TArray<AActor*> Actors = AttachedActors;
-        // 上に乗っているアクターも追従
-        for (AActor* ActorOnTop : Actors)
+    ElapsedTime += DeltaTime;
+    float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
+
+    FVector CurrentLocation = GetOwner()->GetActorLocation();
+    FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
+    FVector DeltaMove = NewLocation - CurrentLocation;
+
+    GetOwner()->SetActorLocation(NewLocation);
+
+    for (AActor* ActorOnTop : AttachedActors)
+    {
+        if (ActorOnTop)
         {
-            if (ActorOnTop)
-            {
-                ActorOnTop->AddActorWorldOffset(DeltaMove,true);
-            }
+            ActorOnTop->AddActorWorldOffset(DeltaMove, true);
         }
+    }
 
-        // 子オブジェクトも追従
-        for (AActor* ChildActor : Child)
+    for (AActor* ChildActor : Child)
+    {
+        if (ChildActor)
         {
-            if (ChildActor)
-            {
-                ChildActor->AddActorWorldOffset(DeltaMove,true);
-            }
+            ChildActor->AddActorWorldOffset(DeltaMove, true);
         }
+    }
 
-        // 移動完了判定
-        if (Alpha >= 1.0f)
-        {
-            bIsMoving = false;
-        }
+    if (Alpha >= 1.0f)
+    {
+        bIsMoving = false;
     }
 }
 
-void AMovingObject::ColorAction(FLinearColor InColor, FEffectMatchResult result)
+
+void UMoveOnColorComponent::ActivateDirect(const FLinearColor& InColor)
 {
-    AColorReactiveObject::ColorAction(InColor, result);
+    StartLocation = GetOwner()->GetActorLocation();
+    ElapsedTime = 0.0f;
 
-    StartLocation = GetActorLocation();
-    ElapsedTime = 0.0f; // 経過時間リセット
-
-    if (ColorConfigurator->IsColorMatch())
+    if (UColorUtilityLibrary::IsHueSimilar(InColor,CurrentColor))
     {
-        TargetLocation = OffLocation;
+        TargetLocation = OnLocation;
     }
     else
     {
-        TargetLocation = OnLocation;
+        TargetLocation = OffLocation;
     }
 
     bIsMoving = true;
 }
 
-void AMovingObject::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+
+void UMoveOnColorComponent::OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
     if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))
         return;
 
-    if (OtherActor && OtherActor != this && !AttachedActors.Contains(OtherActor))
+    if (OtherActor && OtherActor != GetOwner() && !AttachedActors.Contains(OtherActor))
     {
         AttachedActors.Add(OtherActor);
         UE_LOG(LogTemp, Log, TEXT("Added actor on top: %s"), *OtherActor->GetName());
     }
 }
 
-void AMovingObject::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void UMoveOnColorComponent::OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
     if (OtherComp && OtherComp->ComponentHasTag(TEXT("Interaction")))

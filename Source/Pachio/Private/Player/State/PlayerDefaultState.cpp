@@ -1,7 +1,6 @@
 // プロジェクト設定の Description ページに著作権情報を記入
 
 #include "Player/State/PlayerDefaultState.h"
-#include "Player/State/LadderClimberState.h"
 #include "Player/State/PlayerHoldState.h"
 #include "Player/PlayerCharacter.h"
 #include "Player/InGameController.h"
@@ -19,26 +18,40 @@
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
-#include "Objects/Color/LadderActor.h"
+#include "Objects/ColorProjectile.h"
+#include "Components/Color/ColorControllerComponent.h"
+#include "ColorUtilityLibrary.h"
+#include "Components/Color/ObjectColorComponent.h"
+namespace Player_DEFAULT_Constants
+{
+    constexpr float DEAD_ZONE = 0.2f;
+    constexpr float AIR_INPUT_SCALE = 0.3f;
+    constexpr float GROUND_INPUT_SCALE = 1.0f;
+    constexpr float SKILL_RANGE = 200.0f;
+    constexpr float JUMP_START_IGNORE_DURATION = 0.1f;
+    constexpr float AIR_CONTROL = 0.2f;
+    constexpr float FALLING_LATERAL_FRICTION = 0.5f;
+
+
+}
 
 UPlayerDefaultState::UPlayerDefaultState()
+    :LaunchAngle(30.f)
+    , LaunchSpeed(1000.f)
 {
 }
 
 // ステートに入る際に実行される処理
-bool UPlayerDefaultState::OnEnter(APawn* owner, UWorld* world)
+bool UPlayerDefaultState::OnEnter(APawn* owner)
 {
     // 所有キャラクターまたはワールドが無効な場合は失敗
-    if (owner == nullptr || world == nullptr)
+    if (owner == nullptr)
     {
         return false;
     }
 
     // 内部に所有者とワールドを保存
-    if (!mOwner)
         mOwner = owner;
-    if (!pWorld)
-        pWorld = world;
     if (!MoveComp)
     {
         MoveComp = NewObject<UMoveComponent>(mOwner);
@@ -69,28 +82,24 @@ bool UPlayerDefaultState::OnEnter(APawn* owner, UWorld* world)
     APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
     if (!aPlayer)
         return false;
-
-
-    if (USkeletalMeshComponent* MeshComp = aPlayer->FindComponentByClass<USkeletalMeshComponent>())
-    {
-        if (UAnimInstance* AnimInstance = MeshComp->GetAnimInstance())
-        {
-            // モンタージュ終了時のデリゲートをバインド
-            AnimInstance->OnMontageEnded.AddDynamic(this, &UPlayerDefaultState::OnLandingMontageEnded);
-        }
-    }
-
-
-    bIsPlayingLandingAnimation = false;
     APlayerController* PC = GetWorld()->GetFirstPlayerController();
     if (PC)
     {
         PC->SetInputMode(FInputModeGameOnly());
         PC->bShowMouseCursor = false;  // 必要に応じてマウスカーソルを非表示に
     }
+    // CharacterMovementComponentの設定（初期化時など）
+    UCharacterMovementComponent* CharMovement = Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
+    if (CharMovement)
+    {
+        // 空中制御の強さ（0.0～1.0、デフォルトは0.05程度）
+        CharMovement->AirControl = 0.2f;
 
+        // 空中での減速率（0.0～1.0）
+        CharMovement->FallingLateralFriction = 0.5f;
+    }
     // 移動速度の初期値設定（ステート内で使用）
-    mMoveSpeed = 100.0f;
+    mMoveSpeed;
     CurrentDirection = mOwner->GetActorForwardVector();
 
     return true; // ステートの切り替え成功
@@ -102,158 +111,120 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
     if (GetWorld() == nullptr || Physics == nullptr)
         return false;
 
-    // 前フレームの終了フラグをリセット
-    bLandingAnimationJustEnded = false;
+    UCharacterMovementComponent* CharMovement = Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
 
-    // 着地判定
-    if (Physics->HasLanded() && !bIsPlayingLandingAnimation)
+    if (bIsJumping && CharMovement)
     {
-        ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+        bool bOnGround = Physics->OnGround();
+        float CurrentTime = GetWorld()->GetTimeSeconds();
+        float TimeSinceJump = CurrentTime - JumpStartTime;
+
+        // ジャンプ開始から一定時間経過後に着地した場合
+        if (bOnGround && TimeSinceJump > JumpStartIgnoreDuration)
+        {
+            // 力を中止
+            Physics->AddForce(FVector(0, 0, 0), 0.f);
+
+            // 移動モードをWalkingに戻す
+            CharMovement->SetMovementMode(MOVE_Walking);
+
+            ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+            if (sound)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Landed after jump!"));
+                sound->PlaySound("SE", "Land");
+            }
+
+            bIsJumping = false;
+        }
+    }
+    else if (Physics->HasLanded() && CharMovement)
+    {
+        // 通常の着地処理（ジャンプ以外で落下した場合）
+        CharMovement->SetMovementMode(MOVE_Walking);
+
+        ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
         if (sound)
         {
-            UE_LOG(LogTemp, Warning, TEXT("HasLanded returned true, playing landing sound and animation!"));
+            UE_LOG(LogTemp, Warning, TEXT("HasLanded returned true, entering if-block!"));
             sound->PlaySound("SE", "Land");
         }
-
-        PlayLandingAnimation();
     }
-
-    if (bIsPlayingLandingAnimation)
-    {
-        MoveDelta = FVector{ 0,0,0 };
-    }
-
 
     return true;
 }
-
-
-
 bool UPlayerDefaultState::OnExit(APawn* owner)
 {
-    // アニメーション再生中の場合は停止
-    if (bIsPlayingLandingAnimation && LandingMontage != nullptr)
-    {
-        APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
-        if (aPlayer)
-        {
-            if (USkeletalMeshComponent* MeshComp = aPlayer->FindComponentByClass<USkeletalMeshComponent>())
-            {
-                if (UAnimInstance* AnimInstance = MeshComp->GetAnimInstance())
-                {
-                    AnimInstance->Montage_Stop(0.2f, LandingMontage);
-                }
-            }
-        }
-
-        // 入力を再有効化（念のため）
-        APlayerController* PC = GetWorld()->GetFirstPlayerController();
-        if (PC)
-        {
-            mOwner->EnableInput(PC);
-        }
-
-        bIsPlayingLandingAnimation = false;
-    }
-
     return true;
 }
-
-// スキルボタン入力時の処理（現時点では何もしない）
 bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
-    if (!Value.Get<bool>())
-        return false;
-
-    if (bIsPlayingLandingAnimation)
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+    if (!Character) return false;
+    UColorControllerComponent* ColorComp = GetOwner()->GetComponentByClass<UColorControllerComponent>();
+    if (!ColorComp) return false;
+    // モード判定
+    if (mode == EColorAbsorbMode::Paint)
     {
-        return false; // または return;
-    }
+        CurrentSelectedColor = ColorComp->GetCurrentColor();
+        EColorCategory Category =
+            UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentSelectedColor);
 
-    // 目の前に持てるオブジェクトがあるか判定
-    FVector Start = mOwner->GetActorLocation();
-    FVector End = Start + CurrentDirection * 200.f; // 2m先まで
+        int32* TankValue = ColorComp->ColorTankMap.Find(Category);
+        if (!TankValue || *TankValue <= 0)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Not enough color in tank"));
+            return false;
+        }
 
-    FHitResult Hit;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(mOwner);
-    bool bIsHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
-    if (!bIsHit)
-        return false;
-
-    AActor* Target = Hit.GetActor();
-    if (Target == nullptr || !Target->ActorHasTag("Holdable")) // 持てるオブジェクトにタグを付けておく
-        return false;
-
-    IStateControllable* Player = Cast<IStateControllable>(mOwner);
-    if (Player == nullptr)
-        return false;
-    UPlayerStateComponent* NewState = Player->ChangeState(EPlayerStateType::Hold);
-    if (NewState == nullptr)
-        return false;
-
-    if (UPlayerHoldState* HoldState = Cast<UPlayerHoldState>(NewState))
+        // 吸うモード → 近くのオブジェクトを吸収
+        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f); // 距離100を例
+        if (TargetComp)
+        {
+            TargetComp->SetTargetColor(CurrentSelectedColor);
+            (*TankValue)--; // 成功時のみ消費
+            UE_LOG(LogTemp, Log, TEXT("Paint Hit! Tank remaining: %d"), *TankValue);
+        }
+      }
+    else if (mode == EColorAbsorbMode::Absorb)
     {
-        if (CurrentDirection.Y > 0)
-            HoldState->SetUp(Target, true);
-        else
-            HoldState->SetUp(Target, false);
+        // 吸うモード → 近くのオブジェクトを吸収
+        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f); // 距離100を例
+        if (TargetComp)
+        {
+            ColorComp->AbsorbHitObject(TargetComp);
+        }
     }
-
     return true;
 }
 
 void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 {
-    // アニメーション再生中は移動を無効化
-    if (bIsPlayingLandingAnimation)
+    const FVector2D MoveInput = Value.Get<FVector2D>();
+    constexpr float DeadZone = 0.2f;
+
+    UCharacterMovementComponent* CharMovement =
+        Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
+
+    // ★ ワールド軸直指定
+    FVector Direction(
+        MoveInput.X, // W / S → X
+        MoveInput.Y, // D / A → Y
+        0.f
+    );
+
+    if (!Direction.Normalize())
     {
         return;
     }
 
-    FVector2D MoveInput = Value.Get<FVector2D>();
+    // アニメーション用（XY）
+    MoveDelta = Direction * 100.f * GetWorld()->GetDeltaSeconds();
 
-    float DeadZone = 0.2f;
-    if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
-    {
-        Physics->AddForce(FVector(0, 0, 0), 0.f);
-        Physics->SetGravityScale(false);
-        return;
-    }
+    const bool bIsInAir = CharMovement && CharMovement->IsFalling();
+    const float InputScale = bIsInAir ? 0.3f : 1.0f;
 
-    FVector direction = MoveComp->Movement(0, mOwner, Value);
-    direction.Normalize();
-
-    if (direction != FVector::ZeroVector)
-    {
-        FRotator CurrentRotation = mOwner->GetActorRotation();
-        float TargetYaw;
-
-        if (MoveInput.Y > 0)
-        {
-            TargetYaw = 0.f;
-        }
-        else if (MoveInput.Y < 0)
-        {
-            TargetYaw = 180.f;
-            direction *= -1;
-        }
-        else
-        {
-            TargetYaw = direction.Rotation().Yaw;
-        }
-
-        CurrentDirection = FVector(0, direction.Y, 0);
-
-        if (!FMath::IsNearlyEqual(CurrentRotation.Yaw, TargetYaw, 1.f))
-        {
-            FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll);
-            mOwner->SetActorRotation(NewRotation);
-        }
-    }
-
-    MoveDelta = direction * MoveSpeed * GetWorld()->GetDeltaSeconds();
-    mOwner->AddMovementInput(direction, MoveSpeed);
+    mOwner->AddMovementInput(Direction, InputScale);
 }
 
 
@@ -261,129 +232,27 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 
 bool UPlayerDefaultState::Jump(float jumpForce)
 {
-    // アニメーション再生中はジャンプを無効化
-    if (bIsPlayingLandingAnimation)
-    {
-        return false;
-    }
-
     if (GetOwner() == nullptr || Physics == nullptr || !Physics->OnGround())
+    {
         return false;
+    }
 
+    // ジャンプ力を掛けて力を加える
     Physics->AddForce(GetOwner()->GetActorUpVector(), jumpForce);
-    ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-    sound->PlaySound("SE", "Jump");
+
+    // 移動モードをFallingに切り替え
+    UCharacterMovementComponent* CharMovement = Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
+    if (CharMovement)
+    {
+        CharMovement->SetMovementMode(MOVE_Falling);
+    }
+
+    // ジャンプ開始情報を記録
+    bIsJumping = true;
+    JumpStartTime = GetWorld()->GetTimeSeconds();
+
+    ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
+    if (sound)
+        sound->PlaySound("SE", "Jump");
     return true;
-}
-
-
-bool UPlayerDefaultState::TryEnterLadderOnJump() const
-{
-    if (mOwner == nullptr)
-        return false;
-
-    // プレイヤーにアタッチされたBoxComponentを用意している想定
-    // 例えば LadderCheckTrigger として UBoxComponent* を保持している
-    if (HitBox == nullptr)
-        return false;
-
-    TArray<AActor*> OverlappingActors;
-    HitBox->GetOverlappingActors(OverlappingActors, ALadderActor::StaticClass());
-
-    if (OverlappingActors.Num() == 0)
-        return false;
-
-    IStateControllable* player = Cast<IStateControllable>(GetOwner());
-    if (player == nullptr)
-        return false;
-
-    for (AActor* Actor : OverlappingActors)
-    {
-        if (!Actor->ActorHasTag("Ladder"))
-            continue;
-
-        ALadderActor* Ladder = Cast<ALadderActor>(Actor);
-        if (!Ladder)
-            continue;
-
-        // ステート切り替え
-        if (UPlayerStateComponent* NewState = player->ChangeState(EPlayerStateType::Climb))
-        {
-            if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
-            {
-                ClimbState->SetTargetLadder(Ladder);
-                return true;
-            }
-        }
-    }
-
-    return false;
-
-}
-
-void UPlayerDefaultState::OnLandingMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-{
-    if (Montage == LandingMontage)
-    {
-        bIsPlayingLandingAnimation = false;
-        bLandingAnimationJustEnded = true; // OnUpdateで自動的にfalseになる
-
-        APlayerController* PC = GetWorld()->GetFirstPlayerController();
-        if (PC && mOwner)
-        {
-            // 入力を再有効化
-            mOwner->EnableInput(PC);
-
-            // 物理的な速度をリセット
-            APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
-            if (aPlayer)
-            {
-                if (UCharacterMovementComponent* MovementComp = aPlayer->GetCharacterMovement())
-                {
-                    MovementComp->Velocity = FVector::ZeroVector;
-                    MovementComp->StopMovementImmediately();
-                }
-                aPlayer->ConsumeMovementInputVector();
-            }
-
-            UE_LOG(LogTemp, Log, TEXT("Landing animation ended, all movement cleared"));
-        }
-    }
-}
-
-
-void UPlayerDefaultState::PlayLandingAnimation()
-{
-    if (LandingMontage == nullptr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("LandingMontage is not set!"));
-        return;
-    }
-
-    APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
-    if (aPlayer == nullptr)
-        return;
-
-    USkeletalMeshComponent* MeshComp = aPlayer->FindComponentByClass<USkeletalMeshComponent>();
-    if (MeshComp == nullptr)
-        return;
-
-    UAnimInstance* AnimInstance = MeshComp->GetAnimInstance();
-    if (AnimInstance == nullptr)
-        return;
-
-    // 入力を無効化
-    APlayerController* PC = GetWorld()->GetFirstPlayerController();
-    if (PC)
-    {
-        mOwner->DisableInput(PC);
-    }
-
-    // モンタージュ再生
-    float PlayLength = AnimInstance->Montage_Play(LandingMontage, 1.0f);
-    if (PlayLength > 0.0f)
-    {
-        bIsPlayingLandingAnimation = true;
-        UE_LOG(LogTemp, Log, TEXT("Landing animation started, duration: %f, input disabled"), PlayLength);
-    }
 }

@@ -9,78 +9,89 @@
 
 
 
-// Sets default values for this component's properties
+// =======================
+// コンストラクタ
+// =======================
+
+// デフォルト値を設定
 UColorTriggerStopComponent::UColorTriggerStopComponent()
 {
 
 }
 
+// =======================
+// 色一致時の処理
+// =======================
+
 bool UColorTriggerStopComponent::OnColorMatched(const FLinearColor& FilterColor)
 {
-    if (bHide) return false;
-
+    // すでに非表示なら処理不要
+    if (bHide) 
+        return false;
     AActor* Owner = GetOwner();
-    if (!Owner) return false;
+    if (Owner == nullptr) return false;
 
+    // オーナーが持つ全コンポーネントを走査
     for (UActorComponent* Component : Owner->GetComponents())
     {
+        // 「HideTarget」タグが付与されたコンポーネントを対象
         if (Component->ComponentHasTag("HideTarget"))
         {
-            // PrimitiveComponent �Ȃ王�o�ƃR���W������I�t
+            // 描画・衝突を持つコンポーネントなら可視性と衝突を無効化
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
                 Primitive->SetVisibility(false, false);
                 Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
             }
 
-            // �A�N�^�[�R���|�[�l���g�ł���Γ�����~
+            // アクティブなコンポーネントなら停止
             if (Component->IsActive())
             {
                 Component->Deactivate();
             }
 
-            // ��� Tick ��~�߂����ꍇ
+            // Tick を持つ場合は停止
             Component->PrimaryComponentTick.SetTickFunctionEnable(false);
         }
     }
-
-    PlayAppearEffect();
-    ActiveEffect(true);
+    // 非表示状態に更新
     bHide = true;
-
     return bHide;
 }
 
+// =======================
+// 色不一致時の処理
+// =======================
 
 bool UColorTriggerStopComponent::OnColorMismatched(const FLinearColor& FilterColor)
 {
+    // すでに表示状態なら処理不要
     if (!bHide) return false;
-
     AActor* Owner = GetOwner();
-    if (!Owner) return false;
-    DeactivateAllEffects();
+    if (Owner == nullptr) return false;
+
+    // オーナーが持つ全コンポーネントを走査
     for (UActorComponent* Component : Owner->GetComponents())
     {
         if (Component->ComponentHasTag("HideTarget"))
         {
-            // PrimitiveComponent �Ȃ王�o�ƃR���W������I�t
+            // 描画・衝突を持つコンポーネントなら可視性と衝突を有効化
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
                 Primitive->SetVisibility(true, true);
                 Primitive->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
             }
 
-            // �A�N�^�[�R���|�[�l���g�ł���Γ�����~
+            // アクティブ状態に戻す
             if (Component->IsActive())
             {
                 Component->Activate(true);
             }
 
-            // ��� Tick ��~�߂����ꍇ
+            // Tick を再開
             Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
-    ActiveEffect(false);
-    
-   return bHide = false;
+    // 表示状態に更新
+    return bHide = false;
 }

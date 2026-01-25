@@ -32,10 +32,10 @@ void APaintBall::OnOverlap(AActor* OtherActor)
 {
     if (!OtherActor || OtherActor == this) return;
 
-    IColorReactiveInterface* Interface = Cast<IColorReactiveInterface>(OtherActor);
+    IColorReactive* Interface = Cast<IColorReactive>(OtherActor);
     if (Interface)
     {
-        Interface->SetColor(PaintColor, Match);
+        Interface->ActivateDirect(PaintColor);
         Destroy(); // 衝突したら消す場合
     }
 }

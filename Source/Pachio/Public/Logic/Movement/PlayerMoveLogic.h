@@ -19,5 +19,5 @@ class PACHIO_API UPlayerMoveLogic :public UObject, public IMoveLogic
 private:
 	FVector Movement(float DeltaTime, AActor* Owner,const FInputActionValue& Value = FInputActionValue())override;
 
-	void Init(float speed, const FVector)override;
+	void Init(const float Speed, const FVector& Direction)override;
 };

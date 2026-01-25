@@ -1,10 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "ColorReactiveComponent.generated.h"
 
 
@@ -12,77 +11,79 @@ class ANiagaraActor;
 class UNiagaraSystem;
 class UNiagaraComponent;
 
-struct FHSLColor
+
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class PACHIO_API UColorReactiveComponent : public UObjectColorComponent
 {
-	float H; // 0.0?1.0
-	float S; // 0.0?1.0
-	float L; // 0.0?1.0
-};
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class PACHIO_API UColorReactiveComponent : public UActorComponent
-{
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
-	UColorReactiveComponent();
+    /**
+     * コンストラクタ（デフォルト値を設定）
+     */
+    UColorReactiveComponent();
+    // =======================
+    // 状態管理
+    // =======================
 
-public:
-	virtual void Init(bool);
-	void InitColorEffectAndNiagara(const FLinearColor& FilterColor, EBuffEffect, TArray<ANiagaraActor*>);
-	void ApplyColorToMaterial(FLinearColor InColor);
-	bool CheckColorMatch(FEffectMatchResult, const FLinearColor& FilterColor, const bool buseComplementaryColor = false);
-	UFUNCTION(BlueprintCallable)
-	virtual bool IsColorMatch(const FLinearColor& FilterColor, const float Tolerance = 0.08f) const;
-	bool IsColorMatch(const FLinearColor& FilterColor, const FLinearColor& TargetColor, const float Tolerance = 0.08f) const;
-	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
-	FLinearColor GetComplementaryColor(const FLinearColor& InColor);
-	void SetSelectMode(bool);
+    /**
+     * 非表示状態を取得
+     *
+     * @return 非表示であれば true
+     */
+    FORCEINLINE bool IsHidden() const { return bHide; }
 
-	inline bool IsHidden()const {return bHide; }
 
-	void ActiveEffect(bool);
-protected:
-	void ToggleNiagaraActiveState(bool);
-	void PlayAppearEffect();
-	void PlayDisappearEffect();
-	void ActiveNiagaraEffect(UNiagaraSystem*);
-	void DeactivateAllEffects();
 private:
-	UFUNCTION(BlueprintCallable)
-	virtual bool OnColorMatched(const FLinearColor& FilterColor);
-	virtual bool OnColorMismatched(const FLinearColor& FilterColor);
+    /**
+     * 指定された色を適用し、必要に応じてマッチング処理を行う
+     *
+     * @param NewColor - 適用する新しい色
+     */
+    virtual void ActivateDirect(const FLinearColor& NewColor)override;
+    //// =======================
+    //// エフェクト制御
+    //// =======================
+
+    /**
+     * 色がマッチした時に呼ばれる
+     *
+     * @param FilterColor - 判定に使用された色
+     * @return 成功した場合は true
+     */
+    virtual bool OnColorMatched(const FLinearColor& FilterColor) { return true; };
+
+    /**
+     * 色がミスマッチした時に呼ばれる
+     *
+     * @param FilterColor - 判定に使用された色
+     * @return 処理した場合は true
+     */
+    virtual bool OnColorMismatched(const FLinearColor& FilterColor) { return true; };
 protected:
-	UPROPERTY(EditAnywhere)
-	bool bSetStartColor = true;
+    // =======================
+    // プロパティ
+    // =======================
 
-	EBuffEffect Effect;
+    /**
+     * 非表示状態（オブジェクト自体は非表示にならないためフラグで管理）
+     */
+    UPROPERTY()
+    bool bHide;
 
-	UPROPERTY(EditAnywhere)
-	FLinearColor CurrentColor;
+    // =======================
+    // Niagaraシステムアセット
+    // =======================
 
-	UPROPERTY()
-	TArray<ANiagaraActor*> Niagaras;
+    /** ホタル風の発光エフェクト */
+    UPROPERTY()
+    TObjectPtr<UNiagaraSystem> FireflyBurstNiagaraSystem;
 
-	UPROPERTY()
-	UMaterialInstanceDynamic* DynamicMaterialInstance = nullptr;
+    /** 光の粒子エフェクト */
+    UPROPERTY()
+    TObjectPtr<UNiagaraSystem> ParticlesOfLightNiagaraSystem;
 
-	UPROPERTY()
-	UMaterialInstanceDynamic* DynMesh;
-
-	UPROPERTY()
-	UNiagaraSystem* FireflyBurstNiagaraSystem = nullptr;
-
-	UPROPERTY()
-	UNiagaraSystem* ParticlesOfLightNiagaraSystem = nullptr;
-
-	UPROPERTY()
-	UNiagaraSystem* LightCubeNiagaraSystem = nullptr;
-
-	UPROPERTY()
-	TArray<UNiagaraComponent*> ActiveNiagaraComponent;
-
-	bool bSelected = false;
-
-	bool bHide = false;
+    /** 光の立方体エフェクト */
+    UPROPERTY()
+    TObjectPtr<UNiagaraSystem> LightCubeNiagaraSystem;
 };

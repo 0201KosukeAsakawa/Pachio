@@ -4,31 +4,69 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "ColorFilterInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UColorReactiveInterface : public UInterface
+class UColorReactive : public UInterface
 {
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
-class PACHIO_API IColorReactiveInterface
+class PACHIO_API IColorReactive
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void ColorAction(const FLinearColor , FEffectMatchResult effect);
-	virtual void SetColor(FLinearColor, FEffectMatchResult);
-	virtual void ResetColor();
-	virtual void SetSelectMode(bool);
-	virtual bool IsColorChange()const;
-	virtual bool IsColorModifiable()const;
-	virtual bool IsChangeable()const;
-	virtual FName GetColorEventID()const;
+    // =======================
+    // カラーリアクティブ共通インターフェース
+    // =======================
+
+    /**
+     * プレイヤーの色変更操作によるギミック起動
+     * @param TriggerColor - トリガーとなった色
+     */
+    virtual void ActivateDirect(const FLinearColor& NewColor) {};
+
+    /**
+     * 外部トリガー（スイッチ等）による条件付きギミック起動
+     * @param TriggerColor - トリガーとなった色（マッチング判定に使用）
+     */
+    virtual void ActivateConditional(const FLinearColor& TriggerColor) {};
+
+    /**
+     * 色の状態をリセットする
+     *
+     * @param MatchResult - エフェクトのマッチ結果情報
+     */
+    virtual void ResetColor() {};
+
+    /**
+     * 色が変更されたかを判定する
+     *
+     * @return 変更されていれば true
+     */
+    virtual bool HasColorChanged() const { return false; };
+
+    /**
+     * 色が変更可能かを判定する
+     *
+     * @return 変更可能であれば true
+     */
+    virtual bool IsChangeable() const { return false; };
+
+    /**
+     * 現在の色がマッチしているかを判定する
+     *
+     * @return マッチしていれば true
+     */
+    virtual bool IsColorMatched() const { return false; };
+
+    /**
+     * カラーイベントを識別するための ID を取得する
+     *
+     * @return カラーイベントの識別子（FName）
+     */
+    virtual FName GetColorEventID() const { return FName(); };
 };

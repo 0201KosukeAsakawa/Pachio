@@ -2,196 +2,263 @@
 
 
 #include "Components/Color/ColorControllerComponent.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "Components/Color/ObjectColorComponent.h"
+
+#include "DataContainer/ColorTargetTypes.h"
+
 #include "FunctionLibrary.h"
-#include "UI/ColorLens.h"
+#include "ColorUtilityLibrary.h"
+
 #include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 
+#include "Kismet/KismetSystemLibrary.h" 
+
+namespace
+{
+    constexpr int32 ABSORB_AMOUNT = 5;      // 吸収時の回収量
+    constexpr int32 MAX_TANK_CAPACITY = 10;  // タンクの最大容量
+    constexpr int32 MIN_TANK_CAPACITY = 0;   // タンクの最小容量
+}
+
+// =======================
+// コンストラクタ
+// =======================
 
 // Sets default values for this component's properties
 UColorControllerComponent::UColorControllerComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
 
-    // カラーマップ初期化（Responders/Event は除外）
-    const TArray<EColorTargetType> AllModes = UFunctionLibrary::GetAllEnumValues<EColorTargetType>();
-    for (EColorTargetType Mode : AllModes)
-    {
-        if (Mode == EColorTargetType::Responders || Mode == EColorTargetType::Event)
-            continue;
+    // 初期色は白
+    CurrentColor = FLinearColor::Red;
 
-        ColorMap.Add(Mode, FLinearColor::White);
-    }
+    ColorTankMap.Add(EColorCategory::Red, 0);
+    ColorTankMap.Add(EColorCategory::Green, 0);
+    ColorTankMap.Add(EColorCategory::Blue, 0);
+    //ColorTankMap.Add(EColorCategory::White, 10);
 }
+
+// =======================
+// Tick（フレーム更新処理）
+// =======================
 
 void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+ 
 }
 
+// =======================
+// 色調整系
+// =======================
 void UColorControllerComponent::AdjustColor(float Delta)
 {
-    FLinearColor HSV = ColorMap[CurrentColorMode].LinearRGBToHSV();
+    // 現在モードの色を HSV に変換
+    FLinearColor HSV = CurrentColor.LinearRGBToHSV();
+    float Hue = HSV.R; // 色相d
 
-    float Hue = HSV.R;
-    //float Saturation = FMath::Clamp(HSV.G, 0.2f, 0.6f); // 彩度
-    float Saturation = FMath::Clamp(HSV.G, 0.1f, 0.3f); // 彩度
-    float Value = FMath::Clamp(HSV.B, 0.8f, 1.0f);      // 明度
+    // Hue を Delta 分だけ回転
+    Hue = FMath::Fmod(Hue + Delta, 360.0f);
+    if (Hue < 0.f)
+        Hue += 360.f;
 
-    Hue = FMath::Fmod(Hue + Delta * 360.0f, 360.0f);
-    if (Hue < 0.f) Hue += 360.f;
+    //UE_LOG(LogTemp, Log, TEXT("Hue : : %f"), Hue);
 
-    FLinearColor NewColor = FLinearColor(Hue, Saturation, Value).HSVToLinearRGB();
-    ColorMap[CurrentColorMode] = FLinearColor(NewColor.R, NewColor.G, NewColor.B, ColorMap[CurrentColorMode].A);
-
-    OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
-}
-
-void UColorControllerComponent::SetColor(float value)
-{
-    FLinearColor HSV = ColorMap[CurrentColorMode].LinearRGBToHSV();
-
-    float Hue = HSV.R;
-    float Saturation = FMath::Clamp(HSV.G, 0.2f, 0.6f); // 彩度
-    float Value = FMath::Clamp(HSV.B, 0.8f, 1.0f);      // 明度
-
-    Hue = FMath::Fmod(value, 360.0f);
-    if (Hue < 0.f) Hue += 360.f;
-
-    FLinearColor NewColor = FLinearColor(Hue, Saturation, Value).HSVToLinearRGB();
-    ColorMap[CurrentColorMode] = FLinearColor(NewColor.R, NewColor.G, NewColor.B, ColorMap[CurrentColorMode].A);
-
-    OnColorChanged.Broadcast(ColorMap[CurrentColorMode], CurrentColorMode);
-}
-
-
-void UColorControllerComponent::ChangeMode(int Direction)
-{
-    Direction = (Direction >= 1) ? 1 : -1;
-    EColorTargetType NextMode = (Direction > 0)
-        ? GetNextMode(CurrentColorMode)
-        : GetPreviousMode(CurrentColorMode);
-
-    UE_LOG(LogTemp, Warning, TEXT("Trying Mode Change: %d -> %d"), static_cast<int32>(CurrentColorMode), static_cast<int32>(NextMode));
-
-    if (NextMode == EColorTargetType::ObjectColor)
+    // ColorTankMapから有効な色カテゴリを取得（値が1以上のもの）
+    TArray<EColorCategory> ValidCategories;
+    for (const auto& Pair : ColorTankMap)
     {
-        HandleObjectColorMode(Direction, NextMode);
-        return;
-    }
-
-    HandleSimpleMode(Direction, NextMode);
-}
-
-void UColorControllerComponent::HandleObjectColorMode(int Direction, EColorTargetType NextMode)
-{
-    ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
-    UColorManager* ColorManager = LevelManager ? LevelManager->GetColorManager() : nullptr;
-    if (!LevelManager || !ColorManager)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("LevelManager または ColorManager が取得できませんでした"));
-        return;
-    }
-
-    IColorReactiveInterface* ClosestTarget = nullptr;
-    AActor* TargetActor = nullptr;
-    if (!FindClosestColorTarget(ClosestTarget, TargetActor))
-    {
-        UE_LOG(LogTemp, Warning, TEXT("対象が見つからなかったため、モードを変更しませんでした"));
-        return;
-    }
-
-    CurrentColorMode = NextMode;
-    UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
-
-    ColorManager->SetColorTarget(ClosestTarget);
-    UE_LOG(LogTemp, Warning, TEXT("ColorTarget を ColorManager に設定しました"));
-
-    if (TargetActor)
-        LevelManager->GetUIManager()->ShowMarker(TEXT("ChangeColorTarget"), TargetActor);
-
-    if(AnimationDelegate.IsBound())
-    AnimationDelegate.Execute(Direction);
-}
-
-void UColorControllerComponent::HandleSimpleMode(int Direction, EColorTargetType NextMode)
-{
-    ALevelManager* LevelManager = ALevelManager::GetInstance(GetWorld());
-    UColorManager* ColorManager = LevelManager ? LevelManager->GetColorManager() : nullptr;
-
-    CurrentColorMode = NextMode;
-    UE_LOG(LogTemp, Warning, TEXT("New Mode: %d"), static_cast<int32>(CurrentColorMode));
-
-    if (ColorManager) ColorManager->ResetColorTarget();
-    if (LevelManager) LevelManager->GetUIManager()->HideMarker(TEXT("ChangeColorTarget"));
-    if (AnimationDelegate.IsBound())
-    AnimationDelegate.Execute(Direction);
-}
-
-bool UColorControllerComponent::FindClosestColorTarget(IColorReactiveInterface*& OutTarget, AActor*& OutActor)
-{
-    FVector Start = GetOwner()->GetActorLocation();
-    FVector BoxExtent(1000.f, 1000.f, 1000.f);
-
-    TArray<FHitResult> HitResults;
-    FCollisionShape Box = FCollisionShape::MakeBox(BoxExtent);
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(GetOwner());
-
-    bool bHit = GetWorld()->SweepMultiByChannel(
-        HitResults, Start, Start, FQuat::Identity, ECC_Visibility, Box, Params
-    );
-    if (!bHit) return false;
-
-    float ClosestDistSq = TNumericLimits<float>::Max();
-    OutTarget = nullptr;
-    OutActor = nullptr;
-
-    for (const FHitResult& Hit : HitResults)
-    {
-        AActor* HitActor = Hit.GetActor();
-        if (!HitActor || !HitActor->GetClass()->ImplementsInterface(UColorReactiveInterface::StaticClass()))
-            continue;
-
-        IColorReactiveInterface* IR = Cast<IColorReactiveInterface>(HitActor);
-        if (!IR || !IR->IsChangeable())
-            continue;
-
-        float DistSq = FVector::DistSquared(HitActor->GetActorLocation(), Start);
-        if (DistSq < ClosestDistSq)
+        if (Pair.Value > 0)
         {
-            ClosestDistSq = DistSq;
-            OutTarget = IR;
-            OutActor = HitActor;
+            ValidCategories.Add(Pair.Key);
         }
     }
-    return OutTarget != nullptr;
-}
 
-EColorTargetType UColorControllerComponent::GetNextMode(EColorTargetType CurrentMode)
-{
-    return GetAdjacentMode(CurrentMode, +1);
-}
-
-EColorTargetType UColorControllerComponent::GetPreviousMode(EColorTargetType CurrentMode)
-{
-    return GetAdjacentMode(CurrentMode, -1);
-}
-
-EColorTargetType UColorControllerComponent::GetAdjacentMode(EColorTargetType CurrentMode, int Direction)
-{
-    TArray<EColorTargetType> FilteredModes;
-    for (EColorTargetType Mode : UFunctionLibrary::GetAllEnumValues<EColorTargetType>())
+    // 有効なカテゴリがない場合は処理を中断
+    if (ValidCategories.Num() == 0)
     {
-        if (Mode != EColorTargetType::Responders && Mode != EColorTargetType::Event)
-            FilteredModes.Add(Mode);
+        //UE_LOG(LogTemp, Warning, TEXT("No valid color categories available"));
+        return;
     }
 
-    int32 CurrentIndex = FilteredModes.IndexOfByKey(CurrentMode);
-    if (CurrentIndex == INDEX_NONE)
-        return EColorTargetType::WorldColor;
+    // 色相環を等分割（360度 / カテゴリ数）
+    float AnglePerCategory = 360.0f / ValidCategories.Num();
 
-    int32 NewIndex = (CurrentIndex + Direction + FilteredModes.Num()) % FilteredModes.Num();
-    return FilteredModes[NewIndex];
+    // 現在の角度がどの区分に属するかを判定
+    int32 CategoryIndex = FMath::FloorToInt(Hue / AnglePerCategory) % ValidCategories.Num();
+
+    // 判定されたカテゴリを取得
+    EColorCategory TargetCategory = ValidCategories[CategoryIndex];
+
+    UE_LOG(LogTemp, Log, TEXT("Selected Category Index: %d, AnglePerCategory: %f"),
+        CategoryIndex, AnglePerCategory);
+
+    // カテゴリから色を取得
+    FLinearColor NewColor = UColorUtilityLibrary::GetCategoryColor(TargetCategory);
+
+    // CurrentColorを更新（αは保持）
+    CurrentColor = FLinearColor(NewColor.R, NewColor.G, NewColor.B, CurrentColor.A);
+
+    // イベントを通知
+    // OnColorChanged.Broadcast(CurrentColor);
+}
+
+FLinearColor UColorControllerComponent::GetCurrentColor() const
+{
+    return CurrentColor;
+}
+
+
+UObjectColorComponent* UColorControllerComponent::GetHitColorComponent(float Range)
+{
+    FVector Center = GetOwner()->GetActorLocation();
+
+    // 半径（BoxOverlapは「半径」＝HalfExtent）
+    FVector BoxExtent(Range);
+
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(GetOwner());
+
+    TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+    ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldDynamic));
+    ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldStatic));
+
+    TArray<AActor*> OverlappedActors;
+
+    bool bOverlapped = UKismetSystemLibrary::BoxOverlapActors(
+        this,
+        Center,
+        BoxExtent,
+        ObjectTypes,
+        AActor::StaticClass(),
+        ActorsToIgnore,
+        OverlappedActors
+    );
+
+    if (!bOverlapped)
+    {
+        return nullptr;
+    }
+
+    UObjectColorComponent* NearestComponent = nullptr;
+    float NearestDistanceSq = FLT_MAX;
+
+    for (AActor* Actor : OverlappedActors)
+    {
+        if (!Actor)
+        {
+            continue;
+        }
+
+        if (UObjectColorComponent* ColorComp =
+            Actor->GetComponentByClass<UObjectColorComponent>())
+        {
+            const float DistSq =
+                FVector::DistSquared(Center, Actor->GetActorLocation());
+
+            if (DistSq < NearestDistanceSq)
+            {
+                NearestDistanceSq = DistSq;
+                NearestComponent = ColorComp;
+            }
+        }
+    }
+
+    return NearestComponent;
+}
+
+void UColorControllerComponent::PaintHitObject(UObjectColorComponent* TargetComp)
+{
+    if (!TargetComp) return;
+
+    FLinearColor TraceColor = UColorUtilityLibrary::GetCategoryColor(
+        UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentColor)
+    );
+
+    TargetComp->ActivateDirect(TraceColor);
+}
+
+void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetComp)
+{
+    if (!TargetComp) return;
+
+    // 対象が変化中なら吸収できない
+    if (TargetComp->IsPainting())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Target is currently painting, cannot absorb"));
+        return;
+    }
+
+    // ヒットした色を取得
+    FLinearColor HitColor = TargetComp->GetCurrentColor();
+
+    // HSL変換
+    FVector HSL = UColorUtilityLibrary::GetHSL(HitColor);
+    float Saturation = HSL.Y;
+    float Lightness = HSL.Z;
+
+    // 無彩色（ほぼ白や灰色）は White に加算
+    if (Saturation < 0.01f)
+    {
+        int32& WhiteTank = ColorTankMap.FindOrAdd(EColorCategory::White);
+        WhiteTank = FMath::Min(WhiteTank + ABSORB_AMOUNT, MAX_TANK_CAPACITY);
+
+        TargetComp->SetTargetColor(FLinearColor::White);
+        UE_LOG(LogTemp, Log, TEXT("Absorbed White: %d"), WhiteTank);
+        return;
+    }
+
+    // RGB比率に応じて主要色を抽出
+    TArray<TPair<EColorCategory, float>> Components;
+
+    // 赤・緑・青のみTankに加算
+    if (HitColor.R > 0.7f) 
+    {
+        Components.Add({ EColorCategory::Red, HitColor.R });
+        UE_LOG(LogTemp, Log, TEXT("Copy_Red"));
+    }
+    if (HitColor.G > 0.7f) 
+    {
+        Components.Add({ EColorCategory::Green, HitColor.G });
+        UE_LOG(LogTemp, Log, TEXT("Copy_Green"));
+    }
+    if (HitColor.B > 0.7f) 
+    {
+        Components.Add({ EColorCategory::Blue, HitColor.B });
+        UE_LOG(LogTemp, Log, TEXT("Copy_Blue"));
+    }
+
+    // 明るい色や薄い色は White も加算
+    //if (Lightness > 0.8f || HSL.Y < 0.2f)
+    //{
+    //    Components.Add({ EColorCategory::White, 0.5f });
+    //}
+
+    // 合計の重みを計算
+    float TotalWeight = 0.0f;
+    for (const auto& Comp : Components)
+    {
+        TotalWeight += Comp.Value;
+    }
+
+    // Tankに加算（容量制限あり）
+    if (TotalWeight > 0.0f)
+    {
+        for (const auto& Comp : Components)
+        {
+            // 重みに応じて ABSORB_AMOUNT を分配
+            float Ratio = Comp.Value / TotalWeight;
+            int32 AddAmount = FMath::RoundToInt(ABSORB_AMOUNT * Ratio);
+
+            int32& TankValue = ColorTankMap.FindOrAdd(Comp.Key);
+            int32 OldValue = TankValue;
+            TankValue = FMath::Min(TankValue + AddAmount, MAX_TANK_CAPACITY);
+
+            UE_LOG(LogTemp, Log, TEXT("Absorbed %d to tank (was %d, now %d, max %d)"),
+                AddAmount, OldValue, TankValue, MAX_TANK_CAPACITY);
+        }
+    }
+
+    TargetComp->SetTargetColor(FLinearColor::White);
 }

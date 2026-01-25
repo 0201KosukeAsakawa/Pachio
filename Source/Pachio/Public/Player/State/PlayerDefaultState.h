@@ -7,67 +7,110 @@
 #include "PlayerDefaultState.generated.h"
 class UMoveComponent;
 class UBoxComponent;
-UCLASS(Blueprintable)
-class PACHIO_API UPlayerDefaultState : public UPlayerStateComponent
+
+UENUM(BlueprintType)
+enum class EColorAbsorbMode:uint8
 {
-	GENERATED_BODY()
-public:
-	UPlayerDefaultState();
-public:
-	bool OnEnter(APawn*, UWorld*)override;
-	bool OnUpdate(float)override;
-	bool OnExit(APawn*)override;
-	bool OnSkill(const FInputActionValue&)override;
-	void Movement(const FInputActionValue& Value)override;
-	bool Jump(float jumpForce)override;
+    Absorb,   // 色を吸収する
+    Paint      // 色は吸収しない（無視）
+};
 
-private:
-	bool TryEnterLadderOnJump() const;
-
-	// アニメーション終了時のコールバック
-	UFUNCTION()
-	void OnLandingMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-	void PlayLandingAnimation();
-private:
-	FTimerHandle CheckHoldableHandle;
-	// プレイヤー移動処理を司るコンポーネント
-	UPROPERTY()
-	UMoveComponent* MoveComp;
-	UPROPERTY()
-	UBoxComponent* BoxComp;
-	float Direction;
-
-	float MoveSpeed = 10;
-
-	bool InitialRotationSet;
-
-	bool bPrevCanHold;
-	bool bPrevCanClim;
-
-	UPROPERTY(EditAnywhere, Category = "Animation")
-	UAnimMontage* LandingMontage; // 着地アニメーションモンタージュ
-
-	bool bIsPlayingLandingAnimation = false; // 着地アニメーション再生中フラグ
-
-	FRotator InitialRotation;
-
-	FVector CurrentDirection;
-
-	UPROPERTY()
-	UPhysicsCalculator* Physics;
-
-	UPROPERTY()
-	UCapsuleComponent* HitBox;
-
-private:
-	bool bLandingAnimationJustEnded = false; // 着地アニメーションが終了した瞬間のフラグ
+UCLASS()
+class UPlayerDefaultState : public UPlayerStateComponent
+{
+    GENERATED_BODY()
 
 public:
-	// 着地アニメーション終了を確認する関数
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool HasLandingAnimationEnded() const { return bLandingAnimationJustEnded; }
+    UPlayerDefaultState();
 
-	// 着地アニメーション再生中かを確認する関数
-	UFUNCTION(BlueprintCallable, Category = "Animation")
-	bool IsPlayingLandingAnimation() const { return bIsPlayingLandingAnimation; }
+    /**
+     * 状態が有効化された際に呼ばれる
+     *
+     * @param owner この状態の所有者となるPawn
+     * @param world 実行中のWorld
+     * @return 状態の初期化が成功したか
+     */
+    virtual bool OnEnter(APawn* owner) override;
+
+    /**
+     * 毎フレームの更新処理
+     *
+     * @param DeltaTime 経過時間
+     * @return 状態を継続するか（falseで終了）
+     */
+    virtual bool OnUpdate(float DeltaTime) override;
+
+    /**
+     * 状態が終了する際に呼ばれる
+     *
+     * @param owner この状態の所有者となるPawn
+     * @return 終了処理が正常に完了したか
+     */
+    virtual bool OnExit(APawn* owner) override;
+
+    /**
+     * スキル入力が行われた際に呼ばれる
+     *
+     * @param Value 入力値
+     * @return スキルを実行したか
+     */
+    virtual bool OnSkill(const FInputActionValue& Value) override;
+
+    /**
+     * 移動入力を処理する
+     *
+     * @param Value 入力方向値
+     */
+    void Movement(const FInputActionValue& Value);
+
+    /**
+     * ジャンプ処理を実行する
+     *
+     * @param jumpForce ジャンプ力
+     * @return ジャンプが成功したか
+     */
+    bool Jump(float jumpForce);
+
+    void ChangePaintMode(EColorAbsorbMode m)override { mode = m; };
+
+private:
+    // ===== メンバ変数 =====
+
+    UPROPERTY()
+    UMoveComponent* MoveComp;                  // 移動処理コンポーネント
+
+    UPROPERTY()
+    UPhysicsCalculator* Physics;               // 物理計算用コンポーネント
+
+    UPROPERTY()
+    UCapsuleComponent* HitBox;                 // 当たり判定用カプセル
+
+    FVector CurrentDirection;                  // 現在の移動方向
+
+    bool bIsJumping;                           // ジャンプ中フラグ
+    
+    float JumpStartTime;                       // ジャンプ開始時刻
+    
+    float JumpStartIgnoreDuration;             // ジャンプ直後の入力無視時間
+
+
+
+    /** 投射物のクラス */
+    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+    TSubclassOf<class AColorProjectile> ProjectileClass;
+
+    /** 現在選択中の色 */
+    UPROPERTY(EditAnywhere, Category = "Color")
+    FLinearColor CurrentSelectedColor;
+
+    /** 発射角度（度）- 水平から上向き */
+    UPROPERTY(EditAnywhere, Category = "Projectile", meta = (ClampMin = "0", ClampMax = "90"))
+    float LaunchAngle;
+
+    /** 発射速度 */
+    UPROPERTY(EditAnywhere, Category = "Projectile")
+    float LaunchSpeed;
+
+    UPROPERTY(EditAnywhere)
+    EColorAbsorbMode mode;
 };

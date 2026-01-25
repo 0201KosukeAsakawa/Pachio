@@ -7,42 +7,57 @@
 #include "Components/RespawnComponent.h"
 #include "GameFramework/Actor.h"
 
+// =======================
+// コンストラクタ
+// =======================
+
 // Sets default values
 ADeadZone::ADeadZone()
 {
-	PrimaryActorTick.bCanEverTick = true; // ���t���[�� Tick ��ĂԐݒ�
+	// 毎フレームTickを有効化（必要なら無効化しても良い）
+	PrimaryActorTick.bCanEverTick = true;
 
-	// �S�[���p�� BoxComponent �𐶐����A���[�g�Ƃ��Đݒ�
+	// 死亡判定用の BoxComponent を作成し、Root に設定
 	DeadArea = CreateDefaultSubobject<UBoxComponent>(TEXT("DeadArea"));
 	RootComponent = DeadArea;
 
-	// �R���W�����ݒ�F
-	// �E���������͍s�킸�A�I�[�o�[���b�v���m�̂ݍs��
+	// コリジョン設定：
+	// ・クエリ（Overlap 判定）のみ有効
+	// ・デフォルトでは全チャンネル無視
+	// ・Pawn チャンネルのみ Overlap を許可
 	DeadArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	// �E�S�Ẵ`�����l���ɑ΂��Ė���
 	DeadArea->SetCollisionResponseToAllChannels(ECR_Ignore);
-	// �EPawn�i�v���C���[�j�Ƃ̃I�[�o�[���b�v�̂ݗL��
 	DeadArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-	// �I�[�o�[���b�v�C�x���g�o�^�F�v���C���[���������� OnGoalOverlap ��Ă�
+	// Overlap イベントをバインド
 	DeadArea->OnComponentBeginOverlap.AddDynamic(this, &ADeadZone::OverlapDead);
-
 }
 
-// Called when the game starts or when spawned
+// =======================
+// ゲーム開始時処理
+// =======================
+
 void ADeadZone::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	// 必要ならここで初期化処理
 }
 
-// Called every frame
+// =======================
+// 毎フレーム処理
+// =======================
+
 void ADeadZone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	// 現状は特に処理なし
 }
 
+// =======================
+// オーバーラップイベント処理
+// =======================
+
+// ゾーンにアクターが侵入したときに呼ばれる
 void ADeadZone::OverlapDead(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult)
@@ -50,17 +65,18 @@ void ADeadZone::OverlapDead(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if (!OtherActor)
 		return;
 
-	// RespawnComponent を持っているか確認
-	if (URespawnComponent* RespawnComp = OtherActor->FindComponentByClass<URespawnComponent>())
-	{
-		// RespawnComponentがあるなら、リスポーン処理を呼ぶ
-		RespawnComp->RespawnOwnerAtInitialLocation();
-		return;
-	}
 
-	// コンポーネントが無ければ今まで通り State を Dead にする
+	// RespawnComponent が無い場合は State を Dead に変更
 	if (IStateControllable* IS = Cast<IStateControllable>(OtherActor))
 	{
 		IS->ChangeState(EPlayerStateType::Dead);
 	}
+	// RespawnComponent を持っている場合はリスポーン処理を実行
+	if (URespawnComponent* RespawnComp = OtherActor->FindComponentByClass<URespawnComponent>())
+	{
+		RespawnComp->RespawnOwner();
+		return;
+	}
+
+
 }

@@ -6,128 +6,68 @@
 #include "EnhancedInputSubsystems.h"
 #include "CharacterActionInterfaces.generated.h"
 
-// This class does not need to be modified.
+// ======================================================
+// 操作系統合インターフェース
+// 各種入力（移動・ジャンプ・アクション・色変更・UI 等）を
+// 共通的に扱うための定義。
+// ======================================================
+
 UINTERFACE(MinimalAPI)
-class UControllableMover : public UInterface
+class UControllableInterface : public UInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 };
 
 /**
- * 
+ * @brief プレイヤー・カメラ・UI などが入力操作を受け取るための統合インターフェース。
  */
-class PACHIO_API IControllableMover
+class PACHIO_API IControllableInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	virtual void Movement(const FInputActionValue& Value);
-};
+    // ----------------------------
+    // 移動操作
+    // ----------------------------
 
+    /** 移動入力 */
+    virtual void Movement(const FInputActionValue& Value) {}
 
-// This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UControllableJumper : public UInterface
-{
-	GENERATED_BODY()
-};
+    /** ジャンプ入力 */
+    virtual void Jump(const FInputActionValue& Value) {}
 
-/**
- *
- */
-class PACHIO_API IControllableJumper
-{
-	GENERATED_BODY()
+    // ----------------------------
+    // アクション操作
+    // ----------------------------
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-public:
+    /** 攻撃・スキルなどのアクション */
+    virtual void Action(const FInputActionValue& Value) {}
 
-	virtual void Jump(const FInputActionValue& Value);
-};
+    // ----------------------------
+    // カラーモード / 視点操作
+    // ----------------------------
 
-// This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UControllableAbility : public UInterface
-{
-	GENERATED_BODY()
-};
+    /** 色変更 */
+    virtual void ChangeColor(float Value) {}
 
-/**
- *
- */
-class PACHIO_API IControllableAbility
-{
-	GENERATED_BODY()
+    /** キャラクター視点へ変更 */
+    virtual void ChangeCameraViewModeToCharacter() {}
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-public:
+    /** グリッド視点へ変更 */
+    virtual void ChangeCameraViewModeToGrid() {}
 
-	virtual void Action(const FInputActionValue& Value);
-};
+    // ----------------------------
+    // スティック操作
+    // ----------------------------
 
-// This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UColorModeController : public UInterface
-{
-	GENERATED_BODY()
-};
+    /** スティック移動入力 */
+    virtual void OnStickMove(const FInputActionValue& Value) {}
 
-/**
- *
- */
-class PACHIO_API IColorModeController
-{
-	GENERATED_BODY()
+    // ----------------------------
+    // オプション / UI 操作
+    // ----------------------------
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-public:
-
-	virtual void ChangeColor(float);
-
-	// �J���[���[�h��1�E�ɃV�t�g
-	virtual void ShiftArrayRightColorMode();
-
-	// �J���[���[�h��1���ɃV�t�g
-	virtual void ShiftArrayLeftColorMode();
-};
-
-
-// This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UStickAction : public UInterface
-{
-	GENERATED_BODY()
-};
-
-/**
- *
- */
-class PACHIO_API IStickAction
-{
-	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-public:
-	virtual void OnStickMove(const FInputActionValue& Value);
-};
-
-// This class does not need to be modified.
-UINTERFACE(MinimalAPI)
-class UOptionAction : public UInterface
-{
-	GENERATED_BODY()
-};
-
-/**
- *
- */
-class PACHIO_API IOptionAction
-{
-	GENERATED_BODY()
-
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
-public:
-	virtual void OpenMenu(const FInputActionValue& Value);
+    /** メニュー操作 */
+    virtual void OpenMenu(const FInputActionValue& Value) {}
 };

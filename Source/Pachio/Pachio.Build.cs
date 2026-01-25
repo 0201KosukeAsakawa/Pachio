@@ -17,11 +17,12 @@ public class Pachio : ModuleRules
             "CableComponent",
             "Json",
             "JsonUtilities",
-             "FMODStudio",
-             "Niagara",
+            "FMODStudio",
+            "Niagara"   ,
+            "ProceduralMeshComponent",
+            "UE5Coro",
         });
     }
-   
 }
 
 

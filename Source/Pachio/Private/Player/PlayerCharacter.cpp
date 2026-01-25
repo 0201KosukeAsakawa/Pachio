@@ -7,10 +7,10 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/MoveComponent.h"
 #include "Components/Color/ColorControllerComponent.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "Components/Player/PlayerInputComponent.h"
 #include "Components/CameraHandlerComponent.h"
-#include "Components/InvincibilityComponent.h"
-#include "DataContainer/EffectMatchResult.h"
+#include "DataContainer/ColorTargetTypes.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "FunctionLibrary.h"
@@ -18,27 +18,53 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "InputAction.h"
 #include "Interface/Soundable.h"
+#include "Interface/StateManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h" 
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
-#include "Objects/ControllableObjectBase.h"
 #include "UI/UIManager.h"
+#include "Player/SlimeFluidActor.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
+namespace
+{
+	// ============================
+	// ==== 定数定義（constexpr） ====
+	// ============================
 
-
+	static constexpr int32 OUTLINE_STENCIL_VALUE = 10;
+	static constexpr float MOUSE_COLOR_CHANGE_RATE = 0.01f;
+	static constexpr float SCROLL_COLOR_CHANGE_RATE = 0.1f;
+	static constexpr float STICK_DEADZONE = 0.02f;
+	static constexpr float MOVE_SOUND_INTERVAL = 0.5f;
+	static constexpr float MOUSE_DELTA_THRESHOLD = 4.0f;
+	static constexpr float GLOW_INTENSITY_ON = 1.0f;
+	static constexpr float GLOW_INTENSITY_OFF = 0.0f;
+}
 
 // コンストラクタ
 APlayerCharacter::APlayerCharacter()
+	: JumpForce(12.f)
+	, JumpBuff(1.f)
+	, MoveSpeed(10.f)
+	, MoveSoundCooldown(0.f)
+	, DefaultGravityScales(50.f)
+	, FixedXLocation(0.f)
+	, bHasPrevMouse(false)
+	, bHasPrevInputDir(false)
+	, PrevInputDir(FVector::ZeroVector)
 {
 	// 毎フレームTickを実行可能に設定
 	PrimaryActorTick.bCanEverTick = true;
 	// 各種コンポーネントを生成・初期化
-	CameraComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
+	CameraHandleComponent = CreateDefaultSubobject<UCameraHandlerComponent>(TEXT("CameraComponent"));
 	physics = CreateDefaultSubobject<UPhysicsCalculator>(TEXT("Physics"));
 	colorController = CreateDefaultSubobject<UColorControllerComponent>(TEXT("ColorController"));
-	InvincibilityComponent = CreateDefaultSubobject<UInvincibilityComponent>(TEXT("InvincibilityComponent"));
+	StateManagerComponent = CreateDefaultSubobject<UStateManagerComponent>(TEXT("StateManager"));
 }
 
 // ゲーム開始時の初期化処理
@@ -47,12 +73,15 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	FixedXLocation = GetActorLocation().X;
 	// カメラコンポーネントの初期化（ルートコンポーネントを親に設定）
-	if (CameraComponent != nullptr)
+	if (CameraHandleComponent != nullptr)
 	{
-		CameraComponent->Init(RootComponent);
+		CameraHandleComponent->Init(RootComponent);
 	}
-	// ステート管理・攻撃管理初期化
-	InitState();
+	if (StateManagerComponent != nullptr)
+	{
+		StateManagerComponent->Init(this,GetWorld());
+		StateManagerComponent->ChangeState(EPlayerStateType::Default);
+	}
 	// 物理パラメータ設定
 	InitPhysicsSettings();
 	// 入力設定初期化
@@ -60,7 +89,9 @@ void APlayerCharacter::BeginPlay()
 	// 視覚関連設定（アウトラインなど）
 	InitVisualSettings();
 	// ColorManager に登録
-	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(EColorTargetType::Responders, this);
+	ALevelManager::GetInstance(GetWorld())->GetColorManager()->RegisterTarget(this);
+
+	colorController->OnColorChanged.AddDynamic(this,&APlayerCharacter::ApplayColorToEffect);
 
 	bUseControllerRotationYaw = false;
 }
@@ -69,14 +100,14 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (StateManager == nullptr)
+	if (StateManagerComponent == nullptr)
 		return;
 	Circle();
 
-	StateManager->Update(DeltaTime);
+	StateManagerComponent->Update(DeltaTime);
 	UpdateGlowTarget();
-	if (GetActorLocation().X != FixedXLocation)
-		SetActorLocation(FVector(FixedXLocation, GetActorLocation().Y, GetActorLocation().Z));
+	//if (GetActorLocation().X != FixedXLocation)
+	//	SetActorLocation(FVector(FixedXLocation, GetActorLocation().Y, GetActorLocation().Z));
 }
 
 // プレイヤー入力バインド処理
@@ -88,35 +119,66 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	UPlayerInputComponent* PlayerInputData = GetComponentByClass<UPlayerInputComponent>();
 	if (PlayerInputData)
 	{
-		PlayerInputData->BindInput<APlayerCharacter>(PlayerInputComponent);
+		PlayerInputData->BindInput(PlayerInputComponent);
 	}
 }
 
 // 現在のプレイヤーステートを取得
 UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 {
-	return StateManager ? StateManager->GetCurrentState() : nullptr;
+	return StateManagerComponent ? StateManagerComponent->GetCurrentState() : nullptr;
 }
 
 
 void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 {
-	CameraComponent->ApplyCameraSettings(grid, ZBuffa);
+	CameraHandleComponent->ApplyCameraSettings(grid, ZBuffa);
 }
 
 void APlayerCharacter::ResetBuff()
 {
 	 JumpBuff = 1;
-	 //FloatingPawnMovement->GroundFriction = 8.0f;
-	 //FloatingPawnMovement->BrakingDecelerationWalking = 2048.f;
-	 physics->SetGravityScale(true, DefaultGravityScalse);
+	 physics->SetGravityScale(true, DefaultGravityScales);
 }
+
+//void APlayerCharacter::Circle()
+//{
+//	float DeltaX, DeltaY;
+//	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+//	if (PC == nullptr) 
+//		return;
+//
+//	PC->GetInputMouseDelta(DeltaX, DeltaY);
+//	FVector2D CurrentDir(DeltaX, DeltaY);
+//
+//	if (CurrentDir.SizeSquared() > MOUSE_DELTA_THRESHOLD)
+//	{
+//		CurrentDir.Normalize();
+//
+//		if (bHasPrevMouse)
+//		{
+//			float CrossZ = PrevMouseDir.X * CurrentDir.Y - PrevMouseDir.Y * CurrentDir.X;
+//
+//			if (CrossZ > 0)
+//			{
+//				ChangeColor(-MOUSE_COLOR_CHANGE_RATE);  // 左回し → -1
+//			}
+//			else if (CrossZ < 0)
+//			{
+//				ChangeColor(MOUSE_COLOR_CHANGE_RATE); // 右回し → +1
+//			}
+//		}
+//
+//		PrevMouseDir = CurrentDir;
+//		bHasPrevMouse = true;
+//	}
+//}
 
 void APlayerCharacter::Circle()
 {
 	float DeltaX, DeltaY;
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (PC == nullptr) 
+	if (PC == nullptr)
 		return;
 
 	PC->GetInputMouseDelta(DeltaX, DeltaY);
@@ -124,34 +186,42 @@ void APlayerCharacter::Circle()
 
 	if (CurrentDir.SizeSquared() > MOUSE_DELTA_THRESHOLD)
 	{
-		CurrentDir.Normalize();
+		// マウス移動方向の角度を計算
+		float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(DeltaY, DeltaX));
 
-		if (bHasPrevMouse)
+		// -180 ~ +180 を 0 ~ 360 に正規化
+		if (AngleDegrees < 0)
 		{
-			float CrossZ = PrevMouseDir.X * CurrentDir.Y - PrevMouseDir.Y * CurrentDir.X;
-
-			if (CrossZ > 0)
-			{
-				ChangeColor(-MOUSE_COLOR_CHANGE_RATE);  // 左回し → -1
-			}
-			else if (CrossZ < 0)
-			{
-				ChangeColor(MOUSE_COLOR_CHANGE_RATE); // 右回し → +1
-			}
+			AngleDegrees += 360.0f;
 		}
 
+		// 基準をX+からY+にシフト（必要に応じて）
+		AngleDegrees -= 90.0f;
+
+		// 再度0~360に正規化
+		if (AngleDegrees < 0)
+		{
+			AngleDegrees += 360.0f;
+		}
+
+		// 角度をそのまま渡す
+		ChangeColor(AngleDegrees);
+
+		// 前回の方向を保存
+		CurrentDir.Normalize();
 		PrevMouseDir = CurrentDir;
 		bHasPrevMouse = true;
 	}
 }
 
+
 // 移動入力処理（MoveCompを通して移動方向を取得し移動）
 void APlayerCharacter::Movement(const FInputActionValue& Value)
 {
-	if (StateManager == nullptr)
+	if (StateManagerComponent == nullptr)
 		return;
 
-	UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
+	UPlayerStateComponent* CurrentState = StateManagerComponent->GetCurrentState();
 	if (CurrentState != nullptr)
 	{
 		CurrentState->Movement(Value);
@@ -164,10 +234,10 @@ void APlayerCharacter::Movement(const FInputActionValue& Value)
 
 void APlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	if (StateManager == nullptr)
+	if (StateManagerComponent == nullptr)
 		return;
 
-	UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
+	UPlayerStateComponent* CurrentState = StateManagerComponent->GetCurrentState();
 	if (CurrentState != nullptr)
 	{
 		CurrentState->Jump(JumpForce * JumpBuff);
@@ -178,10 +248,10 @@ void APlayerCharacter::Jump(const FInputActionValue& Value)
 // APlayerCharacter.cpp 内の Action メソッド
 void APlayerCharacter::Action(const FInputActionValue& Value)
 {
-	if (StateManager == nullptr)
+	if (StateManagerComponent == nullptr)
 		return;
 
-	UPlayerStateComponent* CurrentState = StateManager->GetCurrentState();
+	UPlayerStateComponent* CurrentState = StateManagerComponent->GetCurrentState();
 	if (CurrentState != nullptr)
 	{
 		CurrentState->OnSkill(Value);
@@ -193,7 +263,7 @@ void APlayerCharacter::SetGravityScale(bool applyGravity)
 	if (physics == nullptr)
 		return;
 
-	physics->SetGravityScale(applyGravity, DefaultGravityScalse);
+	physics->SetGravityScale(applyGravity, DefaultGravityScales);
 }
 
 void APlayerCharacter::SetGravityScale(bool applyGravity, float scale)
@@ -224,71 +294,49 @@ void APlayerCharacter::ChangeColor(float value)
 		return;
 
 	colorController->AdjustColor(value);
+	USlimeFluidComponent* SlimeFluidComponent = GetComponentByClass<USlimeFluidComponent>();
+	if (SlimeFluidComponent)
+	{
+		SlimeFluidComponent->ChangeMaterialColor(colorController->GetCurrentColor());
+	}
 }
 
-void APlayerCharacter::SetColor(float value)
+
+// カラーモードを右にシフト（次の色モードへ変更）
+void APlayerCharacter::ChangeCameraViewModeToCharacter()
 {
 	if (colorController == nullptr)
 		return;
 
-	colorController->SetColor(value);
-}
-
-// カラーモードを右にシフト（次の色モードへ変更）
-void APlayerCharacter::ShiftArrayRightColorMode()
-{
-	if (CameraComponent == nullptr)
-		return;
-
-	CameraComponent->ChangeViewMode(ECameraViewType::CharacterView);
+	StateManagerComponent->GetCurrentState()->ChangePaintMode(EColorAbsorbMode::Absorb);
 }
 
 // カラーモードを左にシフト（前の色モードへ変更）
-void APlayerCharacter::ShiftArrayLeftColorMode()
+void APlayerCharacter::ChangeCameraViewModeToGrid()
 {
-	if (CameraComponent == nullptr)
+	if (colorController == nullptr)
 		return;
 
-	CameraComponent->ChangeViewMode(ECameraViewType::GridView);
+	StateManagerComponent->GetCurrentState()->ChangePaintMode(EColorAbsorbMode::Paint);
 }
 
 // 状態の変更（ステートタグを指定して遷移）
 UPlayerStateComponent* APlayerCharacter::ChangeState(EPlayerStateType Tag)
 {
-	UPlayerStateComponent* result = StateManager->ChangeState(Tag);
+	UPlayerStateComponent* result = StateManagerComponent->ChangeState(Tag);
 	
 	return result;
 }
 
-// ステート管理・攻撃管理の初期化
-void APlayerCharacter::InitState()
-{
-	if (!StateManagerClass)
-	{
-		UE_LOG(LogTemp, Error, TEXT("StateManagerClass is not set!"));
-		return;
-	}
 
-	StateManager = NewObject<UStateManager>(this, StateManagerClass);
-	if (!StateManager)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create StateManager!"));
-		return;
-	}
-
-	StateManager->RegisterComponent();
-	StateManager->Init(this, GetWorld());
-}
 
 // 物理パラメータの初期化（摩擦・重力設定など）
 void APlayerCharacter::InitPhysicsSettings()
 {
 	physics->RegisterComponent();
 	// 重力を加える（値は任意、固定でOUTLINE_STENCIL_VALUEを加算）
-	physics->SetGravityScale(true, DefaultGravityScalse);
+	physics->SetGravityScale(true, DefaultGravityScales);
 
-	// 摩擦や重力のパラメータ調整
-	//FloatingPawnMovement->Deceleration = 2048.f; // 適当な値
 }
 
 // 入力関連の初期化（コンポーネントのコントローラ参照を設定）
@@ -314,10 +362,45 @@ void APlayerCharacter::InitVisualSettings()
 }
 
 
+//void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
+//{
+//	//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
+//
+//	const float DeadZone = STICK_DEADZONE;
+//	if (StickInput.SizeSquared() < DeadZone)
+//	{
+//		//UE_LOG(LogTemp, Log, TEXT("StickInput is Neutral"));
+//		bHasPrevInputDir = false;
+//		return;
+//	}
+//
+//	if (!bHasPrevInputDir)
+//	{
+//		float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(StickInput.Y, StickInput.X));
+//
+//		// -180 ~ +180 を 0 ~ 360 に正規化
+//		if (AngleDegrees < 0)
+//		{
+//			AngleDegrees += 360.0f;
+//		}
+//
+//		// 基準をX+からY+にしたいなら -90°
+//		AngleDegrees += 90.0f;
+//
+//		// 再度0~360に正規化（マイナスになった場合）
+//		if (AngleDegrees < 0)
+//		{
+//			AngleDegrees += 360.0f;
+//		}
+//		ChangeColor(AngleDegrees);
+//
+//		return;
+//	}
+//}
+
 void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 {
 	//UE_LOG(LogTemp, Log, TEXT("StickInput.x=%f,StickInput.y=%f"), StickInput.X, StickInput.Y);
-
 	const float DeadZone = STICK_DEADZONE;
 	if (StickInput.SizeSquared() < DeadZone)
 	{
@@ -328,6 +411,7 @@ void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 
 	if (!bHasPrevInputDir)
 	{
+		// スティックの角度を計算
 		float AngleDegrees = FMath::RadiansToDegrees(FMath::Atan2(StickInput.Y, StickInput.X));
 
 		// -180 ~ +180 を 0 ~ 360 に正規化
@@ -336,16 +420,19 @@ void APlayerCharacter::OnStickRotate(const FVector2D& StickInput)
 			AngleDegrees += 360.0f;
 		}
 
-		// 基準をX+からY+にしたいなら -90°
-		AngleDegrees += 90.0f;
+		// 基準をX+からY+にシフト（-90°）
+		AngleDegrees -= 90.0f;
 
-		// 再度0~360に正規化（マイナスになった場合）
+		// 再度0~360に正規化
 		if (AngleDegrees < 0)
 		{
 			AngleDegrees += 360.0f;
 		}
-		SetColor(AngleDegrees);
 
+		// 角度をそのまま渡す
+		ChangeColor(AngleDegrees);
+
+		bHasPrevInputDir = true;
 		return;
 	}
 }
@@ -361,37 +448,37 @@ void APlayerCharacter::OpenMenu(const FInputActionValue& Value)
 	ALevelManager::GetInstance(GetWorld())->GetUIManager()->ShowWidget(EWidgetCategory::Menu, "Menu");
 }
 
-UCameraComponent* APlayerCharacter::GetCamera()
+UCameraComponent* APlayerCharacter::GetCamera()const
 {
-	if (CameraComponent == nullptr)
+	if (CameraHandleComponent == nullptr)
 		return nullptr;
 
-	return CameraComponent->GetCamera();
+	return CameraHandleComponent->GetCamera();
 }
 
 FVector APlayerCharacter::GetAnimVelocity() const
 {
-	if (!StateManager)
-	{
+	if (StateManagerComponent == nullptr || StateManagerComponent->GetCurrentState() == nullptr)
 		return FVector();
-	}
 
-	// 通常時は実際の速度を返す
-	 return StateManager->GetCurrentState()->GetAnimVelocity();
+	return StateManagerComponent->GetCurrentState()->GetAnimVelocity();
 }
-
 
 float APlayerCharacter::GetYaw() const
 {
-	if (StateManager == nullptr)
+	if (StateManagerComponent == nullptr || StateManagerComponent->GetCurrentState() == nullptr)
 		return 0.0f;
 
-	return StateManager->GetCurrentState()->GetYaw();
+	return StateManagerComponent->GetCurrentState()->GetYaw();
+}
+
+void APlayerCharacter::ApplayColorToEffect(FLinearColor NewColor)
+{
+
 }
 
 void APlayerCharacter::UpdateGlowTarget()
 {
-
 	UBoxComponent* InteractionBox = UFunctionLibrary::FindComponentByName<UBoxComponent>(this, TEXT("InteractionBox"));
 	if (InteractionBox == nullptr)
 	{
@@ -445,15 +532,4 @@ void APlayerCharacter::UpdateGlowTarget()
 
 		CurrentGlowTarget = NewGlowTarget;
 	}
-}
-
-
-void APlayerCharacter::Respawn()
-{
-	SetActorLocation(CurrentRespawnPoint);
-}
-
-void APlayerCharacter::UpdateRespawn(FVector newLocation)
-{
-	CurrentRespawnPoint = newLocation;
 }

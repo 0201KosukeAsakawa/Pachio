@@ -1,5 +1,4 @@
 #include "Enemy/EnemyCharacter.h"
-#include "DataContainer/EnemyDataContainer.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ScoreManager.h"
 #include "Components/BoxComponent.h"
@@ -7,7 +6,7 @@
 
 // コンストラクタ：コンポーネントの初期化
 // コンストラクタ: 初期設定を行う
-AEnemyCharacter::AEnemyCharacter()
+AEnemyCharacter::AEnemyCharacter():MoveSpeed(0.f)
 {
     // 毎フレーム Tick を呼び出すように設定
     PrimaryActorTick.bCanEverTick = true;

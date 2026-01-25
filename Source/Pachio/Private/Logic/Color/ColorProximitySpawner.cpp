@@ -5,100 +5,130 @@
 #include "FunctionLibrary.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Manager/ColorManager.h"
+#include "Manager/LevelManager.h"
 #include "NiagaraActor.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
 
+// =======================
+// コンストラクタ
+// =======================
+
+// デフォルトコンストラクタ
 UColorProximitySpawner::UColorProximitySpawner()
 {
-
+    bHide = false;
 }
 
-bool  UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
+// =======================
+// 色一致・不一致イベント
+// =======================
+
+// 色が一致したときに呼ばれる
+bool UColorProximitySpawner::OnColorMatched(const FLinearColor& FilterColor)
 {
-    ToggleNiagaraActiveState(true);
+    // メッシュを表示状態に切り替え
     OnMesh();
+    // 戻り値は任意仕様（ここでは false）
     return false;
 }
 
+// 色が不一致だったときに呼ばれる
 bool UColorProximitySpawner::OnColorMismatched(const FLinearColor& FilterColor)
 {
-    ToggleNiagaraActiveState(false);
+    // メッシュを非表示状態に切り替え
     OffMesh();
+
+    // 戻り値は任意仕様（ここでは true）
     return true;
 }
 
-void UColorProximitySpawner::Init(bool bVariable)
+// =======================
+// 初期化処理
+// =======================
+
+void UColorProximitySpawner::Initialize()
 {
-    UColorReactiveComponent::Init(bVariable);
-    ToggleNiagaraActiveState(false);
+    // 初期状態はエフェクト停止 & 非表示
     bHide = false;
     OffMesh();
 }
 
+// =======================
+// メッシュ非表示処理
+// =======================
+
 void UColorProximitySpawner::OffMesh()
 {
+    // すでに非表示なら処理しない
     if (bHide) return;
-
     AActor* Owner = GetOwner();
-    if (!Owner) return;
 
+    if (Owner == nullptr) return;
+
+    // Owner が持つ全コンポーネントを走査
     for (UActorComponent* Component : Owner->GetComponents())
     {
+        // 「HideTarget」タグがついているコンポーネントを対象
         if (Component->ComponentHasTag("HideTarget"))
         {
-            // PrimitiveComponent �Ȃ王�o�ƃR���W������I�t
+            // 描画系コンポーネントなら可視性と衝突を無効化
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
                 Primitive->SetVisibility(false, false);
                 Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
             }
 
-            // �A�N�^�[�R���|�[�l���g�ł���Γ�����~
+            // アクティブなコンポーネントなら停止
             if (Component->IsActive())
             {
                 Component->Deactivate();
             }
 
-            // ��� Tick ��~�߂����ꍇ
+            // Tick を持っている場合は停止
             Component->PrimaryComponentTick.SetTickFunctionEnable(false);
         }
     }
 
-    PlayAppearEffect();
-
+    // 非表示フラグ更新
     bHide = true;
 }
 
+// =======================
+// メッシュ表示処理
+// =======================
+
 void UColorProximitySpawner::OnMesh()
 {
+    // すでに表示状態なら処理しない
     if (!bHide) return;
-
     AActor* Owner = GetOwner();
-    if (!Owner) return;
+    if (Owner == nullptr) return;
 
+    // Owner が持つ全コンポーネントを走査
     for (UActorComponent* Component : Owner->GetComponents())
     {
         if (Component->ComponentHasTag("HideTarget"))
         {
-            // PrimitiveComponent �Ȃ王�o�ƃR���W������I�t
+            // 描画系コンポーネントなら可視性と衝突を有効化
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component))
             {
                 Primitive->SetVisibility(true, true);
                 Primitive->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
             }
 
-            // �A�N�^�[�R���|�[�l���g�ł���Γ�����~
+            // アクティブに戻す
             if (Component->IsActive())
             {
                 Component->Activate(true);
             }
 
-            // ��� Tick ��~�߂����ꍇ
+            // Tick を再開
             Component->PrimaryComponentTick.SetTickFunctionEnable(true);
         }
     }
-    DeactivateAllEffects();
+    // 非表示フラグ更新
     bHide = false;
 }

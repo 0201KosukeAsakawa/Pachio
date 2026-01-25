@@ -2,51 +2,48 @@
 
 
 #include "Objects/Color/ColorReactiveSwitch.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Components/Color/ColorReactiveComponent.h"
 #include "Components/BoxComponent.h"
 
-AColorReactiveSwitch::AColorReactiveSwitch()
+// =======================
+// コンストラクタ
+// =======================
+
+UColorReactiveSwitchComponent::UColorReactiveSwitchComponent()
 {
-	// Box Component ��쐬
-	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
-	BoxComponent->SetupAttachment(RootComponent); // �A�N�^�[�̃��[�g�R���|�[�l���g�ɐݒ�
+	
 }
 
-void AColorReactiveSwitch::Init()
+// =======================
+// 初期化処理
+// =======================
+
+void UColorReactiveSwitchComponent::Initialize()
 {
-	AColorReactiveObject::Init();
-	SecondColor = ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetEffectColor(Second);
+	// 親クラスの初期化処理
+	UObjectColorComponent::Initialize();
 }
 
-void AColorReactiveSwitch::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
+// =======================
+// 色反応処理
+// =======================
+
+void UColorReactiveSwitchComponent::ActivateDirect(const FLinearColor& InColor)
 {
-	if (!ColorConfigurator)
-		return;
-	AColorReactiveObject::ColorAction(InColor, result);
-
-	if (ColorConfigurator->CheckColorMatch(result, InColor))
+	// -----------------------
+	// 第一色との一致チェック
+	// -----------------------
+	if (UColorUtilityLibrary::IsHueSimilar(GetCurrentColor(), InColor))
 	{
-		ColorConfigurator->ApplyColorToMaterial(InColor);
+		// LevelManager を取得
 		ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
-		if (levelManager == nullptr)
-			return;
-		if (levelManager->GetColorManager() == nullptr)
+		if (!levelManager || !levelManager->GetColorManager())
 			return;
 
-		levelManager->GetColorManager()->ColorEvent(ColorConfigurator->GetColorEventID(), InColor);
-	}
-	else if (ColorConfigurator->IsColorMatch(SecondColor, InColor))
-	{
-		ColorConfigurator->ApplyColorToMaterial(InColor);
-		ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
-		if (levelManager == nullptr)
-			return;
-		if (levelManager->GetColorManager() == nullptr)
-			return;
-
-		levelManager->GetColorManager()->ColorEvent(ColorConfigurator->GetColorEventID(), InColor);
+		// ColorEvent を発火（イベントIDで識別）
+		levelManager->GetColorManager()->ColorEvent(TargetEventID, InColor);
 	}
 }

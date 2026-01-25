@@ -4,66 +4,102 @@
 #include "Objects/Color/LowGravityZone.h"
 #include "Components/PhysicsCalculator.h"
 #include "Components/BoxComponent.h"
-#include "Components/Color/ColorConfigurator.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 
-// Sets default values
-ALowGravityZone::ALowGravityZone()
+// =======================
+// コンストラクタ
+// =======================
+
+// デフォルト値設定
+ULowGravityZone::ULowGravityZone()
+                                    :bIsActive(false)
+                                    , GravityScale(DEFAULT_GRAVITY_SCALE)
+                                    , JumpBuff(DEFAULT_JUMP_BUFF)
 {
-    PrimaryActorTick.bCanEverTick = false;
-
+    // BoxComponent を作成しルートに設定
     ZoneBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ZoneBox"));
-    RootComponent = ZoneBox;
 
+    // オーバーラップイベントを発生させる設定
     ZoneBox->SetGenerateOverlapEvents(true);
     ZoneBox->SetCollisionProfileName(TEXT("Trigger"));
 }
-void ALowGravityZone::Init()
+
+// =======================
+// 初期化処理
+// =======================
+
+void ULowGravityZone::Initialize()
 {
-    ZoneBox->OnComponentBeginOverlap.AddDynamic(this, &ALowGravityZone::OnOverlapBegin);
-    ZoneBox->OnComponentEndOverlap.AddDynamic(this, &ALowGravityZone::OnOverlapEnd);
+    // オーバーラップ開始/終了イベント登録
+    ZoneBox->OnComponentBeginOverlap.AddDynamic(this, &ULowGravityZone::OnOverlapBegin);
+    ZoneBox->OnComponentEndOverlap.AddDynamic(this, &ULowGravityZone::OnOverlapEnd);
+
+    // 宇宙空間エフェクトを初期化（最初は非表示）
     if (UniverseSystem && !UniverseEffect)
     {
-        UniverseEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(UniverseSystem, GetRootComponent(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false);
-  /*      UniverseEffect->SetWorldScale3D(FVector(20.f));*/
+        UniverseEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(
+            UniverseSystem,
+            GetOwner()->GetRootComponent(),
+            NAME_None,
+            FVector::ZeroVector,
+            FRotator::ZeroRotator,
+            EAttachLocation::KeepRelativeOffset,
+            false
+        );
+        // UniverseEffect->SetWorldScale3D(FVector(20.f)); // 必要ならスケール調整
         UniverseEffect->Deactivate();
     }
 }
 
-void ALowGravityZone::ColorAction(const FLinearColor InColor, FEffectMatchResult result)
+// =======================
+// 色反応処理
+// =======================
+
+void ULowGravityZone::ActivateDirect(const FLinearColor& InColor)
 {
-    if (!ColorConfigurator || !ZoneBox)
+    if (!ZoneBox)
         return;
-    AColorReactiveObject::ColorAction(InColor,result);
-    // �F����v���Ȃ� �� �S���߂�
-    if (!ColorConfigurator->IsColorMatch(InColor))
+
+    // 親クラス処理呼び出し
+    UObjectColorComponent::ActivateDirect(InColor);
+
+    // 色が一致しなければ「重力を元に戻す」
+    if (!UColorUtilityLibrary::IsHueSimilar(InColor,GetCurrentColor()))
     {
         for (AActor* Actor : OverlappingActors)
         {
             if (UPhysicsCalculator* PhysicsComp = Actor->FindComponentByClass<UPhysicsCalculator>())
             {
-                PhysicsComp->SetGravityScale(true);
+                PhysicsComp->SetGravityScale(true); // デフォルトの重力に戻す
             }
         }
         OverlappingActors.Empty();
-        if(UniverseEffect)
-        UniverseEffect->Deactivate();
-        b = false;
+
+        if (UniverseEffect)
+            UniverseEffect->Deactivate();
+
+        bIsActive = false; // ゾーン無効化フラグ
         return;
     }
+
+    // 色一致時はエフェクトを有効化
     if (UniverseEffect)
         UniverseEffect->Activate();
-    b = true;
+
+    bIsActive = true;
+
+    // Box 範囲を取得
     FVector Center = ZoneBox->GetComponentLocation();
     FVector HalfSize = ZoneBox->GetScaledBoxExtent();
 
+    // ゾーン内にいるアクターを検知
     TArray<FHitResult> HitResults;
-
     bool bHit = GetWorld()->SweepMultiByChannel(
         HitResults,
         Center,
-        Center, // �J�n�E�I�������ŐÓI����
+        Center, // 開始と終了が同じなので静的判定
         FQuat::Identity,
         ECC_PhysicsBody,
         FCollisionShape::MakeBox(HalfSize)
@@ -72,54 +108,70 @@ void ALowGravityZone::ColorAction(const FLinearColor InColor, FEffectMatchResult
     if (!bHit)
         return;
 
+    // ヒットしたアクターに低重力を適用
     for (const FHitResult& Hit : HitResults)
     {
         if (AActor* HitActor = Hit.GetActor())
         {
             if (UPhysicsCalculator* PhysicsComp = HitActor->FindComponentByClass<UPhysicsCalculator>())
             {
-                PhysicsComp->SetGravityScale(true, GravityScale,JumpBuff); // ����
+                PhysicsComp->SetGravityScale(true, GravityScale, JumpBuff); // 重力スケールとジャンプ補正
                 OverlappingActors.Add(HitActor);
             }
         }
     }
-
-
 }
 
+// =======================
+// ポストプロセスエフェクト有効化（未実装）
+// =======================
 
-void ALowGravityZone::SetPostProcessEffectEnabled(bool bEnable)
+void ULowGravityZone::SetPostProcessEffectEnabled(bool bEnable)
 {
+    // TODO: ゾーン内限定の画面演出を追加する場合に使用
 }
 
-void ALowGravityZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+// =======================
+// オーバーラップ開始処理
+// =======================
+
+void ULowGravityZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
-
-    if (!b)
+    // ゾーンが無効なら処理しない
+    if (!bIsActive)
         return;
-    if (OtherActor && OtherActor != this)
+
+    // 自身以外のアクターに対して処理
+    if (OtherActor && OtherActor != GetOwner())
     {
         if (UPhysicsCalculator* PhysicsComp = OtherActor->FindComponentByClass<UPhysicsCalculator>())
         {
-            // �ŏ��ɏd�͌y��
+            // 最初に重力を軽減して適用
             PhysicsComp->SetGravityScale(true, GravityScale, JumpBuff);
             OverlappingActors.Add(OtherActor);
         }
     }
 }
 
-void ALowGravityZone::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+// =======================
+// オーバーラップ終了処理
+// =======================
+
+void ULowGravityZone::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-    if (!b)
+    // ゾーンが無効なら処理しない
+    if (!bIsActive)
         return;
-    if (OtherActor && OtherActor != this)
+
+    // 自身以外のアクターに対して処理
+    if (OtherActor && OtherActor != GetOwner())
     {
         if (UPhysicsCalculator* PhysicsComp = OtherActor->FindComponentByClass<UPhysicsCalculator>())
         {
-            // �d�͂���ɖ߂�
+            // 重力を通常に戻す
             PhysicsComp->SetGravityScale(true);
             OverlappingActors.Remove(OtherActor);
         }

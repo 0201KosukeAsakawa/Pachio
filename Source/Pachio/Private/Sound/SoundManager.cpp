@@ -2,6 +2,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Logic/ColorManager/ColorTargetRegistry.h"
 #include "Components/AudioComponent.h"
+#include "ColorUtilityLibrary.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "Manager/SaveManager.h"
@@ -23,45 +24,38 @@
 // UFMODAudioComponent::EventInstance メンバーにアクセスするために必要です。
 #include "FMODAudioComponent.h"
 
-
-
-static FMOD_RESULT OnTimelineMarker(FMOD_STUDIO_EVENT_CALLBACK_TYPE type, FMOD_STUDIO_EVENTINSTANCE* eventInstance, void* parameters)
-{
-    if (type == FMOD_STUDIO_EVENT_CALLBACK_TIMELINE_MARKER)
-    {
-        auto* Marker = static_cast<FMOD_STUDIO_TIMELINE_MARKER_PROPERTIES*>(parameters);
-        FString MarkerName = UTF8_TO_TCHAR(Marker->name);
-
-        if (MarkerName == "Beat")
-        {
-            void* RawUserData = nullptr;
-            ((FMOD::Studio::EventInstance*)eventInstance)->getUserData(&RawUserData);
-            USoundManager* Manager = static_cast<USoundManager*>(RawUserData);
-            if (Manager)
-            {
-                Manager->OnMarkerBeat(Marker->position);
-            }
-        }
-    }
-    return FMOD_OK;
-}
+// =======================
+// コンストラクタ
+// =======================
 
 USoundManager::USoundManager()
     : BGMVolume(1)
     , SEVolume(1)
     , mCurrentBGM(nullptr)
+    , MusicBPM(100.f)
+    , BeatInterval(5.f)
+    , StartTime(0.f)
+    , LastPredictedBeat(-1.f)
+    , LastConfirmedBeatTime(0.f)
 {
 }
 
+// =======================
+// 初期化処理
+// =======================
+
 void USoundManager::Init()
 {
+    // 保存データから音量を読み込み
     LoadOrCreateVolumeSave();
 
+    // 登録されているサウンドデータを AudioComponent に初期化
     for (auto& soundMap : SoundDataMap)
     {
         const FName dataTag = soundMap.Key;
         FSoundData& soundData = soundMap.Value;
         soundData.AudioComponentMap.Reset();
+
         for (const auto& soundAssetPair : soundData.SoundAssetMap)
         {
             const FName waveTag = soundAssetPair.Key;
@@ -69,15 +63,18 @@ void USoundManager::Init()
             if (waveTag.IsNone() || !sound)
                 continue;
 
+            // 既に登録済みならスキップ
             if (soundData.AudioComponentMap.Contains(waveTag))
                 continue;
 
+            // 2D サウンドコンポーネントを生成
             UAudioComponent* AudioComponent = UGameplayStatics::CreateSound2D(this, sound);
             if (AudioComponent == nullptr)
                 continue;
 
             AudioComponent->bAutoDestroy = false;
 
+            // BGM の場合は Envelope イベントを監視
             if (dataTag == "BGM")
             {
                 AudioComponent->OnAudioSingleEnvelopeValue.AddDynamic(this, &USoundManager::OnEnvelopeValue);
@@ -86,78 +83,81 @@ void USoundManager::Init()
             soundData.AudioComponentMap.Add(waveTag, AudioComponent);
         }
     }
+
+    // 色変化に応じた BPM 変更イベントをバインド
     ALevelManager::GetInstance(GetWorld())->GetColorManager()->GetColorTargetRegistry()->OnColorApplied.AddDynamic(this, &USoundManager::SetTmp);
-    InitTestSound();
 }
 
+// =======================
+// 音量の保存・読み込み
+// =======================
+
+// 保存されている音量データをロード、なければ作成
 void USoundManager::LoadOrCreateVolumeSave()
 {
     FVolumeSaveData LoadedData = USaveManager::LoadVolumeFromJson();
-
     BGMVolume = LoadedData.BGMVolume;
     SEVolume = LoadedData.SEVolume;
 }
+
+// 音量を保存
 void USoundManager::SetVolume(float NewBGM, float NewSE)
 {
     BGMVolume = NewBGM;
     SEVolume = NewSE;
-
     USaveManager::SetVolume(BGMVolume, SEVolume);
 }
 
-void USoundManager::SetTmp(EColorTargetType Mode, FLinearColor NewColor)
+// =======================
+// 色変化による BPM 設定
+// =======================
+
+void USoundManager::SetTmp(FLinearColor NewColor)
 {
     ALevelManager* level = ALevelManager::GetInstance(GetWorld());
-    if (level == nullptr)
-        return;
+    if (!level) return;
 
     UColorManager* colorManager = level->GetColorManager();
-    if (colorManager == nullptr)
-        return;
+    if (!colorManager) return;
 
-    FEffectMatchResult Match = ALevelManager::GetInstance(GetWorld())
-        ->GetColorManager()
-        ->GetClosestEffectByHue(NewColor);
+    // 色から最も近いエフェクトを判定
+    EColorCategory colorCategory = UColorUtilityLibrary::GetNearestColorCategory(NewColor);
 
-    switch (Match.ClosestEffect)
+    // 色に応じて BPM を設定
+    switch (colorCategory)
     {
-
-        case EBuffEffect::Red:
-            MusicBPM = 160.f;
-            break;
-        case EBuffEffect::Blue:
-            MusicBPM = 90.f;
-            break;
-        case EBuffEffect::Green:
-            MusicBPM = 120.f;
-            break;
-        default:
-            MusicBPM = 120.f;
-            break;
+    case EColorCategory::Red:   MusicBPM = 160.f; break;
+    case EColorCategory::Blue:  MusicBPM = 90.f; break;
+    case EColorCategory::Green: MusicBPM = 120.f; break;
+    default:                 MusicBPM = 120.f; break;
     }
-        BeatInterval = 60.f / MusicBPM;  // 拍の秒数を計算
 
-        StartTime = GetWorld()->GetTimeSeconds();  // ビート判定の基準時間をリセット
-        LastPredictedBeat = -1;  // 拍判定リセット
-    
-    colorManager->GetColorTargetRegistry();
-    
+    // 1拍の秒数を計算
+    BeatInterval = 60.f / MusicBPM;
+
+    // ビートタイマーをリセット
+    StartTime = GetWorld()->GetTimeSeconds();
+    LastPredictedBeat = -1;
 }
 
+// =======================
+// 音量制御
+// =======================
+
+// BGM 音量設定
 void USoundManager::SetBGMVolume(float vol)
 {
     const float previousBGMVolume = BGMVolume;
 
-    // 音量を0〜1の範囲に制限
+    // 音量を 0〜4 の範囲に制限
     BGMVolume = FMath::Clamp(vol, 0, 4.0f);
 
-    // 音量をFMODに反映
     if (BGM)
     {
-        BGM->SetVolume(BGMVolume); 
+        BGM->SetVolume(BGMVolume);
     }
 
-    // 音量が変更された場合のみ処理
+    // 音量が変化した場合のみ処理
     if (BGM && previousBGMVolume != BGMVolume)
     {
         if (BGMVolume > 0.0f && !BGM->IsPlaying())
@@ -172,37 +172,38 @@ void USoundManager::SetBGMVolume(float vol)
     }
 }
 
+// SE 音量設定
 void USoundManager::SetSEVolume(float vol)
 {
-    const float previousBGMVolume = SEVolume;
-
-    // 音量を0〜1の範囲に制限
     SEVolume = FMath::Clamp(vol, 0.0f, 4.0f);
 }
 
-bool USoundManager::PlaySound(FName DataID, FName SoundID,bool SetVolume, float Volume, bool IsSpecifyLocation, FVector place)
+// =======================
+// サウンド再生処理
+// =======================
+
+bool USoundManager::PlaySound(FName DataID, FName SoundID, bool SetVolume, float Volume, bool IsSpecifyLocation, FVector place)
 {
     float volume = 0;
     if (!SetVolume)
     {
-        if (DataID == "BGM")
-            volume = BGMVolume;
-        else if (DataID == "SE")
-            volume = SEVolume;
+        if (DataID == "BGM")      volume = BGMVolume;
+        else if (DataID == "SE")  volume = SEVolume;
     }
 
+    // BGM 再生の場合
     if (DataID == "BGM")
     {
         PlayBGM();
-       return true;
+        return true;
     }
 
+    // サウンドデータが存在するかチェック
     if (!SoundDataMap.Contains(DataID))
     {
         UE_LOG(LogTemp, Error, TEXT("SoundDataMap does not contain DataID: %s"), *DataID.ToString());
         return false;
     }
-
     if (!SoundDataMap[DataID].AudioComponentMap.Contains(SoundID))
     {
         UE_LOG(LogTemp, Error, TEXT("AudioComponentMap does not contain SoundID: %s for DataID: %s"), *SoundID.ToString(), *DataID.ToString());
@@ -217,26 +218,29 @@ bool USoundManager::PlaySound(FName DataID, FName SoundID,bool SetVolume, float 
         return false;
     }
 
-    // 音量を設定 (0.0が無音、1.0が最大音量)
+    // 音量設定
     const float volumeToPlay = FMath::Clamp(volume, 0.0f, 1.0f);
     AudioComponent->SetVolumeMultiplier(volumeToPlay);
 
-    // 位置指定がある場合、音の位置を設定
+    // 位置指定がある場合のみワールド位置を設定
     if (IsSpecifyLocation)
     {
         AudioComponent->SetWorldLocation(place);
     }
 
-    // サウンドの距離減衰設定（Attenuation設定）
+    // 距離減衰設定（必要なら適用）
     FSoundAttenuationSettings AttenuationSettings;
-    AttenuationSettings.bAttenuate = true; // 距離による減衰を有効にする
-    AttenuationSettings.FalloffDistance = 2000.0f; // 音量が減衰する距離の設定（例：2000 units）
+    AttenuationSettings.bAttenuate = true;
+    AttenuationSettings.FalloffDistance = 2000.0f;
 
-    // サウンドを再生
+    // サウンド再生
     AudioComponent->Play();
-
     return true;
 }
+
+// =======================
+// BGM 制御
+// =======================
 
 void USoundManager::StopBGM()
 {
@@ -252,34 +256,38 @@ void USoundManager::PlaySoundWithFadeIn(FName DataID, FName SoundID, float Volum
         return;
 
     UAudioComponent* AudioComponent = Cast<UAudioComponent>(SoundDataMap[DataID].AudioComponentMap[SoundID]);
-    if (!AudioComponent)
-        return;
+    if (!AudioComponent) return;
 
     AudioComponent->SetVolumeMultiplier(FMath::Clamp(Volume, 0.0f, 1.0f));
-    AudioComponent->FadeIn(FadeDuration);  // フェードインを追加
+    AudioComponent->FadeIn(FadeDuration);
     AudioComponent->Play();
 }
 
 void USoundManager::StopBGMWithFadeOut(float FadeDuration)
 {
-    //if (mCurrentBGM)
-    //{
-    //    mCurrentBGM->FadeOut(FadeDuration, 0.0f);  // フェードアウト
-    //}
+    // TODO: BGM フェードアウト処理を実装
 }
 
+// =======================
+// サウンド解析
+// =======================
+
+// 音声のエンベロープ値を取得（未使用）
 void USoundManager::OnEnvelopeValue(const USoundWave* SoundWave, const float EnvelopeValue)
 {
 }
 
-// PlayBGM() を修正
+// =======================
+// BGM 再生 (FMOD 使用)
+// =======================
+
 bool USoundManager::PlayBGM()
 {
     if (!BGMEventAsset) return false;
 
     BeatInterval = 60.0f / MusicBPM;
 
-    if (!BGM) // ← 統一
+    if (!BGM)
     {
         BGM = NewObject<UFMODAudioComponent>(this);
         BGM->RegisterComponent();
@@ -291,43 +299,11 @@ bool USoundManager::PlayBGM()
     EventInstance = BGM->StudioInstance;
     if (EventInstance)
     {
-        EventInstance->setUserData(this);
-        EventInstance->setCallback(OnTimelineMarker, FMOD_STUDIO_EVENT_CALLBACK_TIMELINE_MARKER);
+      
     }
 
     StartTime = GetWorld()->GetTimeSeconds();
     LastPredictedBeat = -1;
 
     return true;
-}
-
-void USoundManager::OnBeatTimerElapsed()
-{
-    // ここで通知
-    //OnBeatDetected.Broadcast();
-}
-
-void USoundManager::InitTestSound()
-{
-    if (!BGM)
-    {
-        BGM = NewObject<UFMODAudioComponent>(this);
-        BGM->RegisterComponent();
-
-        if (BGMEventAsset)
-        {
-            BGM->SetEvent(BGMEventAsset);  // ← これが MyFMODEventAsset 相当
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("TestEventAsset is null!"));
-        }
-    }
-}
-
-void USoundManager::OnMarkerBeat(int64 MarkerPositionMs)
-{
-    LastConfirmedBeatTime = MarkerPositionMs / 1000.0f;
-    OnBeatDetected.Broadcast();
-
 }

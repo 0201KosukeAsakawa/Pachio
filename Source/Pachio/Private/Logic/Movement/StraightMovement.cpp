@@ -57,8 +57,8 @@ bool UStraightMovement::IsCollidingWithWall(FVector Direction, const AActor* Own
 }
 
 // 初期化処理（移動速度と初期方向を設定）
-void UStraightMovement::Init(float speed, const FVector d)
-{
+void UStraightMovement::Init(const float speed, const FVector& Direction)
+{    
     Speed = speed;
-    CurrentMovementDirection = d;
+    CurrentMovementDirection = Direction;
 }

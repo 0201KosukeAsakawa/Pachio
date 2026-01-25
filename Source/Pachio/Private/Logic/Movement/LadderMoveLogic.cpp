@@ -22,6 +22,6 @@ FVector ULadderMoveLogic::Movement(float DeltaTime, AActor* Owner, const FInputA
 
     return MoveDir;
 }
-void ULadderMoveLogic::Init(float speed, const FVector)
+void ULadderMoveLogic::Init(const float Speed , const FVector& Direction )
 {
 }

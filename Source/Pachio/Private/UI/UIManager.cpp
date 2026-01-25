@@ -1,5 +1,4 @@
 #include "UI/UIManager.h"
-#include "UI/ColorLens.h"
 #include "UI/LockonWidget.h"
 #include "UI/ClearResultWidget.h"
 #include "UI/PlayAnimationWidget.h"
@@ -12,18 +11,22 @@
 
 void UUIManager::Init(const AActor*)
 {
+    // 全カテゴリのウィジェットを初期化
     InitAllWidgets();
 
+    // HUD と接続し、UIManager をセット
     APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+
+    if (PC == nullptr)
+        return;
+
     AInGameHUD* MyHUD = Cast<AInGameHUD>(PC->GetHUD());
     if (MyHUD)
     {
         MyHUD->SetUIManager(this);
     }
-    if (ColorLens)
-        ColorLens->AddToViewport();
 
-    // MarkerカテゴリがあればすべてのウィジェットをMarkerWidgetsに登録
+    // Markerカテゴリのウィジェットを専用マップに登録
     if (FWidgetData* WidgetSet = WidgetDataMap.Find(EWidgetCategory::Marker))
     {
         for (auto& Pair : WidgetSet->WidgetMap)
@@ -36,10 +39,9 @@ void UUIManager::Init(const AActor*)
     }
 }
 
-
 void UUIManager::InitAllWidgets()
 {
-    // すべてのカテゴリにあるウィジェットクラスからウィジェットを生成して初期化
+    // 各カテゴリに属するウィジェットをまとめて初期化
     for (auto& Pair : WidgetDataMap)
     {
         InitWidgetGroup(Pair.Value);
@@ -48,20 +50,19 @@ void UUIManager::InitAllWidgets()
 
 void UUIManager::InitWidgetGroup(FWidgetData& WidgetGroup)
 {
-    // ウィジェットインスタンスマップをリセット
+    // 既存のインスタンスをクリア
     WidgetGroup.WidgetMap.Reset();
 
-    // クラス情報に基づき、各ウィジェットを生成してマップに登録
+    // クラス定義に基づき、ウィジェットを生成して登録
     for (auto& ClassPair : WidgetGroup.WidgetClassMap)
     {
-        if (!ClassPair.Value) 
+        if (!ClassPair.Value)
             continue;
 
         UUserWidget* NewWidget = CreateWidget<UUserWidget>(GetWorld(), ClassPair.Value);
         if (NewWidget)
         {
-            // 一度親から削除（念のため）
-            NewWidget->RemoveFromParent();
+            NewWidget->RemoveFromParent(); // 念のため親から外してから登録
             WidgetGroup.WidgetMap.Add(ClassPair.Key, NewWidget);
         }
     }
@@ -69,12 +70,12 @@ void UUIManager::InitWidgetGroup(FWidgetData& WidgetGroup)
 
 void UUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Classes, TArray<UUserWidget*>& Widgets)
 {
-    // 汎用的なウィジェット初期化
+    // 複数クラスからウィジェットを生成する汎用関数
     Widgets.Reset();
 
     for (auto& WidgetClass : Classes)
     {
-        if (!WidgetClass) 
+        if (!WidgetClass)
             continue;
 
         UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), WidgetClass);
@@ -89,16 +90,17 @@ void UUIManager::CreateWidgetArray(const TArray<TSubclassOf<UUserWidget>>& Class
 UUserWidget* UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetName)
 {
     UUserWidget* widget = nullptr;
-    // 指定カテゴリが存在しない場合は無視
+
+    // 該当カテゴリが存在しなければ無視
     if (!WidgetDataMap.Contains(CategoryName))
         return widget;
 
     FWidgetData& Group = WidgetDataMap[CategoryName];
     UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName);
-    // 指定名のウィジェットを検索し、ビューポートに表示
     if (FoundWidget == nullptr)
         return widget;
 
+    // すでに表示中のウィジェットなら再利用
     if (!Group.CurrentWidget.IsEmpty())
     {
         if (Group.CurrentWidget.Contains(WidgetName))
@@ -108,18 +110,17 @@ UUserWidget* UUIManager::ShowWidget(EWidgetCategory CategoryName, FName WidgetNa
         }
     }
 
-
+    // 新しく表示リストに追加
     Group.CurrentWidget.Add(WidgetName, *FoundWidget);
     Group.CurrentWidget[WidgetName]->AddToViewport();
 
     widget = Group.CurrentWidget[WidgetName];
-
-
     return widget;
 }
 
 const void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName WidgetName)
 {
+    // カテゴリが存在しなければ無視
     if (!WidgetDataMap.Contains(CategoryName))
         return;
 
@@ -128,6 +129,7 @@ const void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName Wid
     if (!Group.CurrentWidget.Contains(WidgetName))
         return;
 
+    // アニメーション対応ウィジェットなら停止
     if (UUserWidget* widget = Group.CurrentWidget[WidgetName])
     {
         if (UPlayAnimationWidget* animWidget = Cast<UPlayAnimationWidget>(widget))
@@ -136,36 +138,33 @@ const void UUIManager::HideCurrentWidget(EWidgetCategory CategoryName, FName Wid
         }
     }
 
-    // 現在のウィジェットを非表示にして nullptr に
+    // ビューポートから削除
     RemoveWidgetFromViewport(Group.CurrentWidget[WidgetName]);
 }
 
-bool UUIManager::IsWidgetVisible(EWidgetCategory CategoryName , FName WidgetName) const
+bool UUIManager::IsWidgetVisible(EWidgetCategory CategoryName, FName WidgetName) const
 {
+    // 指定カテゴリが存在するかチェック
     const FWidgetData* Group = WidgetDataMap.Find(CategoryName);
-
-    // 指定カテゴリのウィジェットがビューポート上で可視か判定
     if (!Group)
-        return false; 
+        return false;
     if (!Group->CurrentWidget[WidgetName])
         return false;
-
 
     return true;
 }
 
-UUserWidget* UUIManager::GetWidget(EWidgetCategory CategoryName, FName WidgetName) 
+UUserWidget* UUIManager::GetWidget(EWidgetCategory CategoryName, FName WidgetName)
 {
-    // 指定カテゴリが存在しない場合は無視
+    // 該当カテゴリが存在しなければ無視
     if (!WidgetDataMap.Contains(CategoryName))
         return nullptr;
 
-     FWidgetData& Group = WidgetDataMap[CategoryName];
-     UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName);
-    // 指定名のウィジェットを検索し、ビューポートに表示
+    FWidgetData& Group = WidgetDataMap[CategoryName];
+    UUserWidget** FoundWidget = Group.WidgetMap.Find(WidgetName);
     if (!FoundWidget)
         return nullptr;
-    
+
     return *FoundWidget;
 }
 
@@ -179,18 +178,18 @@ bool UUIManager::PlayWidgetAnimation(EWidgetCategory CategoryName, FName WidgetN
     if (!FoundWidgetPtr || !*FoundWidgetPtr)
         return false;
 
+    // アニメーション再生対応のウィジェットにキャストして実行
     UPlayAnimationWidget* animWidget = Cast<UPlayAnimationWidget>(*FoundWidgetPtr);
     if (animWidget == nullptr)
         return false;
 
     animWidget->PlayAnimationByName(AnimationName);
-
     return true;
 }
 
 void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
 {
-    // ウィジェットが存在していればビューポートから削除し、ポインタもリセット
+    // ウィジェットをビューポートから削除
     if (Widget)
     {
         Widget->RemoveFromViewport();
@@ -199,6 +198,7 @@ void UUIManager::RemoveWidgetFromViewport(UUserWidget*& Widget)
 
 UUserWidget* UUIManager::ShowResultWidget(float Time, EStageRank Rank)
 {
+    // リザルト画面を表示し、内容をセット
     UUserWidget* BaseWidget = ShowWidget(EWidgetCategory::Menu, "Result");
 
     if (UClearResultWidget* ResultWidget = Cast<UClearResultWidget>(BaseWidget))
@@ -211,27 +211,32 @@ UUserWidget* UUIManager::ShowResultWidget(float Time, EStageRank Rank)
 
 UUserWidget* UUIManager::ShowMarker(FName MarkerName, AActor* Target)
 {
+    // ターゲットが無効なら無視
     if (!Target)
         return nullptr;
 
+    // マーカー名に対応するウィジェットを取得
     ULockonWidget** FoundWidget = MarkerWidgets.Find(MarkerName);
     if (!FoundWidget || !(*FoundWidget))
         return nullptr;
 
     ULockonWidget* MarkerWidget = *FoundWidget;
 
+    // 未表示なら表示
     if (!MarkerWidget->IsInViewport())
     {
         MarkerWidget->AddToViewport();
     }
+
+    // マーカーの追従対象をセット
     MarkerWidget->SetTargetActor(Target);
 
     return MarkerWidget;
 }
 
-
 void UUIManager::HideMarker(FName MarkerName)
 {
+    // 指定マーカーを非表示
     ULockonWidget** FoundWidget = MarkerWidgets.Find(MarkerName);
     if (FoundWidget && *FoundWidget)
     {
@@ -241,5 +246,6 @@ void UUIManager::HideMarker(FName MarkerName)
 
 const TMap<FName, ULockonWidget*>& UUIManager::GetAllMarkers() const
 {
+    // 全てのロックオンマーカーを返す
     return MarkerWidgets;
 }

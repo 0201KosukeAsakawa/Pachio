@@ -15,7 +15,7 @@ class PACHIO_API UReadyState : public UPlayerStateComponent
 	GENERATED_BODY()
 private:
 	// ステートに入ったときの処理
-	virtual bool OnEnter(APawn* Owner, UWorld* World)override;
+	virtual bool OnEnter(APawn* Owner)override;
 
 	// 毎フレームの更新処理（Tick の代わりに呼ばれる）
 	virtual bool OnUpdate(float DeltaTime)override;
