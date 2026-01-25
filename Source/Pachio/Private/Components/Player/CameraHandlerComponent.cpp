@@ -63,13 +63,13 @@ void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
 		return;
 
 	// カメラをルートにアタッチ
-	if (Camera && RootComponent)
-	{
-		if (Camera->GetAttachParent() == nullptr)
-		{
-			Camera->SetupAttachment(RootComponent);
-		}
-	}
+	//if (Camera && RootComponent)
+	//{
+	//	if (Camera->GetAttachParent() == nullptr)
+	//	{
+	//		Camera->SetupAttachment(RootComponent);
+	//	}
+	//}
 
 	// 初期位置を設定
 	SetCameraLocation(CameraViewType);

@@ -26,19 +26,10 @@ void UMoveOnColorComponent::BeginPlay()
 	FootTrigger->OnComponentBeginOverlap.AddDynamic(this, &UMoveOnColorComponent::OnFootBeginOverlap);
 	FootTrigger->OnComponentEndOverlap.AddDynamic(this, &UMoveOnColorComponent::OnFootEndOverlap);
 
-	UE_LOG(LogTemp, Warning, TEXT("BeginPlay - MovementMode: %d, bAutoLoop: %d"),
-		(int32)MovementMode, bAutoLoop);
-
 	// 自動ループモードの場合は開始
 	if (MovementMode == EColorMovementMode::Shuttle && bAutoLoop)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Starting AutoLoop from BeginPlay"));
 		AutoLoopMovement(); // コルーチンを直接起動
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AutoLoop NOT started - Mode: %d, bAutoLoop: %d"),
-			(int32)MovementMode, bAutoLoop);
 	}
 }
 
@@ -129,23 +120,16 @@ UE5Coro::TCoroutine<> UMoveOnColorComponent::AutoLoopMovement()
 	// 既に実行中なら何もしない
 	if (bIsAutoLoopRunning.exchange(true))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Already running, skipping"));
 		co_return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Started - LocationA: %s, LocationB: %s"),
-		*LocationA.ToString(), *LocationB.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Started"));
 
 	// 初期位置は地点A想定なので、最初は地点Bへ向かう
 	bCurrentTargetIsB = true;
 
-	int32 LoopCount = 0;
-
 	while (bIsAutoLoopRunning)
 	{
-		LoopCount++;
-		UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Loop iteration %d"), LoopCount);
-
 		// オーナーチェック
 		if (!GetOwner())
 		{
@@ -156,7 +140,7 @@ UE5Coro::TCoroutine<> UMoveOnColorComponent::AutoLoopMovement()
 		// 次の目標地点を決定
 		FVector TargetLocation = bCurrentTargetIsB ? LocationB : LocationA;
 
-		UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Moving to %s (from %s)"),
+		UE_LOG(LogTemp, Log, TEXT("AutoLoop: Moving to %s (from %s)"),
 			bCurrentTargetIsB ? TEXT("Location B") : TEXT("Location A"),
 			*GetOwner()->GetActorLocation().ToString());
 
@@ -164,64 +148,51 @@ UE5Coro::TCoroutine<> UMoveOnColorComponent::AutoLoopMovement()
 		const FVector StartLocation = GetOwner()->GetActorLocation();
 		float ElapsedTime = 0.0f;
 
-		// 目標地点と現在地が同じ場合のチェック
-		if (FVector::Dist(StartLocation, TargetLocation) < 1.0f)
+		// 移動ループ
+		while (ElapsedTime < MoveDuration)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Already at target location, skipping movement"));
-		}
-		else
-		{
-			// 移動ループ
-			int32 FrameCount = 0;
-			while (ElapsedTime < MoveDuration)
+			co_await Latent::NextTick();
+
+			if (!GetOwner() || !bIsAutoLoopRunning)
 			{
-				co_await Latent::NextTick();
-				FrameCount++;
+				co_return;
+			}
 
-				if (!GetOwner() || !bIsAutoLoopRunning)
+			ElapsedTime += GetWorld()->GetDeltaSeconds();
+			float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
+
+			// イージング関数を適用
+			Alpha = ApplyEasing(Alpha);
+
+			const FVector CurrentLocation = GetOwner()->GetActorLocation();
+			const FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
+			const FVector DeltaMove = NewLocation - CurrentLocation;
+
+			GetOwner()->SetActorLocation(NewLocation);
+
+			// 無効なアクターを削除
+			AttachedActors.RemoveAll([](const TWeakObjectPtr<AActor>& Actor)
 				{
-					UE_LOG(LogTemp, Error, TEXT("AutoLoop: Interrupted during movement"));
-					co_return;
-				}
+					return !Actor.IsValid();
+				});
 
-				ElapsedTime += GetWorld()->GetDeltaSeconds();
-				float Alpha = FMath::Clamp(ElapsedTime / MoveDuration, 0.0f, 1.0f);
-
-				// イージング関数を適用
-				Alpha = ApplyEasing(Alpha);
-
-				const FVector CurrentLocation = GetOwner()->GetActorLocation();
-				const FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation, Alpha);
-				const FVector DeltaMove = NewLocation - CurrentLocation;
-
-				GetOwner()->SetActorLocation(NewLocation);
-
-				// 無効なアクターを削除
-				AttachedActors.RemoveAll([](const TWeakObjectPtr<AActor>& Actor)
-					{
-						return !Actor.IsValid();
-					});
-
-				// 乗っているアクターを移動
-				for (const TWeakObjectPtr<AActor>& ActorPtr : AttachedActors)
+			// 乗っているアクターを移動
+			for (const TWeakObjectPtr<AActor>& ActorPtr : AttachedActors)
+			{
+				if (AActor* Actor = ActorPtr.Get())
 				{
-					if (AActor* Actor = ActorPtr.Get())
-					{
-						Actor->AddActorWorldOffset(DeltaMove, true);
-					}
-				}
-
-				// 子アクターを移動
-				for (AActor* ChildActor : Child)
-				{
-					if (ChildActor)
-					{
-						ChildActor->AddActorWorldOffset(DeltaMove, true);
-					}
+					Actor->AddActorWorldOffset(DeltaMove, true);
 				}
 			}
 
-			UE_LOG(LogTemp, Log, TEXT("AutoLoop: Movement completed in %d frames"), FrameCount);
+			// 子アクターを移動
+			for (AActor* ChildActor : Child)
+			{
+				if (ChildActor)
+				{
+					ChildActor->AddActorWorldOffset(DeltaMove, true);
+				}
+			}
 		}
 
 		// 最終位置を確実に設定
@@ -232,14 +203,13 @@ UE5Coro::TCoroutine<> UMoveOnColorComponent::AutoLoopMovement()
 
 		if (!GetOwner() || !bIsAutoLoopRunning)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Stopping before wait"));
 			break;
 		}
 
 		// 到着地点での待機時間を取得
 		float WaitTime = bCurrentTargetIsB ? WaitTimeAtB : WaitTimeAtA;
 
-		UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Arrived at %s, waiting %.2f seconds"),
+		UE_LOG(LogTemp, Log, TEXT("AutoLoop: Arrived at %s, waiting %.2f seconds"),
 			bCurrentTargetIsB ? TEXT("Location B") : TEXT("Location A"), WaitTime);
 
 		// 待機
@@ -253,24 +223,20 @@ UE5Coro::TCoroutine<> UMoveOnColorComponent::AutoLoopMovement()
 			co_await Latent::NextTick();
 		}
 
-		UE_LOG(LogTemp, Log, TEXT("AutoLoop: Wait completed"));
-
 		// キャンセルチェック（待機後）
 		if (!GetOwner() || !bIsAutoLoopRunning)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Stopping after wait"));
 			break;
 		}
 
 		// 目標を反転
 		bCurrentTargetIsB = !bCurrentTargetIsB;
-		UE_LOG(LogTemp, Log, TEXT("AutoLoop: Target reversed, next target is %s"),
-			bCurrentTargetIsB ? TEXT("Location B") : TEXT("Location A"));
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Stopped after %d iterations"), LoopCount);
+	UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Stopped"));
 	bIsAutoLoopRunning = false;
 }
+
 float UMoveOnColorComponent::ApplyEasing(float Alpha) const
 {
 	switch (EasingType)
