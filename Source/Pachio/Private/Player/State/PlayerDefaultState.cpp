@@ -262,7 +262,8 @@ bool UPlayerDefaultState::Jump(float jumpForce)
     JumpStartTime = GetWorld()->GetTimeSeconds();
 
     ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-    sound->PlaySound("SE", "Jump");
+
+    if(sound)  sound->PlaySound("SE", "Jump");
     return true;
 }
 
