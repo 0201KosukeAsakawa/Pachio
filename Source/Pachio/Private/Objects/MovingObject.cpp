@@ -84,12 +84,12 @@ void UMoveOnColorComponent::TickComponent(
 }
 
 
-void UMoveOnColorComponent::ApplyColorWithMatching(const FLinearColor& InColor)
+void UMoveOnColorComponent::ActivateDirect(const FLinearColor& InColor)
 {
     StartLocation = GetOwner()->GetActorLocation();
     ElapsedTime = 0.0f;
 
-    if (HasColorChanged())
+    if (UColorUtilityLibrary::IsHueSimilar(InColor,CurrentColor))
     {
         TargetLocation = OnLocation;
     }

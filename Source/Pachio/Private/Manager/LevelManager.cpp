@@ -8,6 +8,7 @@
 #include "EngineUtils.h"
 #include "Engine/DataTable.h"
 #include "Sound/SoundManager.h"
+#include "SoundHandle.h"
 
 // =======================
 // 静的シングルトンインスタンス
@@ -61,7 +62,7 @@ void ALevelManager::InitializeComponents()
 	{
 		SoundManager->Init();
 		// デフォルトBGMを再生
-		SoundManager->PlaySound("BGM", "Default", true, SoundManager->GetBGMVolume());
+		USoundHandle::PlaySound(this, ESoundKinds::BGM, TEXT("Default"),true,true,SoundManager->GetBGMVolume());
 	}
 
 	// UIManager を生成・初期化
@@ -119,28 +120,6 @@ ALevelManager* ALevelManager::GetInstance(UObject* WorldContext)
 }
 
 // =======================
-// サウンド制御
-// =======================
-
-// サウンドを再生
-void ALevelManager::PlaySound(FName WaveName, FName SoundName)
-{
-	if (!SoundManager)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SoundManager is null when trying to play sound."));
-		return;
-	}
-
-	SoundManager->PlaySound(WaveName, SoundName);
-}
-
-// サウンドマネージャを取得（ISoundableインターフェースで返す）
-TScriptInterface<ISoundable> ALevelManager::GetSoundManager() const
-{
-	return TScriptInterface<ISoundable>(SoundManager);
-}
-
-// =======================
 // プレイヤーゴール処理
 // =======================
 
@@ -158,11 +137,13 @@ void ALevelManager::HandlePlayerGoalReached()
 
 	// BGMを止め、ファンファーレを再生
 	SoundManager->StopBGM();
-	SoundManager->PlaySound("SE", "Fanfare");
-
-	// UI入力専用モードにする場合はここで呼ぶ
-	// PauseGameAndShowUI(ResultWidget);
+	USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Fanfare"));
 }
+
+TScriptInterface<ISoundManagerProvider> ALevelManager::GetSoundManager() const
+{
+	return SoundManager;
+};
 
 // =======================
 // UI専用の入力モードに切り替え

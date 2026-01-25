@@ -1,27 +1,33 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/**
+ * カメラ制御を担当するコンポーネント。
+ *
+ * グリッド単位でのカメラ移動や、ビュータイプ（CharacterView／GridView）の切り替えを管理する。
+ * スムーズな補間移動やズーム設定、カメラ追従処理、イベント演出などを行う。
+ */
+
+#pragma once
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Camera/CameraComponent.h"
+#include "UE5Coro.h"
 #include "CameraHandlerComponent.generated.h"
 
-class USpringArmComponent;
 class UCameraComponent;
 
+using namespace UE5Coro;
 /**
- * カメラ制御を担当するコンポーネント。
- *
- * グリッド単位でのカメラ移動や、ビュータイプ（サイド／トップ）の切り替えを管理する。
- * スムーズな補間移動やズーム設定、カメラ追従処理などを行う。
+ * カメラのビュータイプ
  */
 UENUM(BlueprintType)
 enum class ECameraViewType : uint8
 {
-	/** 横方向（サイドビュー） */
+	/** グリッドビュー */
 	GridView UMETA(DisplayName = "Grid View"),
 
-	/** 上方向（トップビュー） */
+	/** キャラクタービュー */
 	CharacterView UMETA(DisplayName = "Character View")
 };
 
@@ -29,7 +35,7 @@ enum class ECameraViewType : uint8
  * カメラの挙動やパラメータを制御するコンポーネント。
  *
  * 主にプレイヤーキャラクターにアタッチして使用し、
- * グリッド単位での視点変更やスムーズな追従を実現する。
+ * グリッド単位での視点変更やスムーズな追従、イベント演出を実現する。
  */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UCameraHandlerComponent : public UActorComponent
@@ -39,6 +45,11 @@ class PACHIO_API UCameraHandlerComponent : public UActorComponent
 public:
 	/** コンストラクタ：初期値の設定 */
 	UCameraHandlerComponent();
+
+	UFUNCTION(BlueprintCallable, Category = "Camera Test")
+	void TestEventCamera() { TestEventCameraCoroutine(); }
+
+	UE5Coro::TCoroutine<> TestEventCameraCoroutine();
 
 	/**
 	 * カメラ初期化処理
@@ -60,35 +71,36 @@ public:
 	 * カメラ設定を適用（ビュータイプ指定なし）
 	 *
 	 * @param NewGridSize 新しいグリッドサイズ
-	 * @param NewZbaffa Z軸方向の補正値
+	 * @param NewCameraDistance カメラ距離（X軸オフセット）
 	 */
-	void ApplyCameraSettings(FVector2D NewGridSize, float NewZbaffa);
+	void ApplyCameraSettings(FVector2D NewGridSize, float NewCameraDistance);
 
 	/**
 	 * カメラ設定を適用（ビュータイプ指定あり）
 	 *
 	 * @param NewGridSize 新しいグリッドサイズ
-	 * @param NewZbaffa Z軸方向の補正値
-	 * @param ViewType カメラのビュータイプ（サイド／トップ）
+	 * @param NewCameraDistance カメラ距離（X軸オフセット）
+	 * @param ViewType カメラのビュータイプ
 	 */
-	void ApplyCameraSettings(FVector2D NewGridSize, float NewZbaffa, ECameraViewType ViewType);
+	void ApplyCameraSettings(FVector2D NewGridSize, float NewCameraDistance, ECameraViewType ViewType);
 
 	/**
 	 * カメラの表示モードを変更
 	 *
-	 * @param newMode 新しいカメラビュータイプ
+	 * @param NewMode 新しいカメラビュータイプ
 	 */
-	void ChangeViewMode(ECameraViewType newMode) { CameraViewType = newMode; }
+	void ChangeViewMode(ECameraViewType NewMode) { CameraViewType = NewMode; }
 
 	/**
 	 * 現在のカメラ設定が指定値と一致しているか判定
 	 *
 	 * @param TargetGridSize 判定対象のグリッドサイズ
-	 * @param TargetZbaffa 判定対象のZ補正値
+	 * @param TargetCameraDistance 判定対象のカメラ距離
+	 * @param TargetType 判定対象のビュータイプ
 	 *
 	 * @return 一致していれば true
 	 */
-	bool IsParameterMatch(FVector2D TargetGridSize, float TargetZbaffa, ECameraViewType type);
+	bool IsParameterMatch(FVector2D TargetGridSize, float TargetCameraDistance, ECameraViewType TargetType);
 
 	/**
 	 * カメラコンポーネントを取得
@@ -96,6 +108,67 @@ public:
 	 * @return カメラコンポーネントのポインタ
 	 */
 	UCameraComponent* GetCamera() { return Camera; }
+
+	// ========== イベント演出用コルーチン ==========
+
+	/**
+	 * イベント位置にカメラをフォーカス(コルーチン版)
+	 *
+	 * @param EventLocation イベント発生位置
+	 * @param FocusDuration 注視時間(秒)
+	 * @param MoveSpeed 移動速度
+	 * @param bWaitForComplete 移動完了を待つか
+	 */
+	TCoroutine<> FocusOnLocation(
+		FVector EventLocation,
+		float FocusDuration = 2.0f,
+		float MoveSpeed = 3.0f,
+		bool bWaitForComplete = true
+	);
+
+	/**
+	 * 複数地点を順番にフォーカス
+	 *
+	 * @param Locations フォーカス位置の配列
+	 * @param DurationPerLocation 各地点の注視時間
+	 * @param MoveSpeed 移動速度
+	 */
+	TCoroutine<> FocusOnMultipleLocations(
+		TArray<FVector> Locations,
+		float DurationPerLocation = 2.0f,
+		float MoveSpeed = 3.0f
+	);
+
+	/**
+	 * プレイヤー位置に戻る(コルーチン版)
+	 *
+	 * @param MoveSpeed 移動速度
+	 */
+	TCoroutine<> ReturnToPlayer(float MoveSpeed = 3.0f);
+
+	/**
+	 * カメラズーム演出
+	 *
+	 * @param TargetFOV 目標FOV
+	 * @param Duration ズーム時間
+	 */
+	TCoroutine<> ZoomCamera(float TargetFOV, float Duration = 1.0f);
+
+	/**
+	 * カメラシェイク演出
+	 *
+	 * @param Intensity 揺れの強さ
+	 * @param Duration 揺れの時間
+	 */
+	TCoroutine<> ShakeCamera(float Intensity = 10.0f, float Duration = 0.5f);
+
+	/**
+	 * イベント演出中かどうか
+	 *
+	 * @return イベント演出中ならtrue
+	 */
+	UFUNCTION(BlueprintPure, Category = "Camera Event")
+	bool IsInEventMode() const { return bIsInEventMode; }
 
 private:
 	/**
@@ -117,19 +190,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Grid")
 	ECameraViewType CameraViewType = ECameraViewType::CharacterView;
 
-	/** グリッド1マスのサイズ（X:横幅 / Y:奥行） */
+	/** グリッド1マスのサイズ（X:横幅 / Y:高さ） */
 	UPROPERTY(EditAnywhere, Category = "Grid")
 	FVector2D GridSize = FVector2D(7000.f, 3000.f);
 
-	/** Z軸方向のオフセット（高さ補正） */
+	/** カメラのX軸方向距離（奥行き） */
 	UPROPERTY(EditAnywhere, Category = "Grid")
-	float Zbaffa = 2000.f;
-
-	/** 現在のグリッド設定 */
-	FVector2D CurrentGridSize;
-
-	/** 現在のZ補正値 */
-	float CurrentZbaffa;
+	float CameraDistance = 2000.f;
 
 	/** 現在位置しているグリッド座標（整数値） */
 	FIntPoint CurrentGrid = FIntPoint::ZeroValue;
@@ -138,16 +205,21 @@ private:
 	FVector TargetCameraLocation;
 
 	/** カメラの補間速度（移動の滑らかさ） */
-	float InterpSpeed = 5.f;
-
-	/** 実際のカメラ位置（補間後） */
-	FVector CameraLocation;
-
-	/** カメラの回転・位置制御用スプリングアーム */
-	UPROPERTY(VisibleAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USpringArmComponent> SpringArm;
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	float InterpSpeed = 3.0f;
 
 	/** 実際に描画されるカメラ */
 	UPROPERTY(VisibleAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> Camera;
+
+	// ========== イベント演出用変数 ==========
+
+	/** イベント演出中フラグ */
+	bool bIsInEventMode = false;
+
+	/** 元のFOV(ズーム用) */
+	float OriginalFOV = 90.0f;
+
+	/** イベント前のターゲット位置 */
+	FVector PreEventTargetLocation;
 };

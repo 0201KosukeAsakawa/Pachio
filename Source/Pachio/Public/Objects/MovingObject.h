@@ -41,7 +41,7 @@ private:
 	 *
 	 * @param InColor 適用された新しい色
 	 */
-	virtual void ApplyColorWithMatching(const FLinearColor& InColor) override;
+	virtual void ActivateDirect(const FLinearColor& InColor) override;
 
 	/**
 	 * オーバーラップ開始時の処理

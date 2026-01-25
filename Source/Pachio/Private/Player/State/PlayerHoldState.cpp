@@ -9,6 +9,7 @@
 #include "Logic/Movement/PlayerMoveLogic.h"
 #include "Components/Color/ColorReactiveComponent.h"
 #include "Components/MoveComponent.h"
+#include "SoundHandle.h"
 
 UPlayerHoldState::UPlayerHoldState()
     : HoldTarget(nullptr)
@@ -59,8 +60,7 @@ bool UPlayerHoldState::OnUpdate(float DeltaTime)
 bool UPlayerHoldState::OnExit(APawn* owner)
 {
     HoldTarget = nullptr;
-   // targetComp = nullptr;
-    ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE", "Put");
+    USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Put"));
     return true;
 }
 

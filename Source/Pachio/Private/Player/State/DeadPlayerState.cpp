@@ -4,8 +4,8 @@
 #include "Player/State/DeadPlayerState.h"
 #include "Player/PlayerCharacter.h"
 #include "Interface/StateControllable.h"
-#include "Manager/LevelManager.h"
-#include "Sound/SoundManager.h"
+#include "SoundHandle.h"
+#include "Interface/Soundable.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/RespawnComponent.h"
 
@@ -45,12 +45,7 @@ bool UDeadPlayerState::OnEnter(APawn* Owner)
         ElapsedTime = 0.f;
     }
 
-    ALevelManager* levelManager = ALevelManager::GetInstance(GetWorld());
-
-    if (levelManager == nullptr)
-        return false;
-
-    levelManager->GetSoundManager()->PlaySound(TEXT("SE"), TEXT("Dead"));
+    USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Dead"));
 
     return true;
 }
