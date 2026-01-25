@@ -22,6 +22,8 @@
 #include "Components/Color/ColorControllerComponent.h"
 #include "ColorUtilityLibrary.h"
 #include "Components/Color/ObjectColorComponent.h"
+#include "SoundHandle.h"
+
 namespace Player_DEFAULT_Constants
 {
     constexpr float DEAD_ZONE = 0.2f;
@@ -128,12 +130,7 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
             // 移動モードをWalkingに戻す
             CharMovement->SetMovementMode(MOVE_Walking);
 
-            ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-            if (sound)
-            {
-                UE_LOG(LogTemp, Warning, TEXT("Landed after jump!"));
-                sound->PlaySound("SE", "Land");
-            }
+            USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Land"));
 
             bIsJumping = false;
         }
@@ -142,15 +139,8 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
     {
         // 通常の着地処理（ジャンプ以外で落下した場合）
         CharMovement->SetMovementMode(MOVE_Walking);
-
-        ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-        if (sound)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("HasLanded returned true, entering if-block!"));
-            sound->PlaySound("SE", "Land");
-        }
+        USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Land"));
     }
-
     return true;
 }
 bool UPlayerDefaultState::OnExit(APawn* owner)
@@ -251,8 +241,6 @@ bool UPlayerDefaultState::Jump(float jumpForce)
     bIsJumping = true;
     JumpStartTime = GetWorld()->GetTimeSeconds();
 
-    ISoundManagerProvider* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-    if (sound)
-        sound->PlaySound("SE", "Jump");
+    USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Jump"));
     return true;
 }

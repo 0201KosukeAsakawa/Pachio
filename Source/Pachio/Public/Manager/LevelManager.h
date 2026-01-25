@@ -15,7 +15,7 @@ class UUIManager;
 
 class UWeatherEffectManager;
 class UDataTable;
-class ISoundable;
+class ISoundManagerProvider;
 class UBlockDataContainer;
 class UAttackDataContainer;
 class UItemDataContainer;
@@ -60,20 +60,12 @@ public:
 	void HandlePlayerGoalReached();
 
 	/**
-	 * サウンドの再生を指示
-	 *
-	 * @param Category サウンドカテゴリ名
-	 * @param CueName  再生するサウンドキュー名
-	 */
-	void PlaySound(FName Category, FName CueName);
-
-	/**
 	 * サウンドマネージャーを取得
 	 *
 	 * @return ISoundable インターフェースを実装したサウンド管理クラス
 	 */
 	UFUNCTION(BlueprintCallable, Category = "LevelManager")
-	TScriptInterface<ISoundable> GetSoundManager() const;
+	TScriptInterface<ISoundManagerProvider> GetSoundManager() const;
 
 	/**
 	 * グローバルアクセス用のレベルマネージャーを取得（シングルトン）

@@ -8,6 +8,7 @@
 
 
 class ISoundManagerProvider;
+enum class ESoundKinds : uint8;
 /**
  *
  */
@@ -18,83 +19,83 @@ class PACHIO_API USoundHandle : public UBlueprintFunctionLibrary
 
 public:
     // ==========================
-    // ==== ‰¹—Ê§Œä ====
+    // ==== ï¿½ï¿½ï¿½Êï¿½ï¿½ï¿½ ====
     // ==========================
 
     /**
-     * @brief BGM/SE‰¹—Ê‚ğˆêŠ‡İ’è
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @param NewBGM BGM‰¹—Êi0-1j
-     * @param NewSE SE‰¹—Êi0-1j
+     * @brief BGM/SEï¿½ï¿½ï¿½Ê‚ï¿½êŠ‡ï¿½İ’ï¿½
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @param NewBGM BGMï¿½ï¿½ï¿½Êi0-1ï¿½j
+     * @param NewSE SEï¿½ï¿½ï¿½Êi0-1ï¿½j
      */
     UFUNCTION(BlueprintCallable, Category = "Sound|Volume", meta = (WorldContext = "WorldContext"))
     static void SetVolume(UObject* WorldContext, float NewBGM, float NewSE);
 
     /**
-     * @brief BGM‰¹—Êİ’è
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @param Volume ‰¹—Êi0-1j
+     * @brief BGMï¿½ï¿½ï¿½Êİ’ï¿½
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @param Volume ï¿½ï¿½ï¿½Êi0-1ï¿½j
      */
     UFUNCTION(BlueprintCallable, Category = "Sound|Volume", meta = (WorldContext = "WorldContext"))
     static void SetBGMVolume(UObject* WorldContext, float Volume);
 
     /**
-     * @brief SE‰¹—Êİ’è
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @param Volume ‰¹—Êi0-1j
+     * @brief SEï¿½ï¿½ï¿½Êİ’ï¿½
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @param Volume ï¿½ï¿½ï¿½Êi0-1ï¿½j
      */
     UFUNCTION(BlueprintCallable, Category = "Sound|Volume", meta = (WorldContext = "WorldContext"))
     static void SetSEVolume(UObject* WorldContext, float Volume);
 
     /**
-     * @brief Œ»İ‚ÌBGM‰¹—Ê‚ğæ“¾
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @return float BGM‰¹—Êi0-1j
+     * @brief ï¿½ï¿½ï¿½İ‚ï¿½BGMï¿½ï¿½ï¿½Ê‚ï¿½æ“¾
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @return float BGMï¿½ï¿½ï¿½Êi0-1ï¿½j
      */
     UFUNCTION(BlueprintPure, Category = "Sound|Volume", meta = (WorldContext = "WorldContext"))
     static float GetBGMVolume(UObject* WorldContext);
 
     /**
-     * @brief Œ»İ‚ÌSE‰¹—Ê‚ğæ“¾
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @return float SE‰¹—Êi0-1j
+     * @brief ï¿½ï¿½ï¿½İ‚ï¿½SEï¿½ï¿½ï¿½Ê‚ï¿½æ“¾
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @return float SEï¿½ï¿½ï¿½Êi0-1ï¿½j
      */
     UFUNCTION(BlueprintPure, Category = "Sound|Volume", meta = (WorldContext = "WorldContext"))
     static float GetSEVolume(UObject* WorldContext);
 
     // ==========================
-    // ==== BGM§Œä ====
+    // ==== BGMï¿½ï¿½ï¿½ï¿½ ====
     // ==========================
 
     /**
-     * @brief BGM‚ğ’â~
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
+     * @brief BGMï¿½ï¿½ï¿½~
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
      */
     UFUNCTION(BlueprintCallable, Category = "Sound|BGM", meta = (WorldContext = "WorldContext"))
     static void StopBGM(UObject* WorldContext);
 
 
     /**
-     * @brief BGM‚ğ’â~
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @param SEName       ’â~‚³‚¹‚éSE–¼
+     * @brief BGMï¿½ï¿½ï¿½~
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @param SEName       ï¿½ï¿½~ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SEï¿½ï¿½
      */
     UFUNCTION(BlueprintCallable, Category = "Sound|SE", meta = (WorldContext = "WorldContext"))
     static void StopSE(UObject* WorldContext, FName SEName);
     // ==========================
-    // ==== ƒTƒEƒ“ƒhÄ¶ ====
+    // ==== ï¿½Tï¿½Eï¿½ï¿½ï¿½hï¿½Äï¿½ ====
     // ==========================
 
     /**
-     * @brief ƒTƒEƒ“ƒh‚ğÄ¶
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @param DataID ƒTƒEƒ“ƒhƒf[ƒ^IDi"BGM", "SE"‚È‚Çj
-     * @param SoundID Ä¶‚·‚éƒTƒEƒ“ƒh‚ÌID
-     * @param SetVolume ƒJƒXƒ^ƒ€‰¹—Ê‚ğg—p‚·‚é‚©
-     * @param Volume ƒJƒXƒ^ƒ€‰¹—Êi0-1j
-     * @param IsSpecifyLocation ˆÊ’uw’èÄ¶‚·‚é‚©
-     * @param Location Ä¶ˆÊ’u
-     * @return bool Ä¶¬Œ÷‚©”Û‚©
+     * @brief ï¿½Tï¿½Eï¿½ï¿½ï¿½hï¿½ï¿½Äï¿½
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @param DataID ï¿½Tï¿½Eï¿½ï¿½ï¿½hï¿½fï¿½[ï¿½^IDï¿½i"BGM", "SE"ï¿½È‚Çj
+     * @param SoundID ï¿½Äï¿½ï¿½ï¿½ï¿½ï¿½Tï¿½Eï¿½ï¿½ï¿½hï¿½ï¿½ID
+     * @param SetVolume ï¿½Jï¿½Xï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½Ê‚ï¿½gï¿½pï¿½ï¿½ï¿½é‚©
+     * @param Volume ï¿½Jï¿½Xï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½Êi0-1ï¿½j
+     * @param IsSpecifyLocation ï¿½Ê’uï¿½wï¿½ï¿½Äï¿½ï¿½ï¿½ï¿½é‚©
+     * @param Location ï¿½Äï¿½ï¿½Ê’u
+     * @return bool ï¿½Äï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û‚ï¿½
      */
     UFUNCTION(BlueprintCallable, Category = "Sound|Playback", meta = (WorldContext = "WorldContext", AdvancedDisplay = "SetVolume,Volume,IsSpecifyLocation,Location"))
     static bool PlaySound(
@@ -108,35 +109,35 @@ public:
         FVector Location = FVector::ZeroVector
     );
     // ==========================
-    // ==== •Ö—˜ŠÖ” ====
+    // ==== ï¿½Ö—ï¿½ï¿½Öï¿½ ====
     // ==========================
 
     /**
-     * @brief SE‚ğŠÈˆÕÄ¶iƒfƒtƒHƒ‹ƒg‰¹—Ê‚Å2DÄ¶j
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @param SoundID Ä¶‚·‚éSE‚ÌID
-     * @param isLoop ŒJ‚è•Ô‚µÄ¶‚·‚é‚©
-     * @return bool Ä¶¬Œ÷‚©”Û‚©
+     * @brief SEï¿½ï¿½ÈˆÕÄï¿½ï¿½iï¿½fï¿½tï¿½Hï¿½ï¿½ï¿½gï¿½ï¿½ï¿½Ê‚ï¿½2Dï¿½Äï¿½ï¿½j
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @param SoundID ï¿½Äï¿½ï¿½ï¿½ï¿½ï¿½SEï¿½ï¿½ID
+     * @param isLoop ï¿½Jï¿½ï¿½Ô‚ï¿½ï¿½Äï¿½ï¿½ï¿½ï¿½é‚©
+     * @return bool ï¿½Äï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û‚ï¿½
      */
     UFUNCTION(BlueprintCallable, Category = "Sound|Playback", meta = (WorldContext = "WorldContext"))
     static bool PlaySE(UObject* WorldContext, FName SoundID, const bool isLoop = false);
 
     /**
-     * @brief SE‚ğˆÊ’uw’è‚ÅÄ¶
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @param SoundID Ä¶‚·‚éSE‚ÌID
-     * @param Location Ä¶ˆÊ’u
-     * @param isLoop ŒJ‚è•Ô‚µÄ¶‚³‚¹‚é‚©
-     * @return bool Ä¶¬Œ÷‚©”Û‚©
+     * @brief SEï¿½ï¿½Ê’uï¿½wï¿½ï¿½ÅÄï¿½
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @param SoundID ï¿½Äï¿½ï¿½ï¿½ï¿½ï¿½SEï¿½ï¿½ID
+     * @param Location ï¿½Äï¿½ï¿½Ê’u
+     * @param isLoop ï¿½Jï¿½ï¿½Ô‚ï¿½ï¿½Äï¿½ï¿½ï¿½ï¿½ï¿½ï¿½é‚©
+     * @return bool ï¿½Äï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û‚ï¿½
      */
     UFUNCTION(BlueprintCallable, Category = "Sound|Playback", meta = (WorldContext = "WorldContext"))
     static bool PlaySEAtLocation(UObject* WorldContext, FName SoundID, FVector Location, bool isLoop);
 
 private:
     /**
-     * @brief SoundManagerƒCƒ“ƒXƒ^ƒ“ƒX‚ğæ“¾
-     * @param WorldContext ƒ[ƒ‹ƒhƒRƒ“ƒeƒLƒXƒg
-     * @return ISoundableProvider ƒCƒ“ƒ^[ƒtƒF[ƒX
+     * @brief SoundManagerï¿½Cï¿½ï¿½ï¿½Xï¿½^ï¿½ï¿½ï¿½Xï¿½ï¿½æ“¾
+     * @param WorldContext ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½g
+     * @return ISoundableProvider ï¿½Cï¿½ï¿½ï¿½^ï¿½[ï¿½tï¿½Fï¿½[ï¿½X
      */
     static TScriptInterface<ISoundManagerProvider> GetSoundManager(UObject* WorldContext);
 };

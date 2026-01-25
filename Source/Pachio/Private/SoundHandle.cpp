@@ -26,7 +26,7 @@ TScriptInterface<ISoundManagerProvider> USoundHandle::GetSoundManager(UObject* W
 }
 
 // ==========================
-// ‰¹—Ê§Œä
+// ï¿½ï¿½ï¿½Êï¿½ï¿½ï¿½
 // ==========================
 
 void USoundHandle::SetVolume(UObject* WorldContext, float NewBGM, float NewSE)
@@ -72,7 +72,7 @@ float USoundHandle::GetSEVolume(UObject* WorldContext)
 }
 
 // ==========================
-// BGM§Œä
+// BGMï¿½ï¿½ï¿½ï¿½
 // ==========================
 
 void USoundHandle::StopBGM(UObject* WorldContext)
@@ -92,7 +92,7 @@ void USoundHandle::StopSE(UObject* WorldContext, FName SEName)
 }
 
 // ==========================
-// ƒTƒEƒ“ƒhÄ¶
+// ï¿½Tï¿½Eï¿½ï¿½ï¿½hï¿½Äï¿½
 // ==========================
 
 bool USoundHandle::PlaySound(
@@ -113,7 +113,7 @@ bool USoundHandle::PlaySound(
 }
 
 // ==========================
-// •Ö—˜ŠÖ”
+// ï¿½Ö—ï¿½ï¿½Öï¿½
 // ==========================
 
 bool USoundHandle::PlaySE(UObject* WorldContext, FName SoundID, bool isLoop)

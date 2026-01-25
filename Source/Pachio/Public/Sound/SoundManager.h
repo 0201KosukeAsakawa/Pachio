@@ -35,7 +35,7 @@ public:
  * BGM/SEの再生、音量管理、フェードイン/アウト、Beat連動処理を担当
  */
 UCLASS(Blueprintable)
-class PACHIO_API USoundManager : public UObject, public ISoundManagerProvider
+class PACHIO_API USoundManager : public UActorComponent, public ISoundManagerProvider
 {
     GENERATED_BODY()
 

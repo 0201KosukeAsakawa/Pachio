@@ -21,14 +21,7 @@ void AInGameController::SetupInputComponent()
 // 所有権を切り替える関数
 void AInGameController::TogglePossession(AActor* HitActor)
 {
-    // すでに何かを憑依していて、元のPawnが記録されている場合は元に戻る
-    if (bIsPossessing && OriginalPawn)
-    {
-        Possess(OriginalPawn);        // 元のPawnに所有権を戻す
-        bIsPossessing = false;        // 所有状態フラグをリセット
-        ALevelManager::GetInstance(GetWorld())->GetSoundManager()->PlaySound("SE","PlayChange");
-        return;
-    }
+
 }
 
 // 手動で元のPawnに戻る処理（外部から呼ばれる用）
