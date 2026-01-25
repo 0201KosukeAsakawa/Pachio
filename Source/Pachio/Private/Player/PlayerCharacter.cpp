@@ -371,11 +371,15 @@ UCameraComponent* APlayerCharacter::GetCamera()
 
 FVector APlayerCharacter::GetAnimVelocity() const
 {
-	if (StateManager == nullptr)
+	if (!StateManager)
+	{
 		return FVector();
+	}
 
-	return StateManager->GetCurrentState()->GetAnimVelocity();
+	// 通常時は実際の速度を返す
+	 return StateManager->GetCurrentState()->GetAnimVelocity();
 }
+
 
 float APlayerCharacter::GetYaw() const
 {

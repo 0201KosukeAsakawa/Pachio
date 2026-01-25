@@ -91,4 +91,6 @@ private:
 	bool bFalling = false;
 
 	bool bHasJustLanded = false;
+
+	bool bIgnoreGroundCheck = false; // 接地判定を一時的に無視するフラグ
 };

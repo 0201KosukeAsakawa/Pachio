@@ -24,6 +24,10 @@ public:
 private:
 	bool TryEnterLadderOnJump() const;
 
+	// アニメーション終了時のコールバック
+	UFUNCTION()
+	void OnLandingMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	void PlayLandingAnimation();
 private:
 	FTimerHandle CheckHoldableHandle;
 	// プレイヤー移動処理を司るコンポーネント
@@ -40,6 +44,11 @@ private:
 	bool bPrevCanHold;
 	bool bPrevCanClim;
 
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	UAnimMontage* LandingMontage; // 着地アニメーションモンタージュ
+
+	bool bIsPlayingLandingAnimation = false; // 着地アニメーション再生中フラグ
+
 	FRotator InitialRotation;
 
 	FVector CurrentDirection;
@@ -49,4 +58,16 @@ private:
 
 	UPROPERTY()
 	UCapsuleComponent* HitBox;
+
+private:
+	bool bLandingAnimationJustEnded = false; // 着地アニメーションが終了した瞬間のフラグ
+
+public:
+	// 着地アニメーション終了を確認する関数
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	bool HasLandingAnimationEnded() const { return bLandingAnimationJustEnded; }
+
+	// 着地アニメーション再生中かを確認する関数
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	bool IsPlayingLandingAnimation() const { return bIsPlayingLandingAnimation; }
 };

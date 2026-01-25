@@ -42,8 +42,9 @@ public:
 	
 	//移動速度
 	inline virtual float GetMoveSpeed()const { return mMoveSpeed; }
-
+	
 	int32 GetYaw()const;
+
 
 protected:
 	/** このステートがアタッチされているキャラクター */

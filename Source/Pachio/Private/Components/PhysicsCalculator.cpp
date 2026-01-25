@@ -27,10 +27,8 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	AActor* Owner = GetOwner();
 
-	// --- ここで OffMesh 状態を判定 ---
 	if (IsActive())
 	{
-		// オーナーが非表示 or Tick 無効なら処理を止める
 		return;
 	}
 	if (bShouldApplyGravity)
@@ -38,6 +36,22 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		AddGravity();
 		UpdateGroundState();
 	}
+
+	// ★ 修正: 接地したら上昇力をキャンセル（ただしジャンプ直後は無視）
+	if (!bIgnoreGroundCheck && OnGround() && ForceDirection.Z > 0)
+	{
+		ForceDirection.Z = 0;
+		ForceScale = 0;
+		bIsPhysicsEnabled = true;
+		Timer = 0;
+	}
+
+	// ★ 追加: 地面から離れたらフラグを解除
+	if (bIgnoreGroundCheck && !OnGround())
+	{
+		bIgnoreGroundCheck = false;
+	}
+
 	FVector MoveVector;
 	if (!bIsPhysicsEnabled)
 	{
@@ -45,11 +59,19 @@ void UPhysicsCalculator::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		MoveVector = ForceDirection * ForceScale;
 
 		FVector Adjusted = GetBlockedAdjustedVector(MoveVector);
-		if (bUseLocalOffset) // b が true ならローカル座標系で移動
+
+		if (ForceDirection.Z > 0 && Adjusted.Z < MoveVector.Z * 0.1f)
+		{
+			ForceDirection.Z = 0;
+			ForceScale = 0;
+			bIsPhysicsEnabled = true;
+		}
+
+		if (bUseLocalOffset)
 		{
 			GetOwner()->AddActorLocalOffset(Adjusted, bIsSweep);
 		}
-		else // false ならワールド座標系で移動
+		else
 		{
 			GetOwner()->AddActorWorldOffset(Adjusted, bIsSweep);
 		}
@@ -81,16 +103,21 @@ void UPhysicsCalculator::UpdateGroundState()
 	bWasOnGround = bIsCurrentlyOnGround;
 }
 
-void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep , const bool useLocalOffset)
+void UPhysicsCalculator::AddForce(FVector Direction, float Force, const bool bSweep, const bool useLocalOffset)
 {
 	ForceDirection = Direction;
-	ForceScale = Force /** ForceModifier*/;
+	ForceScale = Force;
 	Timer = 0;
 	bIsSweep = bSweep;
 	bIsPhysicsEnabled = false;
 	bUseLocalOffset = useLocalOffset;
-}
 
+	// ★ 追加: 上向きの力(ジャンプ)の場合、一時的に接地判定を無視
+	if (Direction.Z > 0)
+	{
+		bIgnoreGroundCheck = true;
+	}
+}
 void UPhysicsCalculator::ResetForce()
 {
 	ForceDirection = FVector::ZeroVector;

@@ -43,6 +43,7 @@ public:
 	bool IsStateMatch(EPlayerStateType StateTag);
 
 	// 現在のステートを取得
+	UFUNCTION(BlueprintCallable)
 	inline UPlayerStateComponent* GetCurrentState() const { return CurrentState; }
 
 private:
