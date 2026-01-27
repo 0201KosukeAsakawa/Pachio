@@ -132,7 +132,7 @@ UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 
 void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 {
-	CameraHandleComponent->ApplyCameraSettings(grid, ZBuffa);
+	//CameraHandleComponent->ApplyCameraSettings(grid, ZBuffa);
 }
 
 void APlayerCharacter::ResetBuff()

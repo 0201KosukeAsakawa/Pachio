@@ -1,4 +1,3 @@
-// MovingObject.cpp
 #include "Objects/MovingObject.h"
 #include "Sound/SoundManager.h"
 #include "ColorUtilityLibrary.h"
@@ -29,16 +28,11 @@ void UMoveOnColorComponent::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("BeginPlay - MovementMode: %d, bAutoLoop: %d"),
 		(int32)MovementMode, bAutoLoop);
 
-	// 自動ループモードの場合は開始
+	// Shuttleモードかつ自動ループの場合のみ自動開始
 	if (MovementMode == EColorMovementMode::Shuttle && bAutoLoop)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Starting AutoLoop from BeginPlay"));
-		AutoLoopMovement(); // コルーチンを直接起動
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AutoLoop NOT started - Mode: %d, bAutoLoop: %d"),
-			(int32)MovementMode, bAutoLoop);
+		UE_LOG(LogTemp, Warning, TEXT("Starting AutoLoop from BeginPlay (Shuttle mode)"));
+		AutoLoopMovement();
 	}
 }
 
@@ -54,12 +48,34 @@ void UMoveOnColorComponent::Initialize()
 
 	InitialWorldLocation = GetOwner()->GetActorLocation();
 
-	// 相対座標を絶対座標に変換
-	LocationA += InitialWorldLocation;
-	LocationB += InitialWorldLocation;
+	// 地点Aのワールド座標を計算
+	if (LocationAMode == ELocationMode::Local)
+	{
+		WorldLocationA = InitialWorldLocation + LocationA;
+		UE_LOG(LogTemp, Log, TEXT("Location A (Local): %s -> World: %s"),
+			*LocationA.ToString(), *WorldLocationA.ToString());
+	}
+	else
+	{
+		WorldLocationA = LocationA;
+		UE_LOG(LogTemp, Log, TEXT("Location A (World): %s"), *WorldLocationA.ToString());
+	}
+
+	// 地点Bのワールド座標を計算
+	if (LocationBMode == ELocationMode::Local)
+	{
+		WorldLocationB = InitialWorldLocation + LocationB;
+		UE_LOG(LogTemp, Log, TEXT("Location B (Local): %s -> World: %s"),
+			*LocationB.ToString(), *WorldLocationB.ToString());
+	}
+	else
+	{
+		WorldLocationB = LocationB;
+		UE_LOG(LogTemp, Log, TEXT("Location B (World): %s"), *WorldLocationB.ToString());
+	}
 
 	// 初期位置を地点Aに設定
-	GetOwner()->SetActorLocation(LocationA);
+	GetOwner()->SetActorLocation(WorldLocationA);
 	bCurrentTargetIsB = false;
 }
 
@@ -79,14 +95,35 @@ void UMoveOnColorComponent::ActivateDirect(const FLinearColor& InColor)
 
 void UMoveOnColorComponent::HandleToggleMode(const FLinearColor& InColor)
 {
-	// 色が一致する場合はB（ON）、それ以外はA（OFF）
-	FVector TargetLocation = UColorUtilityLibrary::IsHueSimilar(InColor, CurrentColor)
-		? LocationB
-		: LocationA;
+	// 色が一致する場合
+	if (UColorUtilityLibrary::IsHueSimilar(InColor, CurrentColor))
+	{
+		// 自動ループが有効な場合は開始
+		if (bAutoLoop && !bIsAutoLoopRunning)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Toggle: Starting AutoLoop (color match)"));
+			AutoLoopMovement();
+		}
+		else if (!bAutoLoop)
+		{
+			// 自動ループ無効時は通常の移動
+			MoveWithEasingAsync(WorldLocationB, MoveDuration);
+		}
+	}
+	else
+	{
+		// 色が不一致の場合
 
-	// 手動移動を開始（既存の手動移動のみキャンセル）
-	// 注意: 自動ループは停止しない
-	MoveWithEasingAsync(TargetLocation, MoveDuration);
+		// 自動ループ実行中なら停止
+		if (bIsAutoLoopRunning)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Toggle: Stopping AutoLoop (color mismatch)"));
+			bIsAutoLoopRunning = false;
+		}
+
+		// Location Aに移動
+		MoveWithEasingAsync(WorldLocationA, MoveDuration);
+	}
 }
 
 void UMoveOnColorComponent::HandleShuttleMode(const FLinearColor& InColor)
@@ -103,7 +140,7 @@ void UMoveOnColorComponent::HandleShuttleMode(const FLinearColor& InColor)
 	{
 		// 現在の目標地点を反転
 		bCurrentTargetIsB = !bCurrentTargetIsB;
-		TargetLocation = bCurrentTargetIsB ? LocationB : LocationA;
+		TargetLocation = bCurrentTargetIsB ? WorldLocationB : WorldLocationA;
 	}
 	else
 	{
@@ -111,7 +148,7 @@ void UMoveOnColorComponent::HandleShuttleMode(const FLinearColor& InColor)
 		if (UColorUtilityLibrary::IsHueSimilar(InColor, CurrentColor))
 		{
 			bCurrentTargetIsB = !bCurrentTargetIsB;
-			TargetLocation = bCurrentTargetIsB ? LocationB : LocationA;
+			TargetLocation = bCurrentTargetIsB ? WorldLocationB : WorldLocationA;
 		}
 		else
 		{
@@ -134,7 +171,7 @@ UE5Coro::TCoroutine<> UMoveOnColorComponent::AutoLoopMovement()
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Started - LocationA: %s, LocationB: %s"),
-		*LocationA.ToString(), *LocationB.ToString());
+		*WorldLocationA.ToString(), *WorldLocationB.ToString());
 
 	// 初期位置は地点A想定なので、最初は地点Bへ向かう
 	bCurrentTargetIsB = true;
@@ -154,7 +191,7 @@ UE5Coro::TCoroutine<> UMoveOnColorComponent::AutoLoopMovement()
 		}
 
 		// 次の目標地点を決定
-		FVector TargetLocation = bCurrentTargetIsB ? LocationB : LocationA;
+		FVector TargetLocation = bCurrentTargetIsB ? WorldLocationB : WorldLocationA;
 
 		UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Moving to %s (from %s)"),
 			bCurrentTargetIsB ? TEXT("Location B") : TEXT("Location A"),
@@ -271,6 +308,7 @@ UE5Coro::TCoroutine<> UMoveOnColorComponent::AutoLoopMovement()
 	UE_LOG(LogTemp, Warning, TEXT("AutoLoop: Stopped after %d iterations"), LoopCount);
 	bIsAutoLoopRunning = false;
 }
+
 float UMoveOnColorComponent::ApplyEasing(float Alpha) const
 {
 	switch (EasingType)
