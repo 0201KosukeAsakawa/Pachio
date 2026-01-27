@@ -75,19 +75,6 @@ FLinearColor UColorManager::GetWorldColor() const
 // プレイヤーの色コントローラーとイベント接続
 void UColorManager::BindController()
 {
-    APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-    if (PlayerPawn == nullptr)
-        return;
-
-    UColorControllerComponent* ColorController = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
-    if (ColorController == nullptr)
-        return;
-
-    if (!ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
-    {
-        // 色変更イベントにバインド
-        ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
-    }
 
 }
 
