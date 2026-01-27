@@ -30,6 +30,17 @@ enum class EColorMovementMode : uint8
 	Shuttle UMETA(DisplayName = "Shuttle (A ⇔ B)")
 };
 
+/** 位置座標の種類 */
+UENUM(BlueprintType)
+enum class ELocationMode : uint8
+{
+	/** ローカル座標（初期位置からの相対） */
+	Local UMETA(DisplayName = "Local (Relative)"),
+
+	/** ワールド座標（絶対位置） */
+	World UMETA(DisplayName = "World (Absolute)")
+};
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UMoveOnColorComponent : public UObjectColorComponent
 {
@@ -83,12 +94,20 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	EColorMovementMode MovementMode = EColorMovementMode::Toggle;
 
-	/** 地点A（OFF位置 or シャトルの始点）（相対座標） */
-	UPROPERTY(EditAnywhere, Category = "Movement", meta = (DisplayName = "Location A (Off/Start)"))
+	/** 地点Aの座標モード */
+	UPROPERTY(EditAnywhere, Category = "Movement|Location A", meta = (DisplayName = "Location A Mode"))
+	ELocationMode LocationAMode = ELocationMode::Local;
+
+	/** 地点A（ローカル/ワールド座標） */
+	UPROPERTY(EditAnywhere, Category = "Movement|Location A", meta = (DisplayName = "Location A"))
 	FVector LocationA;
 
-	/** 地点B（ON位置 or シャトルの終点）（相対座標） */
-	UPROPERTY(EditAnywhere, Category = "Movement", meta = (DisplayName = "Location B (On/End)"))
+	/** 地点Bの座標モード */
+	UPROPERTY(EditAnywhere, Category = "Movement|Location B", meta = (DisplayName = "Location B Mode"))
+	ELocationMode LocationBMode = ELocationMode::Local;
+
+	/** 地点B（ローカル/ワールド座標） */
+	UPROPERTY(EditAnywhere, Category = "Movement|Location B", meta = (DisplayName = "Location B"))
 	FVector LocationB;
 
 	/** 子オブジェクトの配列（連動移動対象） */
@@ -108,19 +127,19 @@ private:
 	EMovementEasing EasingType = EMovementEasing::EaseInOut;
 
 	/** Shuttleモード: 色変化時に逆方向に移動するか */
-	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EMovementMode::Shuttle", EditConditionHides))
+	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EColorMovementMode::Shuttle", EditConditionHides))
 	bool bReverseOnColorChange = true;
 
 	/** Shuttleモード: 自動往復するか（色変化とは無関係にループ） */
-	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EMovementMode::Shuttle", EditConditionHides))
+	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EColorMovementMode::Shuttle", EditConditionHides))
 	bool bAutoLoop = false;
 
 	/** Shuttleモード: 地点Aでの待機時間 */
-	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EMovementMode::Shuttle && bAutoLoop", EditConditionHides, ClampMin = "0.0", ClampMax = "10.0"))
+	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EColorMovementMode::Shuttle && bAutoLoop", EditConditionHides, ClampMin = "0.0", ClampMax = "10.0"))
 	float WaitTimeAtA = 1.0f;
 
 	/** Shuttleモード: 地点Bでの待機時間 */
-	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EMovementMode::Shuttle && bAutoLoop", EditConditionHides, ClampMin = "0.0", ClampMax = "10.0"))
+	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EColorMovementMode::Shuttle && bAutoLoop", EditConditionHides, ClampMin = "0.0", ClampMax = "10.0"))
 	float WaitTimeAtB = 1.0f;
 
 	/** 現在足場に乗っているアクターのリスト */
@@ -129,11 +148,14 @@ private:
 	/** 初期ワールド位置 */
 	FVector InitialWorldLocation;
 
+	/** 地点Aのワールド座標（計算後） */
+	FVector WorldLocationA;
+
+	/** 地点Bのワールド座標（計算後） */
+	FVector WorldLocationB;
+
 	/** Shuttleモード: 現在の目標地点（true = B, false = A） */
 	bool bCurrentTargetIsB = false;
-
-	/** 移動をキャンセルするフラグ */
-	std::atomic<bool> bShouldCancelMovement{ false };
 
 	/** 自動ループが実行中かどうか */
 	std::atomic<bool> bIsAutoLoopRunning{ false };
