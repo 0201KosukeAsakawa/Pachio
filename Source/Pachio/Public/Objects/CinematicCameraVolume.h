@@ -1,6 +1,7 @@
 /**
- * リトルナイトメア風のシネマティックカメラボリューム
- * レベル内に配置し、プレイヤーが侵入するとカメラ挙動が変化する
+ * CinematicCameraVolume.h
+ * リトルナイトメア風のシネマティックカメラボリューム - ワールド座標版
+ * すべての座標設定をワールド座標で統一
  */
 
 #pragma once
@@ -33,13 +34,46 @@ enum class ECameraVolumeType : uint8
 };
 
 /**
+ * カメラの角度制限設定
+ */
+USTRUCT(BlueprintType)
+struct FCameraAngleLimits
+{
+    GENERATED_BODY()
+
+    /** 角度制限を有効にする */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Angle Limits")
+    bool bEnableLimits = false;
+
+    /** Pitch（上下角度）の最小値 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Angle Limits", meta = (EditCondition = "bEnableLimits", ClampMin = "-90.0", ClampMax = "90.0"))
+    float MinPitch = -30.f;
+
+    /** Pitch（上下角度）の最大値 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Angle Limits", meta = (EditCondition = "bEnableLimits", ClampMin = "-90.0", ClampMax = "90.0"))
+    float MaxPitch = 30.f;
+
+    /** Yaw（左右角度）の最小値 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Angle Limits", meta = (EditCondition = "bEnableLimits", ClampMin = "-180.0", ClampMax = "180.0"))
+    float MinYaw = -45.f;
+
+    /** Yaw（左右角度）の最大値 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Angle Limits", meta = (EditCondition = "bEnableLimits", ClampMin = "-180.0", ClampMax = "180.0"))
+    float MaxYaw = 45.f;
+
+    /** プレイヤーを見る際の注視点オフセット（プレイヤーの頭や中心を見る） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Angle Limits", meta = (EditCondition = "bEnableLimits"))
+    FVector LookAtOffset = FVector(0.f, 0.f, 100.f);
+};
+
+/**
  * カメラの移動制限設定
  */
 USTRUCT(BlueprintType)
 struct FCameraConstraints
 {
     GENERATED_BODY()
-public:
+
     /** X軸の移動を許可 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Constraints")
     bool bAllowMoveX = false;
@@ -60,7 +94,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Constraints")
     FVector MaxBounds = FVector(10000.f);
 
-    /** プレイヤーに対するオフセット */
+    /** プレイヤーに対するオフセット（カメラ距離と位置） */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Constraints")
     FVector FollowOffset = FVector(-500.f, 0.f, 200.f);
 
@@ -70,15 +104,15 @@ public:
 };
 
 /**
- * レールカメラ用のウェイポイント
+ * レールカメラ用のウェイポイント（ワールド座標）
  */
 USTRUCT(BlueprintType)
 struct FCameraWaypoint
 {
     GENERATED_BODY()
-public:
-    /** ウェイポイント位置 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
+
+    /** ウェイポイント位置（ワールド座標） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint", meta = (MakeEditWidget = true))
     FVector Location = FVector::ZeroVector;
 
     /** カメラの向き */
@@ -89,9 +123,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
     float FOV = 90.f;
 
-    /** このポイントに到達するまでの時間（プレイヤー進行度ベース） */
+    /** このポイントに到達するまでの進行度（0.0 = 開始, 1.0 = 終了） */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
-    float Progress = 0.f; // 0.0 = 開始, 1.0 = 終了
+    float Progress = 0.f;
 };
 
 /**
@@ -127,48 +161,146 @@ public:
     float GetPlayerProgress(const FVector& PlayerLocation) const;
 
 public:
+    // ========== 基本設定 ==========
+
     /** カメラタイプ */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Volume")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "1. Camera Type")
     ECameraVolumeType CameraType = ECameraVolumeType::Follow;
 
     /** ボリュームの範囲 */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera Volume")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "1. Camera Type")
     TObjectPtr<UBoxComponent> VolumeBox;
 
-    /** 固定カメラの位置 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fixed Camera", meta = (EditCondition = "CameraType == ECameraVolumeType::Fixed"))
-    FVector FixedCameraLocation = FVector::ZeroVector;
+    /** このボリュームの優先度（高いほど優先、複数重なった時に使用） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "1. Camera Type", meta = (ClampMin = "0", ClampMax = "100"))
+    int32 Priority = 10;
 
-    /** 固定カメラの回転 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fixed Camera", meta = (EditCondition = "CameraType == ECameraVolumeType::Fixed"))
+    // ========== 固定カメラ設定（Fixed / DollyZoom） ==========
+
+    /** 固定カメラの位置（ワールド座標） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "2. Fixed Camera Position",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::Fixed || CameraType == ECameraVolumeType::DollyZoom", EditConditionHides,
+            MakeEditWidget = true))
+    FVector FixedCameraLocation = FVector(-2000.f, 0.f, 500.f);
+
+    /** 固定カメラの回転（Look At Playerがfalseの時のみ有効） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "2. Fixed Camera Position",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::Fixed && !bLookAtPlayer", EditConditionHides))
     FRotator FixedCameraRotation = FRotator::ZeroRotator;
 
-    /** カメラのFOV */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Volume", meta = (ClampMin = "5.0", ClampMax = "170.0"))
-    float CameraFOV = 90.f;
+    // ========== 追従カメラ設定（Follow / ConstrainedFollow） ==========
 
-    /** カメラの移動制限 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Follow Camera")
-    FCameraConstraints Constraints;
+    /** プレイヤーからのカメラオフセット（X:後ろ距離, Y:横, Z:高さ） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "3. Follow Camera Settings",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::Follow || CameraType == ECameraVolumeType::ConstrainedFollow", EditConditionHides))
+    FVector FollowOffset = FVector(-2000.f, 0.f, 500.f);
 
-    /** レールカメラのウェイポイント */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rail Camera", meta = (EditCondition = "CameraType == ECameraVolumeType::Rail"))
+    /** 追従の遅延（0=即座、1=遅い） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "3. Follow Camera Settings",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::Follow || CameraType == ECameraVolumeType::ConstrainedFollow", EditConditionHides,
+            ClampMin = "0.0", ClampMax = "1.0"))
+    float FollowLag = 0.3f;
+
+    // ========== 制限付き追従設定（ConstrainedFollow） ==========
+
+    /** X軸の追従を許可（通常はfalse：カメラは固定距離を保つ） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "4. Constrained Follow Settings",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::ConstrainedFollow", EditConditionHides))
+    bool bAllowMoveX = false;
+
+    /** Y軸の追従を許可（横スクロールならtrue） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "4. Constrained Follow Settings",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::ConstrainedFollow", EditConditionHides))
+    bool bAllowMoveY = true;
+
+    /** Z軸の追従を許可（縦スクロールならtrue） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "4. Constrained Follow Settings",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::ConstrainedFollow", EditConditionHides))
+    bool bAllowMoveZ = false;
+
+    /** 追従の最小範囲（ワールド座標） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "4. Constrained Follow Settings",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::ConstrainedFollow", EditConditionHides,
+            MakeEditWidget = true,
+            Tooltip = "カメラが移動できる最小位置（ワールド座標：例：Y軸なら開始地点）"))
+    FVector FollowMinBounds = FVector(-2000.f, -10000.f, 500.f);
+
+    /** 追従の最大範囲（ワールド座標） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "4. Constrained Follow Settings",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::ConstrainedFollow", EditConditionHides,
+            MakeEditWidget = true,
+            Tooltip = "カメラが移動できる最大位置（ワールド座標：例：Y軸なら終了地点）"))
+    FVector FollowMaxBounds = FVector(-2000.f, 10000.f, 500.f);
+
+    // ========== レールカメラ設定（Rail） ==========
+
+    /** レールカメラのウェイポイント（すべてワールド座標） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "5. Rail Camera Settings",
+        meta = (EditCondition = "CameraType == ECameraVolumeType::Rail", EditConditionHides,
+            Tooltip = "プレイヤーの進行度（0.0～1.0）に応じてカメラが移動する経路（ワールド座標）"))
     TArray<FCameraWaypoint> Waypoints;
 
-    /** カメラ遷移速度 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Volume", meta = (ClampMin = "0.1", ClampMax = "10.0"))
-    float TransitionSpeed = 2.0f;
-
-    /** このボリュームの優先度（高いほど優先） */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Volume")
-    int32 Priority = 0;
+    // ========== カメラ角度設定（Look At Playerがtrueの時） ==========
 
     /** プレイヤーを見続けるか */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Volume")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "6. Camera Angle Settings")
     bool bLookAtPlayer = true;
 
+    /** カメラ角度制限を有効にする */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "6. Camera Angle Settings",
+        meta = (EditCondition = "bLookAtPlayer", EditConditionHides))
+    bool bEnableAngleLimits = false;
+
+    /** Pitch（上下角度）の最小値 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "6. Camera Angle Settings",
+        meta = (EditCondition = "bLookAtPlayer && bEnableAngleLimits", EditConditionHides,
+            ClampMin = "-90.0", ClampMax = "90.0",
+            Tooltip = "カメラが下を向ける角度の限界（例：-30なら下30度まで）"))
+    float MinPitch = -30.f;
+
+    /** Pitch（上下角度）の最大値 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "6. Camera Angle Settings",
+        meta = (EditCondition = "bLookAtPlayer && bEnableAngleLimits", EditConditionHides,
+            ClampMin = "-90.0", ClampMax = "90.0",
+            Tooltip = "カメラが上を向ける角度の限界（例：10なら上10度まで）"))
+    float MaxPitch = 30.f;
+
+    /** Yaw（左右角度）の最小値 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "6. Camera Angle Settings",
+        meta = (EditCondition = "bLookAtPlayer && bEnableAngleLimits", EditConditionHides,
+            ClampMin = "-180.0", ClampMax = "180.0",
+            Tooltip = "カメラが左を向ける角度の限界（例：-45なら左45度まで）"))
+    float MinYaw = -45.f;
+
+    /** Yaw（左右角度）の最大値 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "6. Camera Angle Settings",
+        meta = (EditCondition = "bLookAtPlayer && bEnableAngleLimits", EditConditionHides,
+            ClampMin = "-180.0", ClampMax = "180.0",
+            Tooltip = "カメラが右を向ける角度の限界（例：45なら右45度まで）"))
+    float MaxYaw = 45.f;
+
+    /** プレイヤーのどこを見るか（頭、中心など） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "6. Camera Angle Settings",
+        meta = (EditCondition = "bLookAtPlayer", EditConditionHides,
+            Tooltip = "プレイヤー位置からのオフセット（例：Z=100なら頭の高さ）"))
+    FVector LookAtOffset = FVector(0.f, 0.f, 100.f);
+
+    // ========== その他のカメラ設定 ==========
+
+    /** カメラのFOV（視野角） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "7. Other Settings",
+        meta = (ClampMin = "5.0", ClampMax = "170.0",
+            Tooltip = "小さい値=望遠（70）、標準（90）、大きい値=広角（110）"))
+    float CameraFOV = 90.f;
+
+    /** カメラ遷移速度 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "7. Other Settings",
+        meta = (ClampMin = "0.1", ClampMax = "10.0",
+            Tooltip = "別のボリュームから切り替わる速度"))
+    float TransitionSpeed = 2.0f;
+
     /** デバッグ表示 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "8. Debug")
     bool bShowDebug = true;
 
 private:
@@ -180,4 +312,11 @@ private:
 
     /** 前回のカメラ回転（補間用） */
     FRotator LastCameraRotation;
+
+    // 内部用：構造体からフラット化
+    UPROPERTY()
+    FCameraConstraints Constraints;
+
+    UPROPERTY()
+    FCameraAngleLimits CameraAngleLimits;
 };

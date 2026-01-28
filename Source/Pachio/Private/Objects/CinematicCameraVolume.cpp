@@ -1,4 +1,10 @@
+/**
+ * CinematicCameraVolume.cpp
+ * シネマティックカメラボリュームの実装 - 位置固定問題修正版
+ */
+
 #include "Objects/CinematicCameraVolume.h"
+#include "Components/CameraHandlerComponent.h"
 #include "GameFramework/Character.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -14,6 +20,16 @@ ACinematicCameraVolume::ACinematicCameraVolume()
     VolumeBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     VolumeBox->SetCollisionResponseToAllChannels(ECR_Ignore);
     VolumeBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+    // デフォルト値設定（すべてワールド座標）
+    FixedCameraLocation = FVector(-2000.f, 0.f, 500.f);
+    FollowOffset = FVector(-2000.f, 0.f, 500.f);
+    FollowLag = 0.3f;
+    bAllowMoveX = false;
+    bAllowMoveY = true;
+    bAllowMoveZ = false;
+    FollowMinBounds = FVector(-2000.f, -10000.f, 500.f);
+    FollowMaxBounds = FVector(-2000.f, 10000.f, 500.f);
 }
 
 void ACinematicCameraVolume::BeginPlay()
@@ -27,6 +43,28 @@ void ACinematicCameraVolume::BeginPlay()
     // 初期位置保存
     LastCameraLocation = GetActorLocation();
     LastCameraRotation = GetActorRotation();
+
+    // フラット化されたプロパティから構造体に値をコピー
+    Constraints.bAllowMoveX = bAllowMoveX;
+    Constraints.bAllowMoveY = bAllowMoveY;
+    Constraints.bAllowMoveZ = bAllowMoveZ;
+    Constraints.FollowOffset = FollowOffset;
+    Constraints.FollowLag = FollowLag;
+    Constraints.MinBounds = FollowMinBounds;
+    Constraints.MaxBounds = FollowMaxBounds;
+
+    CameraAngleLimits.bEnableLimits = bEnableAngleLimits;
+    CameraAngleLimits.MinPitch = MinPitch;
+    CameraAngleLimits.MaxPitch = MaxPitch;
+    CameraAngleLimits.MinYaw = MinYaw;
+    CameraAngleLimits.MaxYaw = MaxYaw;
+    CameraAngleLimits.LookAtOffset = LookAtOffset;
+
+    // ★デバッグログ：設定値を確認
+    if (CameraType == ECameraVolumeType::Fixed || CameraType == ECameraVolumeType::DollyZoom)
+    {
+        UE_LOG(LogTemp, Log, TEXT("[%s] Fixed Camera Location: %s"), *GetName(), *FixedCameraLocation.ToString());
+    }
 }
 
 void ACinematicCameraVolume::Tick(float DeltaTime)
@@ -55,18 +93,94 @@ void ACinematicCameraVolume::Tick(float DeltaTime)
             FString::Printf(TEXT("%s (Priority: %d)"), *TypeString, Priority),
             nullptr, DebugColor, 0.f, true);
 
-        // ウェイポイント表示（レールカメラ）
+        // 固定カメラ位置の表示（ワールド座標）
+        if (CameraType == ECameraVolumeType::Fixed || CameraType == ECameraVolumeType::DollyZoom)
+        {
+            // ★重要：FixedCameraLocationが(0,0,0)かチェック
+            if (FixedCameraLocation.IsNearlyZero())
+            {
+                DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200.f),
+                    TEXT("WARNING: Fixed Camera Location is (0,0,0)!"),
+                    nullptr, FColor::Red, 0.f, true, 2.0f);
+            }
+
+            DrawDebugSphere(GetWorld(), FixedCameraLocation, 80.f, 8, FColor::Red, false, -1.f, 0, 3.f);
+            DrawDebugLine(GetWorld(), FixedCameraLocation, GetActorLocation(), FColor::Red, false, -1.f, 0, 2.f);
+            DrawDebugString(GetWorld(), FixedCameraLocation + FVector(0, 0, 100),
+                FString::Printf(TEXT("Camera: %s"), *FixedCameraLocation.ToString()),
+                nullptr, FColor::Red, 0.f, true);
+        }
+
+        // 追従ラインの表示（ConstrainedFollow - ワールド座標）
+        if (CameraType == ECameraVolumeType::ConstrainedFollow)
+        {
+            if (bAllowMoveY)
+            {
+                FVector LineStart = FVector(FollowMinBounds.X, FollowMinBounds.Y, FollowMinBounds.Z);
+                FVector LineEnd = FVector(FollowMaxBounds.X, FollowMaxBounds.Y, FollowMinBounds.Z);
+                DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Magenta, false, -1.f, 0, 5.f);
+
+                DrawDebugSphere(GetWorld(), LineStart, 50.f, 8, FColor::Magenta, false, -1.f, 0, 3.f);
+                DrawDebugSphere(GetWorld(), LineEnd, 50.f, 8, FColor::Magenta, false, -1.f, 0, 3.f);
+
+                DrawDebugString(GetWorld(), LineStart + FVector(0, 0, 100),
+                    FString::Printf(TEXT("Y Min: %.0f"), FollowMinBounds.Y),
+                    nullptr, FColor::Magenta, 0.f, true);
+                DrawDebugString(GetWorld(), LineEnd + FVector(0, 0, 100),
+                    FString::Printf(TEXT("Y Max: %.0f"), FollowMaxBounds.Y),
+                    nullptr, FColor::Magenta, 0.f, true);
+            }
+
+            if (bAllowMoveZ)
+            {
+                FVector LineStart = FVector(FollowMinBounds.X, FollowMinBounds.Y, FollowMinBounds.Z);
+                FVector LineEnd = FVector(FollowMinBounds.X, FollowMinBounds.Y, FollowMaxBounds.Z);
+                DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Cyan, false, -1.f, 0, 5.f);
+
+                DrawDebugSphere(GetWorld(), LineStart, 50.f, 8, FColor::Cyan, false, -1.f, 0, 3.f);
+                DrawDebugSphere(GetWorld(), LineEnd, 50.f, 8, FColor::Cyan, false, -1.f, 0, 3.f);
+
+                DrawDebugString(GetWorld(), LineStart + FVector(100, 0, 0),
+                    FString::Printf(TEXT("Z Min: %.0f"), FollowMinBounds.Z),
+                    nullptr, FColor::Cyan, 0.f, true);
+                DrawDebugString(GetWorld(), LineEnd + FVector(100, 0, 0),
+                    FString::Printf(TEXT("Z Max: %.0f"), FollowMaxBounds.Z),
+                    nullptr, FColor::Cyan, 0.f, true);
+            }
+
+            if (bAllowMoveX)
+            {
+                FVector LineStart = FVector(FollowMinBounds.X, FollowMinBounds.Y, FollowMinBounds.Z);
+                FVector LineEnd = FVector(FollowMaxBounds.X, FollowMinBounds.Y, FollowMinBounds.Z);
+                DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Orange, false, -1.f, 0, 5.f);
+
+                DrawDebugSphere(GetWorld(), LineStart, 50.f, 8, FColor::Orange, false, -1.f, 0, 3.f);
+                DrawDebugSphere(GetWorld(), LineEnd, 50.f, 8, FColor::Orange, false, -1.f, 0, 3.f);
+
+                DrawDebugString(GetWorld(), LineStart + FVector(0, 100, 0),
+                    FString::Printf(TEXT("X Min: %.0f"), FollowMinBounds.X),
+                    nullptr, FColor::Orange, 0.f, true);
+                DrawDebugString(GetWorld(), LineEnd + FVector(0, 100, 0),
+                    FString::Printf(TEXT("X Max: %.0f"), FollowMaxBounds.X),
+                    nullptr, FColor::Orange, 0.f, true);
+            }
+        }
+
+        // ウェイポイント表示（レールカメラ - ワールド座標）
         if (CameraType == ECameraVolumeType::Rail)
         {
             for (int32 i = 0; i < Waypoints.Num(); ++i)
             {
-                FVector WaypointWorld = GetActorTransform().TransformPosition(Waypoints[i].Location);
-                DrawDebugSphere(GetWorld(), WaypointWorld, 50.f, 8, FColor::Cyan, false, -1.f, 0, 3.f);
+                FVector WaypointWorld = Waypoints[i].Location;
+                DrawDebugSphere(GetWorld(), WaypointWorld, 80.f, 12, FColor::Cyan, false, -1.f, 0, 3.f);
+                DrawDebugString(GetWorld(), WaypointWorld + FVector(0, 0, 150),
+                    FString::Printf(TEXT("WP%d (%.2f)"), i, Waypoints[i].Progress),
+                    nullptr, FColor::Cyan, 0.f, true);
 
                 if (i < Waypoints.Num() - 1)
                 {
-                    FVector NextWaypointWorld = GetActorTransform().TransformPosition(Waypoints[i + 1].Location);
-                    DrawDebugLine(GetWorld(), WaypointWorld, NextWaypointWorld, FColor::Cyan, false, -1.f, 0, 2.f);
+                    FVector NextWaypointWorld = Waypoints[i + 1].Location;
+                    DrawDebugLine(GetWorld(), WaypointWorld, NextWaypointWorld, FColor::Cyan, false, -1.f, 0, 3.f);
                 }
             }
         }
@@ -76,20 +190,39 @@ void ACinematicCameraVolume::Tick(float DeltaTime)
 void ACinematicCameraVolume::OnPlayerEnter(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (ACharacter* Character = Cast<ACharacter>(OtherActor))
+    ACharacter* Character = Cast<ACharacter>(OtherActor);
+    if (!Character)
+        return;
+
+    bIsActive = true;
+    UE_LOG(LogTemp, Log, TEXT("Player entered camera volume: %s (Priority: %d)"), *GetName(), Priority);
+
+    UCameraHandlerComponent* CameraHandler = Character->GetComponentByClass<UCameraHandlerComponent>();
+    if (CameraHandler)
     {
-        bIsActive = true;
-        UE_LOG(LogTemp, Log, TEXT("Player entered camera volume: %s"), *GetName());
+        CameraHandler->SetActiveCameraVolume(this, false);
+        UE_LOG(LogTemp, Log, TEXT("Camera volume activated: %s"), *GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CameraHandlerComponent not found on character!"));
     }
 }
 
 void ACinematicCameraVolume::OnPlayerExit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-    if (ACharacter* Character = Cast<ACharacter>(OtherActor))
+    ACharacter* Character = Cast<ACharacter>(OtherActor);
+    if (!Character)
+        return;
+
+    bIsActive = false;
+    UE_LOG(LogTemp, Log, TEXT("Player exited camera volume: %s"), *GetName());
+
+    UCameraHandlerComponent* CameraHandler = Character->GetComponentByClass<UCameraHandlerComponent>();
+    if (CameraHandler && CameraHandler->GetActiveVolume() == this)
     {
-        bIsActive = false;
-        UE_LOG(LogTemp, Log, TEXT("Player exited camera volume: %s"), *GetName());
+        CameraHandler->FindNearestCameraVolume();
     }
 }
 
@@ -101,14 +234,24 @@ void ACinematicCameraVolume::GetCameraTransform(const FVector& PlayerLocation, F
     {
     case ECameraVolumeType::Fixed:
     {
-        // 固定カメラ：ワールド空間での固定位置
-        OutLocation = GetActorTransform().TransformPosition(FixedCameraLocation);
-        OutRotation = (GetActorRotation() + FixedCameraRotation).Clamp();
+        // ★修正：ワールド座標をそのまま使用
+        OutLocation = FixedCameraLocation;
+        OutRotation = FixedCameraRotation;
+
+        // ★デバッグログ
+        UE_LOG(LogTemp, VeryVerbose, TEXT("[%s] Fixed Camera - OutLocation: %s"), *GetName(), *OutLocation.ToString());
 
         if (bLookAtPlayer)
         {
-            FVector DirectionToPlayer = PlayerLocation - OutLocation;
+            FVector LookAtTarget = PlayerLocation + LookAtOffset;
+            FVector DirectionToPlayer = LookAtTarget - OutLocation;
             OutRotation = DirectionToPlayer.Rotation();
+
+            if (bEnableAngleLimits)
+            {
+                OutRotation.Pitch = FMath::Clamp(OutRotation.Pitch, MinPitch, MaxPitch);
+                OutRotation.Yaw = FMath::Clamp(OutRotation.Yaw, MinYaw, MaxYaw);
+            }
         }
         break;
     }
@@ -116,35 +259,51 @@ void ACinematicCameraVolume::GetCameraTransform(const FVector& PlayerLocation, F
     case ECameraVolumeType::Follow:
     case ECameraVolumeType::ConstrainedFollow:
     {
-        // 追従カメラ：プレイヤーに追従
-        FVector TargetLocation = PlayerLocation + Constraints.FollowOffset;
+        // 追従カメラ：プレイヤー位置 + オフセット
+        FVector TargetLocation = PlayerLocation + FollowOffset;
 
-        // 制限付き追従の場合、軸制限を適用
         if (CameraType == ECameraVolumeType::ConstrainedFollow)
         {
-            FVector BaseLocation = GetActorLocation();
+            // ★修正：軸が許可されていない場合、オフセットを絶対位置として使用
+            FVector BaseLocation = PlayerLocation;
 
-            if (!Constraints.bAllowMoveX)
-                TargetLocation.X = BaseLocation.X;
-            if (!Constraints.bAllowMoveY)
-                TargetLocation.Y = BaseLocation.Y;
-            if (!Constraints.bAllowMoveZ)
-                TargetLocation.Z = BaseLocation.Z;
+            if (!bAllowMoveX)
+            {
+                // X軸追従しない = FollowOffset.Xを絶対位置として使用
+                TargetLocation.X = FollowOffset.X;
+            }
+            if (!bAllowMoveY)
+            {
+                // Y軸追従しない = FollowOffset.Yを絶対位置として使用
+                TargetLocation.Y = FollowOffset.Y;
+            }
+            if (!bAllowMoveZ)
+            {
+                // Z軸追従しない = FollowOffset.Zを絶対位置として使用
+                TargetLocation.Z = FollowOffset.Z;
+            }
 
-            // 範囲制限
-            TargetLocation.X = FMath::Clamp(TargetLocation.X, Constraints.MinBounds.X, Constraints.MaxBounds.X);
-            TargetLocation.Y = FMath::Clamp(TargetLocation.Y, Constraints.MinBounds.Y, Constraints.MaxBounds.Y);
-            TargetLocation.Z = FMath::Clamp(TargetLocation.Z, Constraints.MinBounds.Z, Constraints.MaxBounds.Z);
+            // 範囲制限（ワールド座標）
+            TargetLocation.X = FMath::Clamp(TargetLocation.X, FollowMinBounds.X, FollowMaxBounds.X);
+            TargetLocation.Y = FMath::Clamp(TargetLocation.Y, FollowMinBounds.Y, FollowMaxBounds.Y);
+            TargetLocation.Z = FMath::Clamp(TargetLocation.Z, FollowMinBounds.Z, FollowMaxBounds.Z);
         }
 
         // 遅延追従
-        float LagSpeed = FMath::GetMappedRangeValueClamped(FVector2D(0.f, 1.f), FVector2D(10.f, 1.f), Constraints.FollowLag);
+        float LagSpeed = FMath::GetMappedRangeValueClamped(FVector2D(0.f, 1.f), FVector2D(10.f, 1.f), FollowLag);
         OutLocation = FMath::VInterpTo(LastCameraLocation, TargetLocation, GetWorld()->GetDeltaSeconds(), LagSpeed);
 
         if (bLookAtPlayer)
         {
-            FVector DirectionToPlayer = PlayerLocation - OutLocation;
+            FVector LookAtTarget = PlayerLocation + LookAtOffset;
+            FVector DirectionToPlayer = LookAtTarget - OutLocation;
             OutRotation = DirectionToPlayer.Rotation();
+
+            if (bEnableAngleLimits)
+            {
+                OutRotation.Pitch = FMath::Clamp(OutRotation.Pitch, MinPitch, MaxPitch);
+                OutRotation.Yaw = FMath::Clamp(OutRotation.Yaw, MinYaw, MaxYaw);
+            }
         }
         else
         {
@@ -155,11 +314,12 @@ void ACinematicCameraVolume::GetCameraTransform(const FVector& PlayerLocation, F
 
     case ECameraVolumeType::Rail:
     {
-        // レールカメラ：ウェイポイント間を補間
         if (Waypoints.Num() < 2)
         {
+            // ★フォールバック：ウェイポイントが不足している場合
             OutLocation = GetActorLocation();
             OutRotation = GetActorRotation();
+            UE_LOG(LogTemp, Warning, TEXT("[%s] Rail Camera needs at least 2 waypoints!"), *GetName());
             break;
         }
 
@@ -176,7 +336,6 @@ void ACinematicCameraVolume::GetCameraTransform(const FVector& PlayerLocation, F
             }
         }
 
-        // 2つのウェイポイント間を補間
         const FCameraWaypoint& StartWaypoint = Waypoints[CurrentWaypointIndex];
         const FCameraWaypoint& EndWaypoint = Waypoints[FMath::Min(CurrentWaypointIndex + 1, Waypoints.Num() - 1)];
 
@@ -187,21 +346,15 @@ void ACinematicCameraVolume::GetCameraTransform(const FVector& PlayerLocation, F
             LocalProgress = (Progress - StartWaypoint.Progress) / ProgressRange;
         }
 
-        // 位置と回転を補間
-        FVector StartLoc = GetActorTransform().TransformPosition(StartWaypoint.Location);
-        FVector EndLoc = GetActorTransform().TransformPosition(EndWaypoint.Location);
-        OutLocation = FMath::Lerp(StartLoc, EndLoc, LocalProgress);
-
-        FRotator StartRot = StartWaypoint.Rotation;
-        FRotator EndRot = EndWaypoint.Rotation;
-        OutRotation = FMath::Lerp(StartRot, EndRot, LocalProgress);
-
-        // FOVも補間
+        // ★ワールド座標をそのまま補間
+        OutLocation = FMath::Lerp(StartWaypoint.Location, EndWaypoint.Location, LocalProgress);
+        OutRotation = FMath::Lerp(StartWaypoint.Rotation, EndWaypoint.Rotation, LocalProgress);
         OutFOV = FMath::Lerp(StartWaypoint.FOV, EndWaypoint.FOV, LocalProgress);
 
         if (bLookAtPlayer)
         {
-            FVector DirectionToPlayer = PlayerLocation - OutLocation;
+            FVector LookAtTarget = PlayerLocation + LookAtOffset;
+            FVector DirectionToPlayer = LookAtTarget - OutLocation;
             OutRotation = DirectionToPlayer.Rotation();
         }
         break;
@@ -209,8 +362,8 @@ void ACinematicCameraVolume::GetCameraTransform(const FVector& PlayerLocation, F
 
     case ECameraVolumeType::DollyZoom:
     {
-        // ドリーズーム：カメラ位置は固定、FOVを変化させて遠近感を演出
-        OutLocation = GetActorTransform().TransformPosition(FixedCameraLocation);
+        // ★修正：ワールド座標をそのまま使用
+        OutLocation = FixedCameraLocation;
 
         float DistanceToPlayer = FVector::Dist(OutLocation, PlayerLocation);
         float MinDistance = 500.f;
@@ -221,17 +374,23 @@ void ACinematicCameraVolume::GetCameraTransform(const FVector& PlayerLocation, F
             DistanceToPlayer
         );
 
-        // 距離に応じてFOVを変化（近いほど広角、遠いほど望遠）
         OutFOV = FMath::Lerp(70.f, 110.f, NormalizedDistance);
 
         if (bLookAtPlayer)
         {
-            FVector DirectionToPlayer = PlayerLocation - OutLocation;
+            FVector LookAtTarget = PlayerLocation + LookAtOffset;
+            FVector DirectionToPlayer = LookAtTarget - OutLocation;
             OutRotation = DirectionToPlayer.Rotation();
+
+            if (bEnableAngleLimits)
+            {
+                OutRotation.Pitch = FMath::Clamp(OutRotation.Pitch, MinPitch, MaxPitch);
+                OutRotation.Yaw = FMath::Clamp(OutRotation.Yaw, MinYaw, MaxYaw);
+            }
         }
         else
         {
-            OutRotation = GetActorRotation();
+            OutRotation = FixedCameraRotation;
         }
         break;
     }
@@ -244,11 +403,9 @@ void ACinematicCameraVolume::GetCameraTransform(const FVector& PlayerLocation, F
 
 float ACinematicCameraVolume::GetPlayerProgress(const FVector& PlayerLocation) const
 {
-    // ボリューム内でのプレイヤーの進行度を計算（0-1）
     FVector LocalPlayerLocation = GetActorTransform().InverseTransformPosition(PlayerLocation);
     FVector BoxExtent = VolumeBox->GetScaledBoxExtent();
 
-    // Y軸方向の進行度を使用（横スクロール想定）
     float Progress = FMath::GetMappedRangeValueClamped(
         FVector2D(-BoxExtent.Y, BoxExtent.Y),
         FVector2D(0.f, 1.f),

@@ -233,7 +233,7 @@ bool UCameraHandlerComponent::ShouldSwitchVolume(ACinematicCameraVolume* NewVolu
         return true;
 
     // 優先度が高い場合のみ切り替え
-    return NewVolume->Priority > ActiveCameraVolume->Priority;
+    return NewVolume->Priority >= ActiveCameraVolume->Priority;
 }
 
 // ========== イベント演出コルーチン ==========
