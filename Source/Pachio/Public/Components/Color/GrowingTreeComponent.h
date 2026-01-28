@@ -9,33 +9,33 @@ class UNiagaraComponent;
 class UNiagaraSystem;
 
 /**
- * @brief –Ø‚Ì¬’·’iŠK
+ * @brief æœ¨ã®æˆé•·æ®µéš
  */
 UENUM(BlueprintType)
 enum class ETreeGrowthStage : uint8
 {
-    Sapling UMETA(DisplayName = "•c"),
-    WaitingForWater UMETA(DisplayName = "…‘Ò‚¿"),
-    Growing UMETA(DisplayName = "¬’·’†"),
-    FullyGrown UMETA(DisplayName = "¬–Ø")
+    Sapling UMETA(DisplayName = "è‹—"),
+    WaitingForWater UMETA(DisplayName = "æ°´å¾…ã¡"),
+    Growing UMETA(DisplayName = "æˆé•·ä¸­"),
+    FullyGrown UMETA(DisplayName = "æˆæœ¨")
 };
 
 /**
- * @brief ¬’·ƒ‚[ƒh
+ * @brief æˆé•·ãƒ¢ãƒ¼ãƒ‰
  */
 UENUM(BlueprintType)
 enum class EGrowthMode : uint8
 {
-    MeshSwap UMETA(DisplayName = "ƒƒbƒVƒ…Ø‚è‘Ö‚¦"),
-    Animation UMETA(DisplayName = "ƒAƒjƒ[ƒVƒ‡ƒ“Ä¶")
+    MeshSwap UMETA(DisplayName = "ãƒ¡ãƒƒã‚·ãƒ¥åˆ‡ã‚Šæ›¿ãˆ"),
+    Animation UMETA(DisplayName = "ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³å†ç”Ÿ")
 };
 
 /**
- * @brief …‚ğ‚â‚é‚Æ¬’·‚·‚é–Ø‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg
+ * @brief æˆé•·ã™ã‚‹æœ¨ã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ
  *
- * g‚¢•û:
- * 1. —ÎF(Green)‚ğó‚¯‚é‚Æ…‚ğó‚¯•t‚¯‚éó‘Ô‚É‚È‚é
- * 2. ‚»‚Ìó‘Ô‚ÅÂF(Blue)‚ğó‚¯‚é‚Æ‹}¬’·‚·‚éi•c¨–Øj
+ * ä½¿ã„æ–¹:
+ * 1. ç·‘è‰²(Green)ã‚’å—ã‘ã‚‹ã¨æ°´åˆ†å—ä»˜å¯èƒ½çŠ¶æ…‹ã«ãªã‚‹
+ * 2. ãã®çŠ¶æ…‹ã§é’è‰²(Blue)ã‚’å—ã‘ã‚‹ã¨æ€¥é€Ÿæˆé•·ã™ã‚‹ï¼ˆè‹—â†’æœ¨ï¼‰
  */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UGrowingTreeComponent : public UObjectColorComponent
@@ -44,235 +44,235 @@ class PACHIO_API UGrowingTreeComponent : public UObjectColorComponent
 
 public:
     /**
-     * @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+     * @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
      */
     UGrowingTreeComponent();
 
 protected:
     /**
-     * @brief ÀsŠJn‚Ì‰Šú‰»ˆ—
+     * @brief å®Ÿè¡Œé–‹å§‹æ™‚ã®åˆæœŸåŒ–å‡¦ç†
      */
     virtual void BeginPlay() override;
 
     /**
-     * @brief ƒtƒŒ[ƒ€–ˆ‚ÌXVˆ—
+     * @brief ãƒ•ãƒ¬ãƒ¼ãƒ æ¯ã®æ›´æ–°å‡¦ç†
      */
     virtual void TickComponent(float DeltaTime, ELevelTick TickType,
         FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
     /**
-     * @brief ‰Šú‰»ˆ—
-     * –Ø‚Ì‰Šúó‘Ô‚âƒƒbƒVƒ…İ’è‚ğs‚¤
+     * @brief åˆæœŸåŒ–å‡¦ç†
+     * æœ¨ã®åˆæœŸçŠ¶æ…‹ã‚„ãƒ¡ãƒƒã‚·ãƒ¥è¨­å®šã‚’è¡Œã†
      */
     virtual void Initialize() override;
 
     /**
-     * @brief F”½‰ˆ—
-     * —ÎF‚Å…ó•tó‘ÔAÂF‚Å¬’·‚ğŠJn
-     * @param InColor V‚µ‚­“K—p‚³‚ê‚½F
+     * @brief è‰²å—ä¿¡å‡¦ç†
+     * ç·‘è‰²ã§æ°´åˆ†è£œçµ¦çŠ¶æ…‹ã€é’è‰²ã§æˆé•·é–‹å§‹
+     * @param InColor æ–°ãŸã«é©ç”¨ã•ã‚ŒãŸè‰²
      */
     virtual void ActivateDirect(const FLinearColor& InColor) override;
 
     /**
-     * @brief ¬’·’iŠK‚ğİ’è
-     * @param NewStage V‚µ‚¢¬’·’iŠK
+     * @brief æˆé•·æ®µéšã‚’è¨­å®š
+     * @param NewStage æ–°ã—ã„æˆé•·æ®µéš
      */
     UFUNCTION(BlueprintCallable, Category = "Tree")
     void SetGrowthStage(ETreeGrowthStage NewStage);
 
     /**
-     * @brief Œ»İ‚Ì¬’·’iŠK‚ğæ“¾
+     * @brief ç¾åœ¨ã®æˆé•·æ®µéšã‚’å–å¾—
      */
     UFUNCTION(BlueprintPure, Category = "Tree")
     ETreeGrowthStage GetGrowthStage() const { return CurrentStage; }
 
     /**
-     * @brief …‚ğó‚¯•t‚¯‚éó‘Ô‚©‚Ç‚¤‚©
+     * @brief æ°´åˆ†å—ä»˜å¯èƒ½çŠ¶æ…‹ã‹ã©ã†ã‹
      */
     UFUNCTION(BlueprintPure, Category = "Tree")
     bool CanReceiveWater() const { return CurrentStage == ETreeGrowthStage::WaitingForWater; }
 
 protected:
     /**
-     * @brief …‚ğó‚¯•t‚¯‚éó‘Ô‚É‚·‚éi—ÎF‚ğó‚¯‚½j
+     * @brief æ°´åˆ†å—ä»˜å¯èƒ½çŠ¶æ…‹ã«ã™ã‚‹ï¼ˆç·‘è‰²ã‚’å—ã‘ãŸæ™‚ï¼‰
      */
     void ActivateWaterReady();
 
     /**
-     * @brief ¬’·‚ğŠJn‚·‚éiÂF‚ğó‚¯‚½j
+     * @brief æˆé•·ã‚’é–‹å§‹ã™ã‚‹ï¼ˆé’è‰²ã‚’å—ã‘ãŸæ™‚ï¼‰
      */
     void StartGrowth();
 
     /**
-     * @brief ¬’·ƒAƒjƒ[ƒVƒ‡ƒ“‚ÌXV
-     * @param DeltaTime ƒtƒŒ[ƒ€ŠÔ
+     * @brief æˆé•·ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®æ›´æ–°
+     * @param DeltaTime ãƒ•ãƒ¬ãƒ¼ãƒ æ™‚é–“
      */
     void UpdateGrowth(float DeltaTime);
 
     /**
-     * @brief ¬’·Š®—¹ˆ—
+     * @brief æˆé•·ã‚’å®Œäº†ã•ã›ã‚‹
      */
     void CompleteGrowth();
 
     /**
-     * @brief ¬’·’iŠK‚É‰‚¶‚½ƒƒbƒVƒ…‚ğİ’èiƒƒbƒVƒ…Ø‚è‘Ö‚¦ƒ‚[ƒh—pj
-     * @param Stage ¬’·’iŠK
+     * @brief æˆé•·æ®µéšã«å¿œã˜ãŸãƒ¡ãƒƒã‚·ãƒ¥ã‚’è¨­å®šï¼ˆãƒ¡ãƒƒã‚·ãƒ¥åˆ‡ã‚Šæ›¿ãˆãƒ¢ãƒ¼ãƒ‰ç”¨ï¼‰
+     * @param Stage æˆé•·æ®µéš
      */
     void SetMeshForStage(ETreeGrowthStage Stage);
 
     /**
-     * @brief ƒAƒjƒ[ƒVƒ‡ƒ“‚ğÄ¶iƒAƒjƒ[ƒVƒ‡ƒ“ƒ‚[ƒh—pj
+     * @brief ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’å†ç”Ÿï¼ˆã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰ç”¨ï¼‰
      */
     void PlayGrowthAnimation();
 
     /**
-     * @brief ƒXƒP[ƒ‹ƒAƒjƒ[ƒVƒ‡ƒ“‚ğXViƒAƒjƒ[ƒVƒ‡ƒ“ƒ‚[ƒh—pj
-     * @param DeltaTime ƒtƒŒ[ƒ€ŠÔ
+     * @brief ã‚¹ã‚±ãƒ¼ãƒ«ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’æ›´æ–°ï¼ˆã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰ç”¨ï¼‰
+     * @param DeltaTime ãƒ•ãƒ¬ãƒ¼ãƒ æ™‚é–“
      */
     void UpdateScaleAnimation(float DeltaTime);
 
     /**
-     * @brief ¬’·ƒGƒtƒFƒNƒg‚ğÄ¶
+     * @brief æˆé•·ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã‚’å†ç”Ÿ
      */
     void PlayGrowthEffect();
 
     /**
-     * @brief …ƒGƒtƒFƒNƒg‚ğÄ¶
+     * @brief æ°´ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã‚’å†ç”Ÿ
      */
     void PlayWaterEffect();
 
     /**
-     * @brief ƒƒbƒVƒ…ƒRƒ“ƒ|[ƒlƒ“ƒg‚ğæ“¾
+     * @brief ãƒ¡ãƒƒã‚·ãƒ¥ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å–å¾—
      */
     UStaticMeshComponent* GetTreeMeshComponent() const;
 
     /**
-     * @brief ƒXƒPƒ‹ƒ^ƒ‹ƒƒbƒVƒ…ƒRƒ“ƒ|[ƒlƒ“ƒg‚ğæ“¾iƒAƒjƒ[ƒVƒ‡ƒ“ƒ‚[ƒh—pj
+     * @brief ã‚¹ã‚±ãƒ«ã‚¿ãƒ«ãƒ¡ãƒƒã‚·ãƒ¥ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å–å¾—ï¼ˆã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰ç”¨ï¼‰
      */
     USkeletalMeshComponent* GetSkeletalMeshComponent() const;
 
 protected:
     // =======================
-    // Šî–{İ’è
+    // åŸºæœ¬è¨­å®š
     // =======================
 
-    /** ¬’·ƒ‚[ƒh */
+    /** æˆé•·ãƒ¢ãƒ¼ãƒ‰ */
     UPROPERTY(EditAnywhere, Category = "Tree|Mode")
     EGrowthMode GrowthMode = EGrowthMode::MeshSwap;
 
     // =======================
-    // ƒƒbƒVƒ…Ø‚è‘Ö‚¦ƒ‚[ƒhê—p
+    // ãƒ¡ãƒƒã‚·ãƒ¥åˆ‡ã‚Šæ›¿ãˆãƒ¢ãƒ¼ãƒ‰ç”¨
     // =======================
 
-    /** •c‚ÌƒƒbƒVƒ… */
+    /** è‹—ã®ãƒ¡ãƒƒã‚·ãƒ¥ */
     UPROPERTY(EditAnywhere, Category = "Tree|MeshSwap", meta = (EditCondition = "GrowthMode == EGrowthMode::MeshSwap", EditConditionHides))
     TObjectPtr<UStaticMesh> SaplingMesh;
 
-    /** ¬–Ø‚ÌƒƒbƒVƒ… */
+    /** æˆæœ¨ã®ãƒ¡ãƒƒã‚·ãƒ¥ */
     UPROPERTY(EditAnywhere, Category = "Tree|MeshSwap", meta = (EditCondition = "GrowthMode == EGrowthMode::MeshSwap", EditConditionHides))
     TObjectPtr<UStaticMesh> FullyGrownMesh;
 
     // =======================
-    // ƒAƒjƒ[ƒVƒ‡ƒ“ƒ‚[ƒhê—p
+    // ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰ç”¨
     // =======================
 
-    /** ¬’·ƒAƒjƒ[ƒVƒ‡ƒ“ */
+    /** æˆé•·ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ */
     UPROPERTY(EditAnywhere, Category = "Tree|Animation", meta = (EditCondition = "GrowthMode == EGrowthMode::Animation", EditConditionHides))
     TObjectPtr<UAnimSequence> GrowthAnimation;
 
-    /** ƒAƒjƒ[ƒVƒ‡ƒ“Ä¶‘¬“x */
+    /** ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³å†ç”Ÿé€Ÿåº¦ */
     UPROPERTY(EditAnywhere, Category = "Tree|Animation", meta = (EditCondition = "GrowthMode == EGrowthMode::Animation", EditConditionHides, ClampMin = "0.1"))
     float AnimationPlayRate = 1.0f;
 
-    /** ƒXƒP[ƒ‹•Ï‰»‚ğ—LŒø‰» */
+    /** ã‚¹ã‚±ãƒ¼ãƒ«å¤‰åŒ–ã‚’æœ‰åŠ¹åŒ– */
     UPROPERTY(EditAnywhere, Category = "Tree|Animation", meta = (EditCondition = "GrowthMode == EGrowthMode::Animation", EditConditionHides))
     bool bEnableScaleChange = true;
 
-    /** ¬’·ŠJn‚ÌƒXƒP[ƒ‹”{—¦ */
+    /** æˆé•·é–‹å§‹æ™‚ã®ã‚¹ã‚±ãƒ¼ãƒ«å€ç‡ */
     UPROPERTY(EditAnywhere, Category = "Tree|Animation", meta = (EditCondition = "GrowthMode == EGrowthMode::Animation && bEnableScaleChange", EditConditionHides, ClampMin = "0.1"))
     float StartScaleMultiplier = 0.5f;
 
-    /** ¬’·Š®—¹‚ÌƒXƒP[ƒ‹”{—¦ */
+    /** æˆé•·å®Œäº†æ™‚ã®ã‚¹ã‚±ãƒ¼ãƒ«å€ç‡ */
     UPROPERTY(EditAnywhere, Category = "Tree|Animation", meta = (EditCondition = "GrowthMode == EGrowthMode::Animation && bEnableScaleChange", EditConditionHides, ClampMin = "0.1"))
     float EndScaleMultiplier = 2.0f;
 
     // =======================
-    // ‹¤’Êƒpƒ‰ƒ[ƒ^
+    // å…±é€šãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
     // =======================
 
-    /** ¬’·‚É‚©‚©‚éŠÔi•bj */
+    /** æˆé•·ã«ã‹ã‹ã‚‹æ™‚é–“ï¼ˆç§’ï¼‰ */
     UPROPERTY(EditAnywhere, Category = "Tree|Growth", meta = (ClampMin = "0.1"))
     float GrowthDuration = 1.5f;
 
-    /** ¬’·ƒJ[ƒuiƒIƒvƒVƒ‡ƒ“j */
+    /** æˆé•·ã‚«ãƒ¼ãƒ–ï¼ˆã‚ªãƒ—ã‚·ãƒ§ãƒ³ï¼‰ */
     UPROPERTY(EditAnywhere, Category = "Tree|Growth")
     TObjectPtr<UCurveFloat> GrowthCurve;
 
-    /** …ó•tó‘Ô‚Ì‘±ŠÔi•bj0‚Å–³§ŒÀ */
+    /** æ°´åˆ†è£œçµ¦çŠ¶æ…‹ã®æŒç¶šæ™‚é–“ï¼ˆç§’ï¼‰0ã§ç„¡é™ */
     UPROPERTY(EditAnywhere, Category = "Tree|Growth", meta = (ClampMin = "0.0"))
     float WaterReadyDuration = 5.0f;
 
     // =======================
-    // ƒGƒtƒFƒNƒg
+    // ã‚¨ãƒ•ã‚§ã‚¯ãƒˆ
     // =======================
 
-    /** …ƒGƒtƒFƒNƒg */
+    /** æ°´ã‚¨ãƒ•ã‚§ã‚¯ãƒˆ */
     UPROPERTY(EditAnywhere, Category = "Tree|Effects")
     TObjectPtr<UNiagaraSystem> WaterEffect;
 
-    /** ¬’·ƒGƒtƒFƒNƒg */
+    /** æˆé•·ã‚¨ãƒ•ã‚§ã‚¯ãƒˆ */
     UPROPERTY(EditAnywhere, Category = "Tree|Effects")
     TObjectPtr<UNiagaraSystem> GrowthEffect;
 
-    /** ¬’·ƒTƒEƒ“ƒh */
+    /** æˆé•·ã‚µã‚¦ãƒ³ãƒ‰ */
     UPROPERTY(EditAnywhere, Category = "Tree|Effects")
     TObjectPtr<USoundBase> GrowthSound;
 
-    /** …‚â‚èƒTƒEƒ“ƒh */
+    /** æ°´åˆ†ã‚µã‚¦ãƒ³ãƒ‰ */
     UPROPERTY(EditAnywhere, Category = "Tree|Effects")
     TObjectPtr<USoundBase> WaterSound;
 
     // =======================
-    // Fİ’è
+    // è‰²è¨­å®š
     // =======================
 
-    /** …ó•tƒJƒ‰[i—Îj */
+    /** æ°´åˆ†è£œçµ¦ã‚«ãƒ©ãƒ¼ï¼ˆç·‘ï¼‰ */
     UPROPERTY(EditAnywhere, Category = "Tree|Colors")
     FLinearColor WaterReadyColor = FLinearColor::Green;
 
-    /** ¬’·ŠJnƒJƒ‰[iÂj */
+    /** æˆé•·é–‹å§‹ã‚«ãƒ©ãƒ¼ï¼ˆé’ï¼‰ */
     UPROPERTY(EditAnywhere, Category = "Tree|Colors")
     FLinearColor GrowthTriggerColor = FLinearColor::Blue;
 
-    /** F”»’è‚Ì‹–—eŒë· */
+    /** è‰²åˆ¤å®šã®è¨±å®¹èª¤å·® */
     UPROPERTY(EditAnywhere, Category = "Tree|Colors", meta = (ClampMin = "0.0", ClampMax = "1.0"))
     float ColorTolerance = 0.1f;
 
 private:
     // =======================
-    // ó‘ÔŠÇ—
+    // çŠ¶æ…‹ç®¡ç†
     // =======================
 
-    /** Œ»İ‚Ì¬’·’iŠK */
+    /** ç¾åœ¨ã®æˆé•·æ®µéš */
     UPROPERTY(VisibleAnywhere, Category = "Tree|State")
     ETreeGrowthStage CurrentStage;
 
-    /** ¬’·’†ƒtƒ‰ƒO */
+    /** æˆé•·ä¸­ãƒ•ãƒ©ã‚° */
     bool bIsGrowing;
 
-    /** ¬’·ƒ^ƒCƒ}[ */
+    /** æˆé•·ã‚¿ã‚¤ãƒãƒ¼ */
     float GrowthTimer;
 
-    /** …ó•tƒ^ƒCƒ}[ */
+    /** æ°´åˆ†è£œçµ¦ã‚¿ã‚¤ãƒãƒ¼ */
     float WaterReadyTimer;
 
-    /** ¬’·ŠJn‚ÌƒXƒP[ƒ‹ */
+    /** æˆé•·é–‹å§‹æ™‚ã®ã‚¹ã‚±ãƒ¼ãƒ« */
     FVector InitialScale;
 
-    /** ¬’·Š®—¹‚ÌƒXƒP[ƒ‹ */
+    /** æˆé•·å®Œäº†æ™‚ã®ã‚¹ã‚±ãƒ¼ãƒ« */
     FVector TargetScale;
 
-    /** Œ³‚ÌƒXƒP[ƒ‹iƒAƒjƒ[ƒVƒ‡ƒ“ƒ‚[ƒh—pj */
+    /** å…ƒã®ã‚¹ã‚±ãƒ¼ãƒ«ï¼ˆã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ãƒ¢ãƒ¼ãƒ‰ç”¨ï¼‰ */
     FVector OriginalScale;
 };
