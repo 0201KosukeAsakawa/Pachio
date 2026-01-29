@@ -1,108 +1,203 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Components/Color/ColorControllerComponent.h"
 #include "Components/Color/ObjectColorComponent.h"
-
 #include "DataContainer/ColorTargetTypes.h"
-
 #include "FunctionLibrary.h"
 #include "ColorUtilityLibrary.h"
-
-#include "UI/ColorLens.h"
 #include "UI/UIManager.h"
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
-
 #include "Kismet/KismetSystemLibrary.h" 
 
 namespace
 {
-    constexpr int32 ABSORB_AMOUNT = 5;      // 吸収時の回収量
-    constexpr int32 MAX_TANK_CAPACITY = 10;  // タンクの最大容量
-    constexpr int32 MIN_TANK_CAPACITY = 0;   // タンクの最小容量
+    constexpr int32 ABSORB_AMOUNT = 1;
+    constexpr int32 MAX_TANK_CAPACITY = 1;
+    constexpr int32 MIN_TANK_CAPACITY = 0;
 }
 
 // =======================
 // コンストラクタ
 // =======================
-
-// Sets default values for this component's properties
 UColorControllerComponent::UColorControllerComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
 
-    // 初期色は白
-    CurrentColor = FLinearColor::Red;
+    // Tank順序を定義(赤・緑・青のみ)
+    TankOrder.Add(EColorCategory::Red);
+    TankOrder.Add(EColorCategory::Green);
+    TankOrder.Add(EColorCategory::Blue);
 
+    // 初期Tankマップ(RGB限定)
     ColorTankMap.Add(EColorCategory::Red, 0);
     ColorTankMap.Add(EColorCategory::Green, 0);
     ColorTankMap.Add(EColorCategory::Blue, 0);
-    //ColorTankMap.Add(EColorCategory::White, 10);
+
+    // 初期選択は0(赤)
+    CurrentTankIndex = 0;
+    CurrentColor = UColorUtilityLibrary::GetCategoryColor(EColorCategory::Red);
 }
 
 // =======================
-// Tick（フレーム更新処理）
+// Tick
 // =======================
-
 void UColorControllerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
- 
 }
 
 // =======================
-// 色調整系
+// Tank切り替え
 // =======================
-void UColorControllerComponent::AdjustColor(float Delta)
+void UColorControllerComponent::SwitchToNextTank()
 {
-    // 現在モードの色を HSV に変換
-    FLinearColor HSV = CurrentColor.LinearRGBToHSV();
-    float Hue = HSV.R; // 色相d
+    TArray<EColorCategory> AvailableTanks = GetAvailableTanks();
 
-    // Hue を Delta 分だけ回転
-    Hue = FMath::Fmod(Hue + Delta, 360.0f);
-    if (Hue < 0.f)
-        Hue += 360.f;
-
-    //UE_LOG(LogTemp, Log, TEXT("Hue : : %f"), Hue);
-
-    // ColorTankMapから有効な色カテゴリを取得（値が1以上のもの）
-    TArray<EColorCategory> ValidCategories;
-    for (const auto& Pair : ColorTankMap)
+    if (AvailableTanks.Num() == 0)
     {
-        if (Pair.Value > 0)
-        {
-            ValidCategories.Add(Pair.Key);
-        }
-    }
-
-    // 有効なカテゴリがない場合は処理を中断
-    if (ValidCategories.Num() == 0)
-    {
-        //UE_LOG(LogTemp, Warning, TEXT("No valid color categories available"));
+        UE_LOG(LogTemp, Warning, TEXT("No tanks available"));
         return;
     }
 
-    // 色相環を等分割（360度 / カテゴリ数）
-    float AnglePerCategory = 360.0f / ValidCategories.Num();
+    // 現在のインデックスを次に進める(循環)
+    CurrentTankIndex = (CurrentTankIndex + 1) % TankOrder.Num();
 
-    // 現在の角度がどの区分に属するかを判定
-    int32 CategoryIndex = FMath::FloorToInt(Hue / AnglePerCategory) % ValidCategories.Num();
+    // もし選択したTankが空なら、次の有効なTankを探す
+    int32 SearchCount = 0;
+    while (SearchCount < TankOrder.Num())
+    {
+        EColorCategory SelectedCategory = TankOrder[CurrentTankIndex];
+        if (ColorTankMap[SelectedCategory] > 0)
+        {
+            UpdateColorFromCurrentTank();
+            OnColorChanged.Broadcast(CurrentColor);
+            UE_LOG(LogTemp, Log, TEXT("Switched to tank index %d"), CurrentTankIndex);
+            return;
+        }
 
-    // 判定されたカテゴリを取得
-    EColorCategory TargetCategory = ValidCategories[CategoryIndex];
+        CurrentTankIndex = (CurrentTankIndex + 1) % TankOrder.Num();
+        SearchCount++;
+    }
 
-    UE_LOG(LogTemp, Log, TEXT("Selected Category Index: %d, AnglePerCategory: %f"),
-        CategoryIndex, AnglePerCategory);
+    UE_LOG(LogTemp, Warning, TEXT("No valid tanks found during switch"));
+}
 
-    // カテゴリから色を取得
-    FLinearColor NewColor = UColorUtilityLibrary::GetCategoryColor(TargetCategory);
+void UColorControllerComponent::SwitchToPreviousTank()
+{
+    TArray<EColorCategory> AvailableTanks = GetAvailableTanks();
 
-    // CurrentColorを更新（αは保持）
+    if (AvailableTanks.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No tanks available"));
+        return;
+    }
+
+    // 現在のインデックスを前に戻す(循環)
+    CurrentTankIndex = (CurrentTankIndex - 1 + TankOrder.Num()) % TankOrder.Num();
+
+    // もし選択したTankが空なら、前の有効なTankを探す
+    int32 SearchCount = 0;
+    while (SearchCount < TankOrder.Num())
+    {
+        EColorCategory SelectedCategory = TankOrder[CurrentTankIndex];
+        if (ColorTankMap[SelectedCategory] > 0)
+        {
+            UpdateColorFromCurrentTank();
+            OnColorChanged.Broadcast(CurrentColor);
+            UE_LOG(LogTemp, Log, TEXT("Switched to tank index %d"), CurrentTankIndex);
+            return;
+        }
+
+        CurrentTankIndex = (CurrentTankIndex - 1 + TankOrder.Num()) % TankOrder.Num();
+        SearchCount++;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("No valid tanks found during switch"));
+}
+
+TArray<EColorCategory> UColorControllerComponent::GetAvailableTanks() const
+{
+    TArray<EColorCategory> AvailableTanks;
+
+    for (EColorCategory Category : TankOrder)
+    {
+        if (ColorTankMap.Contains(Category) && ColorTankMap[Category] > 0)
+        {
+            AvailableTanks.Add(Category);
+        }
+    }
+
+    return AvailableTanks;
+}
+
+void UColorControllerComponent::UpdateColorFromCurrentTank()
+{
+    if (!TankOrder.IsValidIndex(CurrentTankIndex))
+    {
+        return;
+    }
+
+    EColorCategory SelectedCategory = TankOrder[CurrentTankIndex];
+    FLinearColor NewColor = UColorUtilityLibrary::GetCategoryColor(SelectedCategory);
     CurrentColor = FLinearColor(NewColor.R, NewColor.G, NewColor.B, CurrentColor.A);
+}
 
-    // イベントを通知
-    // OnColorChanged.Broadcast(CurrentColor);
+void UColorControllerComponent::ConsumeTank(EColorCategory Category, int32 Amount)
+{
+    if (!ColorTankMap.Contains(Category))
+    {
+        return;
+    }
+
+    int32& TankValue = ColorTankMap[Category];
+    int32 OldValue = TankValue;
+    TankValue = FMath::Max(TankValue - Amount, MIN_TANK_CAPACITY);
+
+    UE_LOG(LogTemp, Log, TEXT("Consumed %d from tank, remaining: %d"), Amount, TankValue);
+
+    // ★現在選択中のTankが空になった場合、次のTankに自動切り替え
+    if (TankValue <= 0 && TankOrder.IsValidIndex(CurrentTankIndex))
+    {
+        EColorCategory CurrentCategory = TankOrder[CurrentTankIndex];
+        if (CurrentCategory == Category)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Current tank is empty, switching to next available tank"));
+
+            // 次に残量がある色を探す
+            TArray<EColorCategory> AvailableTanks = GetAvailableTanks();
+            if (AvailableTanks.Num() > 0)
+            {
+                SwitchToNextTank();
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("All tanks are empty!"));
+            }
+        }
+    }
+}
+
+int32 UColorControllerComponent::GetTankAmount(EColorCategory Category) const
+{
+    if (ColorTankMap.Contains(Category))
+    {
+        return ColorTankMap[Category];
+    }
+    return 0;
+}
+
+// =======================
+// 色調整
+// =======================
+void UColorControllerComponent::AdjustColor(float Delta)
+{
+    // 現在のTankの色を基準に調整
+    if (!TankOrder.IsValidIndex(CurrentTankIndex))
+    {
+        return;
+    }
+
+    UpdateColorFromCurrentTank();
 }
 
 FLinearColor UColorControllerComponent::GetCurrentColor() const
@@ -110,12 +205,9 @@ FLinearColor UColorControllerComponent::GetCurrentColor() const
     return CurrentColor;
 }
 
-
 UObjectColorComponent* UColorControllerComponent::GetHitColorComponent(float Range)
 {
     FVector Center = GetOwner()->GetActorLocation();
-
-    // 半径（BoxOverlapは「半径」＝HalfExtent）
     FVector BoxExtent(Range);
 
     TArray<AActor*> ActorsToIgnore;
@@ -152,11 +244,9 @@ UObjectColorComponent* UColorControllerComponent::GetHitColorComponent(float Ran
             continue;
         }
 
-        if (UObjectColorComponent* ColorComp =
-            Actor->GetComponentByClass<UObjectColorComponent>())
+        if (UObjectColorComponent* ColorComp = Actor->GetComponentByClass<UObjectColorComponent>())
         {
-            const float DistSq =
-                FVector::DistSquared(Center, Actor->GetActorLocation());
+            const float DistSq = FVector::DistSquared(Center, Actor->GetActorLocation());
 
             if (DistSq < NearestDistanceSq)
             {
@@ -173,91 +263,84 @@ void UColorControllerComponent::PaintHitObject(UObjectColorComponent* TargetComp
 {
     if (!TargetComp) return;
 
-    FLinearColor TraceColor = UColorUtilityLibrary::GetCategoryColor(
-        UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentColor)
-    );
+    // 現在選択中のTankの色でペイント
+    if (!TankOrder.IsValidIndex(CurrentTankIndex))
+    {
+        return;
+    }
 
-    TargetComp->ApplyColorWithMatching(TraceColor);
+    EColorCategory CurrentCategory = TankOrder[CurrentTankIndex];
+
+    // Tankの残量チェック
+    if (ColorTankMap[CurrentCategory] <= 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Cannot paint: tank is empty"));
+        return;
+    }
+
+    FLinearColor TraceColor = UColorUtilityLibrary::GetCategoryColor(CurrentCategory);
+    TargetComp->SetTargetColor(TraceColor);
+
+    // Tank残量を消費
+    ConsumeTank(CurrentCategory, 1);
 }
 
 void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetComp)
 {
     if (!TargetComp) return;
 
-    // 対象が変化中なら吸収できない
     if (TargetComp->IsPainting())
     {
         UE_LOG(LogTemp, Warning, TEXT("Target is currently painting, cannot absorb"));
         return;
     }
 
-    // ヒットした色を取得
     FLinearColor HitColor = TargetComp->GetCurrentColor();
-
-    // HSL変換
     FVector HSL = UColorUtilityLibrary::GetHSL(HitColor);
     float Saturation = HSL.Y;
-    float Lightness = HSL.Z;
 
-    // 無彩色（ほぼ白や灰色）は White に加算
+    // 無彩色は吸収しない(RGBのみ)
     if (Saturation < 0.01f)
     {
-        int32& WhiteTank = ColorTankMap.FindOrAdd(EColorCategory::White);
-        WhiteTank = FMath::Min(WhiteTank + ABSORB_AMOUNT, MAX_TANK_CAPACITY);
-
-        TargetComp->SetTargetColor(FLinearColor::White);
-        UE_LOG(LogTemp, Log, TEXT("Absorbed White: %d"), WhiteTank);
+        UE_LOG(LogTemp, Warning, TEXT("Cannot absorb colorless objects"));
         return;
     }
 
-    // RGB比率に応じて主要色を抽出
+    // RGB成分を抽出してTankに加算
     TArray<TPair<EColorCategory, float>> Components;
 
-    // 赤・緑・青のみTankに加算
-    if (HitColor.R > 0.7f) 
+    if (HitColor.R > 0.7f)
     {
         Components.Add({ EColorCategory::Red, HitColor.R });
-        UE_LOG(LogTemp, Log, TEXT("Copy_Red"));
     }
-    if (HitColor.G > 0.7f) 
+    if (HitColor.G > 0.7f)
     {
         Components.Add({ EColorCategory::Green, HitColor.G });
-        UE_LOG(LogTemp, Log, TEXT("Copy_Green"));
     }
-    if (HitColor.B > 0.7f) 
+    if (HitColor.B > 0.7f)
     {
         Components.Add({ EColorCategory::Blue, HitColor.B });
-        UE_LOG(LogTemp, Log, TEXT("Copy_Blue"));
     }
 
-    // 明るい色や薄い色は White も加算
-    //if (Lightness > 0.8f || HSL.Y < 0.2f)
-    //{
-    //    Components.Add({ EColorCategory::White, 0.5f });
-    //}
-
-    // 合計の重みを計算
     float TotalWeight = 0.0f;
     for (const auto& Comp : Components)
     {
         TotalWeight += Comp.Value;
     }
 
-    // Tankに加算（容量制限あり）
     if (TotalWeight > 0.0f)
     {
         for (const auto& Comp : Components)
         {
-            // 重みに応じて ABSORB_AMOUNT を分配
             float Ratio = Comp.Value / TotalWeight;
             int32 AddAmount = FMath::RoundToInt(ABSORB_AMOUNT * Ratio);
 
-            int32& TankValue = ColorTankMap.FindOrAdd(Comp.Key);
+            int32& TankValue = ColorTankMap[Comp.Key];
             int32 OldValue = TankValue;
             TankValue = FMath::Min(TankValue + AddAmount, MAX_TANK_CAPACITY);
 
-            UE_LOG(LogTemp, Log, TEXT("Absorbed %d to tank (was %d, now %d, max %d)"),
-                AddAmount, OldValue, TankValue, MAX_TANK_CAPACITY);
+            UE_LOG(LogTemp, Log, TEXT("Absorbed %d to tank (was %d, now %d)"),
+                AddAmount, OldValue, TankValue);
         }
     }
 

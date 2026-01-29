@@ -132,7 +132,7 @@ UPlayerStateComponent* APlayerCharacter::GetPlayerState() const
 
 void APlayerCharacter::SetCameraLocation(FVector2D grid, float ZBuffa)
 {
-	CameraHandleComponent->ApplyCameraSettings(grid, ZBuffa);
+	//CameraHandleComponent->ApplyCameraSettings(grid, ZBuffa);
 }
 
 void APlayerCharacter::ResetBuff()
@@ -446,6 +446,44 @@ void APlayerCharacter::OnStickMove(const FInputActionValue& Value)
 void APlayerCharacter::OpenMenu(const FInputActionValue& Value)
 {
 	ALevelManager::GetInstance(GetWorld())->GetUIManager()->ShowWidget(EWidgetCategory::Menu, "Menu");
+}
+
+void APlayerCharacter::SwitchColorTankNext(const FInputActionValue& Value)
+{
+	if (colorController)
+	{
+		colorController->SwitchToNextTank();
+
+		// ★色の切り替えのみ - 塗らない
+		// UI更新やエフェクトの色変更のみ
+		USlimeFluidComponent* SlimeFluidComponent = GetComponentByClass<USlimeFluidComponent>();
+		if (SlimeFluidComponent)
+		{
+			SlimeFluidComponent->ChangeMaterialColor(colorController->GetCurrentColor());
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Switched to next tank (index: %d)"),
+			colorController->GetCurrentTankIndex());
+	}
+}
+
+void APlayerCharacter::SwitchColorTankPrevious(const FInputActionValue& Value)
+{
+	if (colorController)
+	{
+		colorController->SwitchToPreviousTank();
+
+		// ★色の切り替えのみ - 塗らない
+		// UI更新やエフェクトの色変更のみ
+		USlimeFluidComponent* SlimeFluidComponent = GetComponentByClass<USlimeFluidComponent>();
+		if (SlimeFluidComponent)
+		{
+			SlimeFluidComponent->ChangeMaterialColor(colorController->GetCurrentColor());
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Switched to previous tank (index: %d)"),
+			colorController->GetCurrentTankIndex());
+	}
 }
 
 UCameraComponent* APlayerCharacter::GetCamera()const

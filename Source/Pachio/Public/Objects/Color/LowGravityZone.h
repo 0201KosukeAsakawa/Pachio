@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/Color/ColorReactiveObject.h"
+#include "Components/Color/ObjectColorComponent.h"
 #include "DataContainer/ColorTargetTypes.h"
 #include "LowGravityZone.generated.h"
 
@@ -12,7 +12,7 @@ class UNiagaraSystem;
 class UNiagaraComponent;
 
 UCLASS()
-class PACHIO_API ALowGravityZone : public AColorReactiveObject
+class PACHIO_API ULowGravityZone : public UObjectColorComponent
 {
 	GENERATED_BODY()
 
@@ -21,7 +21,7 @@ public:
 	 * コンストラクタ
 	 * デフォルト値の設定および必要なコンポーネントを初期化する
 	 */
-	ALowGravityZone();
+	ULowGravityZone();
 
 	/**
 	 * 初期化処理
@@ -72,7 +72,7 @@ private:
 	 *
 	 * @param InColor 適用された新しい色
 	 */
-	virtual void ApplyColorWithMatching(const FLinearColor& InColor) override;
+	virtual void ActivateDirect(const FLinearColor& InColor) override;
 
 private:
 	/** ゾーン領域を定義するコリジョンボックス */

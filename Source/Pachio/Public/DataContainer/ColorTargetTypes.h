@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "ColorTargetTypes.generated.h"
 
-class IColorReactiveInterface;
+class IColorReactive;
 
 namespace
 {

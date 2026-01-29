@@ -2,7 +2,6 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
-#include "UI/ColorLens.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/PostProcessVolume.h"
 #include "Interface/ColorFilterInterface.h"
@@ -51,7 +50,7 @@ void UColorManager::ColorEvent(FName EventID, FLinearColor NewColor)
 }
 
 // 色変化に反応するターゲットを登録
-void UColorManager::RegisterTarget(TScriptInterface<IColorReactiveInterface> Target)
+void UColorManager::RegisterTarget(TScriptInterface<IColorReactive> Target)
 {
     if (!this || !ColorTargetRegistry)
         return;
@@ -76,19 +75,6 @@ FLinearColor UColorManager::GetWorldColor() const
 // プレイヤーの色コントローラーとイベント接続
 void UColorManager::BindController()
 {
-    APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-    if (PlayerPawn == nullptr)
-        return;
-
-    UColorControllerComponent* ColorController = PlayerPawn->FindComponentByClass<UColorControllerComponent>();
-    if (ColorController == nullptr)
-        return;
-
-    if (!ColorController->OnColorChanged.IsAlreadyBound(this, &UColorManager::ApplyColor))
-    {
-        // 色変更イベントにバインド
-        ColorController->OnColorChanged.AddDynamic(this, &UColorManager::ApplyColor);
-    }
 
 }
 

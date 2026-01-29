@@ -20,7 +20,7 @@ public class Pachio : ModuleRules
             "FMODStudio",
             "Niagara"   ,
             "ProceduralMeshComponent",
-            //"GameplayMessageRuntime"
+            "UE5Coro",
         });
     }
 }

@@ -114,8 +114,4 @@ protected:
 
 	/** 現在の移動変位量（速度×時間） */
 	FVector MoveDelta;
-
-	/** ステート時に適用されるマテリアル（ビジュアル演出用） */
-	UPROPERTY(EditAnywhere)
-	TSoftObjectPtr<UMaterialInterface> NewMaterial;
 };

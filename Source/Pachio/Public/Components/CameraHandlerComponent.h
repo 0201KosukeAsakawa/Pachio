@@ -1,153 +1,185 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/**
+ * リトルナイトメア風カメラハンドラー
+ * シーンに配置されたCinematicCameraVolumeと連携してカメラを制御
+ */
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Camera/CameraComponent.h"
+#include "UE5Coro.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "CameraHandlerComponent.generated.h"
 
-class USpringArmComponent;
 class UCameraComponent;
+class ACinematicCameraVolume;
+
 
 /**
- * カメラ制御を担当するコンポーネント。
- *
- * グリッド単位でのカメラ移動や、ビュータイプ（サイド／トップ）の切り替えを管理する。
- * スムーズな補間移動やズーム設定、カメラ追従処理などを行う。
+ * カメラ遷移設定
  */
-UENUM(BlueprintType)
-enum class ECameraViewType : uint8
+USTRUCT(BlueprintType)
+struct FCameraTransitionSettings
 {
-	/** 横方向（サイドビュー） */
-	GridView UMETA(DisplayName = "Grid View"),
+    GENERATED_BODY()
 
-	/** 上方向（トップビュー） */
-	CharacterView UMETA(DisplayName = "Character View")
+    /** 遷移速度 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition")
+    float Speed = 3.0f;
+
+    /** イージング関数タイプ */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition")
+    TEnumAsByte<EEasingFunc::Type> EasingType = EEasingFunc::EaseInOut;
+
+    /** ブレンド指数（Easing適用時） */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition")
+    float BlendExp = 2.0f;
 };
 
 /**
- * カメラの挙動やパラメータを制御するコンポーネント。
- *
- * 主にプレイヤーキャラクターにアタッチして使用し、
- * グリッド単位での視点変更やスムーズな追従を実現する。
+ * リトルナイトメア風カメラ制御コンポーネント
  */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UCameraHandlerComponent : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	/** コンストラクタ：初期値の設定 */
-	UCameraHandlerComponent();
+    UCameraHandlerComponent();
 
-	/**
-	 * カメラ初期化処理
-	 *
-	 * @param RootComponent カメラの基準となるルートコンポーネント
-	 */
-	void Init(TObjectPtr<USceneComponent> RootComponent);
+    virtual void BeginPlay() override;
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	/**
-	 * 毎フレーム更新処理
-	 *
-	 * @param DeltaTime フレーム間の経過時間
-	 * @param TickType Tickの種類
-	 * @param ThisTickFunction Tick関数情報
-	 */
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+    /** カメラ初期化 */
+    void Init(TObjectPtr<USceneComponent> RootComponent);
 
-	/**
-	 * カメラ設定を適用（ビュータイプ指定なし）
-	 *
-	 * @param NewGridSize 新しいグリッドサイズ
-	 * @param NewZbaffa Z軸方向の補正値
-	 */
-	void ApplyCameraSettings(FVector2D NewGridSize, float NewZbaffa);
+    /** カメラコンポーネント取得 */
+    UFUNCTION(BlueprintPure, Category = "Camera")
+    UCameraComponent* GetCamera() const { return Camera; }
 
-	/**
-	 * カメラ設定を適用（ビュータイプ指定あり）
-	 *
-	 * @param NewGridSize 新しいグリッドサイズ
-	 * @param NewZbaffa Z軸方向の補正値
-	 * @param ViewType カメラのビュータイプ（サイド／トップ）
-	 */
-	void ApplyCameraSettings(FVector2D NewGridSize, float NewZbaffa, ECameraViewType ViewType);
+    /** 現在アクティブなカメラボリューム取得 */
+    UFUNCTION(BlueprintPure, Category = "Camera")
+    ACinematicCameraVolume* GetActiveVolume() const { return ActiveCameraVolume; }
 
-	/**
-	 * カメラの表示モードを変更
-	 *
-	 * @param newMode 新しいカメラビュータイプ
-	 */
-	void ChangeViewMode(ECameraViewType newMode) { CameraViewType = newMode; }
+    /** イベント演出中か */
+    UFUNCTION(BlueprintPure, Category = "Camera Event")
+    bool IsInEventMode() const { return bIsInEventMode; }
 
-	/**
-	 * 現在のカメラ設定が指定値と一致しているか判定
-	 *
-	 * @param TargetGridSize 判定対象のグリッドサイズ
-	 * @param TargetZbaffa 判定対象のZ補正値
-	 *
-	 * @return 一致していれば true
-	 */
-	bool IsParameterMatch(FVector2D TargetGridSize, float TargetZbaffa, ECameraViewType type);
+    /** 手動でカメラボリュームを設定 */
+    UFUNCTION(BlueprintCallable, Category = "Camera")
+    void SetActiveCameraVolume(ACinematicCameraVolume* NewVolume, bool bInstantTransition = false);
 
-	/**
-	 * カメラコンポーネントを取得
-	 *
-	 * @return カメラコンポーネントのポインタ
-	 */
-	UCameraComponent* GetCamera() { return Camera; }
+    /** 近くのカメラボリュームを検索 */
+    UFUNCTION(BlueprintCallable, Category = "Camera")
+    void FindNearestCameraVolume();
+
+    // ========== イベント演出用 ==========
+
+    /** カスタムイベントカメラ（テスト用） */
+    UFUNCTION(BlueprintCallable, Category = "Camera Test")
+    void TestEventCamera() { TestEventCameraCoroutine(); }
+
+    UE5Coro::TCoroutine<> TestEventCameraCoroutine();
+
+    /** 特定位置にフォーカス */
+    UE5Coro::TCoroutine<> FocusOnLocation(
+        FVector EventLocation,
+        float FocusDuration = 2.0f,
+        float MoveSpeed = 3.0f,
+        bool bWaitForComplete = true
+    );
+
+    /** 複数地点を順次フォーカス */
+    UE5Coro::TCoroutine<> FocusOnMultipleLocations(
+        TArray<FVector> Locations,
+        float DurationPerLocation = 2.0f,
+        float MoveSpeed = 3.0f
+    );
+
+    /** カメラズーム演出 */
+    UE5Coro::TCoroutine<> ZoomCamera(float TargetFOV, float Duration = 1.0f);
+
+    /** カメラシェイク演出 */
+    UE5Coro::TCoroutine<> ShakeCamera(float Intensity = 10.0f, float Duration = 0.5f);
 
 private:
-	/**
-	 * カメラ位置を更新（補間によるスムーズ移動）
-	 *
-	 * @param DeltaTime 経過時間
-	 */
-	void UpdateCameraPosition(float DeltaTime);
+    /** カメラ位置を更新 */
+    void UpdateCameraPosition(float DeltaTime);
 
-	/**
-	 * ビュータイプに応じてカメラの位置を設定
-	 *
-	 * @param ViewType カメラビュータイプ
-	 */
-	void SetCameraLocation(ECameraViewType ViewType);
+    /** カメラボリュームに基づいてカメラを更新 */
+    void UpdateFromCameraVolume(float DeltaTime);
+
+    /** プレイヤー位置に戻る */
+    UE5Coro::TCoroutine<> ReturnToPlayer(float MoveSpeed = 3.0f);
+
+    /** カメラボリュームの優先度を比較 */
+    bool ShouldSwitchVolume(ACinematicCameraVolume* NewVolume) const;
 
 private:
-	/** 現在のカメラ表示タイプ */
-	UPROPERTY(EditAnywhere, Category = "Grid")
-	ECameraViewType CameraViewType = ECameraViewType::CharacterView;
+    /** カメラコンポーネント */
+    UPROPERTY(VisibleAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UCameraComponent> Camera;
 
-	/** グリッド1マスのサイズ（X:横幅 / Y:奥行） */
-	UPROPERTY(EditAnywhere, Category = "Grid")
-	FVector2D GridSize = FVector2D(7000.f, 3000.f);
+    /** カメラ遷移設定 */
+    UPROPERTY(EditAnywhere, Category = "Camera Transition")
+    FCameraTransitionSettings TransitionSettings;
 
-	/** Z軸方向のオフセット（高さ補正） */
-	UPROPERTY(EditAnywhere, Category = "Grid")
-	float Zbaffa = 2000.f;
+    /** カメラボリュームの自動検出を有効にする */
+    UPROPERTY(EditAnywhere, Category = "Camera Volume")
+    bool bAutoDetectVolumes = true;
 
-	/** 現在のグリッド設定 */
-	FVector2D CurrentGridSize;
+    /** カメラボリューム検索範囲 */
+    UPROPERTY(EditAnywhere, Category = "Camera Volume", meta = (EditCondition = "bAutoDetectVolumes"))
+    float VolumeDetectionRadius = 5000.f;
 
-	/** 現在のZ補正値 */
-	float CurrentZbaffa;
+    /** 現在アクティブなカメラボリューム */
+    UPROPERTY()
+    TObjectPtr<ACinematicCameraVolume> ActiveCameraVolume;
 
-	/** 現在位置しているグリッド座標（整数値） */
-	FIntPoint CurrentGrid = FIntPoint::ZeroValue;
+    /** 検出されたカメラボリューム一覧 */
+    UPROPERTY()
+    TArray<TObjectPtr<ACinematicCameraVolume>> DetectedVolumes;
 
-	/** カメラの目標位置（補間対象） */
-	FVector TargetCameraLocation;
+    /** 目標カメラ位置 */
+    FVector TargetCameraLocation;
 
-	/** カメラの補間速度（移動の滑らかさ） */
-	float InterpSpeed = 5.f;
+    /** 目標カメラ回転 */
+    FRotator TargetCameraRotation;
 
-	/** 実際のカメラ位置（補間後） */
-	FVector CameraLocation;
+    /** 目標FOV */
+    float TargetFOV = 90.f;
 
-	/** カメラの回転・位置制御用スプリングアーム */
-	UPROPERTY(VisibleAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USpringArmComponent> SpringArm;
+    /** 元のFOV */
+    float OriginalFOV = 90.f;
 
-	/** 実際に描画されるカメラ */
-	UPROPERTY(VisibleAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCameraComponent> Camera;
+    /** イベント演出中フラグ */
+    bool bIsInEventMode = false;
+
+    /** イベント前のカメラ位置 */
+    FVector PreEventCameraLocation;
+
+    /** イベント前のカメラ回転 */
+    FRotator PreEventCameraRotation;
+
+    /** イベント前のFOV */
+    float PreEventFOV = 90.f;
+
+    /** 遷移中フラグ */
+    bool bIsTransitioning = false;
+
+    /** 遷移開始時刻 */
+    float TransitionStartTime = 0.f;
+
+    /** 遷移期間 */
+    float TransitionDuration = 0.f;
+
+    /** 遷移開始位置 */
+    FVector TransitionStartLocation;
+
+    /** 遷移開始回転 */
+    FRotator TransitionStartRotation;
+
+    /** 遷移開始FOV */
+    float TransitionStartFOV = 90.f;
 };

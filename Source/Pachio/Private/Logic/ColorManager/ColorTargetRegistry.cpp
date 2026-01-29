@@ -43,7 +43,7 @@ void UColorTargetRegistry::ColorEvent(FName EventID, FLinearColor NewColor)
         if (TargetInstance->GetColorEventID() != EventID)
             continue;
 
-        TargetInstance->ApplyColorWithMatching(NewColor);
+        TargetInstance->ActivateDirect(NewColor);
     }
 }
 
@@ -52,7 +52,7 @@ void UColorTargetRegistry::ColorEvent(FName EventID, FLinearColor NewColor)
 // =======================
 
 // 新しいターゲットを登録
-void UColorTargetRegistry::RegisterTarget(TScriptInterface<IColorReactiveInterface> Target)
+void UColorTargetRegistry::RegisterTarget(TScriptInterface<IColorReactive> Target)
 {
     if (!Target)
         return;
@@ -70,12 +70,12 @@ void UColorTargetRegistry::RegisterTarget(TScriptInterface<IColorReactiveInterfa
 //全ターゲットに色を通知
 void UColorTargetRegistry::NotifyTargets(const FLinearColor& Color)
 {
-    for (const TScriptInterface<IColorReactiveInterface>& Target : Instances)
+    for (const TScriptInterface<IColorReactive>& Target : Instances)
     {
         if (Target)
         {
             // ターゲットの反応関数を呼び出す
-            Target->ApplyColorWithMatching(Color);
+            Target->ActivateDirect(Color);
         }
     }
 }

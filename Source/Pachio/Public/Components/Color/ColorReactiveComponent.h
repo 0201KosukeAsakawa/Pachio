@@ -40,7 +40,7 @@ private:
      *
      * @param NewColor - 適用する新しい色
      */
-    virtual void ApplyColorWithMatching(const FLinearColor& NewColor)override;
+    virtual void ActivateDirect(const FLinearColor& NewColor)override;
     //// =======================
     //// エフェクト制御
     //// =======================

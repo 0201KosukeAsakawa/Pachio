@@ -10,7 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-
+#include "SoundHandle.h"
 #include "Manager/LevelManager.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -132,11 +132,7 @@ void APachioCharacter::Look(const FInputActionValue& Value)
 
 void APachioCharacter::Jump()
 {
-	ALevelManager* SoundMgr = ALevelManager::GetInstance(this);
-	if (SoundMgr && !bPressedJump)
-	{
-		SoundMgr->PlaySound("SE", "Jump");
-	}
+	USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Jump"));
 	bPressedJump = true;
 	JumpKeyHoldTime = 0.0f;
 }

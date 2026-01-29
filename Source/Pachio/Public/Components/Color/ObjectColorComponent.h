@@ -8,7 +8,6 @@
 
 class ALevelManager;
 class ANiagaraActor;
-class UBeatScalerComponent;
 class UColorReactiveComponent;
 class UColorManager;
 
@@ -16,7 +15,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnColorCategoryChanged, EColorCategory);
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class PACHIO_API UObjectColorComponent : public USceneComponent, public IColorReactiveInterface
+class PACHIO_API UObjectColorComponent : public USceneComponent, public IColorReactive
 {
     GENERATED_BODY()
 
@@ -79,7 +78,7 @@ public:
      *
      * @param NewColor - 適用する新しい色
      */
-    virtual void ApplyColorWithMatching(const FLinearColor& NewColor) override;
+    virtual void ActivateDirect(const FLinearColor& NewColor) override;
 
     /**
      * 新しい色塗り方式（30度/秒でTick駆動、時間制限付き）
@@ -151,8 +150,7 @@ public:
      *
      * @return カラーイベントの識別子（FName）
      */
-    FORCEINLINE FName GetColorEventID() const final override { return ColorEventID; }
-
+    FORCEINLINE FName GetColorEventID() const final override { return ColorEventID; };
     // =======================
     // エフェクト処理
     // =======================
@@ -215,7 +213,7 @@ protected:
      *
      * @return SkeletalMeshComponent（見つからない場合はnullptr）
      */
-    UStaticMeshComponent* GetMeshComponent() const;
+    UMeshComponent* GetMeshComponent() const;
 
     /**
      * レベルマネージャーを取得
@@ -292,10 +290,6 @@ protected:
     /** 色変更アクションを有効化 */
     UPROPERTY(EditAnywhere, Category = "Color|Behavior")
     bool bEnableColorAction;
-
-    /** ビート演出を有効化 */
-    UPROPERTY(EditAnywhere, Category = "Effects|Behavior")
-    bool bEnableBeatEffect;
 
     /** 補色を使用する */
     UPROPERTY(EditAnywhere, Category = "Color|Matching")

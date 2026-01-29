@@ -1,7 +1,4 @@
-// プロジェクト設定の Description ページに著作権情報を記入
-
 #include "Player/State/PlayerDefaultState.h"
-#include "Player/State/LadderClimberState.h"
 #include "Player/State/PlayerHoldState.h"
 #include "Player/PlayerCharacter.h"
 #include "Player/InGameController.h"
@@ -20,10 +17,11 @@
 #include "Manager/LevelManager.h"
 #include "UI/UIManager.h"
 #include "Objects/ColorProjectile.h"
-#include "Objects/Color/LadderActor.h"
 #include "Components/Color/ColorControllerComponent.h"
 #include "ColorUtilityLibrary.h"
 #include "Components/Color/ObjectColorComponent.h"
+#include "SoundHandle.h"
+
 namespace Player_DEFAULT_Constants
 {
     constexpr float DEAD_ZONE = 0.2f;
@@ -71,16 +69,6 @@ bool UPlayerDefaultState::OnEnter(APawn* owner)
     {
         HitBox = GetOwner()->GetComponentByClass<UCapsuleComponent>();
     }
-
-
-    // キャラクターが持つ StaticMeshComponent を取得
-    UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
-    UMaterialInterface* N = NewMaterial.LoadSynchronous(); // 非同期ロードに対応
-    if (N != nullptr && StaticMeshComp)
-    {
-        StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
-    }
-
     APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
     if (!aPlayer)
         return false;
@@ -107,7 +95,7 @@ bool UPlayerDefaultState::OnEnter(APawn* owner)
     return true; // ステートの切り替え成功
 }
 
-// ステートの毎フレーム更新処理（現時点では何もしない）
+// ステートの毎フレーム更新処理
 bool UPlayerDefaultState::OnUpdate(float DeltaTime)
 {
     if (GetWorld() == nullptr || Physics == nullptr)
@@ -130,12 +118,7 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
             // 移動モードをWalkingに戻す
             CharMovement->SetMovementMode(MOVE_Walking);
 
-            ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-            if (sound)
-            {
-                UE_LOG(LogTemp, Warning, TEXT("Landed after jump!"));
-                sound->PlaySound("SE", "Land");
-            }
+            USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Land"));
 
             bIsJumping = false;
         }
@@ -144,59 +127,52 @@ bool UPlayerDefaultState::OnUpdate(float DeltaTime)
     {
         // 通常の着地処理（ジャンプ以外で落下した場合）
         CharMovement->SetMovementMode(MOVE_Walking);
-
-        ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-        if (sound)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("HasLanded returned true, entering if-block!"));
-            sound->PlaySound("SE", "Land");
-        }
+        USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Land"));
     }
-
     return true;
 }
 bool UPlayerDefaultState::OnExit(APawn* owner)
 {
     return true;
 }
+
 bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
     ACharacter* Character = Cast<ACharacter>(GetOwner());
     if (!Character) return false;
+
     UColorControllerComponent* ColorComp = GetOwner()->GetComponentByClass<UColorControllerComponent>();
     if (!ColorComp) return false;
-    // モード判定
+
+    // ★モード判定:塗るか吸うかのみ
     if (mode == EColorAbsorbMode::Paint)
     {
-        CurrentSelectedColor = ColorComp->GetCurrentColor();
-        EColorCategory Category =
-            UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentSelectedColor);
-
-        int32* TankValue = ColorComp->ColorTankMap.Find(Category);
-        if (!TankValue || *TankValue <= 0)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Not enough color in tank"));
-            return false;
-        }
-
-        // 吸うモード → 近くのオブジェクトを吸収
-        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f); // 距離100を例
+        // ★塗るモード:近くのオブジェクトを塗るだけ
+        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
         if (TargetComp)
         {
-            TargetComp->SetTargetColor(CurrentSelectedColor);
-            (*TankValue)--; // 成功時のみ消費
-            UE_LOG(LogTemp, Log, TEXT("Paint Hit! Tank remaining: %d"), *TankValue);
+            // PaintHitObject内で残量チェックと白色フォールバックを処理
+            ColorComp->PaintHitObject(TargetComp);
         }
-      }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("No paintable object found nearby"));
+        }
+    }
     else if (mode == EColorAbsorbMode::Absorb)
     {
-        // 吸うモード → 近くのオブジェクトを吸収
-        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f); // 距離100を例
+        // ★吸うモード:近くのオブジェクトから色を吸収するだけ
+        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
         if (TargetComp)
         {
             ColorComp->AbsorbHitObject(TargetComp);
         }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("No absorbable object found nearby"));
+        }
     }
+
     return true;
 }
 
@@ -207,14 +183,6 @@ void UPlayerDefaultState::Movement(const FInputActionValue& Value)
 
     UCharacterMovementComponent* CharMovement =
         Cast<UCharacterMovementComponent>(mOwner->GetMovementComponent());
-
-    // はしご遷移判定
-    if (MoveInput.X >= DeadZone && TryEnterLadderOnJump())
-    {
-        Physics->AddForce(FVector::ZeroVector, 0.f);
-        Physics->SetGravityScale(false);
-        return;
-    }
 
     // ★ ワールド軸直指定
     FVector Direction(
@@ -261,51 +229,6 @@ bool UPlayerDefaultState::Jump(float jumpForce)
     bIsJumping = true;
     JumpStartTime = GetWorld()->GetTimeSeconds();
 
-    ISoundable* sound = ALevelManager::GetInstance(GetWorld())->GetSoundManager().GetInterface();
-    sound->PlaySound("SE", "Jump");
+    USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Jump"));
     return true;
-}
-
-bool UPlayerDefaultState::TryEnterLadderOnJump() const
-{
-    if (mOwner == nullptr)
-        return false;
-
-    // プレイヤーにアタッチされたBoxComponentを用意している想定
-    // 例えば LadderCheckTrigger として UBoxComponent* を保持している
-    if (HitBox == nullptr)
-        return false;
-
-    TArray<AActor*> OverlappingActors;
-    HitBox->GetOverlappingActors(OverlappingActors, ALadderActor::StaticClass());
-
-    if (OverlappingActors.Num() == 0)
-        return false;
-
-    IStateControllable* player = Cast<IStateControllable>(GetOwner());
-    if (player == nullptr)
-        return false;
-
-    for (AActor* Actor : OverlappingActors)
-    {
-        if (!Actor->ActorHasTag("Ladder"))
-            continue;
-
-        ALadderActor* Ladder = Cast<ALadderActor>(Actor);
-        if (!Ladder)
-            continue;
-
-        // ステート切り替え
-        if (UPlayerStateComponent* NewState = player->ChangeState(EPlayerStateType::Climb))
-        {
-            if (ULadderClimberState* ClimbState = Cast<ULadderClimberState>(NewState))
-            {
-                ClimbState->SetTargetLadder(Ladder);
-                return true;
-            }
-        }
-    }
-
-    return false;
-
 }
