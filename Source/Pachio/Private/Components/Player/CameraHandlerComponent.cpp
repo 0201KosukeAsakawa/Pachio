@@ -34,12 +34,12 @@ void UCameraHandlerComponent::Init(TObjectPtr<USceneComponent> RootComponent)
     if (!Camera)
         return;
 
-    // カメラをルートにアタッチ
-    if (RootComponent && !Camera->GetAttachParent())
-    {
-        Camera->SetupAttachment(RootComponent);
-        Camera->RegisterComponent();
-    }
+    //// カメラをルートにアタッチ
+    //if (RootComponent && !Camera->GetAttachParent())
+    //{
+    //    Camera->SetupAttachment(RootComponent);
+    //    Camera->RegisterComponent();
+    //}
 
     if (Camera)
     {
