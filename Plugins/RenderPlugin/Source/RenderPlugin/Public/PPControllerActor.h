@@ -5,7 +5,7 @@
 #include "PPControllerActor.generated.h"
 
 class APostProcessVolume;
-class UMaterialInstanceDynamic;
+class UMaterialInterface;
 
 UCLASS()
 class RENDERPLUGIN_API APPControllerActor : public AActor
@@ -19,16 +19,12 @@ protected:
     virtual void BeginPlay() override;
 
 public:
-    // デバッグ用（未指定なら自動探索）
-    UPROPERTY(EditAnywhere, Category = "PostProcess")
-    APostProcessVolume* TargetVolume = nullptr;
+    UPROPERTY(EditAnywhere, Category = "RenderPlugin")
+    APostProcessVolume* TargetVolume;
 
-private:
-    // GC防止
-    UPROPERTY()
-    UMaterialInstanceDynamic* MID = nullptr;
+    UPROPERTY(EditAnywhere, Category = "RenderPlugin")
+    UMaterialInterface* PostProcessMaterial;
 
-    // 内部処理
-    APostProcessVolume* FindGlobalVolume() const;
-    bool SetupMaterial(APostProcessVolume* Volume);
+    UPROPERTY(EditAnywhere, Category = "RenderPlugin")
+    float BlendWeight = 1.0f;
 };
