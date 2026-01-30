@@ -155,6 +155,34 @@ void UColorControllerComponent::ConsumeTank(EColorCategory Category, int32 Amoun
 
     UE_LOG(LogTemp, Log, TEXT("Consumed %d from tank, remaining: %d"), Amount, TankValue);
 
+    // ★★ 消費された色をCurrentColorから減算(加法混色)
+    if (TankValue <= 0)
+    {
+        FLinearColor CategoryColor = UColorUtilityLibrary::GetCategoryColor(Category);
+
+        // 加法混色なので、その色成分を0にする
+        if (Category == EColorCategory::Red)
+        {
+            CurrentColor.R = 0.0f;
+        }
+        else if (Category == EColorCategory::Green)
+        {
+            CurrentColor.G = 0.0f;
+        }
+        else if (Category == EColorCategory::Blue)
+        {
+            CurrentColor.B = 0.0f;
+        }
+
+        // ★★ 色変更をブロードキャスト(マテリアル更新のため)
+        OnColorChanged.Broadcast(CurrentColor);
+
+        UE_LOG(LogTemp, Log, TEXT("Tank empty - Color component removed. New color: R=%.2f G=%.2f B=%.2f"),
+            CurrentColor.R, CurrentColor.G, CurrentColor.B);
+
+        UpdateColorFromAllTanks();
+    }
+
     // ★現在選択中のTankが空になった場合、次のTankに自動切り替え
     if (TankValue <= 0 && TankOrder.IsValidIndex(CurrentTankIndex))
     {
@@ -172,6 +200,9 @@ void UColorControllerComponent::ConsumeTank(EColorCategory Category, int32 Amoun
             else
             {
                 UE_LOG(LogTemp, Warning, TEXT("All tanks are empty!"));
+                // ★★ 全てのタンクが空の場合、完全に色を抜く
+                CurrentColor = FLinearColor(0.0f, 0.0f, 0.0f, CurrentColor.A);
+                OnColorChanged.Broadcast(CurrentColor);
             }
         }
     }
@@ -345,6 +376,7 @@ void UColorControllerComponent::AbsorbHitObject(UObjectColorComponent* TargetCom
     }
 
     TargetComp->SetTargetColor(FLinearColor::White);
+    OnColorChanged.Broadcast(CurrentColor);
 }
 
 // 既存のコードの最後に以下を追加
@@ -393,4 +425,26 @@ bool UColorControllerComponent::IsInPaintMode() const
 
     EColorCategory CurrentCategory = TankOrder[CurrentTankIndex];
     return ColorTankMap[CurrentCategory] > 0;
+}
+
+void UColorControllerComponent::UpdateColorFromAllTanks()
+{
+    // 全てのタンクの状態から加法混色で色を計算
+    FLinearColor NewColor = FLinearColor(0.0f, 0.0f, 0.0f, CurrentColor.A);
+
+    if (ColorTankMap[EColorCategory::Red] > 0)
+    {
+        NewColor.R = 1.0f;
+    }
+    if (ColorTankMap[EColorCategory::Green] > 0)
+    {
+        NewColor.G = 1.0f;
+    }
+    if (ColorTankMap[EColorCategory::Blue] > 0)
+    {
+        NewColor.B = 1.0f;
+    }
+
+    CurrentColor = NewColor;
+    OnColorChanged.Broadcast(CurrentColor);
 }

@@ -92,6 +92,7 @@ private:
      */
     void ConsumeTank(EColorCategory Category, int32 Amount = 1);
 
+    void UpdateColorFromAllTanks();
 private:
     FLinearColor CurrentColor;
 

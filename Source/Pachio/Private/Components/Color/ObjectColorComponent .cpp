@@ -20,14 +20,14 @@ namespace
     /** マテリアルスロットインデックス */
     static constexpr int32 MATERIAL_SLOT_INDEX = 0;
 
-    /** 色変更時間 */
-    static constexpr float CHANGE_HITCOLOR = 2.f;
-
-    /** 色相変化速度（度/秒） - 新しい塗り方用 */
+    /** 色相変化速度（度/秒） */
     static constexpr float HUE_CHANGE_SPEED = 30.0f;
 
     /** 色変更の持続時間（秒） */
     static constexpr float COLOR_CHANGE_DURATION = 2.f;
+
+    /** 彩度がこの値以下の場合、無彩色とみなす */
+    static constexpr float ACHROMATIC_SATURATION_THRESHOLD = 0.01f;
 }
 
 
@@ -40,8 +40,6 @@ UObjectColorComponent::UObjectColorComponent()
     , HitColor(FLinearColor::White)          // ヒット時の色
     , InitialColor(FLinearColor::White)      // 初期色（リセット時に使用）
     , TargetColor(FLinearColor::White)       // 目標色（Tick内で徐々に近づく）
-    , StartColor(FLinearColor::White)        // 補間開始時の色
-    , LastColor(FLinearColor::White)         // 前回の目標色
     , bApplyColorToMaterial(true)            // マテリアルに色を適用するか
     , bEnableColorAction(true)               // 色変更アクションを有効化
     , bUseComplementaryColor(false)          // 補色を使用するか
@@ -53,7 +51,6 @@ UObjectColorComponent::UObjectColorComponent()
     , bIsPainting(false)                     // ペイント中か
     , bHasTargetColor(false)                 // 目標色が設定されているか
     , HitTimer(0.f)                          // ヒット時の経過時間
-    , LastPaintTime(0.f)                     // 最後のペイント時刻
     , ColorChangeTimer(0.f)                  // 色変更の経過時間
 {
     PrimaryComponentTick.bCanEverTick = true;
@@ -85,11 +82,10 @@ void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    // ===== 新規追加：目標色への段階的変化（SetTargetColor用） =====
+    // 目標色への段階的変化（SetTargetColor用）
     if (bHasTargetColor && bColorChangeable)
     {
         UpdateColorGradually(DeltaTime);
-        //ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(ColorChangeTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
     }
 }
 
@@ -147,7 +143,7 @@ void UObjectColorComponent::Initialize()
 }
 
 /**
- * 従来の色塗り方式（90度/秒で変化）
+ * 従来の色塗り方式（即座に変化）
  * PaintHitObjectなどから呼び出される
  */
 void UObjectColorComponent::ActivateDirect(const FLinearColor& NewColor)
@@ -181,7 +177,13 @@ void UObjectColorComponent::SetTargetColor(const FLinearColor& NewColor, float D
     TargetColor = NewColor;
     bHasTargetColor = true;
     ColorChangeTimer = 0.f;
-    //ColorChangeDuration = Duration;
+
+    // ★ 追加: 初期フレームで即座に色を適用開始
+    if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
+    {
+        // 最初の1フレーム分の更新を即座に実行
+        UpdateColorGradually(0.016f); // 約60FPSの1フレーム分
+    }
 
     UE_LOG(LogTemp, Log, TEXT("[%s] Target color set for %.1f seconds: R=%.2f G=%.2f B=%.2f"),
         *GetOwner()->GetName(),
@@ -191,6 +193,7 @@ void UObjectColorComponent::SetTargetColor(const FLinearColor& NewColor, float D
 
 /**
  * Tick内で呼ばれる色更新処理（30度/秒で段階的に変化、時間制限付き）
+ * 無彩色から有彩色への変化時は、目標色の色相を直接使用する
  *
  * @param DeltaTime フレーム時間
  */
@@ -199,37 +202,43 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
     // 経過時間を更新
     ColorChangeTimer += DeltaTime;
 
-    // 時間切れチェック
-    if (ColorChangeTimer >= COLOR_CHANGE_DURATION)
-    {
-        bHasTargetColor = false;
-        UE_LOG(LogTemp, Log, TEXT("[%s] Color change time expired (%.2f seconds)"),
-            *GetOwner()->GetName(), ColorChangeTimer);
-
-        //if(UColorUtilityLibrary::GetNearestColorCategory(CurrentColor) == ColorCategory)
-        if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor))
-        {
-            ActivateDirect(CurrentColor);
-        }
-        return;
-    }
+    // ★ 修正: 時間切れチェックを最後に移動
+    // まず色を更新してから時間をチェックする
 
     // 現在の色と目標色のHSLを取得
     FVector currentHSL = UColorUtilityLibrary::GetHSL(CurrentColor);
     FVector targetHSL = UColorUtilityLibrary::GetHSL(TargetColor);
 
-    // Hueの最短角距離を計算
-    float deltaHue = targetHSL.X - currentHSL.X;
-    deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
+    float newHue = currentHSL.X;
+    float deltaHue = 0.0f;
 
-    // このフレームでの最大変化量（30度/秒）
-    float maxHueChangeThisFrame = HUE_CHANGE_SPEED * DeltaTime;
-    float hueStep = FMath::Clamp(deltaHue, -maxHueChangeThisFrame, maxHueChangeThisFrame);
+    // 現在の色が無彩色（白・グレー・黒）かチェック
+    bool bCurrentIsAchromatic = currentHSL.Y < ACHROMATIC_SATURATION_THRESHOLD;
+    bool bTargetIsAchromatic = targetHSL.Y < ACHROMATIC_SATURATION_THRESHOLD;
 
-    // 新しいHueを計算
-    float newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
+    if (bCurrentIsAchromatic && !bTargetIsAchromatic)
+    {
+        // 無彩色から有彩色へ：目標色の色相を直接使用
+        newHue = targetHSL.X;
 
-    // SaturationとLightnessも滑らかに補間（1秒で完了）
+        UE_LOG(LogTemp, Verbose, TEXT("[%s] Transitioning from achromatic to chromatic. Using target hue: %.1f"),
+            *GetOwner()->GetName(), targetHSL.X);
+    }
+    else if (!bCurrentIsAchromatic && !bTargetIsAchromatic)
+    {
+        // 有彩色から有彩色へ：最短角距離で補間
+        deltaHue = targetHSL.X - currentHSL.X;
+        deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
+
+        // このフレームでの最大変化量（30度/秒）
+        float maxHueChangeThisFrame = HUE_CHANGE_SPEED * DeltaTime;
+        float hueStep = FMath::Clamp(deltaHue, -maxHueChangeThisFrame, maxHueChangeThisFrame);
+
+        // 新しいHueを計算
+        newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
+    }
+
+    // SaturationとLightnessも滑らかに補間
     float interpSpeed = 1.0f * DeltaTime;
     float newS = FMath::Lerp(currentHSL.Y, targetHSL.Y, interpSpeed);
     float newL = FMath::Lerp(currentHSL.Z, targetHSL.Z, interpSpeed);
@@ -238,24 +247,34 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
     FLinearColor newColor = UColorUtilityLibrary::FromHSL(FVector(newHue, newS, newL));
     CurrentColor = newColor;
 
-    // メッシュ色変更モードの場合のみマテリアルに適用
+    // ★ 修正: 必ずマテリアルに適用
     if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
     {
         ApplyColorToMaterial(CurrentColor);
     }
 
-    // 目標色に到達したかチェック（時間内に到達した場合は終了）
+    // 目標色に到達したかチェック
     float remainingHueDiff = FMath::Abs(FMath::Fmod(targetHSL.X - newHue + 540.0f, 360.0f) - 180.0f);
 
-    if (remainingHueDiff < 1.0f &&
-        FMath::Abs(targetHSL.Y - newS) < 0.05f &&
-        FMath::Abs(targetHSL.Z - newL) < 0.05f)
+    // 無彩色の場合は色相差を無視
+    if (bTargetIsAchromatic)
     {
-        // 完全に目標色に到達（時間内に到達）
+        remainingHueDiff = 0.0f;
+    }
+
+    bool bReachedTarget = (remainingHueDiff < 1.0f &&
+        FMath::Abs(targetHSL.Y - newS) < 0.05f &&
+        FMath::Abs(targetHSL.Z - newL) < 0.05f);
+
+    // ★ 修正: 到達判定または時間切れで終了
+    if (bReachedTarget || ColorChangeTimer >= COLOR_CHANGE_DURATION)
+    {
+        // 最終的な色を確実に適用
         if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
         {
-            ApplyColorToMaterial(CurrentColor);
+            ApplyColorToMaterial(bReachedTarget ? TargetColor : CurrentColor);
         }
+
         bHasTargetColor = false;
 
         if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05, 0.05)))
@@ -263,8 +282,10 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
             ActivateDirect(CurrentColor);
         }
 
-        UE_LOG(LogTemp, Log, TEXT("[%s] Reached target color in %.2f seconds"),
-            *GetOwner()->GetName(), ColorChangeTimer);
+        UE_LOG(LogTemp, Log, TEXT("[%s] Color change finished: %s in %.2f seconds"),
+            *GetOwner()->GetName(),
+            bReachedTarget ? TEXT("Reached") : TEXT("Timeout"),
+            ColorChangeTimer);
     }
 }
 
