@@ -10,9 +10,27 @@ class ALevelManager;
 class ANiagaraActor;
 class UColorReactiveComponent;
 class UColorManager;
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnColorCategoryChanged, EColorCategory);
 
+/**
+ * @brief 色変更モード
+ * オブジェクトの色変更動作を制御する
+ */
+UENUM(BlueprintType)
+enum class EColorChangeMode : uint8
+{
+    /** メッシュの色のみを変更 */
+    MeshColorOnly UMETA(DisplayName = "Mesh Color Only"),
+
+    /** ナイアガラエフェクトのみを起動 */
+    NiagaraOnly UMETA(DisplayName = "Niagara Only"),
+
+    /** メッシュの色変更とナイアガラエフェクトの両方を実行 */
+    MeshColorAndNiagara UMETA(DisplayName = "Mesh Color + Niagara")
+};
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UObjectColorComponent : public USceneComponent, public IColorReactive
@@ -90,6 +108,7 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category = "Color")
     void SetTargetColor(const FLinearColor& NewColor, const float Duration = 30.f);
+
     // =======================
     // 色の操作
     // =======================
@@ -151,6 +170,7 @@ public:
      * @return カラーイベントの識別子（FName）
      */
     FORCEINLINE FName GetColorEventID() const final override { return ColorEventID; };
+
     // =======================
     // エフェクト処理
     // =======================
@@ -171,8 +191,14 @@ public:
      */
     void ApplyColorToMaterialAlpha(const float Alpha, const FLinearColor& InColor);
 
+    /**
+     * ナイアガラエフェクトを起動
+     * 設定されたモードに基づいてエフェクトを再生する
+     */
+    void ActivateNiagaraEffect();
 
     bool IsPainting()const { return bIsPainting; }
+
 protected:
     // =======================
     // 内部初期化処理
@@ -239,6 +265,28 @@ public:
 
 protected:
     // =======================
+    // モード設定
+    // =======================
+
+    /** 色変更モード */
+    UPROPERTY(EditAnywhere, Category = "Color|Mode")
+    EColorChangeMode ColorChangeMode = EColorChangeMode::MeshColorOnly;
+
+    // =======================
+    // ナイアガラ設定
+    // =======================
+
+    /** 再生するナイアガラシステム（NiagaraOnlyまたはMeshColorAndNiagaraモード時のみ使用） */
+    UPROPERTY(EditAnywhere, Category = "Color|Niagara",
+        meta = (EditCondition = "ColorChangeMode != EColorChangeMode::MeshColorOnly",
+            EditConditionHides))
+    TObjectPtr<UNiagaraSystem> NiagaraSystem;
+
+    /** ナイアガラコンポーネント（ランタイムで生成） */
+    UPROPERTY()
+    TObjectPtr<UNiagaraComponent> NiagaraComponent;
+
+    // =======================
     // 色の状態
     // =======================
 
@@ -254,7 +302,6 @@ protected:
 
     /** 目標色（30度/秒の段階的変化用） */
     FLinearColor TargetColor;
-
 
     /** 補間開始時の色 */
     FLinearColor StartColor;
@@ -283,8 +330,10 @@ protected:
     // 動作フラグ
     // =======================
 
-    /** マテリアルへの色適用を有効化 */
-    UPROPERTY(EditAnywhere, Category = "Color|Behavior")
+    /** マテリアルへの色適用を有効化（MeshColorOnlyまたはMeshColorAndNiagaraモード時のみ使用） */
+    UPROPERTY(EditAnywhere, Category = "Color|Behavior",
+        meta = (EditCondition = "ColorChangeMode != EColorChangeMode::NiagaraOnly",
+            EditConditionHides))
     bool bApplyColorToMaterial;
 
     /** 色変更アクションを有効化 */
@@ -343,4 +392,3 @@ private:
     float ColorChangeTimer;      // 色変更の経過時間
     float ColorChangeDuration;   // 色変更の持続時間
 };
-

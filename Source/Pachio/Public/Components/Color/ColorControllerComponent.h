@@ -18,7 +18,6 @@ class PACHIO_API UColorControllerComponent : public UActorComponent
 
 public:
     UColorControllerComponent();
-
     void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
     // ====== 色操作 ======
@@ -30,7 +29,7 @@ public:
 
     UObjectColorComponent* GetHitColorComponent(float Distance);
 
-    // ====== 新規追加:Tank切り替え ======
+    // ====== Tank切り替え ======
     /**
      * 次のTankに切り替え
      */
@@ -54,6 +53,21 @@ public:
      */
     UFUNCTION(BlueprintCallable)
     int32 GetTankAmount(EColorCategory Category) const;
+
+    // ====== 新規追加:統合されたインタラクション ======
+    /**
+     * 状態に応じて自動的にペイント/吸収を切り替える
+     * Tankに色があれば「吐く(ペイント)」、なければ「吸う(吸収)」
+     */
+    UFUNCTION(BlueprintCallable)
+    void InteractWithObject(UObjectColorComponent* TargetComp);
+
+    /**
+     * 現在のモードを取得(デバッグ/UI用)
+     * @return true = ペイントモード, false = 吸収モード
+     */
+    UFUNCTION(BlueprintCallable)
+    bool IsInPaintMode() const;
 
 public:
     UPROPERTY(BlueprintAssignable)

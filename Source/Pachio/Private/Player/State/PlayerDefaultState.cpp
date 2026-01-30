@@ -143,35 +143,36 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 
     UColorControllerComponent* ColorComp = GetOwner()->GetComponentByClass<UColorControllerComponent>();
     if (!ColorComp) return false;
-
-    // ★モード判定:塗るか吸うかのみ
-    if (mode == EColorAbsorbMode::Paint)
-    {
-        // ★塗るモード:近くのオブジェクトを塗るだけ
-        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
-        if (TargetComp)
-        {
-            // PaintHitObject内で残量チェックと白色フォールバックを処理
-            ColorComp->PaintHitObject(TargetComp);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("No paintable object found nearby"));
-        }
-    }
-    else if (mode == EColorAbsorbMode::Absorb)
-    {
-        // ★吸うモード:近くのオブジェクトから色を吸収するだけ
-        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
-        if (TargetComp)
-        {
-            ColorComp->AbsorbHitObject(TargetComp);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("No absorbable object found nearby"));
-        }
-    }
+    UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
+    ColorComp->InteractWithObject(TargetComp);
+    //// ★モード判定:塗るか吸うかのみ
+    //if (mode == EColorAbsorbMode::Paint)
+    //{
+    //    // ★塗るモード:近くのオブジェクトを塗るだけ
+    //    UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
+    //    if (TargetComp)
+    //    {
+    //        // PaintHitObject内で残量チェックと白色フォールバックを処理
+    //        ColorComp->PaintHitObject(TargetComp);
+    //    }
+    //    else
+    //    {
+    //        UE_LOG(LogTemp, Warning, TEXT("No paintable object found nearby"));
+    //    }
+    //}
+    //else if (mode == EColorAbsorbMode::Absorb)
+    //{
+    //    // ★吸うモード:近くのオブジェクトから色を吸収するだけ
+    //    UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
+    //    if (TargetComp)
+    //    {
+    //        ColorComp->AbsorbHitObject(TargetComp);
+    //    }
+    //    else
+    //    {
+    //        UE_LOG(LogTemp, Warning, TEXT("No absorbable object found nearby"));
+    //    }
+    //}
 
     return true;
 }

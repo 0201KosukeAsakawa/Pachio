@@ -6,6 +6,8 @@
 #include "Manager/ColorManager.h"
 #include "Sound/SoundManager.h"
 #include "FunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 // =======================
 // 定数
@@ -82,6 +84,7 @@ void UObjectColorComponent::BeginPlay()
 void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
     // ===== 新規追加：目標色への段階的変化（SetTargetColor用） =====
     if (bHasTargetColor && bColorChangeable)
     {
@@ -114,9 +117,28 @@ void UObjectColorComponent::Initialize()
     UMeshComponent* MeshComp = GetMeshComponent();
     if (MeshComp)
     {
-        // ダイナミックマテリアルを生成
-        constexpr int32 MaterialSlotIndex = 0;
-        DynMesh = MeshComp->CreateAndSetMaterialInstanceDynamic(MaterialSlotIndex);
+        // ダイナミックマテリアルを生成（メッシュ色変更モードの場合のみ）
+        if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
+        {
+            constexpr int32 MaterialSlotIndex = 0;
+            DynMesh = MeshComp->CreateAndSetMaterialInstanceDynamic(MaterialSlotIndex);
+        }
+    }
+
+    // ナイアガラコンポーネントの初期化（ナイアガラモードの場合）
+    if (ColorChangeMode != EColorChangeMode::MeshColorOnly && NiagaraSystem)
+    {
+        NiagaraComponent = NewObject<UNiagaraComponent>(GetOwner());
+        if (NiagaraComponent)
+        {
+            NiagaraComponent->SetAsset(NiagaraSystem);
+            NiagaraComponent->RegisterComponent();
+            NiagaraComponent->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetIncludingScale);
+            NiagaraComponent->SetAutoActivate(false);
+
+            UE_LOG(LogTemp, Log, TEXT("[%s] NiagaraComponent initialized for mode: %d"),
+                *GetOwner()->GetName(), static_cast<int32>(ColorChangeMode));
+        }
     }
 
     InitializeColorLogic();      // 色ロジックの初期化
@@ -130,9 +152,26 @@ void UObjectColorComponent::Initialize()
  */
 void UObjectColorComponent::ActivateDirect(const FLinearColor& NewColor)
 {
-    
-}
+    // モードに応じた処理を実行
+    switch (ColorChangeMode)
+    {
+    case EColorChangeMode::MeshColorOnly:
+        // メッシュの色のみを変更
+        ApplyColorToMaterial(NewColor);
+        break;
 
+    case EColorChangeMode::NiagaraOnly:
+        // ナイアガラエフェクトのみを起動
+        ActivateNiagaraEffect();
+        break;
+
+    case EColorChangeMode::MeshColorAndNiagara:
+        // 両方を実行
+        ApplyColorToMaterial(NewColor);
+        ActivateNiagaraEffect();
+        break;
+    }
+}
 
 void UObjectColorComponent::SetTargetColor(const FLinearColor& NewColor, float Duration)
 {
@@ -198,7 +237,12 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
     // 新しい色を生成して適用
     FLinearColor newColor = UColorUtilityLibrary::FromHSL(FVector(newHue, newS, newL));
     CurrentColor = newColor;
-    ApplyColorToMaterial(CurrentColor);
+
+    // メッシュ色変更モードの場合のみマテリアルに適用
+    if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
+    {
+        ApplyColorToMaterial(CurrentColor);
+    }
 
     // 目標色に到達したかチェック（時間内に到達した場合は終了）
     float remainingHueDiff = FMath::Abs(FMath::Fmod(targetHSL.X - newHue + 540.0f, 360.0f) - 180.0f);
@@ -208,13 +252,17 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
         FMath::Abs(targetHSL.Z - newL) < 0.05f)
     {
         // 完全に目標色に到達（時間内に到達）
-        //CurrentColor = TargetColor;
-        ApplyColorToMaterial(CurrentColor);
+        if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
+        {
+            ApplyColorToMaterial(CurrentColor);
+        }
         bHasTargetColor = false;
+
         if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05, 0.05)))
         {
             ActivateDirect(CurrentColor);
         }
+
         UE_LOG(LogTemp, Log, TEXT("[%s] Reached target color in %.2f seconds"),
             *GetOwner()->GetName(), ColorChangeTimer);
     }
@@ -262,10 +310,11 @@ void UObjectColorComponent::RegisterToColorManager()
 void UObjectColorComponent::SetupMaterial()
 {
     // マテリアル適用が有効な場合はスキップ
-    if (!bApplyColorToMaterial)
+    if (!bApplyColorToMaterial || ColorChangeMode == EColorChangeMode::NiagaraOnly)
     {
         return;
     }
+
     // メッシュコンポーネントを取得
     UMeshComponent* Mesh = GetMeshComponent();
     if (!Mesh)
@@ -298,10 +347,13 @@ void UObjectColorComponent::SetColor(const FLinearColor& NewColor)
         return;
 
     CurrentColor = HitColor;
-    // マテリアルへ色を反映
-    ApplyColorToMaterial(CurrentColor);
-}
 
+    // メッシュ色変更モードの場合のみマテリアルへ色を反映
+    if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
+    {
+        ApplyColorToMaterial(CurrentColor);
+    }
+}
 
 void UObjectColorComponent::ResetColor()
 {
@@ -367,6 +419,25 @@ void UObjectColorComponent::ApplyColorToMaterialAlpha(const float Alpha, const F
     DynMesh->SetScalarParameterValue(FName("Alpha"), Alpha);
 }
 
+/**
+ * ナイアガラエフェクトを起動
+ * 設定されたモードに基づいてエフェクトを再生する
+ */
+void UObjectColorComponent::ActivateNiagaraEffect()
+{
+    if (!NiagaraComponent || !NiagaraSystem)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[%s] Cannot activate Niagara: Component or System is null"),
+            *GetOwner()->GetName());
+        return;
+    }
+
+    // ナイアガラエフェクトを再生
+    NiagaraComponent->Activate(true);
+
+    UE_LOG(LogTemp, Log, TEXT("[%s] Niagara effect activated"),
+        *GetOwner()->GetName());
+}
 
 // =======================
 // ヘルパー関数
