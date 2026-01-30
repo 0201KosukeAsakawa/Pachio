@@ -22,7 +22,8 @@ namespace
 // コンストラクタ
 // =======================
 UGrowingTreeComponent::UGrowingTreeComponent()
-    : GrowthMode(EGrowthMode::MeshSwap)
+    : TriggerMode(EGrowthTriggerMode::TwoStep)
+    , GrowthMode(EGrowthMode::MeshSwap)
     , SaplingMeshScale(FVector::OneVector)
     , FullyGrownMeshScale(FVector::OneVector)
     , AnimationPlayRate(1.0f)
@@ -31,8 +32,8 @@ UGrowingTreeComponent::UGrowingTreeComponent()
     , EndScaleMultiplier(2.0f)
     , GrowthDuration(1.5f)
     , WaterReadyDuration(5.0f)
-    , WaterReadyColor(FLinearColor::Green)
-    , GrowthTriggerColor(FLinearColor::Blue)
+    , GrowthTriggerColor(FLinearColor::Green)
+    , SecondStepColor(FLinearColor::Blue)
     , ColorTolerance(DEFAULT_COLOR_TOLERANCE)
     , CurrentStage(ETreeGrowthStage::Sapling)
     , bIsGrowing(false)
@@ -76,7 +77,8 @@ void UGrowingTreeComponent::Initialize()
         SetMeshForStage(CurrentStage);
     }
 
-    UE_LOG(LogTemp, Log, TEXT("[GrowingTree] Initialized (Mode: %s): %s"),
+    UE_LOG(LogTemp, Log, TEXT("[GrowingTree] Initialized (Trigger: %s, Mode: %s): %s"),
+        TriggerMode == EGrowthTriggerMode::GreenOnly ? TEXT("GreenOnly") : TEXT("TwoStep"),
         GrowthMode == EGrowthMode::MeshSwap ? TEXT("MeshSwap") : TEXT("Animation"),
         *GetOwner()->GetName());
 }
@@ -112,23 +114,41 @@ void UGrowingTreeComponent::ActivateDirect(const FLinearColor& InColor)
         return;
     }
 
-    // 緑色を受けた場合 → 水分補給状態へ
-    if (UColorUtilityLibrary::IsHueSimilar(InColor, WaterReadyColor))
+    // 緑のみモード：緑色で即座に成長開始
+    if (TriggerMode == EGrowthTriggerMode::GreenOnly)
     {
-        ActivateWaterReady();
-    }
-    // 青色を受けた場合 → 成長開始（水分補給状態の時のみ）
-    else if (UColorUtilityLibrary::IsHueSimilar(InColor, GrowthTriggerColor))
-    {
-        if (CurrentStage == ETreeGrowthStage::WaitingForWater)
+        if (UColorUtilityLibrary::IsHueSimilar(InColor, GrowthTriggerColor))
         {
-            StartGrowth();
+            if (CurrentStage == ETreeGrowthStage::Sapling)
+            {
+                StartGrowth();
+            }
+        }
+    }
+    // 2段階モード：緑→青の2ステップ
+    else if (TriggerMode == EGrowthTriggerMode::TwoStep)
+    {
+        // 緑色を受けた場合 → 水分補給状態へ
+        if (UColorUtilityLibrary::IsHueSimilar(InColor, GrowthTriggerColor))
+        {
+            if (CurrentStage == ETreeGrowthStage::Sapling)
+            {
+                ActivateWaterReady();
+            }
+        }
+        // 青色を受けた場合 → 成長開始（水分補給状態の時のみ）
+        else if (UColorUtilityLibrary::IsHueSimilar(InColor, SecondStepColor))
+        {
+            if (CurrentStage == ETreeGrowthStage::WaitingForWater)
+            {
+                StartGrowth();
+            }
         }
     }
 }
 
 // =======================
-// 水分補給
+// 水分補給（2段階モード用）
 // =======================
 void UGrowingTreeComponent::ActivateWaterReady()
 {
@@ -144,7 +164,7 @@ void UGrowingTreeComponent::ActivateWaterReady()
     PlayWaterEffect();
 
     // 色を緑に変更
-    ApplyColorToMaterial(WaterReadyColor);
+    ApplyColorToMaterial(GrowthTriggerColor);
 
     UE_LOG(LogTemp, Log, TEXT("[GrowingTree] Water ready: %s"), *GetOwner()->GetName());
 }

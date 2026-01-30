@@ -31,11 +31,21 @@ enum class EGrowthMode : uint8
 };
 
 /**
+ * @brief 成長トリガーモード
+ */
+UENUM(BlueprintType)
+enum class EGrowthTriggerMode : uint8
+{
+    TwoStep UMETA(DisplayName = "2段階（緑→青）"),
+    GreenOnly UMETA(DisplayName = "緑のみ")
+};
+
+/**
  * @brief 成長する木のコンポーネント
  *
  * 使い方:
- * 1. 緑色(Green)を受けると水分受付可能状態になる
- * 2. その状態で青色(Blue)を受けると急速成長する（苗→木）
+ * - 2段階モード: 緑色(Green)で水分受付→青色(Blue)で成長
+ * - 緑のみモード: 緑色(Green)で即座に成長開始
  */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UGrowingTreeComponent : public UObjectColorComponent
@@ -69,7 +79,7 @@ public:
 
     /**
      * @brief 色受信処理
-     * 緑色で水分補給状態、青色で成長開始
+     * モードに応じて成長トリガーを処理
      * @param InColor 新たに適用された色
      */
     virtual void ActivateDirect(const FLinearColor& InColor) override;
@@ -95,12 +105,12 @@ public:
 
 protected:
     /**
-     * @brief 水分受付可能状態にする（緑色を受けた時）
+     * @brief 水分受付可能状態にする（緑色を受けた時・2段階モード用）
      */
     void ActivateWaterReady();
 
     /**
-     * @brief 成長を開始する（青色を受けた時）
+     * @brief 成長を開始する
      */
     void StartGrowth();
 
@@ -156,6 +166,10 @@ protected:
     // =======================
     // 基本設定
     // =======================
+
+    /** 成長トリガーモード */
+    UPROPERTY(EditAnywhere, Category = "Tree|Mode")
+    EGrowthTriggerMode TriggerMode = EGrowthTriggerMode::TwoStep;
 
     /** 成長モード */
     UPROPERTY(EditAnywhere, Category = "Tree|Mode")
@@ -218,15 +232,15 @@ protected:
     TObjectPtr<UCurveFloat> GrowthCurve;
 
     /** 水分補給状態の持続時間（秒）0で無限 */
-    UPROPERTY(EditAnywhere, Category = "Tree|Growth", meta = (ClampMin = "0.0"))
+    UPROPERTY(EditAnywhere, Category = "Tree|Growth", meta = (EditCondition = "TriggerMode == EGrowthTriggerMode::TwoStep", EditConditionHides, ClampMin = "0.0"))
     float WaterReadyDuration = 5.0f;
 
     // =======================
     // エフェクト
     // =======================
 
-    /** 水エフェクト */
-    UPROPERTY(EditAnywhere, Category = "Tree|Effects")
+    /** 水エフェクト（2段階モード用） */
+    UPROPERTY(EditAnywhere, Category = "Tree|Effects", meta = (EditCondition = "TriggerMode == EGrowthTriggerMode::TwoStep", EditConditionHides))
     TObjectPtr<UNiagaraSystem> WaterEffect;
 
     /** 成長エフェクト */
@@ -237,21 +251,21 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Tree|Effects")
     TObjectPtr<USoundBase> GrowthSound;
 
-    /** 水分サウンド */
-    UPROPERTY(EditAnywhere, Category = "Tree|Effects")
+    /** 水分サウンド（2段階モード用） */
+    UPROPERTY(EditAnywhere, Category = "Tree|Effects", meta = (EditCondition = "TriggerMode == EGrowthTriggerMode::TwoStep", EditConditionHides))
     TObjectPtr<USoundBase> WaterSound;
 
     // =======================
     // 色設定
     // =======================
 
-    /** 水分補給カラー（緑） */
+    /** 成長開始カラー（緑） */
     UPROPERTY(EditAnywhere, Category = "Tree|Colors")
-    FLinearColor WaterReadyColor = FLinearColor::Green;
+    FLinearColor GrowthTriggerColor = FLinearColor::Green;
 
-    /** 成長開始カラー（青） */
-    UPROPERTY(EditAnywhere, Category = "Tree|Colors")
-    FLinearColor GrowthTriggerColor = FLinearColor::Blue;
+    /** 2段階目トリガーカラー（青・2段階モード用） */
+    UPROPERTY(EditAnywhere, Category = "Tree|Colors", meta = (EditCondition = "TriggerMode == EGrowthTriggerMode::TwoStep", EditConditionHides))
+    FLinearColor SecondStepColor = FLinearColor::Blue;
 
     /** 色判定の許容誤差 */
     UPROPERTY(EditAnywhere, Category = "Tree|Colors", meta = (ClampMin = "0.0", ClampMax = "1.0"))
