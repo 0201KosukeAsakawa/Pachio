@@ -130,7 +130,7 @@ void UObjectColorComponent::Initialize()
  */
 void UObjectColorComponent::ActivateDirect(const FLinearColor& NewColor)
 {
-    
+
 }
 
 
@@ -152,6 +152,7 @@ void UObjectColorComponent::SetTargetColor(const FLinearColor& NewColor, float D
 
 /**
  * Tick内で呼ばれる色更新処理（30度/秒で段階的に変化、時間制限付き）
+ * 白などの無彩色から有彩色への変化にも対応
  *
  * @param DeltaTime フレーム時間
  */
@@ -167,7 +168,6 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
         UE_LOG(LogTemp, Log, TEXT("[%s] Color change time expired (%.2f seconds)"),
             *GetOwner()->GetName(), ColorChangeTimer);
 
-        //if(UColorUtilityLibrary::GetNearestColorCategory(CurrentColor) == ColorCategory)
         if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor))
         {
             ActivateDirect(CurrentColor);
@@ -179,18 +179,31 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
     FVector currentHSL = UColorUtilityLibrary::GetHSL(CurrentColor);
     FVector targetHSL = UColorUtilityLibrary::GetHSL(TargetColor);
 
-    // Hueの最短角距離を計算
-    float deltaHue = targetHSL.X - currentHSL.X;
-    deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
+    // 彩度の閾値（これ以下の場合は無彩色と見なす）
+    constexpr float LOW_SATURATION_THRESHOLD = 0.1f;
 
-    // このフレームでの最大変化量（30度/秒）
-    float maxHueChangeThisFrame = HUE_CHANGE_SPEED * DeltaTime;
-    float hueStep = FMath::Clamp(deltaHue, -maxHueChangeThisFrame, maxHueChangeThisFrame);
+    float newHue = currentHSL.X;
 
-    // 新しいHueを計算
-    float newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
+    // 現在の彩度が低い場合（白や灰色など）
+    if (currentHSL.Y < LOW_SATURATION_THRESHOLD)
+    {
+        // 目標色の色相を直接採用（赤を経由しない）
+        newHue = targetHSL.X;
+    }
+    else
+    {
+        // 通常の色相変化（最短経路で回転）
+        float deltaHue = targetHSL.X - currentHSL.X;
+        deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
 
-    // SaturationとLightnessも滑らかに補間（1秒で完了）
+        // このフレームでの最大変化量（30度/秒）
+        float maxHueChangeThisFrame = HUE_CHANGE_SPEED * DeltaTime;
+        float hueStep = FMath::Clamp(deltaHue, -maxHueChangeThisFrame, maxHueChangeThisFrame);
+
+        newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
+    }
+
+    // SaturationとLightnessを滑らかに補間
     float interpSpeed = 1.0f * DeltaTime;
     float newS = FMath::Lerp(currentHSL.Y, targetHSL.Y, interpSpeed);
     float newL = FMath::Lerp(currentHSL.Z, targetHSL.Z, interpSpeed);
@@ -200,15 +213,16 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
     CurrentColor = newColor;
     ApplyColorToMaterial(CurrentColor);
 
-    // 目標色に到達したかチェック（時間内に到達した場合は終了）
-    float remainingHueDiff = FMath::Abs(FMath::Fmod(targetHSL.X - newHue + 540.0f, 360.0f) - 180.0f);
+    // 目標色に到達したかチェック
+    // 彩度が低い場合は色相の差を無視
+    bool hueMatched = (currentHSL.Y < LOW_SATURATION_THRESHOLD && newS < LOW_SATURATION_THRESHOLD) ||
+        FMath::Abs(FMath::Fmod(targetHSL.X - newHue + 540.0f, 360.0f) - 180.0f) < 1.0f;
 
-    if (remainingHueDiff < 1.0f &&
+    if (hueMatched &&
         FMath::Abs(targetHSL.Y - newS) < 0.05f &&
         FMath::Abs(targetHSL.Z - newL) < 0.05f)
     {
-        // 完全に目標色に到達（時間内に到達）
-        //CurrentColor = TargetColor;
+        // 完全に目標色に到達
         ApplyColorToMaterial(CurrentColor);
         bHasTargetColor = false;
         if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05, 0.05)))

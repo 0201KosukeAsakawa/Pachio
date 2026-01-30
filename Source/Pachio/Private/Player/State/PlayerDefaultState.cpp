@@ -143,12 +143,12 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 
     UColorControllerComponent* ColorComp = GetOwner()->GetComponentByClass<UColorControllerComponent>();
     if (!ColorComp) return false;
-
+    UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
+    //ColorComp->InteractWithObject(TargetComp);
     // ★モード判定:塗るか吸うかのみ
     if (mode == EColorAbsorbMode::Paint)
     {
         // ★塗るモード:近くのオブジェクトを塗るだけ
-        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
         if (TargetComp)
         {
             // PaintHitObject内で残量チェックと白色フォールバックを処理
@@ -161,8 +161,6 @@ bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
     }
     else if (mode == EColorAbsorbMode::Absorb)
     {
-        // ★吸うモード:近くのオブジェクトから色を吸収するだけ
-        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
         if (TargetComp)
         {
             ColorComp->AbsorbHitObject(TargetComp);

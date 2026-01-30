@@ -18,7 +18,6 @@ class PACHIO_API UColorControllerComponent : public UActorComponent
 
 public:
     UColorControllerComponent();
-
     void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
     // ====== 色操作 ======
@@ -30,7 +29,7 @@ public:
 
     UObjectColorComponent* GetHitColorComponent(float Distance);
 
-    // ====== 新規追加:Tank切り替え ======
+    // ====== Tank切り替え ======
     /**
      * 次のTankに切り替え
      */
@@ -55,6 +54,7 @@ public:
     UFUNCTION(BlueprintCallable)
     int32 GetTankAmount(EColorCategory Category) const;
 
+
 public:
     UPROPERTY(BlueprintAssignable)
     FOnColorChanged OnColorChanged;
@@ -77,7 +77,6 @@ private:
      * Tank使用時の処理(残量を減らし、0になったら次に切り替え)
      */
     void ConsumeTank(EColorCategory Category, int32 Amount = 1);
-
 private:
     FLinearColor CurrentColor;
 
