@@ -169,9 +169,17 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Tree|MeshSwap", meta = (EditCondition = "GrowthMode == EGrowthMode::MeshSwap", EditConditionHides))
     TObjectPtr<UStaticMesh> SaplingMesh;
 
+    /** 苗のメッシュスケール */
+    UPROPERTY(EditAnywhere, Category = "Tree|MeshSwap", meta = (EditCondition = "GrowthMode == EGrowthMode::MeshSwap", EditConditionHides))
+    FVector SaplingMeshScale = FVector::OneVector;
+
     /** 成木のメッシュ */
     UPROPERTY(EditAnywhere, Category = "Tree|MeshSwap", meta = (EditCondition = "GrowthMode == EGrowthMode::MeshSwap", EditConditionHides))
     TObjectPtr<UStaticMesh> FullyGrownMesh;
+
+    /** 成木のメッシュスケール */
+    UPROPERTY(EditAnywhere, Category = "Tree|MeshSwap", meta = (EditCondition = "GrowthMode == EGrowthMode::MeshSwap", EditConditionHides))
+    FVector FullyGrownMeshScale = FVector::OneVector;
 
     // =======================
     // アニメーションモード用

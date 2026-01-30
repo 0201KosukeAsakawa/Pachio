@@ -23,6 +23,8 @@ namespace
 // =======================
 UGrowingTreeComponent::UGrowingTreeComponent()
     : GrowthMode(EGrowthMode::MeshSwap)
+    , SaplingMeshScale(FVector::OneVector)
+    , FullyGrownMeshScale(FVector::OneVector)
     , AnimationPlayRate(1.0f)
     , bEnableScaleChange(true)
     , StartScaleMultiplier(0.5f)
@@ -173,7 +175,7 @@ void UGrowingTreeComponent::StartGrowth()
         if (MeshComp)
         {
             InitialScale = FVector(0.1f, 0.1f, 0.1f);
-            TargetScale = FVector(1.0f, 1.0f, 1.0f);
+            TargetScale = FullyGrownMeshScale;
             MeshComp->SetRelativeScale3D(InitialScale);
         }
     }
@@ -294,17 +296,24 @@ void UGrowingTreeComponent::SetMeshForStage(ETreeGrowthStage Stage)
     }
 
     UStaticMesh* MeshToSet = nullptr;
+    FVector ScaleToSet = FVector::OneVector;
 
     switch (Stage)
     {
     case ETreeGrowthStage::Sapling:
     case ETreeGrowthStage::WaitingForWater:
         MeshToSet = SaplingMesh;
+        ScaleToSet = SaplingMeshScale;
         break;
 
     case ETreeGrowthStage::Growing:
+        // 成長中は0から開始（StartGrowth内で設定）
+        MeshToSet = FullyGrownMesh;
+        break;
+
     case ETreeGrowthStage::FullyGrown:
         MeshToSet = FullyGrownMesh;
+        ScaleToSet = FullyGrownMeshScale;
         break;
     }
 
@@ -312,10 +321,10 @@ void UGrowingTreeComponent::SetMeshForStage(ETreeGrowthStage Stage)
     {
         MeshComp->SetStaticMesh(MeshToSet);
 
-        // 通常の成長段階ではスケールを1に戻す
+        // Growing段階以外ではスケールを設定
         if (Stage != ETreeGrowthStage::Growing)
         {
-            MeshComp->SetRelativeScale3D(FVector::OneVector);
+            MeshComp->SetRelativeScale3D(ScaleToSet);
         }
     }
 }

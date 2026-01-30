@@ -6,8 +6,6 @@
 #include "Manager/ColorManager.h"
 #include "Sound/SoundManager.h"
 #include "FunctionLibrary.h"
-#include "NiagaraComponent.h"
-#include "NiagaraFunctionLibrary.h"
 
 // =======================
 // 定数
@@ -20,14 +18,14 @@ namespace
     /** マテリアルスロットインデックス */
     static constexpr int32 MATERIAL_SLOT_INDEX = 0;
 
-    /** 色相変化速度（度/秒） */
+    /** 色変更時間 */
+    static constexpr float CHANGE_HITCOLOR = 2.f;
+
+    /** 色相変化速度（度/秒） - 新しい塗り方用 */
     static constexpr float HUE_CHANGE_SPEED = 30.0f;
 
     /** 色変更の持続時間（秒） */
     static constexpr float COLOR_CHANGE_DURATION = 2.f;
-
-    /** 彩度がこの値以下の場合、無彩色とみなす */
-    static constexpr float ACHROMATIC_SATURATION_THRESHOLD = 0.01f;
 }
 
 
@@ -40,6 +38,8 @@ UObjectColorComponent::UObjectColorComponent()
     , HitColor(FLinearColor::White)          // ヒット時の色
     , InitialColor(FLinearColor::White)      // 初期色（リセット時に使用）
     , TargetColor(FLinearColor::White)       // 目標色（Tick内で徐々に近づく）
+    , StartColor(FLinearColor::White)        // 補間開始時の色
+    , LastColor(FLinearColor::White)         // 前回の目標色
     , bApplyColorToMaterial(true)            // マテリアルに色を適用するか
     , bEnableColorAction(true)               // 色変更アクションを有効化
     , bUseComplementaryColor(false)          // 補色を使用するか
@@ -51,6 +51,7 @@ UObjectColorComponent::UObjectColorComponent()
     , bIsPainting(false)                     // ペイント中か
     , bHasTargetColor(false)                 // 目標色が設定されているか
     , HitTimer(0.f)                          // ヒット時の経過時間
+    , LastPaintTime(0.f)                     // 最後のペイント時刻
     , ColorChangeTimer(0.f)                  // 色変更の経過時間
 {
     PrimaryComponentTick.bCanEverTick = true;
@@ -81,11 +82,11 @@ void UObjectColorComponent::BeginPlay()
 void UObjectColorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-    // 目標色への段階的変化（SetTargetColor用）
+    // ===== 新規追加：目標色への段階的変化（SetTargetColor用） =====
     if (bHasTargetColor && bColorChangeable)
     {
         UpdateColorGradually(DeltaTime);
+        //ApplyColorToMaterialAlpha(1.0f - FMath::Clamp(ColorChangeTimer / CHANGE_HITCOLOR, 0.0f, 1.0f), HitColor);
     }
 }
 
@@ -113,28 +114,9 @@ void UObjectColorComponent::Initialize()
     UMeshComponent* MeshComp = GetMeshComponent();
     if (MeshComp)
     {
-        // ダイナミックマテリアルを生成（メッシュ色変更モードの場合のみ）
-        if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
-        {
-            constexpr int32 MaterialSlotIndex = 0;
-            DynMesh = MeshComp->CreateAndSetMaterialInstanceDynamic(MaterialSlotIndex);
-        }
-    }
-
-    // ナイアガラコンポーネントの初期化（ナイアガラモードの場合）
-    if (ColorChangeMode != EColorChangeMode::MeshColorOnly && NiagaraSystem)
-    {
-        NiagaraComponent = NewObject<UNiagaraComponent>(GetOwner());
-        if (NiagaraComponent)
-        {
-            NiagaraComponent->SetAsset(NiagaraSystem);
-            NiagaraComponent->RegisterComponent();
-            NiagaraComponent->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetIncludingScale);
-            NiagaraComponent->SetAutoActivate(false);
-
-            UE_LOG(LogTemp, Log, TEXT("[%s] NiagaraComponent initialized for mode: %d"),
-                *GetOwner()->GetName(), static_cast<int32>(ColorChangeMode));
-        }
+        // ダイナミックマテリアルを生成
+        constexpr int32 MaterialSlotIndex = 0;
+        DynMesh = MeshComp->CreateAndSetMaterialInstanceDynamic(MaterialSlotIndex);
     }
 
     InitializeColorLogic();      // 色ロジックの初期化
@@ -143,31 +125,14 @@ void UObjectColorComponent::Initialize()
 }
 
 /**
- * 従来の色塗り方式（即座に変化）
+ * 従来の色塗り方式（90度/秒で変化）
  * PaintHitObjectなどから呼び出される
  */
 void UObjectColorComponent::ActivateDirect(const FLinearColor& NewColor)
 {
-    // モードに応じた処理を実行
-    switch (ColorChangeMode)
-    {
-    case EColorChangeMode::MeshColorOnly:
-        // メッシュの色のみを変更
-        ApplyColorToMaterial(NewColor);
-        break;
 
-    case EColorChangeMode::NiagaraOnly:
-        // ナイアガラエフェクトのみを起動
-        ActivateNiagaraEffect();
-        break;
-
-    case EColorChangeMode::MeshColorAndNiagara:
-        // 両方を実行
-        ApplyColorToMaterial(NewColor);
-        ActivateNiagaraEffect();
-        break;
-    }
 }
+
 
 void UObjectColorComponent::SetTargetColor(const FLinearColor& NewColor, float Duration)
 {
@@ -177,13 +142,7 @@ void UObjectColorComponent::SetTargetColor(const FLinearColor& NewColor, float D
     TargetColor = NewColor;
     bHasTargetColor = true;
     ColorChangeTimer = 0.f;
-
-    // ★ 追加: 初期フレームで即座に色を適用開始
-    if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
-    {
-        // 最初の1フレーム分の更新を即座に実行
-        UpdateColorGradually(0.016f); // 約60FPSの1フレーム分
-    }
+    //ColorChangeDuration = Duration;
 
     UE_LOG(LogTemp, Log, TEXT("[%s] Target color set for %.1f seconds: R=%.2f G=%.2f B=%.2f"),
         *GetOwner()->GetName(),
@@ -193,7 +152,7 @@ void UObjectColorComponent::SetTargetColor(const FLinearColor& NewColor, float D
 
 /**
  * Tick内で呼ばれる色更新処理（30度/秒で段階的に変化、時間制限付き）
- * 無彩色から有彩色への変化時は、目標色の色相を直接使用する
+ * 白などの無彩色から有彩色への変化にも対応
  *
  * @param DeltaTime フレーム時間
  */
@@ -202,43 +161,49 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
     // 経過時間を更新
     ColorChangeTimer += DeltaTime;
 
-    // ★ 修正: 時間切れチェックを最後に移動
-    // まず色を更新してから時間をチェックする
+    // 時間切れチェック
+    if (ColorChangeTimer >= COLOR_CHANGE_DURATION)
+    {
+        bHasTargetColor = false;
+        UE_LOG(LogTemp, Log, TEXT("[%s] Color change time expired (%.2f seconds)"),
+            *GetOwner()->GetName(), ColorChangeTimer);
+
+        if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor))
+        {
+            ActivateDirect(CurrentColor);
+        }
+        return;
+    }
 
     // 現在の色と目標色のHSLを取得
     FVector currentHSL = UColorUtilityLibrary::GetHSL(CurrentColor);
     FVector targetHSL = UColorUtilityLibrary::GetHSL(TargetColor);
 
+    // 彩度の閾値（これ以下の場合は無彩色と見なす）
+    constexpr float LOW_SATURATION_THRESHOLD = 0.1f;
+
     float newHue = currentHSL.X;
-    float deltaHue = 0.0f;
 
-    // 現在の色が無彩色（白・グレー・黒）かチェック
-    bool bCurrentIsAchromatic = currentHSL.Y < ACHROMATIC_SATURATION_THRESHOLD;
-    bool bTargetIsAchromatic = targetHSL.Y < ACHROMATIC_SATURATION_THRESHOLD;
-
-    if (bCurrentIsAchromatic && !bTargetIsAchromatic)
+    // 現在の彩度が低い場合（白や灰色など）
+    if (currentHSL.Y < LOW_SATURATION_THRESHOLD)
     {
-        // 無彩色から有彩色へ：目標色の色相を直接使用
+        // 目標色の色相を直接採用（赤を経由しない）
         newHue = targetHSL.X;
-
-        UE_LOG(LogTemp, Verbose, TEXT("[%s] Transitioning from achromatic to chromatic. Using target hue: %.1f"),
-            *GetOwner()->GetName(), targetHSL.X);
     }
-    else if (!bCurrentIsAchromatic && !bTargetIsAchromatic)
+    else
     {
-        // 有彩色から有彩色へ：最短角距離で補間
-        deltaHue = targetHSL.X - currentHSL.X;
+        // 通常の色相変化（最短経路で回転）
+        float deltaHue = targetHSL.X - currentHSL.X;
         deltaHue = FMath::Fmod(deltaHue + 540.0f, 360.0f) - 180.0f;
 
         // このフレームでの最大変化量（30度/秒）
         float maxHueChangeThisFrame = HUE_CHANGE_SPEED * DeltaTime;
         float hueStep = FMath::Clamp(deltaHue, -maxHueChangeThisFrame, maxHueChangeThisFrame);
 
-        // 新しいHueを計算
         newHue = FMath::Fmod(currentHSL.X + hueStep + 360.0f, 360.0f);
     }
 
-    // SaturationとLightnessも滑らかに補間
+    // SaturationとLightnessを滑らかに補間
     float interpSpeed = 1.0f * DeltaTime;
     float newS = FMath::Lerp(currentHSL.Y, targetHSL.Y, interpSpeed);
     float newL = FMath::Lerp(currentHSL.Z, targetHSL.Z, interpSpeed);
@@ -246,46 +211,26 @@ void UObjectColorComponent::UpdateColorGradually(float DeltaTime)
     // 新しい色を生成して適用
     FLinearColor newColor = UColorUtilityLibrary::FromHSL(FVector(newHue, newS, newL));
     CurrentColor = newColor;
-
-    // ★ 修正: 必ずマテリアルに適用
-    if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
-    {
-        ApplyColorToMaterial(CurrentColor);
-    }
+    ApplyColorToMaterial(CurrentColor);
 
     // 目標色に到達したかチェック
-    float remainingHueDiff = FMath::Abs(FMath::Fmod(targetHSL.X - newHue + 540.0f, 360.0f) - 180.0f);
+    // 彩度が低い場合は色相の差を無視
+    bool hueMatched = (currentHSL.Y < LOW_SATURATION_THRESHOLD && newS < LOW_SATURATION_THRESHOLD) ||
+        FMath::Abs(FMath::Fmod(targetHSL.X - newHue + 540.0f, 360.0f) - 180.0f) < 1.0f;
 
-    // 無彩色の場合は色相差を無視
-    if (bTargetIsAchromatic)
-    {
-        remainingHueDiff = 0.0f;
-    }
-
-    bool bReachedTarget = (remainingHueDiff < 1.0f &&
+    if (hueMatched &&
         FMath::Abs(targetHSL.Y - newS) < 0.05f &&
-        FMath::Abs(targetHSL.Z - newL) < 0.05f);
-
-    // ★ 修正: 到達判定または時間切れで終了
-    if (bReachedTarget || ColorChangeTimer >= COLOR_CHANGE_DURATION)
+        FMath::Abs(targetHSL.Z - newL) < 0.05f)
     {
-        // 最終的な色を確実に適用
-        if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
-        {
-            ApplyColorToMaterial(bReachedTarget ? TargetColor : CurrentColor);
-        }
-
+        // 完全に目標色に到達
+        ApplyColorToMaterial(CurrentColor);
         bHasTargetColor = false;
-
         if (UColorUtilityLibrary::IsHueSimilar(CurrentColor, InitialColor, FVector(0.05, 0.05, 0.05)))
         {
             ActivateDirect(CurrentColor);
         }
-
-        UE_LOG(LogTemp, Log, TEXT("[%s] Color change finished: %s in %.2f seconds"),
-            *GetOwner()->GetName(),
-            bReachedTarget ? TEXT("Reached") : TEXT("Timeout"),
-            ColorChangeTimer);
+        UE_LOG(LogTemp, Log, TEXT("[%s] Reached target color in %.2f seconds"),
+            *GetOwner()->GetName(), ColorChangeTimer);
     }
 }
 
@@ -331,11 +276,10 @@ void UObjectColorComponent::RegisterToColorManager()
 void UObjectColorComponent::SetupMaterial()
 {
     // マテリアル適用が有効な場合はスキップ
-    if (!bApplyColorToMaterial || ColorChangeMode == EColorChangeMode::NiagaraOnly)
+    if (!bApplyColorToMaterial)
     {
         return;
     }
-
     // メッシュコンポーネントを取得
     UMeshComponent* Mesh = GetMeshComponent();
     if (!Mesh)
@@ -368,13 +312,10 @@ void UObjectColorComponent::SetColor(const FLinearColor& NewColor)
         return;
 
     CurrentColor = HitColor;
-
-    // メッシュ色変更モードの場合のみマテリアルへ色を反映
-    if (ColorChangeMode != EColorChangeMode::NiagaraOnly)
-    {
-        ApplyColorToMaterial(CurrentColor);
-    }
+    // マテリアルへ色を反映
+    ApplyColorToMaterial(CurrentColor);
 }
+
 
 void UObjectColorComponent::ResetColor()
 {
@@ -440,25 +381,6 @@ void UObjectColorComponent::ApplyColorToMaterialAlpha(const float Alpha, const F
     DynMesh->SetScalarParameterValue(FName("Alpha"), Alpha);
 }
 
-/**
- * ナイアガラエフェクトを起動
- * 設定されたモードに基づいてエフェクトを再生する
- */
-void UObjectColorComponent::ActivateNiagaraEffect()
-{
-    if (!NiagaraComponent || !NiagaraSystem)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[%s] Cannot activate Niagara: Component or System is null"),
-            *GetOwner()->GetName());
-        return;
-    }
-
-    // ナイアガラエフェクトを再生
-    NiagaraComponent->Activate(true);
-
-    UE_LOG(LogTemp, Log, TEXT("[%s] Niagara effect activated"),
-        *GetOwner()->GetName());
-}
 
 // =======================
 // ヘルパー関数
