@@ -1,5 +1,3 @@
-// プロジェクト設定の Description ページに著作権情報を記入
-
 #include "Player/State/PlayerDefaultState.h"
 #include "Player/State/PlayerHoldState.h"
 #include "Player/PlayerCharacter.h"
@@ -71,16 +69,6 @@ bool UPlayerDefaultState::OnEnter(APawn* owner)
     {
         HitBox = GetOwner()->GetComponentByClass<UCapsuleComponent>();
     }
-
-
-    // キャラクターが持つ StaticMeshComponent を取得
-    UStaticMeshComponent* StaticMeshComp = UFunctionLibrary::FindComponentByName<UStaticMeshComponent>(owner, "StaticMesh");
-    UMaterialInterface* N = NewMaterial.LoadSynchronous(); // 非同期ロードに対応
-    if (N != nullptr && StaticMeshComp)
-    {
-        StaticMeshComp->SetMaterial(0, N); // マテリアルをスロット0に適用
-    }
-
     APlayerCharacter* aPlayer = Cast<APlayerCharacter>(mOwner);
     if (!aPlayer)
         return false;
@@ -107,7 +95,7 @@ bool UPlayerDefaultState::OnEnter(APawn* owner)
     return true; // ステートの切り替え成功
 }
 
-// ステートの毎フレーム更新処理（現時点では何もしない）
+// ステートの毎フレーム更新処理
 bool UPlayerDefaultState::OnUpdate(float DeltaTime)
 {
     if (GetWorld() == nullptr || Physics == nullptr)
@@ -147,44 +135,42 @@ bool UPlayerDefaultState::OnExit(APawn* owner)
 {
     return true;
 }
+
 bool UPlayerDefaultState::OnSkill(const FInputActionValue& Value)
 {
     ACharacter* Character = Cast<ACharacter>(GetOwner());
     if (!Character) return false;
+
     UColorControllerComponent* ColorComp = GetOwner()->GetComponentByClass<UColorControllerComponent>();
     if (!ColorComp) return false;
-    // モード判定
+    UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f);
+    //ColorComp->InteractWithObject(TargetComp);
+    // ★モード判定:塗るか吸うかのみ
     if (mode == EColorAbsorbMode::Paint)
     {
-        CurrentSelectedColor = ColorComp->GetCurrentColor();
-        EColorCategory Category =
-            UColorUtilityLibrary::GetNearestColorCategoryRGBY(CurrentSelectedColor);
-
-        int32* TankValue = ColorComp->ColorTankMap.Find(Category);
-        if (!TankValue || *TankValue <= 0)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Not enough color in tank"));
-            return false;
-        }
-
-        // 吸うモード → 近くのオブジェクトを吸収
-        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f); // 距離100を例
+        // ★塗るモード:近くのオブジェクトを塗るだけ
         if (TargetComp)
         {
-            TargetComp->SetTargetColor(CurrentSelectedColor);
-            (*TankValue)--; // 成功時のみ消費
-            UE_LOG(LogTemp, Log, TEXT("Paint Hit! Tank remaining: %d"), *TankValue);
+            // PaintHitObject内で残量チェックと白色フォールバックを処理
+            ColorComp->PaintHitObject(TargetComp);
         }
-      }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("No paintable object found nearby"));
+        }
+    }
     else if (mode == EColorAbsorbMode::Absorb)
     {
-        // 吸うモード → 近くのオブジェクトを吸収
-        UObjectColorComponent* TargetComp = ColorComp->GetHitColorComponent(500.f); // 距離100を例
         if (TargetComp)
         {
             ColorComp->AbsorbHitObject(TargetComp);
         }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("No absorbable object found nearby"));
+        }
     }
+
     return true;
 }
 

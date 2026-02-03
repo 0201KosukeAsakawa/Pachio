@@ -1,112 +1,166 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// MovingObject.h
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Components/Color/ObjectColorComponent.h"
 #include "DataContainer/ColorTargetTypes.h"
+#include "UE5Coro.h"
 #include "MovingObject.generated.h"
 
 class UBoxComponent;
+
+/** イージングの種類 */
+UENUM(BlueprintType)
+enum class EMovementEasing : uint8
+{
+	Linear,
+	EaseIn,
+	EaseOut,
+	EaseInOut,
+	SmoothStep
+};
+
+/** 移動モード */
+UENUM(BlueprintType)
+enum class EColorMovementMode : uint8
+{
+	/** 色一致時のみON位置、それ以外はOFF位置 */
+	Toggle UMETA(DisplayName = "Toggle (On/Off)"),
+
+	/** 色変化をトリガーにA-B間を往復 */
+	Shuttle UMETA(DisplayName = "Shuttle (A ⇔ B)")
+};
+
+/** 位置座標の種類 */
+UENUM(BlueprintType)
+enum class ELocationMode : uint8
+{
+	/** ローカル座標（初期位置からの相対） */
+	Local UMETA(DisplayName = "Local (Relative)"),
+
+	/** ワールド座標（絶対位置） */
+	World UMETA(DisplayName = "World (Absolute)")
+};
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UMoveOnColorComponent : public UObjectColorComponent
 {
 	GENERATED_BODY()
 
 public:
-	/**
-	 * コンストラクタ
-	 * デフォルト値の設定および必要なコンポーネントの初期化を行う
-	 */
 	UMoveOnColorComponent();
-
-	/**
-	 * 初期化処理
-	 * オブジェクトの位置情報や関連するアクターの設定を行う
-	 */
 	virtual void Initialize() override;
-
-	/**
-	 * 毎フレーム呼ばれる処理
-	 * 移動アニメーションを更新する
-	 *
-	 * @param DeltaTime 前フレームからの経過時間
-	 */
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
-	/**
-	 * 色反応処理
-	 * 指定された色に応じて移動先を切り替える
-	 *
-	 * @param InColor 適用された新しい色
-	 */
 	virtual void ActivateDirect(const FLinearColor& InColor) override;
 
 	/**
-	 * オーバーラップ開始時の処理
-	 * 対象が足場に乗った際に呼ばれる
-	 *
-	 * @param OverlappedComp このアクターのトリガーコンポーネント
-	 * @param OtherActor 接触したアクター
-	 * @param OtherComp 接触したアクターのコリジョン
-	 * @param OtherBodyIndex インデックス
-	 * @param bFromSweep スイープによる検出か
-	 * @param SweepResult ヒット情報
+	 * イージング関数を適用した移動
 	 */
-	UFUNCTION()
-	void OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UE5Coro::TCoroutine<> MoveWithEasingAsync(FVector Target, float Duration);
 
 	/**
-	 * オーバーラップ終了時の処理
-	 * 対象が足場から離れた際に呼ばれる
-	 *
-	 * @param OverlappedComp このアクターのトリガーコンポーネント
-	 * @param OtherActor 離れたアクター
-	 * @param OtherComp 離れたアクターのコリジョン
-	 * @param OtherBodyIndex インデックス
+	 * イージング関数の適用
 	 */
+	float ApplyEasing(float Alpha) const;
+
+	/**
+	 * Toggleモードの処理
+	 */
+	void HandleToggleMode(const FLinearColor& InColor);
+
+	/**
+	 * Shuttleモードの処理
+	 */
+	void HandleShuttleMode(const FLinearColor& InColor);
+
+	/**
+	 * 自動ループ処理
+	 */
+	UE5Coro::TCoroutine<> AutoLoopMovement();
+
 	UFUNCTION()
-	void OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	void OnFootBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+		const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnFootEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 private:
-	/** 現在移動中かどうか */
-	bool bIsMoving = false;
+	/** 移動モード */
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	EColorMovementMode MovementMode = EColorMovementMode::Toggle;
 
-	/** OFF状態時の位置 */
-	UPROPERTY(EditAnywhere)
-	FVector OffLocation;
+	/** 地点Aの座標モード */
+	UPROPERTY(EditAnywhere, Category = "Movement|Location A", meta = (DisplayName = "Location A Mode"))
+	ELocationMode LocationAMode = ELocationMode::Local;
 
-	/** ON状態時の位置 */
-	UPROPERTY(EditAnywhere)
-	FVector OnLocation;
+	/** 地点A（ローカル/ワールド座標） */
+	UPROPERTY(EditAnywhere, Category = "Movement|Location A", meta = (DisplayName = "Location A"))
+	FVector LocationA;
 
-	/** 現在のターゲット位置 */
-	FVector TargetLocation;
+	/** 地点Bの座標モード */
+	UPROPERTY(EditAnywhere, Category = "Movement|Location B", meta = (DisplayName = "Location B Mode"))
+	ELocationMode LocationBMode = ELocationMode::Local;
+
+	/** 地点B（ローカル/ワールド座標） */
+	UPROPERTY(EditAnywhere, Category = "Movement|Location B", meta = (DisplayName = "Location B"))
+	FVector LocationB;
 
 	/** 子オブジェクトの配列（連動移動対象） */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Movement")
 	TArray<AActor*> Child;
 
 	/** 足場判定用のトリガー */
-	UPROPERTY(EditAnywhere)
-	UBoxComponent* FootTrigger;
-
-	/** 現在足場に乗っているアクターのリスト */
-	TArray<AActor*> AttachedActors;
-
-	/** 移動開始位置 */
-	FVector StartLocation;
+	UPROPERTY(EditAnywhere, Category = "Collision")
+	TObjectPtr<UBoxComponent> FootTrigger;
 
 	/** 移動にかける時間（秒） */
-	UPROPERTY(EditAnywhere)
-	float MoveDuration;
+	UPROPERTY(EditAnywhere, Category = "Movement", meta = (ClampMin = "0.1", ClampMax = "10.0"))
+	float MoveDuration = 1.0f;
 
-	/** 経過時間 */
-	float ElapsedTime;
+	/** イージング関数の種類 */
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	EMovementEasing EasingType = EMovementEasing::EaseInOut;
+
+	/** Shuttleモード: 色変化時に逆方向に移動するか */
+	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EColorMovementMode::Shuttle", EditConditionHides))
+	bool bReverseOnColorChange = true;
+
+	/** Shuttleモード: 自動往復するか（色変化とは無関係にループ） */
+	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EColorMovementMode::Shuttle", EditConditionHides))
+	bool bAutoLoop = false;
+
+	/** Shuttleモード: 地点Aでの待機時間 */
+	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EColorMovementMode::Shuttle && bAutoLoop", EditConditionHides, ClampMin = "0.0", ClampMax = "10.0"))
+	float WaitTimeAtA = 1.0f;
+
+	/** Shuttleモード: 地点Bでの待機時間 */
+	UPROPERTY(EditAnywhere, Category = "Movement|Shuttle", meta = (EditCondition = "MovementMode == EColorMovementMode::Shuttle && bAutoLoop", EditConditionHides, ClampMin = "0.0", ClampMax = "10.0"))
+	float WaitTimeAtB = 1.0f;
+
+	/** 現在足場に乗っているアクターのリスト */
+	TArray<TWeakObjectPtr<AActor>> AttachedActors;
+
+	/** 初期ワールド位置 */
+	FVector InitialWorldLocation;
+
+	/** 地点Aのワールド座標（計算後） */
+	FVector WorldLocationA;
+
+	/** 地点Bのワールド座標（計算後） */
+	FVector WorldLocationB;
+
+	/** Shuttleモード: 現在の目標地点（true = B, false = A） */
+	bool bCurrentTargetIsB = false;
+
+	/** 自動ループが実行中かどうか */
+	std::atomic<bool> bIsAutoLoopRunning{ false };
 
 private:
-	/** デフォルトの移動時間（1.0秒） */
 	static constexpr float DEFAULT_DURATION = 1.0f;
+	static constexpr float MIN_DURATION = 0.01f;
 };

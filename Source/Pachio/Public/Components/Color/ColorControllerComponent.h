@@ -1,13 +1,9 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "ColorControllerComponent.generated.h"
 
-// Blueprint からバインド可能な色変更通知デリゲート（対象タイプも含む）
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnColorChanged, FLinearColor, NewColor);
-
-// モード切替時などの演出用デリゲート
 DECLARE_DELEGATE_OneParam(FColorAnimationDelegate, float);
 
 class IColorReactive;
@@ -15,70 +11,81 @@ class UColorUtilityLibrary;
 class UObjectColorComponent;
 enum class EColorCategory : uint8;
 
-// アクターにアタッチして「色の制御・切り替え」を行うコンポーネント
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PACHIO_API UColorControllerComponent : public UActorComponent
 {
     GENERATED_BODY()
 
 public:
-    // ====== 基本 ======
-
-    /**
-     * コンストラクタ（デフォルト値を設定）
-     */
     UColorControllerComponent();
-
-    /**
-     * 毎フレーム呼ばれる更新処理
-     *
-     * @param DeltaTime - 経過時間
-     * @param TickType - Tick の種類
-     * @param ThisTickFunction - Tick 関数情報
-     */
     void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
     // ====== 色操作 ======
-
-    /**
-     * 現在のモードの色を Hue を Δ値だけ回転させて変更する
-     *
-     * @param Delta - Hue を加算・減算する割合（-1.0f ~ +1.0f）
-     */
     UFUNCTION(BlueprintCallable)
     void AdjustColor(float Delta);
 
-    /**
-     * 現在のモードで保持している色を取得
-     *
-     * @return 現在のモードの色
-     */
     UFUNCTION(BlueprintCallable)
     FLinearColor GetCurrentColor() const;
 
     UObjectColorComponent* GetHitColorComponent(float Distance);
 
-public:
-    // ====== デリゲート ======
+    // ====== Tank切り替え ======
+    /**
+     * 次のTankに切り替え
+     */
+    UFUNCTION(BlueprintCallable)
+    void SwitchToNextTank();
 
     /**
-     * Blueprint から購読可能な「色変更通知イベント」
-     * （変更後の色と対象モードを通知）
+     * 前のTankに切り替え
      */
+    UFUNCTION(BlueprintCallable)
+    void SwitchToPreviousTank();
+
+    /**
+     * 現在選択中のTankインデックスを取得
+     */
+    UFUNCTION(BlueprintCallable)
+    int32 GetCurrentTankIndex() const { return CurrentTankIndex; }
+
+    /**
+     * 指定したTankの残量を取得
+     */
+    UFUNCTION(BlueprintCallable)
+    int32 GetTankAmount(EColorCategory Category) const;
+
+
+public:
     UPROPERTY(BlueprintAssignable)
     FOnColorChanged OnColorChanged;
 
-    // ====== 内部処理 ======
     void PaintHitObject(UObjectColorComponent* TargetComp);
     void AbsorbHitObject(UObjectColorComponent* TargetComp);
 
 private:
-    // ====== 内部データ ======
+    /**
+     * 有効なTank(残量>0)のリストを取得
+     */
+    TArray<EColorCategory> GetAvailableTanks() const;
 
     /**
-     * 各モードごとに保持する色のマップ
+     * 現在のTankインデックスに基づいて色を更新
      */
+    void UpdateColorFromCurrentTank();
+
+    /**
+     * Tank使用時の処理(残量を減らし、0になったら次に切り替え)
+     */
+    void ConsumeTank(EColorCategory Category, int32 Amount = 1);
+private:
     FLinearColor CurrentColor;
+
+    // RGB Tank順序(Index 0=Red, 1=Green, 2=Blue)
+    TArray<EColorCategory> TankOrder;
+
+    // 現在選択中のTankインデックス
+    int32 CurrentTankIndex;
+
 public:
-    TMap<EColorCategory, int32>ColorTankMap;
+    TMap<EColorCategory, int32> ColorTankMap;
 };

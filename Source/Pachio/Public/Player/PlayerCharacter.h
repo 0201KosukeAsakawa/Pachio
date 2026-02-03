@@ -156,6 +156,18 @@ public:
     void OpenMenu(const FInputActionValue& Value) override;
 
     /**
+     * @brief 次のカラーTankに切り替え（IControllableInterface実装）
+     * @param Value 入力値
+     */
+    void SwitchColorTankNext(const FInputActionValue& Value) override;
+
+    /**
+     * @brief 前のカラーTankに切り替え（IControllableInterface実装）
+     * @param Value 入力値
+     */
+    void SwitchColorTankPrevious(const FInputActionValue& Value) override;
+
+    /**
      * @brief 現在光らせている対象を更新
      */
     void UpdateGlowTarget();
