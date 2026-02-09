@@ -244,11 +244,6 @@ void UObjectColorComponent::InitializeColorLogic()
 
     CurrentColor = InitialColor;
     HitColor = InitialColor;
-
-    UE_LOG(LogTemp, Log, TEXT("ColorLogic initialized for %s (Effect: %d, Color: R=%.2f G=%.2f B=%.2f)"),
-        *GetOwner()->GetName(),
-        static_cast<int32>(ColorCategory),
-        InitialColor.R, InitialColor.G, InitialColor.B);
 }
 
 /**
@@ -260,6 +255,7 @@ void UObjectColorComponent::RegisterToColorManager()
     UColorManager* ColorManager = GetColorManager();
     if (!ColorManager)
     {
+        if(GetOwner() != nullptr)
         UE_LOG(LogTemp, Warning, TEXT("ColorManager not found for %s"),
             *GetOwner()->GetName());
         return;
@@ -284,6 +280,7 @@ void UObjectColorComponent::SetupMaterial()
     UMeshComponent* Mesh = GetMeshComponent();
     if (!Mesh)
     {
+        if(GetOwner() != nullptr)
         UE_LOG(LogTemp, Warning, TEXT("Mesh component not found for %s"),
             *GetOwner()->GetName());
         return;
