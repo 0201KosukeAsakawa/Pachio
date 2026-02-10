@@ -132,7 +132,7 @@ void APachioCharacter::Look(const FInputActionValue& Value)
 
 void APachioCharacter::Jump()
 {
-	USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Jump"));
+	//USoundHandle::PlaySound(this, ESoundKinds::SE, TEXT("Jump"));
 	bPressedJump = true;
 	JumpKeyHoldTime = 0.0f;
 }

@@ -8,6 +8,7 @@
 #include "Components/WidgetComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/InGameHUD.h"
+#include "Animation/WidgetAnimation.h"
 
 void UUIManager::Init(const AActor*)
 {
@@ -24,18 +25,6 @@ void UUIManager::Init(const AActor*)
     if (MyHUD)
     {
         MyHUD->SetUIManager(this);
-    }
-
-    // Markerカテゴリのウィジェットを専用マップに登録
-    if (FWidgetData* WidgetSet = WidgetDataMap.Find(EWidgetCategory::Marker))
-    {
-        for (auto& Pair : WidgetSet->WidgetMap)
-        {
-            if (ULockonWidget* LockonWidget = Cast<ULockonWidget>(Pair.Value))
-            {
-                MarkerWidgets.Add(Pair.Key, LockonWidget);
-            }
-        }
     }
 }
 
@@ -248,4 +237,79 @@ const TMap<FName, ULockonWidget*>& UUIManager::GetAllMarkers() const
 {
     // 全てのロックオンマーカーを返す
     return MarkerWidgets;
+}
+
+bool UUIManager::PlayWidgetAnimationWithDirection(
+    EWidgetCategory CategoryName,
+    FName WidgetName,
+    FName AnimationName,
+    bool bReverse,
+    float PlaybackSpeed,
+    bool bRestoreState
+)
+{
+    if (!WidgetDataMap.Contains(CategoryName))
+        return false;
+
+    FWidgetData& Group = WidgetDataMap[CategoryName];
+    UUserWidget** FoundWidgetPtr = Group.CurrentWidget.Find(WidgetName);
+    if (!FoundWidgetPtr || !*FoundWidgetPtr)
+        return false;
+
+    UUserWidget* Widget = *FoundWidgetPtr;
+
+    // ウィジェットのプロパティからアニメーションを検索
+    UWidgetAnimation* FoundAnimation = nullptr;
+
+    for (TFieldIterator<FObjectProperty> PropIt(Widget->GetClass()); PropIt; ++PropIt)
+    {
+        FObjectProperty* ObjectProperty = *PropIt;
+        if (ObjectProperty->PropertyClass == UWidgetAnimation::StaticClass())
+        {
+            UWidgetAnimation* Animation = Cast<UWidgetAnimation>(ObjectProperty->GetObjectPropertyValue_InContainer(Widget));
+            if (Animation && Animation->GetFName() == AnimationName)
+            {
+                FoundAnimation = Animation;
+                break;
+            }
+        }
+    }
+
+    if (!FoundAnimation)
+        return false;
+
+    if (bReverse)
+    {
+        Widget->PlayAnimationReverse(FoundAnimation, PlaybackSpeed, bRestoreState);
+    }
+    else
+    {
+        Widget->PlayAnimation(FoundAnimation, 0.0f, 1, EUMGSequencePlayMode::Forward, PlaybackSpeed);
+    }
+
+    return true;
+}
+
+bool UUIManager::PlayModeAnimation(FName WidgetName,FName AnimationName, float PlaybackSpeed)
+{
+    return PlayWidgetAnimationWithDirection(
+        EWidgetCategory::AnimWedgit,  // モードウィジェットが所属するカテゴリ
+        WidgetName,           // ウィジェット名
+        AnimationName,
+        false,                   // 順再生
+        PlaybackSpeed,
+        false
+    );
+}
+
+bool UUIManager::PlayModeAnimationReverse(FName WidgetName,FName AnimationName, float PlaybackSpeed, bool bRestoreState)
+{
+    return PlayWidgetAnimationWithDirection(
+        EWidgetCategory::AnimWedgit,  // モードウィジェットが所属するカテゴリ
+        WidgetName,           // ウィジェット名
+        AnimationName,
+        true,                    // 逆再生
+        PlaybackSpeed,
+        bRestoreState
+    );
 }

@@ -355,6 +355,8 @@ protected:
     /** 色イベントID（イベントトリガー用） */
     UPROPERTY(EditAnywhere, Category = "Color|Events")
     FName ColorEventID;
+    UPROPERTY(EditAnywhere, Category = "Color|Events")
+    int32 MaterialSlotIndex = 0;
 
 private:
     // =======================

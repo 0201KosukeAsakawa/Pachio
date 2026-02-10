@@ -115,7 +115,6 @@ void UObjectColorComponent::Initialize()
     if (MeshComp)
     {
         // ダイナミックマテリアルを生成
-        constexpr int32 MaterialSlotIndex = 0;
         DynMesh = MeshComp->CreateAndSetMaterialInstanceDynamic(MaterialSlotIndex);
     }
 
