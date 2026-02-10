@@ -112,6 +112,43 @@ public:
      */
     ULockonWidget* GetMarker(FName MarkerName) const { return MarkerWidgets[MarkerName]; }
 
+    /**
+ * @brief ウィジェット内アニメーション再生（順再生/逆再生対応）
+ * @param CategoryName ウィジェットカテゴリ
+ * @param WidgetName ウィジェット名
+ * @param AnimationName 再生するアニメーション名
+ * @param bReverse true で逆再生、false で順再生
+ * @param PlaybackSpeed 再生速度（デフォルト: 1.0）
+ * @return bool 成功したか
+ */
+    UFUNCTION(BlueprintCallable)
+    bool PlayWidgetAnimationWithDirection(
+        EWidgetCategory CategoryName,
+        FName WidgetName,
+        FName AnimationName,
+        bool bReverse,
+        float PlaybackSpeed,
+        bool bRestoreState
+    );
+
+    /**
+     * @brief モードウィジェットのアニメーションを順再生
+     * @param AnimationName 再生するアニメーション名
+     * @param PlaybackSpeed 再生速度（デフォルト: 1.0）
+     * @return bool 成功したか
+     */
+    UFUNCTION(BlueprintCallable)
+    bool PlayModeAnimation(FName WidgetName, FName AnimationName, float PlaybackSpeed = 1.0f);
+
+    /**
+     * @brief モードウィジェットのアニメーションを逆再生
+     * @param AnimationName 再生するアニメーション名
+     * @param PlaybackSpeed 再生速度（デフォルト: 1.0）
+     * @return bool 成功したか
+     */
+    UFUNCTION(BlueprintCallable)
+    bool PlayModeAnimationReverse(FName WidgetName, FName AnimationName, float PlaybackSpeed, bool bRestoreState);
+
 private:
     // ============================
     // ==== ウィジェット初期化系 ==

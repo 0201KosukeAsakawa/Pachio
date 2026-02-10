@@ -25,6 +25,7 @@
 #include "Manager/LevelManager.h"
 #include "Manager/ColorManager.h"
 #include "UI/UIManager.h"
+#include "UI/UIHandle.h"
 #include "Player/SlimeFluidActor.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -76,6 +77,7 @@ void APlayerCharacter::BeginPlay()
 	if (CameraHandleComponent != nullptr)
 	{
 		CameraHandleComponent->Init(RootComponent);
+		UUIHandle::ShowWidget(this, EWidgetCategory::AnimWedgit,FName("AbsorbMode"));
 	}
 	if (StateManagerComponent != nullptr)
 	{
@@ -309,6 +311,7 @@ void APlayerCharacter::ChangeCameraViewModeToCharacter()
 		return;
 
 	StateManagerComponent->GetCurrentState()->ChangePaintMode(EColorAbsorbMode::Absorb);
+	UUIHandle::PlayModeAnimation(this, FName("AbsorbMode"), FName("Anim_SwichAction_INST"), 1.0f);
 }
 
 // カラーモードを左にシフト（前の色モードへ変更）
@@ -318,6 +321,8 @@ void APlayerCharacter::ChangeCameraViewModeToGrid()
 		return;
 
 	StateManagerComponent->GetCurrentState()->ChangePaintMode(EColorAbsorbMode::Paint);
+	UUIHandle::PlayModeAnimationReverse(this, FName("AbsorbMode"), FName("Anim_SwichAction_INST"), 1.0f, false);
+
 }
 
 // 状態の変更（ステートタグを指定して遷移）
